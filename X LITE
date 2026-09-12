@@ -230,11 +230,11 @@ local function BuildUI()
 	local pStroke = Instance.new("UIStroke", Promo); pStroke.Color = Config.Theme.Gold; pStroke.Transparency = 0.6
 
 	local pTitle = Instance.new("TextLabel", Promo)
-	pTitle.Text = "⭐ 欲解锁 自瞄(Aimbot) 与 透视(ESP)?"; pTitle.Size = UDim2.new(1, 0, 0, 18); pTitle.Position = UDim2.new(0, 0, 0, 4)
+	pTitle.Text = "⭐ Want to Unlock Aimbot & ESP?"; pTitle.Size = UDim2.new(1, 0, 0, 18); pTitle.Position = UDim2.new(0, 0, 0, 4)
 	pTitle.BackgroundTransparency = 1; pTitle.TextColor3 = Config.Theme.Gold; pTitle.Font = Enum.Font.GothamBold; pTitle.TextSize = 10
 
 	local pDesc = Instance.new("TextLabel", Promo)
-	pDesc.Text = "Nano RM5 | Mini RM10 | Pro RM20\n💬 联系 Discord: " .. Config.Seller.Discord; pDesc.Size = UDim2.new(1, 0, 0, 36); pDesc.Position = UDim2.new(0, 0, 0, 22)
+	pDesc.Text = "Nano RM5 | Mini RM10 | Pro RM20\n💬 Contact Discord: " .. Config.Seller.Discord; pDesc.Size = UDim2.new(1, 0, 0, 36); pDesc.Position = UDim2.new(0, 0, 0, 22)
 	pDesc.BackgroundTransparency = 1; pDesc.TextColor3 = Config.Theme.Text; pDesc.Font = Enum.Font.GothamMedium; pDesc.TextSize = 9
 end
 
@@ -253,7 +253,7 @@ local function Unload()
 	end
 
 	if Storage.MainFrame and Storage.MainFrame.Parent then Storage.MainFrame.Parent:Destroy() end
-	Notify("X LITE", "已完全卸载并清理内存。")
+	Notify("X LITE", "Successfully unloaded and cleaned memory.")
 end
 
 -- ==================================================================
@@ -332,7 +332,7 @@ local function Init()
 		end
 	end))
 
-	Notify("X LITE FREE", "免费版已启动！[Insert] 菜单 [End] 卸载\n升配请联系: " .. Config.Seller.Discord, 4)
+	Notify("X LITE FREE", "Free Edition Loaded! [Insert] Menu [End] Unload\nUpgrade Discord: " .. Config.Seller.Discord, 4)
 	print("==========================================")
 	print("🎁 X LITE V1.0.0 FREE EDITION LOADED!")
 	print("🔥 UPGRADE TO NANO (RM5) / MINI (RM10) / PRO (RM20)")
