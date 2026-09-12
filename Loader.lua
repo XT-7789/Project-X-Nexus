@@ -86,16 +86,16 @@ local isMobile = Services.UIS.TouchEnabled and not Services.UIS.KeyboardEnabled
 
 if string.lower(tier) == "nano" then
 	if isMobile then
-		loadstring(game:HttpGet(repo .. "X%20Nano/X%20NANOM%20V3.0.0.lua"))()
+		loadstring(game:HttpGet(repo .. "X%20NANOM.lua"))()
 	else
-		loadstring(game:HttpGet(repo .. "X%20Nano/X%20Nano%20V3.0.0.lua"))()
+		loadstring(game:HttpGet(repo .. "X%20NANO.lua"))()
 	end
 elseif string.lower(tier) == "mini" then
-	loadstring(game:HttpGet(repo .. "X%20Mini/X%20Mini%20V4.0.0.lua"))()
+	loadstring(game:HttpGet(repo .. "X%20MINI"))()
 elseif string.lower(tier) == "pro" then
-	loadstring(game:HttpGet(repo .. "X%20PRO/X%20PRO%20V2.0.0.lua"))()
+	loadstring(game:HttpGet(repo .. "X%20PRO.lua"))()
 elseif string.lower(tier) == "titan" then
-	loadstring(game:HttpGet(repo .. "X%20Titan/X%20Titan%20V4.5.8.lua"))()
+	loadstring(game:HttpGet(repo .. "X%20TITAN.lua"))()
 else
-	loadstring(game:HttpGet(repo .. "X%20Nano/X%20Nano%20V3.0.0.lua"))()
+	loadstring(game:HttpGet(repo .. "X%20NANO.lua"))()
 end
