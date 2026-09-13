@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PROM V3.2.0 - MOBILE TOURNAMENT SUITE ]]
+-- [[ X PROM V3.2.1 - MOBILE TOURNAMENT SUITE ]]
 -- Official Seller: vlilayz | Tier: PROM (RM 20)
 -- Specially Crafted for Delta Mobile / iOS / Android / Tablet
 -- 100% Zero Keyboard Required | Touch Floating Bubble | Mobile Silent Aim
@@ -120,8 +120,8 @@ local Utils = {}
 function Utils.GetCharacterData(plr)
 	if not plr then return nil end
 	local char = plr.Character
-	if not char or not char.Parent then
-		for _, fName in ipairs({"Characters", "Players", "Entities", "Soldiers", "Rigs", "Actors", "Zombies", "Bots", "NPCs", "Alive", "Spawns"}) do
+	if not char or not char.Parent or not char:IsDescendantOf(Services.Workspace) then
+		for _, fName in ipairs({"Characters", "Players", "Entities", "Soldiers", "Rigs", "Actors", "Zombies", "Bots", "NPCs", "Alive", "Spawns", "Survivors", "Humans", "InGame", "World", "Game", "Map", "Living", "Deadzone"}) do
 			local f = Services.Workspace:FindFirstChild(fName)
 			if f then
 				char = f:FindFirstChild(plr.Name) or f:FindFirstChild(tostring(plr.UserId))
@@ -139,7 +139,7 @@ function Utils.GetCharacterData(plr)
 	if char.PrimaryPart and char.PrimaryPart:IsA("BasePart") then
 		root = char.PrimaryPart
 	else
-		for _, name in ipairs({"HumanoidRootPart", "Torso", "UpperTorso", "RootPart", "Root", "MainPart", "Main", "HRP", "Center", "Collision", "Hitbox", "Pelvis", "Waist", "Base"}) do
+		for _, name in ipairs({"HumanoidRootPart", "Torso", "UpperTorso", "LowerTorso", "RootPart", "Root", "MainPart", "Main", "HRP", "Center", "Collision", "Hitbox", "Pelvis", "Waist", "Base"}) do
 			local p = char:FindFirstChild(name)
 			if p and p:IsA("BasePart") then root = p; break end
 		end
@@ -216,23 +216,35 @@ function Utils.IsAlive(arg1, arg2, arg3)
 	end
 	if not char or not char.Parent or not char:IsDescendantOf(Services.Workspace) then return false end
 
-	-- 1. Arsenal Specific Death & Spawn Checks
-	local isArsenal = (game.PlaceId == 286090429 or game.GameId == 111958650 or (plr and plr:FindFirstChild("NRPBS") ~= nil) or Services.Workspace:FindFirstChild("Debris") ~= nil)
-	if plr then
-		local nrpbs = plr:FindFirstChild("NRPBS")
+	-- 1. Arsenal Specific Death & Spawn Checks (ONLY in real Arsenal: PlaceId or NRPBS, NEVER Workspace.Debris)
+	local isArsenal = (game.PlaceId == 286090429 or game.GameId == 111958650 or (plr and plr:FindFirstChild("NRPBS") ~= nil))
+	if isArsenal then
+		local nrpbs = plr and plr:FindFirstChild("NRPBS")
 		if nrpbs then
 			local hpVal = nrpbs:FindFirstChild("Health")
 			if hpVal and hpVal:IsA("ValueBase") and (tonumber(hpVal.Value) or 0) <= 0 then return false end
-			if not char:FindFirstChild("Spawned") then return false end
 		end
+		if not char:FindFirstChild("Spawned") then return false end
 	end
-	if isArsenal and not char:FindFirstChild("Spawned") then return false end
 
-	-- 2. General Dead / Ragdoll tags check
-	if char:FindFirstChild("Dead") or char:FindFirstChild("Ragdoll") or char:FindFirstChild("Died") or char:FindFirstChild("Corpse") or char:FindFirstChild("Killed") then
+	-- 2. General Dead / Ragdoll tags check (Only actual BoolValues/ValueBase/Folders, never scripts or animations)
+	local function isDeadObj(obj)
+		if not obj then return false end
+		if obj:IsA("BoolValue") then return obj.Value == true end
+		if obj:IsA("ValueBase") then
+			local v = tostring(obj.Value):lower()
+			return v == "true" or v == "dead" or v == "died"
+		end
+		if obj:IsA("Folder") or obj:IsA("Configuration") or obj:IsA("StringValue") then
+			return true
+		end
 		return false
 	end
-	if plr and plr:FindFirstChild("Status") and plr.Status:FindFirstChild("Dead") and plr.Status.Dead.Value == true then
+
+	if isDeadObj(char:FindFirstChild("Dead")) or isDeadObj(char:FindFirstChild("Ragdoll")) or isDeadObj(char:FindFirstChild("Died")) or isDeadObj(char:FindFirstChild("Corpse")) or isDeadObj(char:FindFirstChild("Killed")) then
+		return false
+	end
+	if plr and plr:FindFirstChild("Status") and plr.Status:FindFirstChild("Dead") and isDeadObj(plr.Status.Dead) then
 		return false
 	end
 
@@ -257,7 +269,7 @@ function Utils.IsAlive(arg1, arg2, arg3)
 	-- 4. Root / BasePart Validation
 	local root = char.PrimaryPart or char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or char:FindFirstChildWhichIsA("BasePart")
 	if not root then return false end
-	if root.Position.Y < -400 or math.abs(root.Position.X) > 100000 or math.abs(root.Position.Z) > 100000 then
+	if root.Position.Y < -1500 or math.abs(root.Position.X) > 100000 or math.abs(root.Position.Z) > 100000 then
 		return false
 	end
 
@@ -720,7 +732,7 @@ local function BuildMobileUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "📱 X PROM <font color='#00dcff'>V3.2.0</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
+    Title.Text = "📱 X PROM <font color='#00dcff'>V3.2.1</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
     Title.Size = UDim2.new(0, 240, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 13; Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -1281,7 +1293,7 @@ local function Init()
         end
     end)
 
-    Notify("X PROM V3.2.0", "Delta Mobile Pro Active! Tap [⚡] for menu")
+    Notify("X PROM V3.2.1", "Delta Mobile Pro Active! Tap [⚡] for menu")
 end
 
 Init()
