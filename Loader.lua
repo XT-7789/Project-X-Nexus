@@ -73,6 +73,9 @@ if not data.success then
 	return
 end
 
+-- Set one-time security authentication token for guarded scripts
+getgenv()._X_AUTH_TOKEN = "X_NEXUS_VERIFIED_7789"
+
 -- Success! Dispatch correct script tier
 local tier = data.tier or "Nano"
 Notify("✅ SUCCESS", "Welcome! Loading X " .. tostring(tier) .. "...", 3)
