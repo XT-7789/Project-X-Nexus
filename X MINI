@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X MINI V4.1.0 - PURE COMBAT & UTILITY EDITION ]]
+-- [[ X MINI V4.1.1 - PURE COMBAT & UTILITY EDITION ]]
 -- 定位: 纯粹日常主力 / 双栏紧凑 / 高性价比 / 零多余负担
 -- 架构: 双Tab (COMBAT & UTILITY) | 纯净平滑自瞄 | 完整ESP | 移动与辅助 | 零内存泄漏
 -- ==================================================================
@@ -661,9 +661,9 @@ local function BuildUI()
     AddToggle(CombatPage, "🎯 Smooth Aimbot", "Aimbot")
     AddToggle(CombatPage, "🖱️ Right Click to Aim [HOLD]", "RightClickOnly")
     AddToggle(CombatPage, "⭕ Show FOV Circle", "ShowFOV", function(v) if Storage.FOVRingUI then Storage.FOVRingUI.Visible = v end end)
-    local maxMiniFOV = isMiniPlus and 500 or 180
+    local maxMiniFOV = isMiniPlus and 500 or 250
     if not isMiniPlus then Config.Vals.FOV = math.min(Config.Vals.FOV, maxMiniFOV) end
-    AddSlider(CombatPage, "FOV Size" .. (isMiniPlus and " (PRO-X)" or " (Max 180)"), 50, maxMiniFOV, "FOV", function(v)
+    AddSlider(CombatPage, "FOV Size" .. (isMiniPlus and " (PRO-X)" or " (Max 250)"), 50, maxMiniFOV, "FOV", function(v)
         if Storage.FOVRingUI then Storage.FOVRingUI.Size = UDim2.new(0, v * 2, 0, v * 2) end
     end)
     AddToggle(CombatPage, "🛡️ Team Check", "TeamCheck")
@@ -688,19 +688,19 @@ local function BuildUI()
     AddToggle(UtilityPage, "➕ Crosshair", "Crosshair")
     AddToggle(UtilityPage, "🦅 Fly Mode [Z]", "Fly", function() Utils.UpdateCollisions() end)
     AddToggle(UtilityPage, "🪶 Legit Fly (Safe Glide)", "LegitFly")
-    local maxMiniFly = isMiniPlus and 400 or 180
-    local maxMiniWalk = isMiniPlus and 300 or 180
+    local maxMiniFly = isMiniPlus and 400 or 250
+    local maxMiniWalk = isMiniPlus and 300 or 250
     if not isMiniPlus then
         Config.Vals.FlySpeed = math.min(Config.Vals.FlySpeed, maxMiniFly)
         Config.Vals.WalkSpeed = math.min(Config.Vals.WalkSpeed, maxMiniWalk)
     end
-    AddSlider(UtilityPage, "Fly Speed" .. (isMiniPlus and " (PRO-X)" or " (Max 180)"), 20, maxMiniFly, "FlySpeed")
+    AddSlider(UtilityPage, "Fly Speed" .. (isMiniPlus and " (PRO-X)" or " (Max 250)"), 20, maxMiniFly, "FlySpeed")
     AddToggle(UtilityPage, "👻 Noclip [V]", "Noclip", function() Utils.UpdateCollisions() end)
     AddToggle(UtilityPage, "⚡ Speed Hack", "SpeedHack", function(v)
         local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
         if hum then hum.WalkSpeed = v and Config.Vals.WalkSpeed or Storage.OriginalWalkSpeed end
     end)
-    AddSlider(UtilityPage, "Walk Speed" .. (isMiniPlus and " (PRO-X)" or " (Max 180)"), 20, maxMiniWalk, "WalkSpeed", function(v)
+    AddSlider(UtilityPage, "Walk Speed" .. (isMiniPlus and " (PRO-X)" or " (Max 250)"), 20, maxMiniWalk, "WalkSpeed", function(v)
         if Config.States.SpeedHack and LocalPlayer.Character then
             local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
             if hum then hum.WalkSpeed = v end
@@ -820,7 +820,7 @@ local function Init()
         end
     end))
 
-    -- RenderStepped: Aimbot, ESP, Crosshair (Tier Refresh Rate: Mini=180Hz, Mini+=Uncapped)
+    -- RenderStepped: Aimbot, ESP, Crosshair (Tier Refresh Rate: Mini=180Hz/120Hz, Mini+=Uncapped)
     local lastMiniRender = 0
     local maxMiniHz = isMiniPlus and 240 or 180
     TrackConn(Services.RunService.RenderStepped:Connect(function()

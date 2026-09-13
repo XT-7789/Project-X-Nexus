@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X MINIM V4.1.0 - MOBILE COMBAT SUITE ]]
+-- [[ X MINIM V4.1.1 - MOBILE COMBAT SUITE ]]
 -- Official Seller: vlilayz | Tier: MINIM (RM 10)
 -- Optimized for Delta Mobile / Android / iOS / Tablet
 -- 100% Zero Keyboard Required | Touch-Friendly UI | Floating Bubble
@@ -299,7 +299,7 @@ local function BuildMobileUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "📱 X MINIM <font color='#00d2ff'>V4.1.0</font> <font color='#8c91a0'>| MOBILE SUITE</font>"; Title.RichText = true
+    Title.Text = "📱 X MINIM <font color='#00d2ff'>V4.1.1</font> <font color='#8c91a0'>| MOBILE SUITE</font>"; Title.RichText = true
     Title.Size = UDim2.new(0, 240, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 13; Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -438,9 +438,9 @@ local function BuildMobileUI()
     AddSlider(P1, "Head Hitbox Size", 5, 40, "HeadSize", function() Utils.UpdateHeadExpander() end)
     AddToggle(P1, "🔫 TriggerBot (Auto Fire)", "TriggerBot")
     AddToggle(P1, "⭕ Show FOV Circle", "ShowFOV", function(v) if Storage.FOVRingUI then Storage.FOVRingUI.Visible = v end end)
-    local maxMinimFOV = isMiniPlus and 400 or 180
+    local maxMinimFOV = isMiniPlus and 400 or 250
     if not isMiniPlus then Config.Vals.FOV = math.min(Config.Vals.FOV, maxMinimFOV) end
-    AddSlider(P1, "FOV Radius" .. (isMiniPlus and " (PRO-X)" or " (Max 180)"), 50, maxMinimFOV, "FOV", function(v)
+    AddSlider(P1, "FOV Radius" .. (isMiniPlus and " (PRO-X)" or " (Max 250)"), 50, maxMinimFOV, "FOV", function(v)
         if Storage.FOVRingUI then Storage.FOVRingUI.Size = UDim2.new(0, v * 2, 0, v * 2) end
     end)
     AddToggle(P1, "🛡️ Team Check", "TeamCheck")
@@ -465,19 +465,19 @@ local function BuildMobileUI()
         if Storage.FlyUpBtn then Storage.FlyUpBtn.Visible = v end
         if Storage.FlyDownBtn then Storage.FlyDownBtn.Visible = v end
     end)
-    local maxMinimFly = isMiniPlus and 300 or 180
-    local maxMinimWalk = isMiniPlus and 200 or 180
+    local maxMinimFly = isMiniPlus and 300 or 250
+    local maxMinimWalk = isMiniPlus and 200 or 250
     if not isMiniPlus then
         Config.Vals.FlySpeed = math.min(Config.Vals.FlySpeed, maxMinimFly)
         Config.Vals.WalkSpeed = math.min(Config.Vals.WalkSpeed, maxMinimWalk)
     end
-    AddSlider(P2, "Fly Speed" .. (isMiniPlus and " (PRO-X)" or " (Max 180)"), 20, maxMinimFly, "FlySpeed")
+    AddSlider(P2, "Fly Speed" .. (isMiniPlus and " (PRO-X)" or " (Max 250)"), 20, maxMinimFly, "FlySpeed")
     AddToggle(P2, "👻 Noclip", "Noclip", function() Utils.UpdateCollisions() end)
     AddToggle(P2, "⚡ Speed Hack", "SpeedHack", function(v)
         local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
         if hum then hum.WalkSpeed = v and Config.Vals.WalkSpeed or Storage.OriginalWalkSpeed end
     end)
-    AddSlider(P2, "Walk Speed" .. (isMiniPlus and " (PRO-X)" or " (Max 180)"), 20, maxMinimWalk, "WalkSpeed", function(v)
+    AddSlider(P2, "Walk Speed" .. (isMiniPlus and " (PRO-X)" or " (Max 250)"), 20, maxMinimWalk, "WalkSpeed", function(v)
         if Config.States.SpeedHack and LocalPlayer.Character then
             local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
             if hum then hum.WalkSpeed = v end
@@ -624,8 +624,13 @@ local function Init()
         end
     end))
 
-    -- RenderStepped Loop
+    -- RenderStepped Loop (Tier Refresh Rate: Mini=180Hz/120Hz, Mini+=Uncapped)
+    local lastMinimRender = 0
+    local maxMinimHz = isMiniPlus and 240 or 180
     TrackConn(Services.RunService.RenderStepped:Connect(function()
+        local now = tick()
+        if not isMiniPlus and (now - lastMinimRender < (1 / maxMinimHz)) then return end
+        lastMinimRender = now
         -- Mobile Auto-Aim
         if Config.States.Aimbot then
             local target = Utils.GetClosestTarget()
@@ -746,7 +751,7 @@ local function Init()
         end
     end))
 
-    Notify("X MINIM V4.1.0", "Delta Mobile Ready! Tap [⚡] to toggle menu")
+    Notify("X MINIM V4.1.1", "Delta Mobile Ready! Tap [⚡] to toggle menu")
 end
 
 Init()
