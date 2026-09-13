@@ -124,13 +124,13 @@ elseif string.lower(tier) == "mini" then
 elseif string.lower(tier) == "minim" then
 	print("📱 X MINIM V4.0.1 LOADED")
 elseif string.lower(tier) == "prom" then
-	print("📱 X PROM V3.1.1 LOADED")
+	print("📱 X PROM V3.1.2 LOADED")
 elseif string.lower(tier) == "nanom" then
 	print("📱 X NANOM V3.1.0 LOADED")
 elseif string.lower(tier) == "nano" then
 	print(isMobile and "📱 X NANOM V3.1.0 LOADED" or "🪶 X NANO V3.1.0 LOADED")
 elseif string.lower(tier) == "pro" then
-	print(isMobile and "📱 X PROM V3.1.1 LOADED" or "⚡ X PRO V3.1.1 LOADED")
+	print(isMobile and "📱 X PROM V3.1.2 LOADED" or "⚡ X PRO V3.1.2 LOADED")
 elseif string.lower(tier) == "titan" then
 	print("🔥 X TITAN V5.2.1 [VOID WALKER] LOADED")
 else

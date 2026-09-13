@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PROM V3.1.1 - MOBILE TOURNAMENT SUITE ]]
+-- [[ X PROM V3.1.2 - MOBILE TOURNAMENT SUITE ]]
 -- Official Seller: vlilayz | Tier: PROM (RM 20)
 -- Specially Crafted for Delta Mobile / iOS / Android / Tablet
 -- 100% Zero Keyboard Required | Touch Floating Bubble | Mobile Silent Aim
@@ -534,7 +534,7 @@ local function BuildMobileUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "📱 X PROM <font color='#00dcff'>V3.1.1</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
+    Title.Text = "📱 X PROM <font color='#00dcff'>V3.1.2</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
     Title.Size = UDim2.new(0, 240, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 13; Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -560,7 +560,13 @@ local function BuildMobileUI()
         page.Size = UDim2.new(1, -20, 1, -56); page.Position = UDim2.new(0, 10, 0, 48)
         page.BackgroundTransparency = 1; page.ScrollBarThickness = 3
         page.ScrollBarImageColor3 = Config.Theme.Accent; page.Visible = false
+        page.BorderSizePixel = 0
+        page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        page.CanvasSize = UDim2.new(0, 0, 0, 0)
         local pageLayout = Instance.new("UIListLayout", page); pageLayout.Padding = UDim.new(0, 6)
+        local pagePadding = Instance.new("UIPadding", page)
+        pagePadding.PaddingBottom = UDim.new(0, 16)
+        pagePadding.PaddingRight = UDim.new(0, 4)
 
         local btn = Instance.new("TextButton", TabBar)
         btn.Size = UDim2.new(0, 80, 1, 0); btn.BackgroundColor3 = Color3.fromRGB(28, 30, 42)
@@ -736,9 +742,10 @@ local function BuildMobileUI()
         if _G.X_PROM_UNLOAD then _G.X_PROM_UNLOAD() end
     end)
 
-    P1.CanvasSize = UDim2.new(0, 0, 0, 480)
-    P2.CanvasSize = UDim2.new(0, 0, 0, 500)
-    P3.CanvasSize = UDim2.new(0, 0, 0, 540)
+    -- Auto Canvas Sizing with bottom padding
+    P1.CanvasSize = UDim2.new(0, 0, 0, 0)
+    P2.CanvasSize = UDim2.new(0, 0, 0, 0)
+    P3.CanvasSize = UDim2.new(0, 0, 0, 0)
 
     -- Virtual Touch Fly Controls (▲ / ▼)
     local flyControls = Instance.new("Frame", ScreenGui)
@@ -1087,7 +1094,7 @@ local function Init()
         end
     end)
 
-    Notify("X PROM V3.1.1", "Delta Mobile Pro Active! Tap [⚡] for menu")
+    Notify("X PROM V3.1.2", "Delta Mobile Pro Active! Tap [⚡] for menu")
 end
 
 Init()

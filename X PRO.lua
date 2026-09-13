@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PRO V3.1.1 - COMPETITIVE & TOURNAMENT SUITE ]]
+-- [[ X PRO V3.1.2 - COMPETITIVE & TOURNAMENT SUITE ]]
 -- Official Seller: vlilayz | Tier: PRO (RM 20)
 -- 100% English UI | Zero Memory Leak | High Performance
 -- Features: Smart Prediction | Auto Bone Target | Silent Aim Metamethod | Skeleton ESP | 2D Tactical Radar | Weapon ESP | Off-screen Target Arrows | TriggerBot | LegitFly | Anti-Killbrick
@@ -591,7 +591,7 @@ local function MicroFlickSilentAim()
 end
 
 -- ==================================================================
--- MODERN 3-TAB UI (V3.1.1)
+-- MODERN 3-TAB UI (V3.1.2)
 -- ==================================================================
 local function BuildUI()
     local uiName = "X_PRO_V3_0_0"
@@ -601,7 +601,7 @@ local function BuildUI()
     ScreenGui.Name = uiName; ScreenGui.ResetOnSpawn = false; ScreenGui.IgnoreGuiInset = true
 
     local Main = Instance.new("Frame", ScreenGui)
-    Main.Size = UDim2.new(0, 530, 0, 430); Main.Position = UDim2.new(0.5, -265, 0.5, -215)
+    Main.Size = UDim2.new(0, 560, 0, 450); Main.Position = UDim2.new(0.5, -280, 0.5, -225)
     Main.BackgroundColor3 = Config.Theme.Main; Main.Active = true; Main.Draggable = true
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
     local Stroke = Instance.new("UIStroke", Main)
@@ -609,17 +609,24 @@ local function BuildUI()
     Storage.MainFrame = Main
 
     local Header = Instance.new("Frame", Main)
-    Header.Size = UDim2.new(1, 0, 0, 44); Header.BackgroundColor3 = Config.Theme.Sec
+    Header.Size = UDim2.new(1, 0, 0, 46); Header.BackgroundColor3 = Config.Theme.Sec
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 8)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "⚡ X PRO <font color='#00dcff'>V3.1.1</font>"; Title.RichText = true
-    Title.Size = UDim2.new(0, 160, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
+    Title.Text = "⚡ X PRO <font color='#00dcff'>V3.1.2</font>"; Title.RichText = true
+    Title.Size = UDim2.new(0, 130, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
+    Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
+    Title.Font = Enum.Font.GothamBold; Title.TextSize = 14; Title.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- Header Unload Button
+    local TabBar = Instance.new("Frame", Header)
+    TabBar.Size = UDim2.new(0, 258, 0, 28); TabBar.Position = UDim2.new(0, 142, 0.5, -14)
+    TabBar.BackgroundTransparency = 1
+    local TabList = Instance.new("UIListLayout", TabBar); TabList.FillDirection = Enum.FillDirection.Horizontal; TabList.Padding = UDim.new(0, 6)
+
+    -- Header Unload Button (Properly spaced, no overlap)
     local HdrUnloadBtn = Instance.new("TextButton", Header)
     HdrUnloadBtn.Name = "HeaderUnload"
-    HdrUnloadBtn.Size = UDim2.new(0, 60, 0, 26); HdrUnloadBtn.Position = UDim2.new(1, -70, 0.5, -13)
+    HdrUnloadBtn.Size = UDim2.new(0, 62, 0, 26); HdrUnloadBtn.Position = UDim2.new(1, -102, 0.5, -13)
     HdrUnloadBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
     HdrUnloadBtn.Text = "UNLOAD"; HdrUnloadBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     HdrUnloadBtn.Font = Enum.Font.GothamBold; HdrUnloadBtn.TextSize = 10
@@ -627,23 +634,34 @@ local function BuildUI()
     local hubStroke = Instance.new("UIStroke", HdrUnloadBtn)
     hubStroke.Color = Color3.fromRGB(255, 80, 80); hubStroke.Thickness = 1
     HdrUnloadBtn.MouseButton1Click:Connect(function() if Unload then Unload() end end)
-    Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
-    Title.Font = Enum.Font.GothamBold; Title.TextSize = 14; Title.TextXAlignment = Enum.TextXAlignment.Left
 
-    local TabBar = Instance.new("Frame", Header)
-    TabBar.Size = UDim2.new(0, 260, 0, 28); TabBar.Position = UDim2.new(1, -270, 0.5, -14)
-    TabBar.BackgroundTransparency = 1
-    local TabList = Instance.new("UIListLayout", TabBar); TabList.FillDirection = Enum.FillDirection.Horizontal; TabList.Padding = UDim.new(0, 6)
+    -- Header Close Button (✕)
+    local CloseBtn = Instance.new("TextButton", Header)
+    CloseBtn.Name = "HeaderClose"
+    CloseBtn.Size = UDim2.new(0, 26, 0, 26); CloseBtn.Position = UDim2.new(1, -34, 0.5, -13)
+    CloseBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 48)
+    CloseBtn.Text = "✕"; CloseBtn.TextColor3 = Config.Theme.Text
+    CloseBtn.Font = Enum.Font.GothamBold; CloseBtn.TextSize = 13
+    Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+    local closeStroke = Instance.new("UIStroke", CloseBtn)
+    closeStroke.Color = Config.Theme.Accent; closeStroke.Thickness = 1; closeStroke.Transparency = 0.6
+    CloseBtn.MouseButton1Click:Connect(function() Main.Visible = false end)
 
     local Pages = {}
     local TabButtons = {}
 
     local function CreateTab(name)
         local page = Instance.new("ScrollingFrame", Main)
-        page.Size = UDim2.new(1, -24, 1, -62); page.Position = UDim2.new(0, 12, 0, 52)
-        page.BackgroundTransparency = 1; page.ScrollBarThickness = 2
+        page.Size = UDim2.new(1, -24, 1, -66); page.Position = UDim2.new(0, 12, 0, 54)
+        page.BackgroundTransparency = 1; page.ScrollBarThickness = 3
         page.ScrollBarImageColor3 = Config.Theme.Accent; page.Visible = false
+        page.BorderSizePixel = 0
+        page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        page.CanvasSize = UDim2.new(0, 0, 0, 0)
         local pageLayout = Instance.new("UIListLayout", page); pageLayout.Padding = UDim.new(0, 6)
+        local pagePadding = Instance.new("UIPadding", page)
+        pagePadding.PaddingBottom = UDim.new(0, 16)
+        pagePadding.PaddingRight = UDim.new(0, 6)
 
         local btn = Instance.new("TextButton", TabBar)
         btn.Size = UDim2.new(0, 82, 1, 0); btn.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
@@ -670,7 +688,7 @@ local function BuildUI()
 
     local function AddToggle(page, text, stateKey, cb)
         local btn = Instance.new("TextButton", page)
-        btn.Size = UDim2.new(1, -6, 0, 36); btn.BackgroundColor3 = Config.Theme.Sec
+        btn.Size = UDim2.new(1, 0, 0, 36); btn.BackgroundColor3 = Config.Theme.Sec
         btn.Text = ""; btn.AutoButtonColor = false
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
         local s = Instance.new("UIStroke", btn); s.Color = Config.Theme.Accent; s.Transparency = 0.85
@@ -706,7 +724,7 @@ local function BuildUI()
 
     local function AddSlider(page, text, min, max, valKey, cb)
         local frame = Instance.new("Frame", page)
-        frame.Size = UDim2.new(1, -6, 0, 44); frame.BackgroundColor3 = Config.Theme.Sec
+        frame.Size = UDim2.new(1, 0, 0, 44); frame.BackgroundColor3 = Config.Theme.Sec
         Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
 
         local lbl = Instance.new("TextLabel", frame)
@@ -799,9 +817,10 @@ local function BuildUI()
     AddToggle(P3, "🚗 Vehicle Speed Boost", "VehicleBoost")
     AddSlider(P3, "Vehicle Speed", 50, 350, "VehicleSpeed")
 
-    P1.CanvasSize = UDim2.new(0, 0, 0, 520)
-    P2.CanvasSize = UDim2.new(0, 0, 0, 480)
-    P3.CanvasSize = UDim2.new(0, 0, 0, 560)
+    -- Auto Canvas Sizing with bottom padding ensures every item is fully visible
+    P1.CanvasSize = UDim2.new(0, 0, 0, 0)
+    P2.CanvasSize = UDim2.new(0, 0, 0, 0)
+    P3.CanvasSize = UDim2.new(0, 0, 0, 0)
 end
 
 -- ==================================================================
@@ -1175,7 +1194,7 @@ local function Init()
         end
     end)
 
-    Notify("X PRO V3.1.1", "Tournament Pro Active! [Insert] Menu [F] Lock Target [End] Unload")
+    Notify("X PRO V3.1.2", "Tournament Pro Active! [Insert] Menu [F] Lock Target [End] Unload")
 end
 
 Init()
