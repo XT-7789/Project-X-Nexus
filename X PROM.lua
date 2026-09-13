@@ -62,12 +62,12 @@ local Config = {
         Tracers = false, Chams = false, Fullbright = false, Crosshair = false,
         Radar = false, HitSound = true,
         Fly = false, SpeedHack = false, InfJump = false, Noclip = false, NoFall = false,
-        AntiKillbrick = false
+        AntiKillbrick = false, ItemESP = false, VehicleBoost = false
     },
     Vals = {
         FOV = 180, Smoothness = 0.32, PredictionStrength = 0.14,
         TriggerDelay = 0.15, WalkSpeed = 85, FlySpeed = 120,
-        RadarRange = 120, AimPart = "Head"
+        RadarRange = 120, AimPart = "Head", VehicleSpeed = 140
     }
 }
 
@@ -78,7 +78,7 @@ local Storage = {
     FlyUpBtn = nil, FlyDownBtn = nil, FlyUpState = false, FlyDownState = false,
     OriginalLighting = {}, OriginalCollisions = {}, OriginalWalkSpeed = 16,
     TriggerCooldown = 0, HitSoundObj = nil, RadarGui = nil, RadarFrame = nil, RadarObjects = {},
-    AimParts = {"Head", "Torso", "HumanoidRootPart"}, AimPartIndex = 1
+    AimParts = {"Head", "Torso", "HumanoidRootPart"}, AimPartIndex = 1, ItemESPObjects = {}
 }
 
 local function TrackConn(c)
@@ -599,6 +599,7 @@ local function BuildMobileUI()
 
     -- TAB 2: VISUALS
     AddToggle(P2, "📦 Box + Health ESP", "ESP")
+    AddToggle(P2, "📦 Item & Loot ESP", "ItemESP", function(v) if not v then ClearItemESP() else task.spawn(UpdateItemESP) end end)
     AddToggle(P2, "🔫 Weapon / Tool ESP", "WeaponESP")
     AddToggle(P2, "🦴 Skeleton ESP", "ESPSkeleton")
     AddToggle(P2, "🧭 Off-screen Target Arrows", "OffscreenArrows")
@@ -631,6 +632,8 @@ local function BuildMobileUI()
     AddToggle(P3, "🛡️ God Mode (Anti-Killbrick)", "AntiKillbrick")
     AddToggle(P3, "🪂 No Fall Damage", "NoFall")
     AddToggle(P3, "🦘 Infinite Jump", "InfJump")
+    AddToggle(P3, "🚗 Vehicle Speed Boost", "VehicleBoost")
+    AddSlider(P3, "Vehicle Speed", 50, 300, "VehicleSpeed")
 
     -- One-Touch Unload Button
     local UnloadBtn = Instance.new("TextButton", P3)
@@ -643,8 +646,8 @@ local function BuildMobileUI()
     end)
 
     P1.CanvasSize = UDim2.new(0, 0, 0, 480)
-    P2.CanvasSize = UDim2.new(0, 0, 0, 460)
-    P3.CanvasSize = UDim2.new(0, 0, 0, 440)
+    P2.CanvasSize = UDim2.new(0, 0, 0, 500)
+    P3.CanvasSize = UDim2.new(0, 0, 0, 540)
 
     -- Virtual Touch Fly Controls (▲ / ▼)
     local flyControls = Instance.new("Frame", ScreenGui)
@@ -712,6 +715,7 @@ local function Unload()
 
     Config.States.Chams = false; Utils.UpdateChams()
     Config.States.Fullbright = false; Utils.ToggleFullbright(false)
+    ClearItemESP()
     Config.States.Fly = false; Config.States.Noclip = false; Utils.UpdateCollisions()
 
     local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
@@ -959,10 +963,38 @@ local function Init()
             hum.PlatformStand = false
         end
 
+        
+        -- Vehicle Speed Boost (Mobile)
+        if Config.States.VehicleBoost and hum and hum.SeatPart then
+            local seat = hum.SeatPart
+            if seat:IsA("VehicleSeat") then
+                seat.MaxSpeed = math.max(seat.MaxSpeed, Config.Vals.VehicleSpeed)
+                seat.Torque = 1000000
+            end
+            local carRoot = seat.AssemblyRootPart or seat
+            if carRoot and hum.MoveDirection.Magnitude > 0 then
+                local forwardDot = hum.MoveDirection:Dot(seat.CFrame.LookVector)
+                local moveSign = forwardDot >= -0.1 and 1 or -1
+                local dir = seat.CFrame.LookVector * moveSign
+                local curVel = carRoot.AssemblyLinearVelocity
+                local target = dir * Config.Vals.VehicleSpeed
+                carRoot.AssemblyLinearVelocity = Vector3.new(target.X, curVel.Y, target.Z)
+            end
+        end
+
         if Config.States.InfJump and hum:GetState() == Enum.HumanoidStateType.Freefall then
             hum:ChangeState(Enum.HumanoidStateType.Jumping)
         end
     end))
+
+    task.spawn(function()
+        while true do
+            task.wait(0.7)
+            if Config.States.ItemESP then
+                pcall(UpdateItemESP)
+            end
+        end
+    end)
 
     Notify("X PROM V3.0.0", "Delta Mobile Pro Active! Tap [⚡] for menu")
 end

@@ -68,14 +68,14 @@ local Config = {
 		KillAura = false, TPAura = false, Desync = false, AntiAimSpin = false, AntiAimHeadJitter = false,
 		RightClickToggle = true, ShowFOV = false, TacticalLock = false,
 		ShowLockStatus = true, SmartPrediction = true, AutoAimPart = true,
-		LegitFly = false, ServerDesync = false, CFrameSpeed = false, Radar = false
+		LegitFly = false, ServerDesync = false, CFrameSpeed = false, Radar = false, ItemESP = false, VehicleBoost = false, VehicleFly = false
 	},
 	Vals = {
 		FOV = 200, OrbitDistance = 8, OrbitSpeed = 8, FlingPower = 100000, WalkSpeed = 150, FlySpeed = 150, HitboxSize = 15, HeadSize = 25,
 		AimbotSmoothness = 0.3, PredictionStrength = 0.16, DesyncPower = 5,
 		AuraRange = 25, TPBehindDist = 4, TriggerDelay = 0.15,
 		AntiAimSpinSpeed = 10, AntiAimJitterRadius = 5, AimPart = "Head",
-		Deadzone = 5, PingCompensation = 0.05, RadarRange = 100, LegitFlySmooth = 0.1
+		Deadzone = 5, PingCompensation = 0.05, RadarRange = 100, LegitFlySmooth = 0.1, VehicleSpeed = 180
 	}
 }
 
@@ -87,7 +87,7 @@ local Storage = {
 	OriginalLighting = {}, HitboxLastUpdate = 0,
 	AuraTarget = nil, CurrentSpectate = nil, SnapPlayer = nil,
 	LockedTarget = nil, IsHiding = false, HideCFrame = nil,
-	DestroyedParts = {}, MapStorageFolder = nil,
+	DestroyedParts = {}, MapStorageFolder = nil, ItemESPObjects = {},
 	AimParts = {"Head", "Torso", "HumanoidRootPart"}, AimPartIndex = 1,
 	PlayerListFrame = nil, Connections = {}, Loops = {},
 	TriggerBotCooldown = 0,
@@ -777,6 +777,7 @@ function UI.Init()
 	
 	AddSection(P2, "ESP", getOrder2)
 	AddToggle(P2, "ESP Master", "ESP", getOrder2)
+	AddToggle(P2, "📦 Item & Loot ESP", "ItemESP", getOrder2)
 	AddToggle(P2, "ESP Skeleton", "ESPSkeleton", getOrder2)
 	AddToggle(P2, "360° Tracers", "Tracers", getOrder2)
 	AddToggle(P2, "Visibility Check", "VisibilityCheck", getOrder2)
@@ -804,6 +805,11 @@ function UI.Init()
 	AddToggle(P3, "Sky Hide [X]", "SkyHide", getOrder3)
 	AddToggle(P3, "Click TP [Ctrl+Click]", "ClickTP", getOrder3)
 	
+	AddSection(P3, "VEHICLE & DRIVE", getOrder3)
+	AddToggle(P3, "🚗 Vehicle Speed Boost", "VehicleBoost", getOrder3)
+	AddToggle(P3, "🛸 Vehicle Aerial Fly", "VehicleFly", getOrder3)
+	AddSlider(P3, "Vehicle Speed", 50, 400, 180, function(v) Config.Vals.VehicleSpeed = v end, getOrder3)
+
 	AddSection(P3, "CHECKPOINTS", getOrder3)
 	AddDual(P3, "📍 SET P1", function() Utils.SetPoint("P1") end, "⚡ TP P1", function() Utils.TPPoint("P1") end, getOrder3)
 	AddDual(P3, "📍 SET P2", function() Utils.SetPoint("P2") end, "⚡ TP P2", function() Utils.TPPoint("P2") end, getOrder3)
@@ -1249,7 +1255,16 @@ local function UpdateRadar()
 	end
 end
 
-function Runtime.Init()
+function task.spawn(function()
+	while true do
+		task.wait(0.7)
+		if Config.States.ItemESP then
+			pcall(UpdateItemESP)
+		end
+	end
+end)
+
+Runtime.Init()
 	if _G.X_TITAN_RUNTIME_INITIALIZED then
 		print("X TITAN: Detected existing instance, unloading first...")
 		local oldInstance = _G.X_TITAN_CURRENT_INSTANCE
@@ -1648,6 +1663,39 @@ function Runtime.Init()
 			end
 		end
 		
+		
+		-- Vehicle Speed Boost & Aerial Fly
+		if Config.States.VehicleBoost and hum and hum.SeatPart then
+			local seat = hum.SeatPart
+			if seat:IsA("VehicleSeat") then
+				seat.MaxSpeed = math.max(seat.MaxSpeed, Config.Vals.VehicleSpeed)
+				seat.Torque = 2000000
+				seat.TurnSpeed = math.max(seat.TurnSpeed, 2.5)
+			end
+			local carRoot = seat.AssemblyRootPart or seat
+			if carRoot then
+				local isFwd = Services.UIS:IsKeyDown(Enum.KeyCode.W) or (hum.MoveDirection.Magnitude > 0 and hum.MoveDirection:Dot(seat.CFrame.LookVector) >= -0.1)
+				local isBack = Services.UIS:IsKeyDown(Enum.KeyCode.S) or (hum.MoveDirection.Magnitude > 0 and hum.MoveDirection:Dot(seat.CFrame.LookVector) < -0.1)
+				if isFwd or isBack then
+					local dir = seat.CFrame.LookVector * (isFwd and 1 or -1)
+					local curVel = carRoot.AssemblyLinearVelocity
+					local target = dir * Config.Vals.VehicleSpeed
+					carRoot.AssemblyLinearVelocity = Vector3.new(target.X, curVel.Y, target.Z)
+				end
+				if Config.States.VehicleFly then
+					local vFlyDir = 0
+					if Services.UIS:IsKeyDown(Enum.KeyCode.Space) or Services.UIS:IsKeyDown(Enum.KeyCode.E) then
+						vFlyDir = 1
+					elseif Services.UIS:IsKeyDown(Enum.KeyCode.LeftShift) or Services.UIS:IsKeyDown(Enum.KeyCode.Q) then
+						vFlyDir = -1
+					end
+					if vFlyDir ~= 0 then
+						carRoot.AssemblyLinearVelocity = Vector3.new(carRoot.AssemblyLinearVelocity.X, vFlyDir * (Config.Vals.VehicleSpeed * 0.75), carRoot.AssemblyLinearVelocity.Z)
+					end
+				end
+			end
+		end
+
 		if Config.States.NoFall then
 			if hrp.AssemblyLinearVelocity.Y < -30 then
 				hrp.AssemblyLinearVelocity = Vector3.new(hrp.AssemblyLinearVelocity.X, -30, hrp.AssemblyLinearVelocity.Z)
@@ -1953,6 +2001,15 @@ function Runtime.Init()
 	end)
 	table.insert(Storage.Connections, inputEndedConn)
 end
+
+task.spawn(function()
+	while true do
+		task.wait(0.7)
+		if Config.States.ItemESP then
+			pcall(UpdateItemESP)
+		end
+	end
+end)
 
 Runtime.Init()
 Utils.Notify("✅ X TITAN V5.0.0 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")

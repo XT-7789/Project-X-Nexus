@@ -67,12 +67,12 @@ local Config = {
         Tracers = false, Chams = false, Fullbright = false, Crosshair = false,
         Radar = false, HitSound = true, NoRecoil = false,
         Fly = false, LegitFly = false, SpeedHack = false, InfJump = false,
-        Noclip = false, NoFall = false, ClickTP = false, AntiKillbrick = false
+        Noclip = false, NoFall = false, ClickTP = false, AntiKillbrick = false, ItemESP = false, VehicleBoost = false
     },
     Vals = {
         FOV = 180, Smoothness = 0.28, PredictionStrength = 0.14,
         TriggerDelay = 0.15, WalkSpeed = 85, FlySpeed = 120,
-        RadarRange = 120, AimPart = "Head", OffscreenRadius = 240
+        RadarRange = 120, AimPart = "Head", OffscreenRadius = 240, VehicleSpeed = 140
     }
 }
 
@@ -82,7 +82,7 @@ local Storage = {
     OriginalLighting = {}, OriginalCollisions = {}, OriginalWalkSpeed = 16,
     LockedTarget = nil, IsRightMouseDown = false, TriggerCooldown = 0,
     RadarGui = nil, RadarFrame = nil, RadarObjects = {}, HitSoundObj = nil,
-    AimParts = {"Head", "Torso", "HumanoidRootPart"}, AimPartIndex = 1
+    AimParts = {"Head", "Torso", "HumanoidRootPart"}, AimPartIndex = 1, ItemESPObjects = {}
 }
 
 local function TrackConn(c)
@@ -576,6 +576,7 @@ local function BuildUI()
 
     -- TAB 2: VISUALS
     AddToggle(P2, "📦 Box ESP", "ESP")
+    AddToggle(P2, "📦 Item & Loot ESP", "ItemESP", function(v) if not v then ClearItemESP() else task.spawn(UpdateItemESP) end end)
     AddToggle(P2, "🔫 Weapon / Tool ESP", "WeaponESP")
     AddToggle(P2, "🦴 Skeleton ESP", "ESPSkeleton")
     AddToggle(P2, "🧭 Off-screen Target Arrows", "OffscreenArrows")
@@ -606,10 +607,12 @@ local function BuildUI()
     AddToggle(P3, "🪂 No Fall Damage", "NoFall")
     AddToggle(P3, "🦘 Infinite Jump", "InfJump")
     AddToggle(P3, "📍 Click TP [Ctrl+Click]", "ClickTP")
+    AddToggle(P3, "🚗 Vehicle Speed Boost", "VehicleBoost")
+    AddSlider(P3, "Vehicle Speed", 50, 350, "VehicleSpeed")
 
     P1.CanvasSize = UDim2.new(0, 0, 0, 520)
-    P2.CanvasSize = UDim2.new(0, 0, 0, 440)
-    P3.CanvasSize = UDim2.new(0, 0, 0, 480)
+    P2.CanvasSize = UDim2.new(0, 0, 0, 480)
+    P3.CanvasSize = UDim2.new(0, 0, 0, 560)
 end
 
 -- ==================================================================
@@ -891,6 +894,27 @@ local function Init()
             hum.PlatformStand = false
         end
 
+        
+        -- Vehicle Speed Boost
+        if Config.States.VehicleBoost and hum and hum.SeatPart then
+            local seat = hum.SeatPart
+            if seat:IsA("VehicleSeat") then
+                seat.MaxSpeed = math.max(seat.MaxSpeed, Config.Vals.VehicleSpeed)
+                seat.Torque = 1000000
+            end
+            local carRoot = seat.AssemblyRootPart or seat
+            if carRoot then
+                local isFwd = Services.UIS:IsKeyDown(Enum.KeyCode.W)
+                local isBack = Services.UIS:IsKeyDown(Enum.KeyCode.S)
+                if isFwd or isBack then
+                    local dir = seat.CFrame.LookVector * (isFwd and 1 or -1)
+                    local curVel = carRoot.AssemblyLinearVelocity
+                    local target = dir * Config.Vals.VehicleSpeed
+                    carRoot.AssemblyLinearVelocity = Vector3.new(target.X, curVel.Y, target.Z)
+                end
+            end
+        end
+
         if Config.States.InfJump and Services.UIS:IsKeyDown(Enum.KeyCode.Space) then
             hum:ChangeState(Enum.HumanoidStateType.Jumping)
         end
@@ -937,6 +961,15 @@ local function Init()
             Storage.IsRightMouseDown = false
         end
     end))
+
+    task.spawn(function()
+        while true do
+            task.wait(0.7)
+            if Config.States.ItemESP then
+                pcall(UpdateItemESP)
+            end
+        end
+    end)
 
     Notify("X PRO V3.0.0", "Tournament Pro Active! [Insert] Menu [F] Lock Target [End] Unload")
 end

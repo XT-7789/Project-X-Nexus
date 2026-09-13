@@ -61,7 +61,7 @@ local Config = {
         ShowFOV = false, HeadExpander = false, TriggerBot = false,
         ESP = false, Chams = false, Fullbright = false, Crosshair = false,
         Fly = false, LegitFly = false, Noclip = false, SpeedHack = false,
-        InfJump = false, NoFall = false, ClickTP = false
+        InfJump = false, NoFall = false, ClickTP = false, ItemESP = false
     },
     Vals = {
         FOV = 180, Smoothness = 0.3, WalkSpeed = 80, FlySpeed = 120,
@@ -72,7 +72,7 @@ local Config = {
 local Storage = {
     Connections = {}, ESPObjects = {}, CrosshairLines = {}, ToggleFuncs = {},
     FOVRingUI = nil, MainFrame = nil, OriginalLighting = {}, OriginalCollisions = {},
-    OriginalWalkSpeed = 16, IsRightMouseDown = false, TriggerCooldown = 0
+    OriginalWalkSpeed = 16, IsRightMouseDown = false, TriggerCooldown = 0, ItemESPObjects = {}
 }
 
 local function TrackConn(c)
@@ -249,6 +249,84 @@ local function RemoveESP(plr)
     end
 end
 
+
+local function ClearItemESP()
+    for obj, gui in pairs(Storage.ItemESPObjects) do
+        if gui and gui.Parent then pcall(function() gui:Destroy() end) end
+    end
+    Storage.ItemESPObjects = {}
+end
+
+local function UpdateItemESP()
+    if not Config.States.ItemESP then
+        ClearItemESP()
+        return
+    end
+    local myChar = LocalPlayer.Character
+    local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
+    if not myHrp then return end
+
+    local found = {}
+    for _, prompt in pairs(Services.Workspace:GetDescendants()) do
+        if prompt:IsA("ProximityPrompt") and prompt.Enabled then
+            local pPart = prompt.Parent
+            if pPart and pPart:IsA("BasePart") and not pPart:IsDescendantOf(myChar) then
+                local dist = (pPart.Position - myHrp.Position).Magnitude
+                if dist <= 500 then
+                    local name = prompt.ObjectText ~= "" and prompt.ObjectText or prompt.ActionText ~= "" and prompt.ActionText or pPart.Name
+                    found[pPart] = { Name = name, Dist = math.floor(dist) }
+                end
+            end
+        elseif prompt:IsA("Tool") and prompt.Parent == Services.Workspace then
+            local handle = prompt:FindFirstChild("Handle") or prompt:FindFirstChildWhichIsA("BasePart")
+            if handle then
+                local dist = (handle.Position - myHrp.Position).Magnitude
+                if dist <= 500 then
+                    found[handle] = { Name = prompt.Name, Dist = math.floor(dist) }
+                end
+            end
+        end
+    end
+
+    for part, data in pairs(found) do
+        local bg = Storage.ItemESPObjects[part]
+        if not bg or not bg.Parent then
+            bg = Instance.new("BillboardGui")
+            bg.Name = "X_ITEM_ESP"
+            bg.AlwaysOnTop = true
+            bg.Size = UDim2.new(0, 150, 0, 26)
+            bg.Adornee = part
+            bg.MaxDistance = 500
+            
+            local lbl = Instance.new("TextLabel", bg)
+            lbl.Name = "Tag"
+            lbl.Size = UDim2.new(1, 0, 1, 0)
+            lbl.BackgroundTransparency = 1
+            lbl.TextColor3 = Color3.fromRGB(255, 215, 50)
+            lbl.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+            lbl.TextStrokeTransparency = 0.2
+            lbl.Font = Enum.Font.GothamBold
+            lbl.TextSize = 11
+            lbl.Text = "📦 " .. data.Name .. " [" .. tostring(data.Dist) .. "m]"
+            
+            bg.Parent = targetGui
+            Storage.ItemESPObjects[part] = bg
+        else
+            local lbl = bg:FindFirstChild("Tag")
+            if lbl then
+                lbl.Text = "📦 " .. data.Name .. " [" .. tostring(data.Dist) .. "m]"
+            end
+        end
+    end
+
+    for part, bg in pairs(Storage.ItemESPObjects) do
+        if not found[part] or not part.Parent then
+            pcall(function() bg:Destroy() end)
+            Storage.ItemESPObjects[part] = nil
+        end
+    end
+end
+
 -- ==================================================================
 -- DUAL TAB UI (COMBAT & UTILITY)
 -- ==================================================================
@@ -406,6 +484,7 @@ local function BuildUI()
 
     -- ================= TAB 2: UTILITY =================
     AddToggle(UtilityPage, "📦 Box ESP", "ESP")
+    AddToggle(UtilityPage, "📦 Item & Loot ESP", "ItemESP", function(v) if not v then ClearItemESP() else task.spawn(UpdateItemESP) end end)
     AddToggle(UtilityPage, "✨ Chams (Highlight)", "Chams", function() Utils.UpdateChams() end)
     AddToggle(UtilityPage, "💡 Fullbright", "Fullbright", function(v) Utils.ToggleFullbright(v) end)
     AddToggle(UtilityPage, "➕ Crosshair", "Crosshair")
@@ -438,6 +517,7 @@ local function Unload()
     for _, c in pairs(Storage.Connections) do pcall(function() c:Disconnect() end) end
     Storage.Connections = {}
     for _, p in pairs(Services.Players:GetPlayers()) do RemoveESP(p) end
+    ClearItemESP()
     if Storage.CrosshairLines.H then pcall(function() Storage.CrosshairLines.H:Remove(); Storage.CrosshairLines.V:Remove() end) end
 
     Config.States.Chams = false; Utils.UpdateChams()
@@ -670,6 +750,15 @@ local function Init()
             Storage.IsRightMouseDown = false
         end
     end))
+
+    task.spawn(function()
+        while true do
+            task.wait(0.7)
+            if Config.States.ItemESP then
+                pcall(UpdateItemESP)
+            end
+        end
+    end)
 
     Notify("X MINI V4.0", "Combat Edition Ready! [Insert] Menu [End] Unload")
 end

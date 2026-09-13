@@ -58,7 +58,7 @@ local Config = {
         ShowFOV = false, HeadExpander = false, TriggerBot = false,
         ESP = false, Chams = false, Fullbright = false, Crosshair = false,
         Fly = false, Noclip = false, SpeedHack = false,
-        InfJump = false, NoFall = false
+        InfJump = false, NoFall = false, ItemESP = false
     },
     Vals = {
         FOV = 180, Smoothness = 0.32, WalkSpeed = 80, FlySpeed = 120,
@@ -71,7 +71,7 @@ local Storage = {
     FOVRingUI = nil, MainFrame = nil, MenuBubble = nil,
     FlyUpBtn = nil, FlyDownBtn = nil, FlyUpState = false, FlyDownState = false,
     OriginalLighting = {}, OriginalCollisions = {}, OriginalWalkSpeed = 16,
-    TriggerCooldown = 0, HeadBackup = {}
+    TriggerCooldown = 0, HeadBackup = {}, ItemESPObjects = {}
 }
 
 local function TrackConn(c)
@@ -402,6 +402,7 @@ local function BuildMobileUI()
 
     -- TAB 2: UTILITY & VISUALS
     AddToggle(P2, "📦 Box + Health ESP", "ESP")
+    AddToggle(P2, "📦 Item & Loot ESP", "ItemESP", function(v) if not v then ClearItemESP() else task.spawn(UpdateItemESP) end end)
     AddToggle(P2, "✨ Chams (Highlight)", "Chams", function() Utils.UpdateChams() end)
     AddToggle(P2, "💡 Fullbright", "Fullbright", function(v) Utils.ToggleFullbright(v) end)
     AddToggle(P2, "➕ Crosshair", "Crosshair")
@@ -497,6 +498,7 @@ local function Unload()
     end
     if Storage.CrosshairLines.H then pcall(function() Storage.CrosshairLines.H:Remove(); Storage.CrosshairLines.V:Remove() end) end
 
+    ClearItemESP()
     Config.States.HeadExpander = false; Utils.UpdateHeadExpander()
     Config.States.Chams = false; Utils.UpdateChams()
     Config.States.Fullbright = false; Utils.ToggleFullbright(false)
