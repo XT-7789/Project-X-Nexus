@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PRO V3.1.2 - COMPETITIVE & TOURNAMENT SUITE ]]
+-- [[ X PRO V3.1.3 - COMPETITIVE & TOURNAMENT SUITE ]]
 -- Official Seller: vlilayz | Tier: PRO (RM 20)
 -- 100% English UI | Zero Memory Leak | High Performance
 -- Features: Smart Prediction | Auto Bone Target | Silent Aim Metamethod | Skeleton ESP | 2D Tactical Radar | Weapon ESP | Off-screen Target Arrows | TriggerBot | LegitFly | Anti-Killbrick
@@ -591,7 +591,7 @@ local function MicroFlickSilentAim()
 end
 
 -- ==================================================================
--- MODERN 3-TAB UI (V3.1.2)
+-- MODERN 3-TAB UI (V3.1.3)
 -- ==================================================================
 local function BuildUI()
     local uiName = "X_PRO_V3_0_0"
@@ -613,7 +613,7 @@ local function BuildUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 8)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "⚡ X PRO <font color='#00dcff'>V3.1.2</font>"; Title.RichText = true
+    Title.Text = "⚡ X PRO <font color='#00dcff'>V3.1.3</font>"; Title.RichText = true
     Title.Size = UDim2.new(0, 130, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 14; Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -978,26 +978,32 @@ local function Init()
                                 Storage.ESPObjects[plr] = esp
                             end
 
-                            if onScreen then
-                                local headPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
-                                local height = math.abs(headPos.Y - Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0)).Y)
-                                local width = height / 1.8
+                            local rootCFrame = root.CFrame
+                            local topPos, topOn = Camera:WorldToViewportPoint((rootCFrame * CFrame.new(0, 2.4, 0)).Position)
+                            local bottomPos, bottomOn = Camera:WorldToViewportPoint((rootCFrame * CFrame.new(0, -3.2, 0)).Position)
+                            local isVisOnScreen = topOn or bottomOn
+
+                            if isVisOnScreen and topPos.Z > 0 then
+                                local height = math.abs(topPos.Y - bottomPos.Y)
+                                local width = height / 1.6
+                                local boxX = topPos.X - width / 2
+                                local boxY = math.min(topPos.Y, bottomPos.Y)
 
                                 esp.Box.Visible = true; esp.Box.Size = Vector2.new(width, height)
-                                esp.Box.Position = Vector2.new(pos.X - width / 2, pos.Y - height / 2); esp.Box.Color = color
+                                esp.Box.Position = Vector2.new(boxX, boxY); esp.Box.Color = color; esp.Box.Transparency = 1
 
                                 esp.Name.Visible = true; esp.Name.Text = plr.DisplayName
-                                esp.Name.Position = Vector2.new(pos.X, esp.Box.Position.Y - 16); esp.Name.Color = color
+                                esp.Name.Position = Vector2.new(boxX + width / 2, boxY - 16); esp.Name.Color = color
 
                                 esp.HealthBar.Visible = true
-                                esp.HealthBar.From = Vector2.new(esp.Box.Position.X - 5, esp.Box.Position.Y + height)
-                                local curHp, maxHp = Utils.GetHealth(plr, plr.Character); esp.HealthBar.To = Vector2.new(esp.Box.Position.X - 5, esp.Box.Position.Y + height - height * math.clamp(curHp / maxHp, 0, 1))
+                                esp.HealthBar.From = Vector2.new(boxX - 5, boxY + height)
+                                local curHp, maxHp = Utils.GetHealth(plr, plr.Character); esp.HealthBar.To = Vector2.new(boxX - 5, boxY + height - height * math.clamp(curHp / maxHp, 0, 1))
 
                                 if Config.States.WeaponESP then
                                     local tool = plr.Character:FindFirstChildOfClass("Tool")
                                     esp.Weapon.Visible = true
                                     esp.Weapon.Text = tool and "[" .. tool.Name .. "]" or "[Unarmed]"
-                                    esp.Weapon.Position = Vector2.new(pos.X, esp.Box.Position.Y + height + 2)
+                                    esp.Weapon.Position = Vector2.new(boxX + width / 2, boxY + height + 2)
                                 else
                                     esp.Weapon.Visible = false
                                 end
@@ -1197,7 +1203,7 @@ local function Init()
         end
     end)
 
-    Notify("X PRO V3.1.2", "Tournament Pro Active! [Insert] Menu [F] Lock Target [End] Unload")
+    Notify("X PRO V3.1.3", "Tournament Pro Active! [Insert] Menu [F] Lock Target [End] Unload")
 end
 
 Init()
