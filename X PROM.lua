@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PROM V3.4.3 - PROFESSIONAL MOBILE SUITE ]]
+-- [[ X PROM V3.5.0 - PROFESSIONAL MOBILE SUITE ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- High-Performance Zero-Lag Character Caching & 60+ FPS Optimization
 -- ==============================================================================
@@ -897,7 +897,7 @@ local function BuildMobileUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "📱 X PROM <font color='#00dcff'>V3.4.3</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
+    Title.Text = "📱 X PROM <font color='#00dcff'>V3.5.0</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
     Title.Size = UDim2.new(0, 240, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 13; Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -1309,7 +1309,7 @@ local function Init()
                                     HealthBar = Drawing.new("Line"),
                                     Weapon = Drawing.new("Text")
                                 }
-                                esp.Box.Thickness = 1.5; esp.Box.Filled = false
+                                esp.Box.Thickness = Config.Vals.ESPBoxThickness or 1.5; esp.Box.Filled = false
                                 esp.Name.Size = 12; esp.Name.Center = true; esp.Name.Outline = true; esp.Name.Color = Color3.new(1,1,1)
                                 esp.HealthBar.Thickness = 1.5; esp.HealthBar.Color = Color3.new(0,1,0)
                                 esp.Weapon.Size = 11; esp.Weapon.Center = true; esp.Weapon.Outline = true; esp.Weapon.Color = Config.Theme.Dim
@@ -1324,7 +1324,7 @@ local function Init()
                                 esp.Box.Visible = true; esp.Box.Size = Vector2.new(width, height)
                                 esp.Box.Position = Vector2.new(pos.X - width / 2, pos.Y - height / 2); esp.Box.Color = color
 
-                                esp.Name.Visible = true; esp.Name.Text = isUnspawned and (plr.DisplayName .. " [NO-SPAWN]") or plr.DisplayName
+                                esp.Name.Visible = (Config.States.ShowName ~= false); esp.Name.Text = isUnspawned and (plr.DisplayName .. " [NO-SPAWN]") or plr.DisplayName
                                 esp.Name.Position = Vector2.new(pos.X, esp.Box.Position.Y - 15); esp.Name.Color = color
 
                                 esp.HealthBar.Visible = true
@@ -1460,7 +1460,7 @@ local function Init()
         end
     end)
 
-    Notify("X PROM V3.4.3", "Delta Mobile Pro Active! Tap [⚡] for menu")
+    Notify("X PROM V3.5.0", "Delta Mobile Pro Active! Tap [⚡] for menu")
 end
 
 Init()

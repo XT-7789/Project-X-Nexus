@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V5.5.3 - TITAN GOD (APEX OMNI) ]]
+-- [[ X TITAN V5.6.0 - TITAN GOD (APEX OMNI) ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
 -- P2: Zero-Lag Character Caching, Throttled Raycasts & High-FPS Engine
@@ -58,7 +58,7 @@ end
 if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==============================================================================
--- CONFIGURATION & STORAGE (V5.5.3)
+-- CONFIGURATION & STORAGE (V5.6.0)
 -- ==============================================================================
 local Config = {
 	Keys = {
@@ -86,14 +86,16 @@ local Config = {
 		RightClickToggle = true, ShowFOV = false, TacticalLock = false,
 		ShowLockStatus = true, SmartPrediction = true, AutoAimPart = true,
 		LegitFly = false, ServerDesync = false, CFrameSpeed = false, Radar = false, ItemESP = false, VehicleBoost = false, VehicleFly = false,
-		WeaponESP = true, OffscreenArrows = false, NoRecoil = false, DetectUnspawned = true
+		WeaponESP = true, OffscreenArrows = false, NoRecoil = false, DetectUnspawned = true,
+		ShowDistance = true, ShowHealth = true, ShowName = true
 	},
 	Vals = {
 		FOV = 200, OrbitDistance = 8, OrbitSpeed = 8, FlingPower = 100000, WalkSpeed = 150, FlySpeed = 150, HitboxSize = 15, HeadSize = 25,
 		AimbotSmoothness = 0.3, PredictionStrength = 0.16, DesyncPower = 5,
 		AuraRange = 25, TPBehindDist = 4, TriggerDelay = 0.15,
 		AntiAimSpinSpeed = 10, AntiAimJitterRadius = 5, AimPart = "Head",
-		Deadzone = 5, PingCompensation = 0.05, RadarRange = 100, LegitFlySmooth = 0.1, VehicleSpeed = 180
+		Deadzone = 5, PingCompensation = 0.05, RadarRange = 100, LegitFlySmooth = 0.1, VehicleSpeed = 180,
+		ESPRefreshRate = 0.3, ESPBoxThickness = 1.5, ESPTextSize = 13, ItemScanInterval = 1.5, TracerOrigin = "Bottom"
 	}
 }
 
@@ -148,7 +150,7 @@ _G.X_TITAN_CURRENT_INSTANCE = {
 }
 
 -- ==============================================================================
--- UTILITIES (V5.5.3)
+-- UTILITIES (V5.6.0)
 -- ==============================================================================
 local Utils = {}
 _G.X_TITAN_CURRENT_INSTANCE.Utils = Utils
@@ -333,7 +335,7 @@ function Utils.GetCharacterData(plr)
 	if not plr then return nil end
 	local now = tick()
 	local cached = Storage.CharCache[plr]
-	if cached and (now - cached.LastResolve < 0.4) then
+	if cached and (now - cached.LastResolve < (Config.Vals.ESPRefreshRate or 0.3)) then
 		if cached.Char and cached.Char.Parent and cached.Root and cached.Root.Parent then
 			-- Real-time alive check so death is registered instantly
 			local isAlive, isUnspawned = Utils.IsAlive(plr, cached.Char, cached.Hum)
@@ -1011,9 +1013,9 @@ function Features.GetAuraTarget()
 end
 
 -- ==============================================================================
--- UI SYSTEM (V5.5.3)
+-- UI SYSTEM (V5.6.0)
 -- ==============================================================================
--- ITEM & LOOT ESP SUBSYSTEM (V5.5.3)
+-- ITEM & LOOT ESP SUBSYSTEM (V5.6.0)
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
 		pcall(function() bg:Destroy() end)
@@ -1154,7 +1156,7 @@ function UI.Init()
 	Title.Font = Enum.Font.GothamBlack; Title.TextSize = 16; Title.TextXAlignment = Enum.TextXAlignment.Left
 
 	local Subtitle = Instance.new("TextLabel", SidePanel)
-	Subtitle.Text = "VOID WALKER • V5.5.3"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
+	Subtitle.Text = "VOID WALKER • V5.6.0"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
 	Subtitle.BackgroundTransparency = 1; Subtitle.TextColor3 = Config.Theme.TextDim
 	Subtitle.Font = Enum.Font.GothamBold; Subtitle.TextSize = 9; Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 	
@@ -1446,6 +1448,44 @@ function UI.Init()
 	AddToggle(P2, "X-Ray", "XRay", getOrder2)
 	AddToggle(P2, "Fullbright", "Fullbright", getOrder2)
 	
+	AddSection(P2, "👑 VIP ENGINE & ESP CUSTOMIZATION", getOrder2)
+	AddSlider(P2, "⚡ ESP Polling Delay (1=0.1s, 10=1.0s)", 1, 10, 3, function(v) Config.Vals.ESPRefreshRate = v / 10 end, getOrder2)
+	AddSlider(P2, "📦 Item Scan Delay (sec)", 5, 30, 15, function(v) Config.Vals.ItemScanInterval = v / 10 end, getOrder2)
+	AddSlider(P2, "✏️ ESP Line Thickness", 10, 40, 15, function(v)
+		Config.Vals.ESPBoxThickness = v / 10
+		for _, e in pairs(Storage.ESPObjects) do if e.Box then e.Box.Thickness = Config.Vals.ESPBoxThickness end end
+	end, getOrder2)
+	AddSlider(P2, "🔤 ESP Text Size", 9, 18, 13, function(v)
+		Config.Vals.ESPTextSize = v
+		for _, e in pairs(Storage.ESPObjects) do
+			if e.Name then e.Name.Size = v end
+			if e.Distance then e.Distance.Size = v - 1 end
+		end
+	end, getOrder2)
+	AddDual(P2, "🎯 Tracer Origin", function()
+		if Config.Vals.TracerOrigin == "Bottom" then Config.Vals.TracerOrigin = "Center"
+		elseif Config.Vals.TracerOrigin == "Center" then Config.Vals.TracerOrigin = "Mouse"
+		else Config.Vals.TracerOrigin = "Bottom" end
+		Utils.Notify("Tracer Origin", "Origin set to: " .. Config.Vals.TracerOrigin)
+	end, "🎨 Cycle VIP Theme", function()
+		local themes = {"Cyan", "Crimson", "Toxic", "Violet", "Gold"}
+		local colors = {
+			Cyan = Color3.fromRGB(0, 255, 255),
+			Crimson = Color3.fromRGB(255, 55, 85),
+			Toxic = Color3.fromRGB(50, 255, 120),
+			Violet = Color3.fromRGB(190, 80, 255),
+			Gold = Color3.fromRGB(255, 200, 40)
+		}
+		Storage.ThemeIndex = ((Storage.ThemeIndex or 1) % #themes) + 1
+		local tName = themes[Storage.ThemeIndex]
+		Config.Theme.Stroke = colors[tName]
+		if Storage.FOVRingUI and Storage.FOVRingUI:FindFirstChild("UIStroke") then Storage.FOVRingUI.UIStroke.Color = colors[tName] end
+		Utils.Notify("🎨 Theme Applied", "VIP Theme set to: " .. tName)
+	end, getOrder2)
+	AddToggle(P2, "Show Player Names", "ShowName", getOrder2)
+	AddToggle(P2, "Show Health Bar", "ShowHealth", getOrder2)
+	AddToggle(P2, "Show Distance", "ShowDistance", getOrder2)
+
 	AddSection(P2, "RADAR", getOrder2)
 	AddToggle(P2, "📡 Smart Threat Radar", "Radar", getOrder2)
 	AddSlider(P2, "Radar Range", 50, 500, 100, function(v) Config.Vals.RadarRange = v end, getOrder2)
@@ -1610,7 +1650,7 @@ function UI.Init()
 end
 
 -- ==============================================================================
--- CORE EXPLOIT HOOKS (V5.5.3 - ALL BUGS FIXED)
+-- CORE EXPLOIT HOOKS (V5.6.0 - ALL BUGS FIXED)
 -- ==============================================================================
 local HasTitanMetamethodHook = false
 
@@ -1800,11 +1840,11 @@ end)
 table.insert(Storage.Loops, auraLoop)
 
 -- ==============================================================================
--- RUNTIME (V5.5.3)
+-- RUNTIME (V5.6.0)
 -- ==============================================================================
 local Runtime = {}
 function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.5.3 - TITAN GOD (APEX OMNI)...")
+	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.6.0 - TITAN GOD (APEX OMNI)...")
 	Storage.IsUnloaded = true
 	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
 	Storage.Loops = {}
@@ -1907,7 +1947,7 @@ function Runtime.Unload()
 	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
 	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
 	Storage.RadarObjects = {}
-	print("X TITAN V5.5.3 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
+	print("X TITAN V5.6.0 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
 end
 
 local function InitRadar()
@@ -2449,8 +2489,15 @@ function Runtime.Init()
 						pcall(function()
 							local ln = Storage.TracerLines[plr] or Drawing.new("Line"); Storage.TracerLines[plr] = ln
 							if onScreen and topPos.Z > 0 then
-								ln.Visible = true; ln.Thickness = 1.5; ln.Color = drawColor
-								ln.From = center; ln.To = Vector2.new(bottomPos.X, bottomPos.Y)
+								ln.Visible = true; ln.Thickness = Config.Vals.ESPBoxThickness or 1.5; ln.Color = drawColor
+								local tOrigin = center
+								if Config.Vals.TracerOrigin == "Bottom" then
+									tOrigin = Vector2.new(center.X, CurrentCam.ViewportSize.Y)
+								elseif Config.Vals.TracerOrigin == "Mouse" then
+									local mPos = Services.UIS:GetMouseLocation()
+									tOrigin = Vector2.new(mPos.X, mPos.Y)
+								end
+								ln.From = tOrigin; ln.To = Vector2.new(bottomPos.X, bottomPos.Y)
 							else
 								ln.Visible = false
 							end
@@ -2497,11 +2544,12 @@ function Runtime.Init()
 						if Config.States.ESP then
 							pcall(function()
 								esp.Box.Visible = true; esp.Box.Size = Vector2.new(width, height); esp.Box.Position = Vector2.new(boxX, boxY); esp.Box.Color = drawColor; esp.Box.Transparency = 1
-								esp.Name.Visible = true; esp.Name.Text = isUnspawned and (plr.DisplayName .. " [NO-SPAWN]") or plr.DisplayName; esp.Name.Position = Vector2.new(boxX + width / 2, boxY - 16); esp.Name.Color = drawColor
-								esp.HealthBar.Visible = true; local curHp, maxHp = Utils.GetHealth(plr, pChar); local healthRatio = math.clamp(curHp / maxHp, 0, 1)
+								esp.Box.Thickness = Config.Vals.ESPBoxThickness or 1.5
+								esp.Name.Visible = (Config.States.ShowName ~= false); esp.Name.Size = Config.Vals.ESPTextSize or 13; esp.Name.Text = isUnspawned and (plr.DisplayName .. " [NO-SPAWN]") or plr.DisplayName; esp.Name.Position = Vector2.new(boxX + width / 2, boxY - 16); esp.Name.Color = drawColor
+								esp.HealthBar.Visible = (Config.States.ShowHealth ~= false); local curHp, maxHp = Utils.GetHealth(plr, pChar); local healthRatio = math.clamp(curHp / maxHp, 0, 1)
 								esp.HealthBar.Color = Color3.new(1 - healthRatio, healthRatio, 0)
 								esp.HealthBar.From = Vector2.new(boxX - 5, boxY + height); esp.HealthBar.To = Vector2.new(boxX - 5, boxY + height - height * healthRatio)
-								esp.Distance.Visible = true; esp.Distance.Text = string.format("%.0fm", (root.Position - (hrp and hrp.Position or root.Position)).Magnitude)
+								esp.Distance.Visible = (Config.States.ShowDistance ~= false); esp.Distance.Size = (Config.Vals.ESPTextSize or 13) - 1; esp.Distance.Text = string.format("%.0fm", (root.Position - (hrp and hrp.Position or root.Position)).Magnitude)
 								esp.Distance.Position = Vector2.new(boxX + width / 2, boxY + height + 2); esp.Distance.Color = drawColor
 								if Config.States.WeaponESP and esp.Weapon then
 									local tool = pChar:FindFirstChildOfClass("Tool") or pChar:FindFirstChild("Gun") or pChar:FindFirstChild("EquippedTool")
@@ -2570,7 +2618,7 @@ function Runtime.Init()
 			end
 			return
 		end
-		-- [V5.5.3] Rainbow Chams & HUD Accent
+		-- [V5.6.0] Rainbow Chams & HUD Accent
 		if Config.States.NoRecoil and LocalPlayer.Character then
 			pcall(function()
 				local myChar = LocalPlayer.Character
@@ -2591,7 +2639,7 @@ function Runtime.Init()
 			Config.Theme.Stroke = rainbow
 		end
 
-		-- [V5.5.3] Touch Fling Logic (PlayerCache Optimized)
+		-- [V5.6.0] Touch Fling Logic (PlayerCache Optimized)
 		if Config.States.TouchFling and hrp then
 			for p, data in pairs(Storage.PlayerCache) do
 				if not (Config.States.TeamCheck and Utils.IsTeammate(p)) then
@@ -2604,7 +2652,7 @@ function Runtime.Init()
 			end
 		end
 
-		-- [V5.5.3] Orbit Stalker Aura
+		-- [V5.6.0] Orbit Stalker Aura
 		if Config.States.OrbitAura and Storage.LockedTarget and Storage.LockedTarget.Character and hrp then
 			local tHRP = Storage.LockedTarget.Character:FindFirstChild("HumanoidRootPart")
 			if tHRP then
@@ -2615,7 +2663,7 @@ function Runtime.Init()
 			end
 		end
 
-		-- [V5.5.3] Anti-Fling Immortality (PlayerCache Optimized)
+		-- [V5.6.0] Anti-Fling Immortality (PlayerCache Optimized)
 		if Config.States.AntiFling and hrp then
 			for p, data in pairs(Storage.PlayerCache) do
 				local otherHRP = data.Root
@@ -3011,7 +3059,7 @@ end
 
 local itemLoop = task.spawn(function()
 	while true do
-		task.wait(1.5)
+		task.wait(Config.Vals.ItemScanInterval or 1.5)
 		if Storage.IsUnloaded then break end
 		if Config.States.ItemESP then
 			pcall(UpdateItemESP)
@@ -3022,5 +3070,5 @@ table.insert(Storage.Loops, itemLoop)
 
 Runtime.Init()
 _G.X_TITAN_INSTANCE = { Config = Config, Storage = Storage, Utils = Utils, Features = Features, Runtime = Runtime }
-Utils.Notify("✅ X TITAN V5.5.3 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
-print("X TITAN V5.5.3 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
+Utils.Notify("✅ X TITAN V5.6.0 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
+print("X TITAN V5.6.0 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")

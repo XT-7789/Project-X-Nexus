@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PRO V3.4.3 - PROFESSIONAL SUITE ]]
+-- [[ X PRO V3.5.0 - PROFESSIONAL SUITE ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- High-Performance Zero-Lag Character Caching & 60+ FPS Optimization
 -- ==============================================================================
@@ -868,7 +868,7 @@ local function MicroFlickSilentAim()
 end
 
 -- ==================================================================
--- MODERN 3-TAB UI (V3.4.3)
+-- MODERN 3-TAB UI (V3.5.0)
 -- ==================================================================
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
@@ -977,7 +977,7 @@ local function BuildUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 8)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "⚡ X PRO <font color='#00dcff'>V3.4.3</font>"; Title.RichText = true
+    Title.Text = "⚡ X PRO <font color='#00dcff'>V3.5.0</font>"; Title.RichText = true
     Title.Size = UDim2.new(0, 130, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 14; Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -1339,7 +1339,7 @@ local function Init()
                                     HealthBar = Drawing.new("Line"),
                                     Weapon = Drawing.new("Text")
                                 }
-                                esp.Box.Thickness = 1.5; esp.Box.Filled = false
+                                esp.Box.Thickness = Config.Vals.ESPBoxThickness or 1.5; esp.Box.Filled = false
                                 esp.Name.Size = 13; esp.Name.Center = true; esp.Name.Outline = true; esp.Name.Color = Color3.new(1,1,1)
                                 esp.HealthBar.Thickness = 1.5; esp.HealthBar.Color = Color3.new(0,1,0)
                                 esp.Weapon.Size = 11; esp.Weapon.Center = true; esp.Weapon.Outline = true; esp.Weapon.Color = Config.Theme.Dim
@@ -1360,7 +1360,7 @@ local function Init()
                                 esp.Box.Visible = true; esp.Box.Size = Vector2.new(width, height)
                                 esp.Box.Position = Vector2.new(boxX, boxY); esp.Box.Color = color; esp.Box.Transparency = 1
 
-                                esp.Name.Visible = true; esp.Name.Text = isUnspawned and (plr.DisplayName .. " [NO-SPAWN]") or plr.DisplayName
+                                esp.Name.Visible = (Config.States.ShowName ~= false); esp.Name.Text = isUnspawned and (plr.DisplayName .. " [NO-SPAWN]") or plr.DisplayName
                                 esp.Name.Position = Vector2.new(boxX + width / 2, boxY - 16); esp.Name.Color = color
 
                                 esp.HealthBar.Visible = true
@@ -1571,7 +1571,7 @@ local function Init()
         end
     end)
 
-    Notify("X PRO V3.4.3", "Tournament Pro Active! [Insert] Menu [F] Lock Target [End] Unload")
+    Notify("X PRO V3.5.0", "Tournament Pro Active! [Insert] Menu [F] Lock Target [End] Unload")
 end
 
 Init()
