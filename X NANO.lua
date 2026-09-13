@@ -33,10 +33,25 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 
 local targetGui
 if type(gethui) == "function" then
-	targetGui = gethui()
-else
-	local s, c = pcall(function() return game:GetService("CoreGui") end)
-	if s and c then targetGui = c else targetGui = LocalPlayer:WaitForChild("PlayerGui") end
+	pcall(function() targetGui = gethui() end)
+end
+if not targetGui then
+	local canCore = false
+	pcall(function()
+		local test = Instance.new("ScreenGui")
+		test.Name = "_X_TEST_"
+		test.Parent = game:GetService("CoreGui")
+		test:Destroy()
+		canCore = true
+	end)
+	if canCore then
+		targetGui = game:GetService("CoreGui")
+	else
+		targetGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui", 10)
+	end
+end
+if not targetGui then
+	pcall(function() targetGui = LocalPlayer:WaitForChild("PlayerGui") end)
 end
 if not targetGui then warn("X NANO: GUI Target failed!") return end
 
@@ -492,10 +507,15 @@ local function Init()
 
 	-- Hotkeys
 	TrackConn(Services.UIS.InputBegan:Connect(function(input, gpe)
+		if input.KeyCode == Config.Keys.Menu or input.KeyCode == Enum.KeyCode.RightControl then
+			local focused = Services.UIS:GetFocusedTextBox()
+			if not focused then
+				if Storage.MainFrame then Storage.MainFrame.Visible = not Storage.MainFrame.Visible end
+				return
+			end
+		end
 		if gpe then return end
-		if input.KeyCode == Config.Keys.Menu then
-			if Storage.MainFrame then Storage.MainFrame.Visible = not Storage.MainFrame.Visible end
-		elseif input.KeyCode == Config.Keys.Fly then
+		if input.KeyCode == Config.Keys.Fly then
 			if Storage.ToggleFuncs["Fly"] then Storage.ToggleFuncs["Fly"](not Config.States.Fly) end
 		elseif input.KeyCode == Config.Keys.Noclip then
 			if Storage.ToggleFuncs["Noclip"] then Storage.ToggleFuncs["Noclip"](not Config.States.Noclip) end

@@ -122,7 +122,7 @@ if isMasterMiniPlus then
 	if isMobile then
 		loadstring(game:HttpGet(repo .. "X%20MINIM.lua"))()
 	else
-		loadstring(game:HttpGet(repo .. "X%20MINI"))()
+		loadstring(game:HttpGet(repo .. "X%20MINI.lua"))()
 	end
 elseif string.lower(tier) == "litem" then
 	loadstring(game:HttpGet(repo .. "X%20LITEM.lua"))()
@@ -145,7 +145,7 @@ elseif string.lower(tier) == "nano" then
 		loadstring(game:HttpGet(repo .. "X%20NANO.lua"))()
 	end
 elseif string.lower(tier) == "mini" then
-	loadstring(game:HttpGet(repo .. "X%20MINI"))()
+	loadstring(game:HttpGet(repo .. "X%20MINI.lua"))()
 elseif string.lower(tier) == "pro" then
 	if isMobile then
 		loadstring(game:HttpGet(repo .. "X%20PROM.lua"))()

@@ -33,10 +33,26 @@ local Mouse = LocalPlayer:GetMouse()
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local targetGui
-if type(gethui) == "function" then targetGui = gethui()
-else
-	local s, c = pcall(function() return game:GetService("CoreGui") end)
-	if s and c then targetGui = c else targetGui = LocalPlayer:WaitForChild("PlayerGui") end
+if type(gethui) == "function" then
+	pcall(function() targetGui = gethui() end)
+end
+if not targetGui then
+	local canCore = false
+	pcall(function()
+		local test = Instance.new("ScreenGui")
+		test.Name = "_X_TEST_"
+		test.Parent = game:GetService("CoreGui")
+		test:Destroy()
+		canCore = true
+	end)
+	if canCore then
+		targetGui = game:GetService("CoreGui")
+	else
+		targetGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui", 10)
+	end
+end
+if not targetGui then
+	pcall(function() targetGui = LocalPlayer:WaitForChild("PlayerGui") end)
 end
 if not targetGui then warn("X TITAN: GUI Target failed!") return end
 
@@ -1911,13 +1927,17 @@ Runtime.Init()
 	-- INPUT
 	-- ======================================================================
 	local inputBeganConn = Services.UIS.InputBegan:Connect(function(i, g)
-		if g then return end
-		if i.KeyCode == Config.Keys.Menu and Storage.MainFrame then
-			if not Storage.MenuDebounce then
-				Storage.MenuDebounce = true; Storage.MainFrame.Visible = not Storage.MainFrame.Visible
-				task.delay(0.2, function() Storage.MenuDebounce = false end)
+		if (i.KeyCode == Config.Keys.Menu or i.KeyCode == Enum.KeyCode.RightControl) and Storage.MainFrame then
+			local focused = Services.UIS:GetFocusedTextBox()
+			if not focused then
+				if not Storage.MenuDebounce then
+					Storage.MenuDebounce = true; Storage.MainFrame.Visible = not Storage.MainFrame.Visible
+					task.delay(0.2, function() Storage.MenuDebounce = false end)
+				end
+				return
 			end
 		end
+		if g then return end
 		if i.KeyCode == Config.Keys.Unload then Runtime.Unload(); return end
 		if i.UserInputType == Enum.UserInputType.MouseButton2 and Config.States.RightClickToggle then Config.States.Aimbot = true end
 		if i.KeyCode == Config.Keys.Fly then
