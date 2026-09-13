@@ -401,7 +401,15 @@ local function BuildMobileUI()
     AddToggle(P1, "🧱 Wall Check", "WallCheck")
 
     -- TAB 2: UTILITY & VISUALS
-    AddToggle(P2, "📦 Box + Health ESP", "ESP")
+    AddToggle(P2, "📦 Box + Health ESP", "ESP", function(v)
+        if not v and Drawing then
+            for _, esp in pairs(Storage.ESPObjects) do
+                if esp.Box then esp.Box.Visible = false end
+                if esp.Name then esp.Name.Visible = false end
+                if esp.HealthBar then esp.HealthBar.Visible = false end
+            end
+        end
+    end)
     AddToggle(P2, "📦 Item & Loot ESP", "ItemESP", function(v) if not v then ClearItemESP() else task.spawn(UpdateItemESP) end end)
     AddToggle(P2, "✨ Chams (Highlight)", "Chams", function() Utils.UpdateChams() end)
     AddToggle(P2, "💡 Fullbright", "Fullbright", function(v) Utils.ToggleFullbright(v) end)
@@ -600,17 +608,17 @@ local function Init()
 
         -- ESP & Crosshair
         if Drawing then
-            for _, plr in pairs(Services.Players:GetPlayers()) do
-                if plr ~= LocalPlayer and plr.Character then
-                    local root = plr.Character:FindFirstChild("HumanoidRootPart")
-                    local head = plr.Character:FindFirstChild("Head")
-                    local hum = plr.Character:FindFirstChildOfClass("Humanoid")
+            if Config.States.ESP then
+                for _, plr in pairs(Services.Players:GetPlayers()) do
+                    if plr ~= LocalPlayer and plr.Character then
+                        local root = plr.Character:FindFirstChild("HumanoidRootPart")
+                        local head = plr.Character:FindFirstChild("Head")
+                        local hum = plr.Character:FindFirstChildOfClass("Humanoid")
 
-                    if root and head and hum and hum.Health > 0 then
-                        local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
-                        local color = (Config.States.TeamCheck and Utils.IsTeammate(plr)) and Config.Theme.Team or Config.Theme.Accent
+                        if root and head and hum and hum.Health > 0 then
+                            local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
+                            local color = (Config.States.TeamCheck and Utils.IsTeammate(plr)) and Config.Theme.Team or Config.Theme.Accent
 
-                        if Config.States.ESP then
                             local esp = Storage.ESPObjects[plr]
                             if not esp then
                                 esp = { Box = Drawing.new("Square"), Name = Drawing.new("Text"), HealthBar = Drawing.new("Line") }
@@ -640,7 +648,15 @@ local function Init()
                         elseif Storage.ESPObjects[plr] then
                             Storage.ESPObjects[plr].Box.Visible = false; Storage.ESPObjects[plr].Name.Visible = false; Storage.ESPObjects[plr].HealthBar.Visible = false
                         end
+                    elseif Storage.ESPObjects[plr] then
+                        Storage.ESPObjects[plr].Box.Visible = false; Storage.ESPObjects[plr].Name.Visible = false; Storage.ESPObjects[plr].HealthBar.Visible = false
                     end
+                end
+            else
+                for _, esp in pairs(Storage.ESPObjects) do
+                    if esp.Box then esp.Box.Visible = false end
+                    if esp.Name then esp.Name.Visible = false end
+                    if esp.HealthBar then esp.HealthBar.Visible = false end
                 end
             end
 

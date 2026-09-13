@@ -458,7 +458,14 @@ local function BuildMobileUI()
 		if Storage.FOVRingUI then Storage.FOVRingUI.Size = UDim2.new(0, v * 2, 0, v * 2) end
 	end)
 	AddToggle("🛡️ Team Check", "TeamCheck")
-	AddToggle("📦 Box ESP", "ESP")
+	AddToggle("📦 Box ESP", "ESP", function(v)
+        if not v and Drawing then
+            for _, esp in pairs(Storage.ESPObjects) do
+                if esp.Box then esp.Box.Visible = false end
+                if esp.Name then esp.Name.Visible = false end
+            end
+        end
+    end)
 	AddToggle("✨ Chams Glow (Highlight)", "Chams", function() UpdateChams() end)
 	AddToggle("💡 Fullbright", "Fullbright", function(v) ToggleFullbright(v) end)
 	AddToggle("🦅 Touch Fly (▲▼ Controls)", "Fly", function(v)

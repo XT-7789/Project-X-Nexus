@@ -575,7 +575,16 @@ local function BuildUI()
     AddToggle(P1, "🧱 Wall Check", "WallCheck")
 
     -- TAB 2: VISUALS
-    AddToggle(P2, "📦 Box ESP", "ESP")
+    AddToggle(P2, "📦 Box ESP", "ESP", function(v)
+        if not v and Drawing then
+            for _, esp in pairs(Storage.ESPObjects) do
+                if esp.Box then esp.Box.Visible = false end
+                if esp.Name then esp.Name.Visible = false end
+                if esp.HealthBar then esp.HealthBar.Visible = false end
+                if esp.Weapon then esp.Weapon.Visible = false end
+            end
+        end
+    end)
     AddToggle(P2, "📦 Item & Loot ESP", "ItemESP", function(v) if not v then ClearItemESP() else task.spawn(UpdateItemESP) end end)
     AddToggle(P2, "🔫 Weapon / Tool ESP", "WeaponESP")
     AddToggle(P2, "🦴 Skeleton ESP", "ESPSkeleton")

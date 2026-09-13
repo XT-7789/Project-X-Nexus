@@ -483,7 +483,15 @@ local function BuildUI()
     AddSlider(CombatPage, "Head Size", 2, 35, "HeadSize")
 
     -- ================= TAB 2: UTILITY =================
-    AddToggle(UtilityPage, "📦 Box ESP", "ESP")
+    AddToggle(UtilityPage, "📦 Box ESP", "ESP", function(v)
+        if not v and Drawing then
+            for _, esp in pairs(Storage.ESPObjects) do
+                if esp.Box then esp.Box.Visible = false end
+                if esp.Name then esp.Name.Visible = false end
+                if esp.HealthBar then esp.HealthBar.Visible = false end
+            end
+        end
+    end)
     AddToggle(UtilityPage, "📦 Item & Loot ESP", "ItemESP", function(v) if not v then ClearItemESP() else task.spawn(UpdateItemESP) end end)
     AddToggle(UtilityPage, "✨ Chams (Highlight)", "Chams", function() Utils.UpdateChams() end)
     AddToggle(UtilityPage, "💡 Fullbright", "Fullbright", function(v) Utils.ToggleFullbright(v) end)
@@ -618,7 +626,7 @@ local function Init()
         end
 
         -- Drawing ESP
-        if Drawing and (Config.States.ESP or Config.States.Crosshair) then
+        if Drawing then
             if Config.States.ESP then
                 for plr, esp in pairs(Storage.ESPObjects) do
                     local char = plr.Character
@@ -649,6 +657,12 @@ local function Init()
                     else
                         esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false
                     end
+                end
+            else
+                for _, esp in pairs(Storage.ESPObjects) do
+                    if esp.Box then esp.Box.Visible = false end
+                    if esp.Name then esp.Name.Visible = false end
+                    if esp.HealthBar then esp.HealthBar.Visible = false end
                 end
             end
 

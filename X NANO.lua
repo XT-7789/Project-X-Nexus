@@ -321,7 +321,14 @@ local function BuildUI()
 		if Storage.FOVRingUI then Storage.FOVRingUI.Size = UDim2.new(0, v * 2, 0, v * 2) end
 	end)
 	AddToggle("🛡️ Team Check", "TeamCheck")
-	AddToggle("📦 Box ESP", "ESP")
+	AddToggle("📦 Box ESP", "ESP", function(v)
+        if not v and Drawing then
+            for _, esp in pairs(Storage.ESPObjects) do
+                if esp.Box then esp.Box.Visible = false end
+                if esp.Name then esp.Name.Visible = false end
+            end
+        end
+    end)
 	AddToggle("✨ Chams (Glow)", "Chams", function() UpdateChams() end)
 	AddToggle("🦅 Fly Mode [Z]", "Fly", function() UpdateCollisions() end)
 	AddSlider("Fly Speed", 20, 300, "FlySpeed")
@@ -415,35 +422,42 @@ local function Init()
 		end
 
 		-- Box ESP
-		if Config.States.ESP and Drawing then
-			for plr, esp in pairs(Storage.ESPObjects) do
-				local char = plr.Character
-				local root = char and char:FindFirstChild("HumanoidRootPart")
-				local head = char and char:FindFirstChild("Head")
-				local hum = char and char:FindFirstChildOfClass("Humanoid")
+		if Drawing then
+			if Config.States.ESP then
+				for plr, esp in pairs(Storage.ESPObjects) do
+					local char = plr.Character
+					local root = char and char:FindFirstChild("HumanoidRootPart")
+					local head = char and char:FindFirstChild("Head")
+					local hum = char and char:FindFirstChildOfClass("Humanoid")
 
-				if char and root and head and hum and hum.Health > 0 then
-					local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
-					local color = (Config.States.TeamCheck and IsTeammate(plr)) and Config.Theme.Team or Config.Theme.Accent
-					if onScreen then
-						local headPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
-						local height = math.abs(headPos.Y - Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0)).Y)
-						local width = height / 1.8
+					if char and root and head and hum and hum.Health > 0 then
+						local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
+						local color = (Config.States.TeamCheck and IsTeammate(plr)) and Config.Theme.Team or Config.Theme.Accent
+						if onScreen then
+							local headPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+							local height = math.abs(headPos.Y - Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0)).Y)
+							local width = height / 1.8
 
-						esp.Box.Visible = true
-						esp.Box.Size = Vector2.new(width, height)
-						esp.Box.Position = Vector2.new(pos.X - width / 2, pos.Y - height / 2)
-						esp.Box.Color = color
+							esp.Box.Visible = true
+							esp.Box.Size = Vector2.new(width, height)
+							esp.Box.Position = Vector2.new(pos.X - width / 2, pos.Y - height / 2)
+							esp.Box.Color = color
 
-						esp.Name.Visible = true
-						esp.Name.Text = plr.DisplayName
-						esp.Name.Position = Vector2.new(pos.X, esp.Box.Position.Y - 16)
-						esp.Name.Color = color
+							esp.Name.Visible = true
+							esp.Name.Text = plr.DisplayName
+							esp.Name.Position = Vector2.new(pos.X, esp.Box.Position.Y - 16)
+							esp.Name.Color = color
+						else
+							esp.Box.Visible = false; esp.Name.Visible = false
+						end
 					else
 						esp.Box.Visible = false; esp.Name.Visible = false
 					end
-				else
-					esp.Box.Visible = false; esp.Name.Visible = false
+				end
+			else
+				for _, esp in pairs(Storage.ESPObjects) do
+					if esp.Box then esp.Box.Visible = false end
+					if esp.Name then esp.Name.Visible = false end
 				end
 			end
 		end
