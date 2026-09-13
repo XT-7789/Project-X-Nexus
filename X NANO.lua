@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X NANO V3.0.0 - ULTRA LIGHTWEIGHT EDITION ]]
+-- [[ X NANO V3.1.0 - ULTRA LIGHTWEIGHT EDITION ]]
 -- 定位: 极速启动 / 低配友好 / 核心战斗 / 零卡顿
 -- 包含: 平滑自瞄(带FOV) | 极简ESP(Box+Chams) | 极速移动(Fly/Noclip/Speed/Jump) | 干净卸载
 -- ==================================================================
@@ -90,16 +90,27 @@ local function IsTeammate(plr)
 	return false
 end
 
+local function IsAlive(plr, char)
+	if not plr or not char then return false end
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	if not hum or hum.Health <= 0 then return false end
+	if char:FindFirstChild("Dead") or char:FindFirstChild("Killed") then return false end
+	if plr:FindFirstChild("Status") and plr.Status:FindFirstChild("Dead") and plr.Status.Dead.Value == true then return false end
+	local hrp = char:FindFirstChild("HumanoidRootPart")
+	if not hrp or hrp.Transparency >= 0.99 then return false end
+	return true
+end
+
 local function GetClosestTarget()
 	local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 	local closestDist, target = Config.Vals.FOV, nil
 
 	for _, p in pairs(Services.Players:GetPlayers()) do
 		if p == LocalPlayer or not p.Character then continue end
+		if not IsAlive(p, p.Character) then continue end
 		if Config.States.TeamCheck and IsTeammate(p) then continue end
-		local hum = p.Character:FindFirstChildOfClass("Humanoid")
 		local head = p.Character:FindFirstChild("Head")
-		if not hum or not head or hum.Health <= 0 then continue end
+		if not head then continue end
 
 		local pos, onScreen = Camera:WorldToViewportPoint(head.Position)
 		if onScreen then
@@ -116,7 +127,7 @@ end
 local function UpdateCollisions()
 	local char = LocalPlayer.Character
 	if not char then return end
-	local shouldNoclip = Config.States.Fly or Config.States.Noclip
+	local shouldNoclip = Config.States.Noclip
 	for _, v in pairs(char:GetDescendants()) do
 		if v:IsA("BasePart") then
 			if shouldNoclip then
@@ -203,6 +214,59 @@ end
 -- ==================================================================
 -- ULTRA COMPACT CARD UI
 -- ==================================================================
+local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or "")
+local isNanoPlus = string.find(string.upper(activeKey), "X%-NANO%-PRO%-X") ~= nil or string.find(string.upper(activeKey), "X%-PRO") ~= nil or string.find(string.upper(activeKey), "X%-TITAN") ~= nil
+
+-- [TIER 1 & 2] NANO+ PRO-X SILENT AIM ENGINE
+local HasNanoHook = false
+if isNanoPlus then
+	if type(hookmetamethod) == "function" and type(getnamecallmethod) == "function" then
+		local safeUnpack = table.unpack or unpack
+		pcall(function()
+			local oldNamecall
+			oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+				local method = getnamecallmethod()
+				local args = {...}
+				if Config.States.SilentAim and (method == "Raycast" or method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRay") then
+					local targetPart = GetClosestTarget()
+					if targetPart and targetPart.Parent then
+						local predPos = targetPart.Position
+						if method == "Raycast" then
+							args[2] = (predPos - args[1]).Unit * 5000
+							return oldNamecall(self, safeUnpack(args))
+						else
+							local ray = args[1]
+							args[1] = Ray.new(ray.Origin, (predPos - ray.Origin).Unit * 5000)
+							return oldNamecall(self, safeUnpack(args))
+						end
+					end
+				end
+				return oldNamecall(self, ...)
+			end)
+		end)
+	end
+	pcall(function()
+		if type(getrawmetatable) == "function" and type(setreadonly) == "function" then
+			local mt = getrawmetatable(game)
+			if mt then
+				setreadonly(mt, false)
+				local oldIdx = mt.__index
+				mt.__index = function(t, k)
+					if Config.States.SilentAim and (t:IsA("Mouse") or tostring(t) == "Mouse") then
+						local tp = GetClosestTarget()
+						if tp then
+							if k == "Hit" then return CFrame.new(tp.Position)
+							elseif k == "Target" then return tp end
+						end
+				end
+					return oldIdx(t, k)
+				end
+				setreadonly(mt, true)
+			end
+		end
+	end)
+end
+
 local function BuildUI()
 	local uiName = "X_NANO_V3_0_0"
 	if targetGui:FindFirstChild(uiName) then targetGui[uiName]:Destroy() end
@@ -226,7 +290,11 @@ local function BuildUI()
 	Instance.new("UICorner", Bar).CornerRadius = UDim.new(0, 8)
 	
 	local Title = Instance.new("TextLabel", Bar)
-	Title.Text = "⚡ X NANO <font color='#8c8c96'>V3.0</font>"; Title.RichText = true
+	if isNanoPlus then
+		Title.Text = "⚡ X NANO<font color='#00e5ff'>+</font> <font color='#ffcd32'>[PRO-X]</font>"; Title.RichText = true
+	else
+		Title.Text = "⚡ X NANO <font color='#8c8c96'>V3.1</font>"; Title.RichText = true
+	end
 	Title.Size = UDim2.new(1, -40, 1, 0); Title.Position = UDim2.new(0, 12, 0, 0)
 	Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Accent
 	Title.Font = Enum.Font.GothamBold; Title.TextSize = 14; Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -318,6 +386,9 @@ local function BuildUI()
 	end
 
 	-- Add Nano Feature Set
+	if isNanoPlus then
+		AddToggle("🔥 Silent Aim (PRO-X)", "SilentAim")
+	end
 	AddToggle("🎯 Aimbot (Smooth)", "Aimbot")
 	AddToggle("⭕ Show FOV", "ShowFOV", function(v) if Storage.FOVRingUI then Storage.FOVRingUI.Visible = v end end)
 	AddSlider("FOV Radius", 50, 400, "FOV", function(v)
@@ -409,7 +480,7 @@ local function Init()
 			hum.FallDistance = 0
 		end
 
-		if Config.States.Fly or Config.States.Noclip then
+		if Config.States.Noclip then
 			UpdateCollisions()
 		end
 	end))
@@ -433,7 +504,7 @@ local function Init()
 					local head = char and char:FindFirstChild("Head")
 					local hum = char and char:FindFirstChildOfClass("Humanoid")
 
-					if char and root and head and hum and hum.Health > 0 then
+					if char and root and head and hum and IsAlive(plr, plr.Character) then
 						local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
 						local color = (Config.States.TeamCheck and IsTeammate(plr)) and Config.Theme.Team or Config.Theme.Accent
 						if onScreen then

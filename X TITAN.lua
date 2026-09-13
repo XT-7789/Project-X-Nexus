@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V5.2.0 - VOID WALKER (SPECIAL VIP EXCLUSIVE) ]]
+-- [[ X TITAN V5.2.1.1 - VOID WALKER (SPECIAL VIP EXCLUSIVE) ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
 -- P2: RenderStepped Target Caching & Collision Loop Optimization
@@ -45,7 +45,7 @@ end
 if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==============================================================================
--- CONFIGURATION & STORAGE (V5.2.0)
+-- CONFIGURATION & STORAGE (V5.2.1.1)
 -- ==============================================================================
 local Config = {
 	Keys = {
@@ -133,7 +133,7 @@ _G.X_TITAN_CURRENT_INSTANCE = {
 }
 
 -- ==============================================================================
--- UTILITIES (V5.2.0)
+-- UTILITIES (V5.2.1.1)
 -- ==============================================================================
 local Utils = {}
 _G.X_TITAN_CURRENT_INSTANCE.Utils = Utils
@@ -685,9 +685,9 @@ function Features.GetAuraTarget()
 end
 
 -- ==============================================================================
--- UI SYSTEM (V5.2.0)
+-- UI SYSTEM (V5.2.1.1)
 -- ==============================================================================
--- ITEM & LOOT ESP SUBSYSTEM (V5.2.0)
+-- ITEM & LOOT ESP SUBSYSTEM (V5.2.1.1)
 local function ClearItemESP()
 	for obj, gui in pairs(Storage.ItemESPObjects) do
 		if gui and gui.Parent then pcall(function() gui:Destroy() end) end
@@ -763,7 +763,7 @@ end
 
 local UI = {}
 function UI.Init()
-	local guiName = "X_TITAN_V520"
+	local guiName = "X_TITAN_V521"
 	if targetGui:FindFirstChild(guiName) then targetGui[guiName]:Destroy() end
 	
 	local ScreenGui = Instance.new("ScreenGui", targetGui)
@@ -814,7 +814,7 @@ function UI.Init()
 	Title.Font = Enum.Font.GothamBlack; Title.TextSize = 16; Title.TextXAlignment = Enum.TextXAlignment.Left
 
 	local Subtitle = Instance.new("TextLabel", SidePanel)
-	Subtitle.Text = "VOID WALKER • V5.2"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
+	Subtitle.Text = "VOID WALKER • V5.2.1"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
 	Subtitle.BackgroundTransparency = 1; Subtitle.TextColor3 = Config.Theme.TextDim
 	Subtitle.Font = Enum.Font.GothamBold; Subtitle.TextSize = 9; Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 	
@@ -1013,10 +1013,10 @@ function UI.Init()
 		for _, bind in ipairs(binds) do
 			local F = Instance.new("Frame", page)
 			F.LayoutOrder = getOrder(); F.Size = UDim2.new(1, -4, 0, 22); F.BackgroundTransparency = 1
-			local L = Instance.new("TextLabel", F); L.Size = UDim2.new(0.6, 0, 1, 0); L.Position = UDim2.new(0, 10, 0, 0)
+			local L = Instance.new("TextLabel", F); L.Size = UDim2.new(0.55, 0, 1, 0); L.Position = UDim2.new(0, 10, 0, 0)
 			L.BackgroundTransparency = 1; L.Text = bind[1]; L.TextColor3 = Config.Theme.Text; L.Font = Enum.Font.GothamBold; L.TextSize = 10
 			L.TextXAlignment = Enum.TextXAlignment.Left
-			local K = Instance.new("TextLabel", F); K.Size = UDim2.new(0.35, 0, 1, 0); K.Position = UDim2.new(0.65, 0, 0, 0)
+			local K = Instance.new("TextLabel", F); K.Size = UDim2.new(0.4, 0, 1, 0); K.Position = UDim2.new(0.6, -20, 0, 0)
 			K.BackgroundTransparency = 1; K.Text = bind[2]; K.TextColor3 = Config.Theme.Stroke; K.Font = Enum.Font.GothamBlack; K.TextSize = 10
 			K.TextXAlignment = Enum.TextXAlignment.Right
 		end
@@ -1254,7 +1254,7 @@ function UI.Init()
 end
 
 -- ==============================================================================
--- CORE EXPLOIT HOOKS (V5.2.0 - ALL BUGS FIXED)
+-- CORE EXPLOIT HOOKS (V5.2.1.1 - ALL BUGS FIXED)
 -- ==============================================================================
 local HasTitanMetamethodHook = false
 
@@ -1444,11 +1444,11 @@ end)
 table.insert(Storage.Loops, auraLoop)
 
 -- ==============================================================================
--- RUNTIME (V5.2.0)
+-- RUNTIME (V5.2.1.1)
 -- ==============================================================================
 local Runtime = {}
 function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.2.0 - TITAN GOD (APEX OMNI)...")
+	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.2.1.1 - TITAN GOD (APEX OMNI)...")
 	Storage.IsUnloaded = true
 	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
 	Storage.Loops = {}
@@ -1549,13 +1549,13 @@ function Runtime.Unload()
 	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
 	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
 	Storage.RadarObjects = {}
-	print("X TITAN V5.2.0 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
+	print("X TITAN V5.2.1.1 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
 end
 
 local function InitRadar()
 	if Storage.RadarGui then return end
 	local RadarGui = Instance.new("ScreenGui", targetGui)
-	RadarGui.Name = "X_RADAR_V520"; RadarGui.IgnoreGuiInset = true; RadarGui.DisplayOrder = 9999998
+	RadarGui.Name = "X_RADAR_V521"; RadarGui.IgnoreGuiInset = true; RadarGui.DisplayOrder = 9999998
 	Storage.RadarGui = RadarGui
 	
 	local RadarFrame = Instance.new("Frame", RadarGui)
@@ -1670,7 +1670,7 @@ function Runtime.Init()
 	end
 	Storage.OriginalFallenHeight = Services.Workspace.FallenPartsDestroyHeight
 	
-	local FOVGui = Instance.new("ScreenGui", targetGui); FOVGui.Name = "X_FOV_V520"; FOVGui.IgnoreGuiInset = true; FOVGui.DisplayOrder = 9999999
+	local FOVGui = Instance.new("ScreenGui", targetGui); FOVGui.Name = "X_FOV_V521"; FOVGui.IgnoreGuiInset = true; FOVGui.DisplayOrder = 9999999
 	local FOVFrame = Instance.new("Frame", FOVGui)
 	FOVFrame.AnchorPoint = Vector2.new(0.5, 0.5); FOVFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 	FOVFrame.BackgroundTransparency = 1; FOVFrame.Visible = false
@@ -1678,7 +1678,7 @@ function Runtime.Init()
 	Instance.new("UICorner", FOVFrame).CornerRadius = UDim.new(1, 0); Storage.FOVRingUI = FOVFrame
 	
 	local TacticalHUDGui = Instance.new("ScreenGui", targetGui)
-	TacticalHUDGui.Name = "X_TacticalHUD_V520"; TacticalHUDGui.IgnoreGuiInset = true; TacticalHUDGui.DisplayOrder = 9999998
+	TacticalHUDGui.Name = "X_TacticalHUD_V521"; TacticalHUDGui.IgnoreGuiInset = true; TacticalHUDGui.DisplayOrder = 9999998
 	local MainPanel = Instance.new("Frame", TacticalHUDGui)
 	MainPanel.Size = UDim2.new(0, 260, 0, 75); MainPanel.AnchorPoint = Vector2.new(0.5, 0)
 	MainPanel.Position = UDim2.new(0.5, 0, 0.65, 0); MainPanel.BackgroundColor3 = Color3.fromRGB(10, 12, 18)
@@ -2169,7 +2169,7 @@ function Runtime.Init()
 			end
 			return
 		end
-		-- [V5.2.0] Rainbow Chams & HUD Accent
+		-- [V5.2.1.1] Rainbow Chams & HUD Accent
 		if Config.States.NoRecoil and LocalPlayer.Character then
 			pcall(function()
 				local myChar = LocalPlayer.Character
@@ -2190,7 +2190,7 @@ function Runtime.Init()
 			Config.Theme.Stroke = rainbow
 		end
 
-		-- [V5.2.0] Touch Fling Logic (PlayerCache Optimized)
+		-- [V5.2.1.1] Touch Fling Logic (PlayerCache Optimized)
 		if Config.States.TouchFling and hrp then
 			for p, data in pairs(Storage.PlayerCache) do
 				if not (Config.States.TeamCheck and Utils.IsTeammate(p)) then
@@ -2203,7 +2203,7 @@ function Runtime.Init()
 			end
 		end
 
-		-- [V5.2.0] Orbit Stalker Aura
+		-- [V5.2.1.1] Orbit Stalker Aura
 		if Config.States.OrbitAura and Storage.LockedTarget and Storage.LockedTarget.Character and hrp then
 			local tHRP = Storage.LockedTarget.Character:FindFirstChild("HumanoidRootPart")
 			if tHRP then
@@ -2214,7 +2214,7 @@ function Runtime.Init()
 			end
 		end
 
-		-- [V5.2.0] Anti-Fling Immortality (PlayerCache Optimized)
+		-- [V5.2.1.1] Anti-Fling Immortality (PlayerCache Optimized)
 		if Config.States.AntiFling and hrp then
 			for p, data in pairs(Storage.PlayerCache) do
 				local otherHRP = data.Root
@@ -2319,7 +2319,7 @@ function Runtime.Init()
 		end
 		
 		-- [ZERO-LAG COLLISION ENGINE] Only modify/restore when active states change
-		local needsNoCollide = Config.States.Noclip or Config.States.Fly or Storage.IsHiding
+		local needsNoCollide = Config.States.Noclip or Storage.IsHiding
 		local needsNoTouch = Config.States.AntiKillbrick
 		if needsNoCollide then
 			if not Storage.NoCollideActive then
@@ -2620,5 +2620,5 @@ end)
 table.insert(Storage.Loops, itemLoop)
 
 Runtime.Init()
-Utils.Notify("✅ X TITAN V5.2.0 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
-print("X TITAN V5.2.0 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
+Utils.Notify("✅ X TITAN V5.2.1.1 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
+print("X TITAN V5.2.1.1 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")

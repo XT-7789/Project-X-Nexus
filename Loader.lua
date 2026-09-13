@@ -59,6 +59,7 @@ if not key or key == "" or key == "PASTE_YOUR_KEY_HERE" or key == "YOUR_KEY_HERE
 end
 
 local isMasterMiniPlus = (string.upper(tostring(key)) == "X-MINI-PRO-X")
+local isMasterNanoPlus = (string.upper(tostring(key)) == "X-NANO-PRO-X")
 local tier
 
 Notify("⚡ X SUITE", "Authenticating Key & Verifying HWID...", 2)
@@ -94,9 +95,11 @@ if not data.success then
 	return
 end
 
-tier = data.tier or (isMasterMiniPlus and "Mini" or "Nano")
+tier = data.tier or (isMasterNanoPlus and "Nano" or (isMasterMiniPlus and "Mini" or "Nano"))
 
-if isMasterMiniPlus then
+if isMasterNanoPlus then
+	Notify("👑 X NANO+ PRIVILEGED", "Founder Key X-NANO-PRO-X Verified! Silent Aim Unlocked.", 3)
+elseif isMasterMiniPlus then
 	Notify("👑 X MINI+ PRIVILEGED", "Founder Key X-MINI-PRO-X Verified! Silent Aim Unlocked.", 3)
 end
 
@@ -108,26 +111,28 @@ local isMobile = Services.UIS.TouchEnabled and not Services.UIS.KeyboardEnabled
 Notify("✅ SUCCESS", "Welcome! Loading X " .. tostring(tier) .. "...", 3)
 print("==========================================")
 print("✅ [PROJECT X NEXUS] ACCESS GRANTED")
-if isMasterMiniPlus then
-	print("👑 X MINI+ V4.0.0 [PRO-X EDITION] LOADED - SILENT AIM UNLOCKED")
+if isMasterNanoPlus then
+	print("👑 X NANO+ V3.1.0 [PRO-X EDITION] LOADED - SILENT AIM UNLOCKED")
+elseif isMasterMiniPlus then
+	print("👑 X MINI+ V4.0.1 [PRO-X EDITION] LOADED - SILENT AIM UNLOCKED")
 elseif string.lower(tier) == "litem" then
 	print("📱 X LITEM V1.0.0 LOADED")
 elseif string.lower(tier) == "lite" then
 	print(isMobile and "📱 X LITEM V1.0.0 LOADED" or "🎁 X LITE V1.0.0 LOADED")
 elseif string.lower(tier) == "mini" then
-	print("📦 X MINI V4.0.0 LOADED")
+	print("📦 X MINI V4.0.1 LOADED")
 elseif string.lower(tier) == "minim" then
-	print("📱 X MINIM V4.0.0 LOADED")
+	print("📱 X MINIM V4.0.1 LOADED")
 elseif string.lower(tier) == "prom" then
-	print("📱 X PROM V3.0.0 LOADED")
+	print("📱 X PROM V3.1.1 LOADED")
 elseif string.lower(tier) == "nanom" then
-	print("📱 X NANOM V3.0.0 LOADED")
+	print("📱 X NANOM V3.1.0 LOADED")
 elseif string.lower(tier) == "nano" then
-	print(isMobile and "📱 X NANOM V3.0.0 LOADED" or "🪶 X NANO V3.0.0 LOADED")
+	print(isMobile and "📱 X NANOM V3.1.0 LOADED" or "🪶 X NANO V3.1.0 LOADED")
 elseif string.lower(tier) == "pro" then
-	print(isMobile and "📱 X PROM V3.1.0 LOADED" or "⚡ X PRO V3.1.0 LOADED")
+	print(isMobile and "📱 X PROM V3.1.1 LOADED" or "⚡ X PRO V3.1.1 LOADED")
 elseif string.lower(tier) == "titan" then
-	print("🔥 X TITAN V5.2.0 [VOID WALKER] LOADED")
+	print("🔥 X TITAN V5.2.1 [VOID WALKER] LOADED")
 else
 	print("⚡ X " .. string.upper(tostring(tier)) .. " LOADED")
 end
@@ -135,7 +140,13 @@ print("👑 FOUNDER & DEV : XT-7789")
 print("💬 DISCORD SELLER: vlilayz")
 print("==========================================")
 
-if isMasterMiniPlus then
+if isMasterNanoPlus then
+	if isMobile then
+		loadstring(SafeHttpGet(repo .. "X%20NANOM.lua"))()
+	else
+		loadstring(SafeHttpGet(repo .. "X%20NANO.lua"))()
+	end
+elseif isMasterMiniPlus then
 	if isMobile then
 		loadstring(SafeHttpGet(repo .. "X%20MINIM.lua"))()
 	else

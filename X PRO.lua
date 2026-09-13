@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PRO V3.1.0 - COMPETITIVE & TOURNAMENT SUITE ]]
+-- [[ X PRO V3.1.1 - COMPETITIVE & TOURNAMENT SUITE ]]
 -- Official Seller: vlilayz | Tier: PRO (RM 20)
 -- 100% English UI | Zero Memory Leak | High Performance
 -- Features: Smart Prediction | Auto Bone Target | Silent Aim Metamethod | Skeleton ESP | 2D Tactical Radar | Weapon ESP | Off-screen Target Arrows | TriggerBot | LegitFly | Anti-Killbrick
@@ -298,7 +298,7 @@ end
 function Utils.UpdateCollisions()
     local char = LocalPlayer.Character
     if not char then return end
-    local shouldNoclip = Config.States.Fly or Config.States.Noclip
+    local shouldNoclip = Config.States.Noclip
     for _, v in pairs(char:GetDescendants()) do
         if v:IsA("BasePart") then
             if shouldNoclip then
@@ -591,7 +591,7 @@ local function MicroFlickSilentAim()
 end
 
 -- ==================================================================
--- MODERN 3-TAB UI (V3.1.0)
+-- MODERN 3-TAB UI (V3.1.1)
 -- ==================================================================
 local function BuildUI()
     local uiName = "X_PRO_V3_0_0"
@@ -613,7 +613,7 @@ local function BuildUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 8)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "⚡ X PRO <font color='#00dcff'>V3.1.0</font>"; Title.RichText = true
+    Title.Text = "⚡ X PRO <font color='#00dcff'>V3.1.1</font>"; Title.RichText = true
     Title.Size = UDim2.new(0, 160, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
 
     -- Header Unload Button
@@ -1175,7 +1175,7 @@ local function Init()
         end
     end)
 
-    Notify("X PRO V3.1.0", "Tournament Pro Active! [Insert] Menu [F] Lock Target [End] Unload")
+    Notify("X PRO V3.1.1", "Tournament Pro Active! [Insert] Menu [F] Lock Target [End] Unload")
 end
 
 Init()

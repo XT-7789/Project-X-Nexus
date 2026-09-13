@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PROM V3.1.0 - MOBILE TOURNAMENT SUITE ]]
+-- [[ X PROM V3.1.1 - MOBILE TOURNAMENT SUITE ]]
 -- Official Seller: vlilayz | Tier: PROM (RM 20)
 -- Specially Crafted for Delta Mobile / iOS / Android / Tablet
 -- 100% Zero Keyboard Required | Touch Floating Bubble | Mobile Silent Aim
@@ -258,7 +258,7 @@ end
 function Utils.UpdateCollisions()
     local char = LocalPlayer.Character
     if not char then return end
-    local shouldNoclip = Config.States.Fly or Config.States.Noclip
+    local shouldNoclip = Config.States.Noclip
     for _, v in pairs(char:GetDescendants()) do
         if v:IsA("BasePart") then
             if shouldNoclip then
@@ -534,7 +534,7 @@ local function BuildMobileUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "📱 X PROM <font color='#00dcff'>V3.1.0</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
+    Title.Text = "📱 X PROM <font color='#00dcff'>V3.1.1</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
     Title.Size = UDim2.new(0, 240, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 13; Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -1087,7 +1087,7 @@ local function Init()
         end
     end)
 
-    Notify("X PROM V3.1.0", "Delta Mobile Pro Active! Tap [⚡] for menu")
+    Notify("X PROM V3.1.1", "Delta Mobile Pro Active! Tap [⚡] for menu")
 end
 
 Init()
