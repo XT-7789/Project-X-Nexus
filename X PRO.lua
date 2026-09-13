@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PRO V3.3.0 - COMPETITIVE & TOURNAMENT SUITE ]]
+-- [[ X PRO V3.4.0 - COMPETITIVE & TOURNAMENT SUITE ]]
 -- Official Seller: vlilayz | Tier: PRO (RM 20)
 -- 100% English UI | Zero Memory Leak | High Performance
 -- Features: Smart Prediction | Auto Bone Target | Silent Aim Metamethod | Skeleton ESP | 2D Tactical Radar | Weapon ESP | Off-screen Target Arrows | TriggerBot | LegitFly | Anti-Killbrick
@@ -70,7 +70,7 @@ local Config = {
         Tracers = false, Chams = false, Fullbright = false, Crosshair = false,
         Radar = false, HitSound = true, NoRecoil = false,
         Fly = false, LegitFly = false, SpeedHack = false, InfJump = false,
-        Noclip = false, NoFall = false, ClickTP = false, AntiKillbrick = false, ItemESP = false, VehicleBoost = false
+        Noclip = false, NoFall = false, ClickTP = false, AntiKillbrick = false, ItemESP = false, VehicleBoost = false, DetectUnspawned = true
     },
     Vals = {
         FOV = 180, Smoothness = 0.28, PredictionStrength = 0.14,
@@ -308,16 +308,33 @@ function Utils.GetCharacterData(plr)
 	if not plr then return nil end
 	local char = plr.Character
 	if not char or not char.Parent or not char:IsDescendantOf(Services.Workspace) then
-		for _, fName in ipairs({"Characters", "Players", "Entities", "Soldiers", "Rigs", "Actors", "Zombies", "Bots", "NPCs", "Alive", "Spawns", "Survivors", "Humans", "InGame", "World", "Game", "Map", "Living", "Deadzone"}) do
+		-- 1. Check common player / character containers
+		for _, fName in ipairs({"Characters", "Players", "Entities", "Soldiers", "Rigs", "Actors", "Zombies", "Bots", "NPCs", "Alive", "Spawns", "Survivors", "Humans", "InGame", "World", "Game", "Map", "Living", "Deadzone", "Lobby", "Spawning", "Menu", "Spawned"}) do
 			local f = Services.Workspace:FindFirstChild(fName)
 			if f then
-				char = f:FindFirstChild(plr.Name) or f:FindFirstChild(tostring(plr.UserId))
+				char = f:FindFirstChild(plr.Name) or f:FindFirstChild(tostring(plr.UserId)) or f:FindFirstChild(plr.DisplayName)
 				if char and char:IsDescendantOf(Services.Workspace) then break end
 				char = nil
 			end
 		end
+		-- 2. Direct child of Workspace
 		if not char then
-			char = Services.Workspace:FindFirstChild(plr.Name)
+			char = Services.Workspace:FindFirstChild(plr.Name) or Services.Workspace:FindFirstChild(tostring(plr.UserId)) or Services.Workspace:FindFirstChild(plr.DisplayName)
+		end
+		-- 3. Search for models with Player/UserId attribute or child value
+		if not char then
+			for _, m in ipairs(Services.Workspace:GetChildren()) do
+				if m:IsA("Model") then
+					local owner = m:GetAttribute("Player") or m:GetAttribute("Owner") or m:GetAttribute("UserId") or m:GetAttribute("Username")
+					if owner and (owner == plr.Name or owner == tostring(plr.UserId) or owner == plr.DisplayName) then
+						char = m; break
+					end
+					local pVal = m:FindFirstChild("Player") or m:FindFirstChild("Owner")
+					if pVal and pVal:IsA("ObjectValue") and pVal.Value == plr then
+						char = m; break
+					end
+				end
+			end
 		end
 	end
 	if not char or not char:IsDescendantOf(Services.Workspace) then return nil end
@@ -401,20 +418,21 @@ function Utils.IsAlive(arg1, arg2, arg3)
 		hum = arg2
 		plr = arg3 or (char and Services.Players:GetPlayerFromCharacter(char))
 	end
-	if not char or not char.Parent or not char:IsDescendantOf(Services.Workspace) then return false end
+	if not char or not char.Parent or not char:IsDescendantOf(Services.Workspace) then return false, false end
 
-	-- 1. Arsenal Specific Death & Spawn Checks (ONLY in real Arsenal: PlaceId or NRPBS, NEVER Workspace.Debris)
-	local isArsenal = (game.PlaceId == 286090429 or game.GameId == 111958650 or (plr and plr:FindFirstChild("NRPBS") ~= nil))
-	if isArsenal then
-		local nrpbs = plr and plr:FindFirstChild("NRPBS")
-		if nrpbs then
-			local hpVal = nrpbs:FindFirstChild("Health")
-			if hpVal and hpVal:IsA("ValueBase") and (tonumber(hpVal.Value) or 0) <= 0 then return false end
-		end
-		if not char:FindFirstChild("Spawned") then return false end
+	-- 1. Root / BasePart Validation
+	local root = char.PrimaryPart or char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or char:FindFirstChildWhichIsA("BasePart")
+	if not root then return false, false end
+
+	-- Void check: if truly fallen into abyss below -3000
+	if root.Position.Y < -3000 or math.abs(root.Position.X) > 200000 or math.abs(root.Position.Z) > 200000 then
+		return false, false
 	end
 
-	-- 2. General Dead / Ragdoll tags check (Only actual BoolValues/ValueBase/Folders, never scripts or animations)
+	-- 2. Detect if player is in Lobby / Spawn / Menu / Faraway unspawned box
+	local isFarawayLobby = (root.Position.Y > 3000 or math.abs(root.Position.X) > 5000 or math.abs(root.Position.Z) > 5000)
+
+	-- 3. Dead / Ragdoll check (Only actual BoolValues/ValueBase/Folders, never scripts or animations)
 	local function isDeadObj(obj)
 		if not obj then return false end
 		if obj:IsA("BoolValue") then return obj.Value == true end
@@ -428,39 +446,60 @@ function Utils.IsAlive(arg1, arg2, arg3)
 		return false
 	end
 
-	if isDeadObj(char:FindFirstChild("Dead")) or isDeadObj(char:FindFirstChild("Ragdoll")) or isDeadObj(char:FindFirstChild("Died")) or isDeadObj(char:FindFirstChild("Corpse")) or isDeadObj(char:FindFirstChild("Killed")) then
-		return false
+	local isRagdoll = isDeadObj(char:FindFirstChild("Dead")) or isDeadObj(char:FindFirstChild("Ragdoll")) or isDeadObj(char:FindFirstChild("Died")) or isDeadObj(char:FindFirstChild("Corpse")) or isDeadObj(char:FindFirstChild("Killed"))
+	if isRagdoll then
+		return false, false
 	end
 	if plr and plr:FindFirstChild("Status") and plr.Status:FindFirstChild("Dead") and isDeadObj(plr.Status.Dead) then
-		return false
+		return false, false
 	end
 
-	-- 3. Humanoid State & Health Check (Standard Roblox)
+	-- 4. Arsenal Specific Death & Spawn Checks
+	local isArsenal = (game.PlaceId == 286090429 or game.GameId == 111958650 or (plr and plr:FindFirstChild("NRPBS") ~= nil))
+	if isArsenal then
+		local nrpbs = plr and plr:FindFirstChild("NRPBS")
+		if nrpbs then
+			local hpVal = nrpbs:FindFirstChild("Health")
+			if hpVal and hpVal:IsA("ValueBase") and (tonumber(hpVal.Value) or 0) <= 0 then
+				return false, false
+			end
+		end
+		if not char:FindFirstChild("Spawned") then
+			-- In Arsenal, character without Spawned is in Deploy/Menu/Unspawned screen
+			return false, true
+		end
+	end
+
+	-- 5. Humanoid State & Health Check (Standard Roblox)
 	hum = hum or char:FindFirstChildOfClass("Humanoid")
 	if hum then
-		if hum.Health <= 0 then return false end
+		if hum.Health <= 0 then
+			if isFarawayLobby or not char:FindFirstChild("Head") then
+				return false, true
+			end
+			return false, false
+		end
 		local ok, state = pcall(function() return hum:GetState() end)
-		if ok and state == Enum.HumanoidStateType.Dead then return false end
+		if ok and state == Enum.HumanoidStateType.Dead then
+			return false, false
+		end
 	else
 		-- Custom Body Games (Phantom Forces, Frontlines, Doors, Custom Rigs)
 		local hpVal = char:FindFirstChild("Health") or char:FindFirstChild("HP") or char:FindFirstChild("hp") or (plr and plr:FindFirstChild("Status") and plr.Status:FindFirstChild("Health"))
 		if hpVal and hpVal:IsA("ValueBase") and tonumber(hpVal.Value) ~= nil and tonumber(hpVal.Value) <= 0 then
-			return false
+			return false, false
 		end
 		local hpAttr = char:GetAttribute("Health") or char:GetAttribute("HP") or char:GetAttribute("hp")
 		if hpAttr ~= nil and tonumber(hpAttr) ~= nil and tonumber(hpAttr) <= 0 then
-			return false
+			return false, false
 		end
 	end
 
-	-- 4. Root / BasePart Validation
-	local root = char.PrimaryPart or char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or char:FindFirstChildWhichIsA("BasePart")
-	if not root then return false end
-	if root.Position.Y < -1500 or math.abs(root.Position.X) > 100000 or math.abs(root.Position.Z) > 100000 then
-		return false
+	if isFarawayLobby then
+		return false, true
 	end
 
-	return true
+	return true, false
 end
 
 function Utils.IsTeammate(plr)
@@ -831,7 +870,7 @@ local function MicroFlickSilentAim()
 end
 
 -- ==================================================================
--- MODERN 3-TAB UI (V3.3.0)
+-- MODERN 3-TAB UI (V3.4.0)
 -- ==================================================================
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
@@ -970,7 +1009,7 @@ local function BuildUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 8)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "⚡ X PRO <font color='#00dcff'>V3.3.0</font>"; Title.RichText = true
+    Title.Text = "⚡ X PRO <font color='#00dcff'>V3.4.0</font>"; Title.RichText = true
     Title.Size = UDim2.new(0, 130, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 14; Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -1130,6 +1169,7 @@ local function BuildUI()
     AddToggle(P1, "🧱 Wall Check", "WallCheck")
 
     -- TAB 2: VISUALS
+    AddToggle(P2, "👻 Detect No-Spawn / Lobby", "DetectUnspawned")
     AddToggle(P2, "📦 Box ESP", "ESP", function(v)
         if not v and Drawing then
             for _, esp in pairs(Storage.ESPObjects) do
@@ -1315,9 +1355,10 @@ local function Init()
                     local head = cData.Head
                     local hum = cData.Hum
 
-                    if Utils.IsAlive(cData.Char, hum, plr) then
+                    local isAlive, isUnspawned = Utils.IsAlive(cData.Char, hum, plr)
+                    if isAlive or (Config.States.DetectUnspawned and isUnspawned) then
                         local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
-                        local color = (Config.States.TeamCheck and Utils.IsTeammate(plr)) and Config.Theme.Team or Config.Theme.Accent
+                        local color = isUnspawned and Color3.fromRGB(190, 130, 255) or ((Config.States.TeamCheck and Utils.IsTeammate(plr)) and Config.Theme.Team or Config.Theme.Accent)
 
                         -- Box + Weapon ESP
                         if Config.States.ESP then
@@ -1350,7 +1391,7 @@ local function Init()
                                 esp.Box.Visible = true; esp.Box.Size = Vector2.new(width, height)
                                 esp.Box.Position = Vector2.new(boxX, boxY); esp.Box.Color = color; esp.Box.Transparency = 1
 
-                                esp.Name.Visible = true; esp.Name.Text = plr.DisplayName
+                                esp.Name.Visible = true; esp.Name.Text = isUnspawned and (plr.DisplayName .. " [NO-SPAWN]") or plr.DisplayName
                                 esp.Name.Position = Vector2.new(boxX + width / 2, boxY - 16); esp.Name.Color = color
 
                                 esp.HealthBar.Visible = true
@@ -1561,7 +1602,7 @@ local function Init()
         end
     end)
 
-    Notify("X PRO V3.3.0", "Tournament Pro Active! [Insert] Menu [F] Lock Target [End] Unload")
+    Notify("X PRO V3.4.0", "Tournament Pro Active! [Insert] Menu [F] Lock Target [End] Unload")
 end
 
 Init()

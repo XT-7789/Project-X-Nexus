@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V5.4.0 - VOID WALKER (SPECIAL VIP EXCLUSIVE) ]]
+-- [[ X TITAN V5.5.0 - VOID WALKER (SPECIAL VIP EXCLUSIVE) ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
 -- P2: RenderStepped Target Caching & Collision Loop Optimization
@@ -45,7 +45,7 @@ end
 if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==============================================================================
--- CONFIGURATION & STORAGE (V5.4.0)
+-- CONFIGURATION & STORAGE (V5.5.0)
 -- ==============================================================================
 local Config = {
 	Keys = {
@@ -73,7 +73,7 @@ local Config = {
 		RightClickToggle = true, ShowFOV = false, TacticalLock = false,
 		ShowLockStatus = true, SmartPrediction = true, AutoAimPart = true,
 		LegitFly = false, ServerDesync = false, CFrameSpeed = false, Radar = false, ItemESP = false, VehicleBoost = false, VehicleFly = false,
-		WeaponESP = true, OffscreenArrows = false, NoRecoil = false
+		WeaponESP = true, OffscreenArrows = false, NoRecoil = false, DetectUnspawned = true
 	},
 	Vals = {
 		FOV = 200, OrbitDistance = 8, OrbitSpeed = 8, FlingPower = 100000, WalkSpeed = 150, FlySpeed = 150, HitboxSize = 15, HeadSize = 25,
@@ -133,7 +133,7 @@ _G.X_TITAN_CURRENT_INSTANCE = {
 }
 
 -- ==============================================================================
--- UTILITIES (V5.4.0)
+-- UTILITIES (V5.5.0)
 -- ==============================================================================
 local Utils = {}
 _G.X_TITAN_CURRENT_INSTANCE.Utils = Utils
@@ -314,16 +314,33 @@ function Utils.GetCharacterData(plr)
 	if not plr then return nil end
 	local char = plr.Character
 	if not char or not char.Parent or not char:IsDescendantOf(Services.Workspace) then
-		for _, fName in ipairs({"Characters", "Players", "Entities", "Soldiers", "Rigs", "Actors", "Zombies", "Bots", "NPCs", "Alive", "Spawns", "Survivors", "Humans", "InGame", "World", "Game", "Map", "Living", "Deadzone"}) do
+		-- 1. Check common player / character containers
+		for _, fName in ipairs({"Characters", "Players", "Entities", "Soldiers", "Rigs", "Actors", "Zombies", "Bots", "NPCs", "Alive", "Spawns", "Survivors", "Humans", "InGame", "World", "Game", "Map", "Living", "Deadzone", "Lobby", "Spawning", "Menu", "Spawned"}) do
 			local f = Services.Workspace:FindFirstChild(fName)
 			if f then
-				char = f:FindFirstChild(plr.Name) or f:FindFirstChild(tostring(plr.UserId))
+				char = f:FindFirstChild(plr.Name) or f:FindFirstChild(tostring(plr.UserId)) or f:FindFirstChild(plr.DisplayName)
 				if char and char:IsDescendantOf(Services.Workspace) then break end
 				char = nil
 			end
 		end
+		-- 2. Direct child of Workspace
 		if not char then
-			char = Services.Workspace:FindFirstChild(plr.Name)
+			char = Services.Workspace:FindFirstChild(plr.Name) or Services.Workspace:FindFirstChild(tostring(plr.UserId)) or Services.Workspace:FindFirstChild(plr.DisplayName)
+		end
+		-- 3. Search for models with Player/UserId attribute or child value
+		if not char then
+			for _, m in ipairs(Services.Workspace:GetChildren()) do
+				if m:IsA("Model") then
+					local owner = m:GetAttribute("Player") or m:GetAttribute("Owner") or m:GetAttribute("UserId") or m:GetAttribute("Username")
+					if owner and (owner == plr.Name or owner == tostring(plr.UserId) or owner == plr.DisplayName) then
+						char = m; break
+					end
+					local pVal = m:FindFirstChild("Player") or m:FindFirstChild("Owner")
+					if pVal and pVal:IsA("ObjectValue") and pVal.Value == plr then
+						char = m; break
+					end
+				end
+			end
 		end
 	end
 	if not char or not char:IsDescendantOf(Services.Workspace) then return nil end
@@ -407,20 +424,21 @@ function Utils.IsAlive(arg1, arg2, arg3)
 		hum = arg2
 		plr = arg3 or (char and Services.Players:GetPlayerFromCharacter(char))
 	end
-	if not char or not char.Parent or not char:IsDescendantOf(Services.Workspace) then return false end
+	if not char or not char.Parent or not char:IsDescendantOf(Services.Workspace) then return false, false end
 
-	-- 1. Arsenal Specific Death & Spawn Checks (ONLY in real Arsenal: PlaceId or NRPBS, NEVER Workspace.Debris)
-	local isArsenal = (game.PlaceId == 286090429 or game.GameId == 111958650 or (plr and plr:FindFirstChild("NRPBS") ~= nil))
-	if isArsenal then
-		local nrpbs = plr and plr:FindFirstChild("NRPBS")
-		if nrpbs then
-			local hpVal = nrpbs:FindFirstChild("Health")
-			if hpVal and hpVal:IsA("ValueBase") and (tonumber(hpVal.Value) or 0) <= 0 then return false end
-		end
-		if not char:FindFirstChild("Spawned") then return false end
+	-- 1. Root / BasePart Validation
+	local root = char.PrimaryPart or char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or char:FindFirstChildWhichIsA("BasePart")
+	if not root then return false, false end
+
+	-- Void check: if truly fallen into abyss below -3000
+	if root.Position.Y < -3000 or math.abs(root.Position.X) > 200000 or math.abs(root.Position.Z) > 200000 then
+		return false, false
 	end
 
-	-- 2. General Dead / Ragdoll tags check (Only actual BoolValues/ValueBase/Folders, never scripts or animations)
+	-- 2. Detect if player is in Lobby / Spawn / Menu / Faraway unspawned box
+	local isFarawayLobby = (root.Position.Y > 3000 or math.abs(root.Position.X) > 5000 or math.abs(root.Position.Z) > 5000)
+
+	-- 3. Dead / Ragdoll check (Only actual BoolValues/ValueBase/Folders, never scripts or animations)
 	local function isDeadObj(obj)
 		if not obj then return false end
 		if obj:IsA("BoolValue") then return obj.Value == true end
@@ -434,39 +452,60 @@ function Utils.IsAlive(arg1, arg2, arg3)
 		return false
 	end
 
-	if isDeadObj(char:FindFirstChild("Dead")) or isDeadObj(char:FindFirstChild("Ragdoll")) or isDeadObj(char:FindFirstChild("Died")) or isDeadObj(char:FindFirstChild("Corpse")) or isDeadObj(char:FindFirstChild("Killed")) then
-		return false
+	local isRagdoll = isDeadObj(char:FindFirstChild("Dead")) or isDeadObj(char:FindFirstChild("Ragdoll")) or isDeadObj(char:FindFirstChild("Died")) or isDeadObj(char:FindFirstChild("Corpse")) or isDeadObj(char:FindFirstChild("Killed"))
+	if isRagdoll then
+		return false, false
 	end
 	if plr and plr:FindFirstChild("Status") and plr.Status:FindFirstChild("Dead") and isDeadObj(plr.Status.Dead) then
-		return false
+		return false, false
 	end
 
-	-- 3. Humanoid State & Health Check (Standard Roblox)
+	-- 4. Arsenal Specific Death & Spawn Checks
+	local isArsenal = (game.PlaceId == 286090429 or game.GameId == 111958650 or (plr and plr:FindFirstChild("NRPBS") ~= nil))
+	if isArsenal then
+		local nrpbs = plr and plr:FindFirstChild("NRPBS")
+		if nrpbs then
+			local hpVal = nrpbs:FindFirstChild("Health")
+			if hpVal and hpVal:IsA("ValueBase") and (tonumber(hpVal.Value) or 0) <= 0 then
+				return false, false
+			end
+		end
+		if not char:FindFirstChild("Spawned") then
+			-- In Arsenal, character without Spawned is in Deploy/Menu/Unspawned screen
+			return false, true
+		end
+	end
+
+	-- 5. Humanoid State & Health Check (Standard Roblox)
 	hum = hum or char:FindFirstChildOfClass("Humanoid")
 	if hum then
-		if hum.Health <= 0 then return false end
+		if hum.Health <= 0 then
+			if isFarawayLobby or not char:FindFirstChild("Head") then
+				return false, true
+			end
+			return false, false
+		end
 		local ok, state = pcall(function() return hum:GetState() end)
-		if ok and state == Enum.HumanoidStateType.Dead then return false end
+		if ok and state == Enum.HumanoidStateType.Dead then
+			return false, false
+		end
 	else
 		-- Custom Body Games (Phantom Forces, Frontlines, Doors, Custom Rigs)
 		local hpVal = char:FindFirstChild("Health") or char:FindFirstChild("HP") or char:FindFirstChild("hp") or (plr and plr:FindFirstChild("Status") and plr.Status:FindFirstChild("Health"))
 		if hpVal and hpVal:IsA("ValueBase") and tonumber(hpVal.Value) ~= nil and tonumber(hpVal.Value) <= 0 then
-			return false
+			return false, false
 		end
 		local hpAttr = char:GetAttribute("Health") or char:GetAttribute("HP") or char:GetAttribute("hp")
 		if hpAttr ~= nil and tonumber(hpAttr) ~= nil and tonumber(hpAttr) <= 0 then
-			return false
+			return false, false
 		end
 	end
 
-	-- 4. Root / BasePart Validation
-	local root = char.PrimaryPart or char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or char:FindFirstChildWhichIsA("BasePart")
-	if not root then return false end
-	if root.Position.Y < -1500 or math.abs(root.Position.X) > 100000 or math.abs(root.Position.Z) > 100000 then
-		return false
+	if isFarawayLobby then
+		return false, true
 	end
 
-	return true
+	return true, false
 end
 
 function Utils.GetCurrentCamera()
@@ -917,9 +956,9 @@ function Features.GetAuraTarget()
 end
 
 -- ==============================================================================
--- UI SYSTEM (V5.4.0)
+-- UI SYSTEM (V5.5.0)
 -- ==============================================================================
--- ITEM & LOOT ESP SUBSYSTEM (V5.4.0)
+-- ITEM & LOOT ESP SUBSYSTEM (V5.5.0)
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
 		pcall(function() bg:Destroy() end)
@@ -1090,7 +1129,7 @@ function UI.Init()
 	Title.Font = Enum.Font.GothamBlack; Title.TextSize = 16; Title.TextXAlignment = Enum.TextXAlignment.Left
 
 	local Subtitle = Instance.new("TextLabel", SidePanel)
-	Subtitle.Text = "VOID WALKER • V5.4.0"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
+	Subtitle.Text = "VOID WALKER • V5.5.0"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
 	Subtitle.BackgroundTransparency = 1; Subtitle.TextColor3 = Config.Theme.TextDim
 	Subtitle.Font = Enum.Font.GothamBold; Subtitle.TextSize = 9; Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 	
@@ -1370,6 +1409,7 @@ function UI.Init()
 	
 	AddSection(P2, "ESP", getOrder2)
 	AddToggle(P2, "ESP Master", "ESP", getOrder2)
+	AddToggle(P2, "👻 Detect No-Spawn / Lobby", "DetectUnspawned", getOrder2)
 	AddToggle(P2, "📦 Item & Loot ESP", "ItemESP", getOrder2)
 	AddToggle(P2, "🔫 Weapon / Tool ESP", "WeaponESP", getOrder2)
 	AddToggle(P2, "🦴 Skeleton ESP", "ESPSkeleton", getOrder2)
@@ -1545,7 +1585,7 @@ function UI.Init()
 end
 
 -- ==============================================================================
--- CORE EXPLOIT HOOKS (V5.4.0 - ALL BUGS FIXED)
+-- CORE EXPLOIT HOOKS (V5.5.0 - ALL BUGS FIXED)
 -- ==============================================================================
 local HasTitanMetamethodHook = false
 
@@ -1735,11 +1775,11 @@ end)
 table.insert(Storage.Loops, auraLoop)
 
 -- ==============================================================================
--- RUNTIME (V5.4.0)
+-- RUNTIME (V5.5.0)
 -- ==============================================================================
 local Runtime = {}
 function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.4.0 - TITAN GOD (APEX OMNI)...")
+	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.5.0 - TITAN GOD (APEX OMNI)...")
 	Storage.IsUnloaded = true
 	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
 	Storage.Loops = {}
@@ -1840,7 +1880,7 @@ function Runtime.Unload()
 	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
 	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
 	Storage.RadarObjects = {}
-	print("X TITAN V5.4.0 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
+	print("X TITAN V5.5.0 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
 end
 
 local function InitRadar()
@@ -2335,10 +2375,10 @@ function Runtime.Init()
 					local pChar = cData.Char
 					local root = cData.Root
 					local head = cData.Head
-					local isAlive = Utils.IsAlive(plr, pChar)
+					local isAlive, isUnspawned = Utils.IsAlive(plr, pChar)
 					local esp = Storage.ESPObjects[plr]
 
-					if not isAlive then
+					if not (isAlive or (Config.States.DetectUnspawned and isUnspawned)) then
 						if esp then
 							pcall(function()
 								esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
@@ -2363,9 +2403,14 @@ function Runtime.Init()
 					local onScreen = topOn or bottomOn
 
 					local drawColor = Config.Theme.Stroke
-					if Storage.LockedTarget == plr then drawColor = Config.Theme.LockColor
-					elseif Config.States.TeamCheck and Utils.IsTeammate(plr) then drawColor = Config.Theme.Team end
-					if Config.States.VisibilityCheck and not Utils.IsVisible(head, plr) then drawColor = Color3.new(0.5, 0.5, 0.5) end
+					if isUnspawned then
+						drawColor = Color3.fromRGB(190, 130, 255)
+					elseif Storage.LockedTarget == plr then
+						drawColor = Config.Theme.LockColor
+					elseif Config.States.TeamCheck and Utils.IsTeammate(plr) then
+						drawColor = Config.Theme.Team
+					end
+					if Config.States.VisibilityCheck and not Utils.IsVisible(head, plr) and not isUnspawned then drawColor = Color3.new(0.5, 0.5, 0.5) end
 
 					if Config.States.Tracers then
 						pcall(function()
@@ -2419,7 +2464,7 @@ function Runtime.Init()
 						if Config.States.ESP then
 							pcall(function()
 								esp.Box.Visible = true; esp.Box.Size = Vector2.new(width, height); esp.Box.Position = Vector2.new(boxX, boxY); esp.Box.Color = drawColor; esp.Box.Transparency = 1
-								esp.Name.Visible = true; esp.Name.Text = plr.DisplayName; esp.Name.Position = Vector2.new(boxX + width / 2, boxY - 16); esp.Name.Color = drawColor
+								esp.Name.Visible = true; esp.Name.Text = isUnspawned and (plr.DisplayName .. " [NO-SPAWN]") or plr.DisplayName; esp.Name.Position = Vector2.new(boxX + width / 2, boxY - 16); esp.Name.Color = drawColor
 								esp.HealthBar.Visible = true; local curHp, maxHp = Utils.GetHealth(plr, pChar); local healthRatio = math.clamp(curHp / maxHp, 0, 1)
 								esp.HealthBar.Color = Color3.new(1 - healthRatio, healthRatio, 0)
 								esp.HealthBar.From = Vector2.new(boxX - 5, boxY + height); esp.HealthBar.To = Vector2.new(boxX - 5, boxY + height - height * healthRatio)
@@ -2492,7 +2537,7 @@ function Runtime.Init()
 			end
 			return
 		end
-		-- [V5.4.0] Rainbow Chams & HUD Accent
+		-- [V5.5.0] Rainbow Chams & HUD Accent
 		if Config.States.NoRecoil and LocalPlayer.Character then
 			pcall(function()
 				local myChar = LocalPlayer.Character
@@ -2513,7 +2558,7 @@ function Runtime.Init()
 			Config.Theme.Stroke = rainbow
 		end
 
-		-- [V5.4.0] Touch Fling Logic (PlayerCache Optimized)
+		-- [V5.5.0] Touch Fling Logic (PlayerCache Optimized)
 		if Config.States.TouchFling and hrp then
 			for p, data in pairs(Storage.PlayerCache) do
 				if not (Config.States.TeamCheck and Utils.IsTeammate(p)) then
@@ -2526,7 +2571,7 @@ function Runtime.Init()
 			end
 		end
 
-		-- [V5.4.0] Orbit Stalker Aura
+		-- [V5.5.0] Orbit Stalker Aura
 		if Config.States.OrbitAura and Storage.LockedTarget and Storage.LockedTarget.Character and hrp then
 			local tHRP = Storage.LockedTarget.Character:FindFirstChild("HumanoidRootPart")
 			if tHRP then
@@ -2537,7 +2582,7 @@ function Runtime.Init()
 			end
 		end
 
-		-- [V5.4.0] Anti-Fling Immortality (PlayerCache Optimized)
+		-- [V5.5.0] Anti-Fling Immortality (PlayerCache Optimized)
 		if Config.States.AntiFling and hrp then
 			for p, data in pairs(Storage.PlayerCache) do
 				local otherHRP = data.Root
@@ -2943,5 +2988,5 @@ end)
 table.insert(Storage.Loops, itemLoop)
 
 Runtime.Init()
-Utils.Notify("✅ X TITAN V5.4.0 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
-print("X TITAN V5.4.0 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
+Utils.Notify("✅ X TITAN V5.5.0 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
+print("X TITAN V5.5.0 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
