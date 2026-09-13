@@ -121,10 +121,52 @@ end
 -- ==================================================================
 local Utils = {}
 
+function Utils.GetPlayerCharacter(p)
+    if not p then return nil end
+    if p.Character and p.Character.Parent then return p.Character end
+    local direct = Services.Workspace:FindFirstChild(p.Name)
+    if direct and direct:IsA("Model") then return direct end
+    for _, fName in ipairs({"Characters", "Players", "Alive", "Entities", "Spawns", "Map"}) do
+        local f = Services.Workspace:FindFirstChild(fName)
+        if f then
+            local c = f:FindFirstChild(p.Name)
+            if c and c:IsA("Model") then return c end
+        end
+    end
+    return nil
+end
+
+function Utils.GetCharacterParts(char)
+    if not char then return nil, nil, nil end
+    local head = char:FindFirstChild("Head") or char:FindFirstChildWhichIsA("BasePart")
+    local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or char:FindFirstChild("LowerTorso") or char.PrimaryPart or head
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    return head, root, hum
+end
+
+function Utils.IsAlive(char, hum)
+    if not char or not char.Parent then return false end
+    if hum then
+        if hum.Health > 0 then return true end
+        if hum.MaxHealth <= 0 then return true end
+        local hAttr = char:GetAttribute("Health")
+        if hAttr and hAttr > 0 then return true end
+        return false
+    end
+    return true
+end
+
 function Utils.IsTeammate(plr)
-    if not plr or not LocalPlayer then return false end
+    if not plr or not LocalPlayer or plr == LocalPlayer then return false end
     if plr.Team and LocalPlayer.Team and plr.Team == LocalPlayer.Team then return true end
     if plr.TeamColor and LocalPlayer.TeamColor and plr.TeamColor == LocalPlayer.TeamColor then return true end
+    local pChar = Utils.GetPlayerCharacter(plr)
+    local myChar = Utils.GetPlayerCharacter(LocalPlayer)
+    if pChar and myChar then
+        local t1 = pChar:GetAttribute("Team")
+        local t2 = myChar:GetAttribute("Team")
+        if t1 and t2 and t1 == t2 then return true end
+    end
     return false
 end
 
@@ -1043,7 +1085,10 @@ local function Init()
 
     task.spawn(function()
         while true do
-            task.wait(0.7)
+            task.wait(0.5)
+            if Config.States.Chams then
+                pcall(Utils.UpdateChams)
+            end
             if Config.States.ItemESP then
                 pcall(UpdateItemESP)
             end

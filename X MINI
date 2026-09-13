@@ -94,10 +94,52 @@ end
 -- ==================================================================
 local Utils = {}
 
+function Utils.GetPlayerCharacter(p)
+    if not p then return nil end
+    if p.Character and p.Character.Parent then return p.Character end
+    local direct = Services.Workspace:FindFirstChild(p.Name)
+    if direct and direct:IsA("Model") then return direct end
+    for _, fName in ipairs({"Characters", "Players", "Alive", "Entities", "Spawns", "Map"}) do
+        local f = Services.Workspace:FindFirstChild(fName)
+        if f then
+            local c = f:FindFirstChild(p.Name)
+            if c and c:IsA("Model") then return c end
+        end
+    end
+    return nil
+end
+
+function Utils.GetCharacterParts(char)
+    if not char then return nil, nil, nil end
+    local head = char:FindFirstChild("Head") or char:FindFirstChildWhichIsA("BasePart")
+    local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or char:FindFirstChild("LowerTorso") or char.PrimaryPart or head
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    return head, root, hum
+end
+
+function Utils.IsAlive(char, hum)
+    if not char or not char.Parent then return false end
+    if hum then
+        if hum.Health > 0 then return true end
+        if hum.MaxHealth <= 0 then return true end
+        local hAttr = char:GetAttribute("Health")
+        if hAttr and hAttr > 0 then return true end
+        return false
+    end
+    return true
+end
+
 function Utils.IsTeammate(plr)
-    if not plr or not LocalPlayer then return false end
+    if not plr or not LocalPlayer or plr == LocalPlayer then return false end
     if plr.Team and LocalPlayer.Team and plr.Team == LocalPlayer.Team then return true end
     if plr.TeamColor and LocalPlayer.TeamColor and plr.TeamColor == LocalPlayer.TeamColor then return true end
+    local pChar = Utils.GetPlayerCharacter(plr)
+    local myChar = Utils.GetPlayerCharacter(LocalPlayer)
+    if pChar and myChar then
+        local t1 = pChar:GetAttribute("Team")
+        local t2 = myChar:GetAttribute("Team")
+        if t1 and t2 and t1 == t2 then return true end
+    end
     return false
 end
 
@@ -120,12 +162,13 @@ function Utils.GetClosestTarget()
     local closestDist, target = Config.Vals.FOV, nil
 
     for _, p in pairs(Services.Players:GetPlayers()) do
-        if p == LocalPlayer or not p.Character then continue end
+        if p == LocalPlayer then continue end
+        local char = Utils.GetPlayerCharacter(p)
+        if not char then continue end
         if Config.States.TeamCheck and Utils.IsTeammate(p) then continue end
 
-        local hum = p.Character:FindFirstChildOfClass("Humanoid")
-        local head = p.Character:FindFirstChild("Head")
-        if not hum or not head or hum.Health <= 0 then continue end
+        local head, root, hum = Utils.GetCharacterParts(char)
+        if not head or not Utils.IsAlive(char, hum) then continue end
 
         if Config.States.WallCheck and not Utils.IsVisible(head) then continue end
 
@@ -180,21 +223,30 @@ end
 
 function Utils.UpdateChams()
     for _, p in pairs(Services.Players:GetPlayers()) do
-        if p ~= LocalPlayer and p.Character then
-            local chams = p.Character:FindFirstChild("X_Mini_Chams")
-            if Config.States.Chams then
-                if not chams then
-                    chams = Instance.new("Highlight")
-                    chams.Name = "X_Mini_Chams"
-                    chams.FillTransparency = 0.5
-                    chams.OutlineTransparency = 0.1
-                    chams.Parent = p.Character
+        if p ~= LocalPlayer then
+            local char = Utils.GetPlayerCharacter(p)
+            if char then
+                local chams = char:FindFirstChild("X_Mini_Chams")
+                if Config.States.Chams then
+                    local _, _, hum = Utils.GetCharacterParts(char)
+                    if Utils.IsAlive(char, hum) then
+                        if not chams then
+                            chams = Instance.new("Highlight")
+                            chams.Name = "X_Mini_Chams"
+                            chams.FillTransparency = 0.5
+                            chams.OutlineTransparency = 0.1
+                            chams.Parent = char
+                        end
+                        local isTeam = Config.States.TeamCheck and Utils.IsTeammate(p)
+                        local col = isTeam and Config.Theme.Team or Config.Theme.Accent
+                        chams.FillColor = col
+                        chams.OutlineColor = col
+                    elseif chams then
+                        chams:Destroy()
+                    end
+                elseif chams then
+                    chams:Destroy()
                 end
-                local col = (Config.States.TeamCheck and Utils.IsTeammate(p)) and Config.Theme.Team or Config.Theme.Accent
-                chams.FillColor = col
-                chams.OutlineColor = col
-            elseif chams then
-                chams:Destroy()
             end
         end
     end
@@ -763,28 +815,30 @@ local function Init()
         if Drawing then
             if Config.States.ESP then
                 for plr, esp in pairs(Storage.ESPObjects) do
-                    local char = plr.Character
-                    local root = char and char:FindFirstChild("HumanoidRootPart")
-                    local head = char and char:FindFirstChild("Head")
-                    local hum = char and char:FindFirstChildOfClass("Humanoid")
+                    local char = Utils.GetPlayerCharacter(plr)
+                    local head, root, hum = Utils.GetCharacterParts(char)
 
-                    if char and root and head and hum and hum.Health > 0 then
+                    if char and root and head and Utils.IsAlive(char, hum) then
                         local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
-                        local color = (Config.States.TeamCheck and Utils.IsTeammate(plr)) and Config.Theme.Team or Config.Theme.Accent
+                        local isTeam = Config.States.TeamCheck and Utils.IsTeammate(plr)
+                        local color = isTeam and Config.Theme.Team or Config.Theme.Accent
                         if onScreen then
                             local headPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
                             local height = math.abs(headPos.Y - Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0)).Y)
-                            local width = height / 1.8
+                            local width = math.clamp(height / 1.8, 12, 350)
 
                             esp.Box.Visible = true; esp.Box.Size = Vector2.new(width, height)
                             esp.Box.Position = Vector2.new(pos.X - width / 2, pos.Y - height / 2); esp.Box.Color = color
 
-                            esp.Name.Visible = true; esp.Name.Text = plr.DisplayName
+                            local dist = math.floor((Camera.CFrame.Position - root.Position).Magnitude)
+                            esp.Name.Visible = true; esp.Name.Text = plr.DisplayName .. " [" .. tostring(dist) .. "m]"
                             esp.Name.Position = Vector2.new(pos.X, esp.Box.Position.Y - 16); esp.Name.Color = color
 
                             esp.HealthBar.Visible = true
+                            local hpPercent = (hum and hum.MaxHealth > 0) and math.clamp(hum.Health / hum.MaxHealth, 0, 1) or 1
+                            esp.HealthBar.Color = Color3.fromRGB(math.floor(255 * (1 - hpPercent)), math.floor(255 * hpPercent), 0)
                             esp.HealthBar.From = Vector2.new(esp.Box.Position.X - 5, esp.Box.Position.Y + height)
-                            esp.HealthBar.To = Vector2.new(esp.Box.Position.X - 5, esp.Box.Position.Y + height - height * (hum.Health / hum.MaxHealth))
+                            esp.HealthBar.To = Vector2.new(esp.Box.Position.X - 5, esp.Box.Position.Y + height - height * hpPercent)
                         else
                             esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false
                         end
@@ -914,7 +968,10 @@ local function Init()
 
     task.spawn(function()
         while true do
-            task.wait(0.7)
+            task.wait(0.5)
+            if Config.States.Chams then
+                pcall(Utils.UpdateChams)
+            end
             if Config.States.ItemESP then
                 pcall(UpdateItemESP)
             end
