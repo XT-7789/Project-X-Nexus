@@ -110,7 +110,17 @@ local Storage = {
 	RootAttachmentOwned = false,
 	WalkSpeedSnapshotPending = false,
 	LastSafeCFrame = nil,
-	HitSoundObj = nil
+	HitSoundObj = nil,
+	PlayerCache = {},
+	ESPHidden = false,
+	NoCollideActive = false,
+	NoTouchActive = false,
+	LastRadarUpdate = 0,
+	LastHUDUpdate = 0,
+	LastTargetScan = 0,
+	CachedTargetPart = nil,
+	CachedIsWall = false,
+	CrosshairVisible = false
 }
 
 _G.X_TITAN_CURRENT_INSTANCE = {
@@ -147,8 +157,15 @@ function Utils.GetCurrentCamera()
 	return cam
 end
 
-function Utils.IsVisible(targetHead)
+function Utils.IsVisible(targetHead, targetPlr)
 	if not targetHead or not targetHead.Parent then return false end
+	local now = tick()
+	if targetPlr and Storage.PlayerCache[targetPlr] then
+		local c = Storage.PlayerCache[targetPlr]
+		if (now - c.LastVisCheck) < 0.15 then
+			return c.IsVisible
+		end
+	end
 	local Camera = Utils.GetCurrentCamera()
 	if not Camera then return false end
 	local origin = Camera.CFrame.Position
@@ -157,10 +174,18 @@ function Utils.IsVisible(targetHead)
 	params.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
 	params.FilterType = Enum.RaycastFilterType.Exclude
 	params.IgnoreWater = true
-	local success, result = pcall(function() return Services.Workspace:Raycast(origin, direction * 1000, params) end)
-	if not success or not result then return true end
-	if result.Instance and result.Instance:IsDescendantOf(targetHead.Parent) then return true end
-	return false
+	local success, result = pcall(function() return Services.Workspace:Raycast(origin, direction, params) end)
+	local isVis = false
+	if not success or not result then
+		isVis = true
+	elseif result.Instance and result.Instance:IsDescendantOf(targetHead.Parent) then
+		isVis = true
+	end
+	if targetPlr and Storage.PlayerCache[targetPlr] then
+		Storage.PlayerCache[targetPlr].LastVisCheck = now
+		Storage.PlayerCache[targetPlr].IsVisible = isVis
+	end
+	return isVis
 end
 
 function Utils.GetPing()
@@ -235,8 +260,8 @@ function Utils.GetClosestToCenter()
 			local aimPart = Utils.GetSmartAimPart(tChar)
 			if aimPart then
 				local pos, onScreen = Camera:WorldToViewportPoint(aimPart.Position)
-				if onScreen then
-					if Config.States.WallCheck and not Utils.IsVisible(aimPart) then return aimPart, true end
+				if onScreen and pos.Z > 0 then
+					if Config.States.WallCheck and not Utils.IsVisible(aimPart, Storage.LockedTarget) then return aimPart, true end
 					return aimPart, false
 				end
 			end
@@ -248,18 +273,18 @@ function Utils.GetClosestToCenter()
 	end
 	
 	local highestThreat, targetPart = -1, nil
-	for _, p in pairs(Services.Players:GetPlayers()) do
-		if p == LocalPlayer or not p.Character then continue end
+	for p, data in pairs(Storage.PlayerCache) do
+		if not data.Char.Parent then continue end
 		if Config.States.TeamCheck and Utils.IsTeammate(p) then continue end
-		local aimPart = Utils.GetSmartAimPart(p.Character)
+		local hum = data.Hum
+		if hum and hum.Health <= 0 and hum.MaxHealth > 0 then continue end
+		local aimPart = Utils.GetSmartAimPart(data.Char)
 		if not aimPart then continue end
-		local hum = p.Character:FindFirstChild("Humanoid")
-		if not hum or hum.Health <= 0 then continue end
 		local pos, onScreen = Camera:WorldToViewportPoint(aimPart.Position)
-		if onScreen then
+		if onScreen and pos.Z > 0 then
 			local screenDist = (Vector2.new(pos.X, pos.Y) - center).Magnitude
 			if screenDist <= Config.Vals.FOV then
-				if Config.States.WallCheck and not Utils.IsVisible(aimPart) then continue end
+				if Config.States.WallCheck and not Utils.IsVisible(aimPart, p) then continue end
 				local threatScore = Utils.CalculateThreatScore(p, myHRP)
 				if threatScore > highestThreat then
 					highestThreat = threatScore
@@ -1159,6 +1184,79 @@ table.insert(Storage.Loops, auraLoop)
 -- ==============================================================================
 -- RUNTIME (V5.0.0)
 -- ==============================================================================
+local function ClearItemESP()
+	for obj, gui in pairs(Storage.ItemESPObjects) do
+		if gui and gui.Parent then pcall(function() gui:Destroy() end) end
+	end
+	Storage.ItemESPObjects = {}
+end
+
+local function UpdateItemESP()
+	if not Config.States.ItemESP then
+		ClearItemESP()
+		return
+	end
+	local myChar = LocalPlayer.Character
+	local myHrp = myChar and (myChar:FindFirstChild("HumanoidRootPart") or myChar:FindFirstChild("Torso"))
+	if not myHrp then return end
+
+	local myPos = myHrp.Position
+	local found = {}
+
+	for _, item in ipairs(Services.Workspace:GetChildren()) do
+		if item:IsA("Tool") and item:FindFirstChild("Handle") then
+			local dist = (item.Handle.Position - myPos).Magnitude
+			if dist <= 500 then found[item.Handle] = { Name = item.Name, Dist = math.floor(dist) } end
+		elseif item.Name == "Drops" or item.Name == "Items" or item.Name == "Loot" or item.Name == "Tools" then
+			for _, sub in ipairs(item:GetChildren()) do
+				local p = sub:IsA("BasePart") and sub or sub:FindFirstChildWhichIsA("BasePart")
+				if p then
+					local dist = (p.Position - myPos).Magnitude
+					if dist <= 500 then found[p] = { Name = sub.Name, Dist = math.floor(dist) } end
+				end
+			end
+		end
+	end
+
+	for part, data in pairs(found) do
+		local bg = Storage.ItemESPObjects[part]
+		if not bg or not bg.Parent then
+			bg = Instance.new("BillboardGui")
+			bg.Name = "X_ITEM_ESP"
+			bg.AlwaysOnTop = true
+			bg.Size = UDim2.new(0, 150, 0, 26)
+			bg.Adornee = part
+			bg.MaxDistance = 500
+			
+			local lbl = Instance.new("TextLabel", bg)
+			lbl.Name = "Tag"
+			lbl.Size = UDim2.new(1, 0, 1, 0)
+			lbl.BackgroundTransparency = 1
+			lbl.TextColor3 = Color3.fromRGB(255, 215, 50)
+			lbl.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+			lbl.TextStrokeTransparency = 0.2
+			lbl.Font = Enum.Font.GothamBold
+			lbl.TextSize = 11
+			lbl.Text = "📦 " .. data.Name .. " [" .. tostring(data.Dist) .. "m]"
+			
+			bg.Parent = targetGui
+			Storage.ItemESPObjects[part] = bg
+		else
+			local lbl = bg:FindFirstChild("Tag")
+			if lbl then
+				lbl.Text = "📦 " .. data.Name .. " [" .. tostring(data.Dist) .. "m]"
+			end
+		end
+	end
+
+	for part, bg in pairs(Storage.ItemESPObjects) do
+		if not found[part] or not part.Parent then
+			pcall(function() bg:Destroy() end)
+			Storage.ItemESPObjects[part] = nil
+		end
+	end
+end
+
 local Runtime = {}
 function Runtime.Unload()
 	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.0.0 - TITAN GOD (APEX OMNI)...")
@@ -1216,6 +1314,8 @@ function Runtime.Unload()
 		end
 	end
 	
+	ClearItemESP()
+	table.clear(Storage.PlayerCache)
 	Utils.ToggleXRay(false); Utils.ToggleFullbright(false)
 	for plr, esp in pairs(Storage.ESPObjects) do for _, d in pairs(esp) do pcall(function() d:Remove() end) end end
 	for plr, skel in pairs(Storage.SkeletonParts) do for _, d in pairs(skel) do pcall(function() d:Remove() end) end end
@@ -1312,22 +1412,31 @@ end
 
 local function UpdateRadar()
 	if not Storage.RadarFrame then return end
-	Storage.RadarFrame.Visible = Config.States.Radar
-	if not Config.States.Radar then return end
+	local isRadarOn = Config.States.Radar
+	Storage.RadarFrame.Visible = isRadarOn
+	if not isRadarOn then
+		for _, obj in pairs(Storage.RadarObjects) do
+			if obj.Visible then obj.Visible = false end
+		end
+		return
+	end
+	
+	local now = tick()
+	if (now - Storage.LastRadarUpdate) < 0.05 then return end
+	Storage.LastRadarUpdate = now
 	
 	local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 	if not myHRP then return end
 	
 	for plr, obj in pairs(Storage.RadarObjects) do
-		if not Services.Players:FindFirstChild(plr.Name) or not plr.Character then
+		if not Storage.PlayerCache[plr] or not plr.Character then
 			pcall(function() obj:Destroy() end); Storage.RadarObjects[plr] = nil
 		else obj.Visible = false end
 	end
 	
-	for _, p in pairs(Services.Players:GetPlayers()) do
-		if p == LocalPlayer or not p.Character then continue end
-		local eHRP = p.Character:FindFirstChild("HumanoidRootPart")
-		if not eHRP then continue end
+	for p, data in pairs(Storage.PlayerCache) do
+		if not data.Char.Parent then continue end
+		local eHRP = data.Root
 		local relativePos = myHRP.CFrame:PointToObjectSpace(eHRP.Position)
 		local dist = math.sqrt(relativePos.X^2 + relativePos.Z^2)
 		if dist > Config.Vals.RadarRange then
@@ -1344,7 +1453,7 @@ local function UpdateRadar()
 		local x = relativePos.X * scale; local z = -relativePos.Z * scale
 		obj.Position = UDim2.new(0.5, x, 0.5, z); obj.Visible = true
 		if Utils.IsTeammate(p) then obj.BackgroundColor3 = Config.Theme.Team
-		elseif Utils.IsVisible(p.Character:FindFirstChild("Head")) then obj.BackgroundColor3 = Config.Theme.LockColor
+		elseif Utils.IsVisible(data.Head, p) then obj.BackgroundColor3 = Config.Theme.LockColor
 		else obj.BackgroundColor3 = Config.Theme.TextDim end
 	end
 end
@@ -1411,6 +1520,58 @@ function Runtime.Init()
 	end
 	
 	for _, p in pairs(Services.Players:GetPlayers()) do pcall(function() Features.CreateESP(p) end) end
+	local function UpdatePlayerCache(p)
+		if not p or p == LocalPlayer then return end
+		local char = p.Character
+		if not char or not char.Parent then
+			Storage.PlayerCache[p] = nil
+			return
+		end
+		local head = char:FindFirstChild("Head") or char:FindFirstChildWhichIsA("BasePart")
+		local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or head
+		local hum = char:FindFirstChildOfClass("Humanoid")
+		if head and root then
+			local existing = Storage.PlayerCache[p]
+			Storage.PlayerCache[p] = {
+				Char = char,
+				Head = head,
+				Root = root,
+				Hum = hum,
+				IsVisible = existing and existing.IsVisible or false,
+				LastVisCheck = existing and existing.LastVisCheck or 0
+			}
+		else
+			Storage.PlayerCache[p] = nil
+		end
+	end
+
+	table.clear(Storage.PlayerCache)
+	for _, p in ipairs(Services.Players:GetPlayers()) do
+		if p ~= LocalPlayer then
+			UpdatePlayerCache(p)
+			local cAdded = p.CharacterAdded:Connect(function()
+				task.wait(0.3)
+				UpdatePlayerCache(p)
+			end)
+			table.insert(Storage.Connections, cAdded)
+		end
+	end
+
+	local cachePAdded = Services.Players.PlayerAdded:Connect(function(p)
+		local cAdded = p.CharacterAdded:Connect(function()
+			task.wait(0.3)
+			UpdatePlayerCache(p)
+		end)
+		table.insert(Storage.Connections, cAdded)
+		UpdatePlayerCache(p)
+	end)
+	table.insert(Storage.Connections, cachePAdded)
+
+	local cachePRemoved = Services.Players.PlayerRemoving:Connect(function(p)
+		Storage.PlayerCache[p] = nil
+		Features.RemoveESP(p)
+	end)
+	table.insert(Storage.Connections, cachePRemoved)
 	UI.Init()
 	InitRadar()
 	
@@ -1472,32 +1633,46 @@ function Runtime.Init()
 		local char = LocalPlayer.Character; local hrp = char and char:FindFirstChild("HumanoidRootPart")
 		local center = Vector2.new(CurrentCam.ViewportSize.X/2, CurrentCam.ViewportSize.Y/2)
 		
-		-- [P2 FIX] Cache target calculation to save CPU
+		-- [ZERO-LAG] Throttled Target Search (Max 60Hz evaluation, full frame lerp)
 		local cachedTarget, cachedIsWall = nil, false
 		if Config.States.Aimbot or Config.States.TriggerBot or Config.States.ShowFOV or Storage.LockedTarget then
-			cachedTarget, cachedIsWall = Utils.GetClosestToCenter()
+			local now = tick()
+			if (now - Storage.LastTargetScan) > 0.016 then
+				Storage.LastTargetScan = now
+				cachedTarget, cachedIsWall = Utils.GetClosestToCenter()
+				Storage.CachedTargetPart = cachedTarget
+				Storage.CachedIsWall = cachedIsWall
+			else
+				cachedTarget = Storage.CachedTargetPart
+				cachedIsWall = Storage.CachedIsWall
+			end
 		end
 		
 		if Storage.FOVRingUI then
-			Storage.FOVRingUI.Visible = Config.States.ShowFOV
 			if Config.States.ShowFOV then
+				Storage.FOVRingUI.Visible = true
 				Storage.FOVRingUI.Size = UDim2.new(0, Config.Vals.FOV * 2, 0, Config.Vals.FOV * 2)
 				if cachedTarget then 
 					Storage.FOVRingUI.UIStroke.Color = cachedIsWall and Config.Theme.WallColor or Config.Theme.LockColor
 				else 
 					Storage.FOVRingUI.UIStroke.Color = Config.Theme.Stroke 
 				end
+			elseif Storage.FOVRingUI.Visible then
+				Storage.FOVRingUI.Visible = false
 			end
 		end
 		
 		if Storage.TacticalHUD then
 			local showHUD = Config.States.ShowLockStatus and Storage.LockedTarget ~= nil
-			Storage.TacticalHUD.Main.Visible = showHUD
-			if showHUD and Storage.LockedTarget.Character then
-				local lockedPlr = Storage.LockedTarget
-				local hum = lockedPlr.Character:FindFirstChild("Humanoid")
-				local hrp_t = lockedPlr.Character:FindFirstChild("HumanoidRootPart")
-				local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+			if showHUD and Storage.LockedTarget and Storage.LockedTarget.Character then
+				Storage.TacticalHUD.Main.Visible = true
+				local now = tick()
+				if (now - Storage.LastHUDUpdate) > 0.05 then
+					Storage.LastHUDUpdate = now
+					local lockedPlr = Storage.LockedTarget
+					local hum = lockedPlr.Character:FindFirstChild("Humanoid")
+					local hrp_t = lockedPlr.Character:FindFirstChild("HumanoidRootPart")
+					local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 				if hum and hrp_t and myHRP then
 					local dist = math.floor((hrp_t.Position - myHRP.Position).Magnitude)
 					local targetRatio = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
@@ -1508,7 +1683,7 @@ function Runtime.Init()
 					local threat, tColor = "LOW", Config.Theme.ThreatLow
 					if dist < 30 then threat, tColor = "HIGH", Config.Theme.ThreatHigh
 					elseif dist < 80 then threat, tColor = "MED", Config.Theme.ThreatMed end
-					local breath = math.sin(tick() * 3) * 0.2 + 0.8
+					local breath = math.sin(now * 3) * 0.2 + 0.8
 					if threat == "HIGH" then tColor = Color3.fromRGB(255, 40 * breath, 40 * breath)
 					elseif threat == "MED" then tColor = Color3.fromRGB(255, 180 * breath, 0) end
 					Storage.TacticalHUD.Header.Text = string.format("[%s] %s", threat, lockedPlr.Name)
@@ -1516,26 +1691,37 @@ function Runtime.Init()
 					Storage.TacticalHUD.Footer.Text = string.format("DIST: %dm | AIM: %s", dist, Config.Vals.AimPart)
 					Storage.TacticalHUD.Stroke.Color = tColor
 				end
+				end
+			elseif Storage.TacticalHUD.Main.Visible then
+				Storage.TacticalHUD.Main.Visible = false
 			end
 		end
 		
 		if Drawing then
-			local spread = 6
-			local crosshairColor = Config.Theme.Stroke
-			if Config.States.DynamicCrosshair then
-				if Config.States.Fly or Config.States.SpeedHack then spread = 18
-				elseif hrp and hrp.AssemblyLinearVelocity.Magnitude > 10 then spread = 12 end
-				if Storage.LockedTarget or Config.States.Aimbot then spread = 2; crosshairColor = Config.Theme.LockColor end
-			end
 			local showCross = Config.States.Crosshair or Config.States.DynamicCrosshair
-			local t, b, l, r = Storage.CrosshairLines.Top, Storage.CrosshairLines.Bottom, Storage.CrosshairLines.Left, Storage.CrosshairLines.Right
 			if showCross then
-				t.Visible = true; t.From = Vector2.new(center.X, center.Y - spread - 4); t.To = Vector2.new(center.X, center.Y - spread); t.Color = crosshairColor
-				b.Visible = true; b.From = Vector2.new(center.X, center.Y + spread + 4); b.To = Vector2.new(center.X, center.Y + spread); b.Color = crosshairColor
-				l.Visible = true; l.From = Vector2.new(center.X - spread - 4, center.Y); l.To = Vector2.new(center.X - spread, center.Y); l.Color = crosshairColor
-				r.Visible = true; r.From = Vector2.new(center.X + spread + 4, center.Y); r.To = Vector2.new(center.X + spread, center.Y); r.Color = crosshairColor
-			else
-				t.Visible = false; b.Visible = false; l.Visible = false; r.Visible = false
+				local spread = 6
+				local crosshairColor = Config.Theme.Stroke
+				if Config.States.DynamicCrosshair then
+					if Config.States.Fly or Config.States.SpeedHack then spread = 18
+					elseif hrp and hrp.AssemblyLinearVelocity.Magnitude > 10 then spread = 12 end
+					if Storage.LockedTarget or Config.States.Aimbot then spread = 2; crosshairColor = Config.Theme.LockColor end
+				end
+				local t, b, l, r = Storage.CrosshairLines.Top, Storage.CrosshairLines.Bottom, Storage.CrosshairLines.Left, Storage.CrosshairLines.Right
+				if t and b and l and r then
+					t.Visible = true; t.From = Vector2.new(center.X, center.Y - spread - 4); t.To = Vector2.new(center.X, center.Y - spread); t.Color = crosshairColor
+					b.Visible = true; b.From = Vector2.new(center.X, center.Y + spread + 4); b.To = Vector2.new(center.X, center.Y + spread); b.Color = crosshairColor
+					l.Visible = true; l.From = Vector2.new(center.X - spread - 4, center.Y); l.To = Vector2.new(center.X - spread, center.Y); l.Color = crosshairColor
+					r.Visible = true; r.From = Vector2.new(center.X + spread + 4, center.Y); r.To = Vector2.new(center.X + spread, center.Y); r.Color = crosshairColor
+				end
+				Storage.CrosshairVisible = true
+			elseif Storage.CrosshairVisible then
+				Storage.CrosshairVisible = false
+				local t, b, l, r = Storage.CrosshairLines.Top, Storage.CrosshairLines.Bottom, Storage.CrosshairLines.Left, Storage.CrosshairLines.Right
+				if t then t.Visible = false end
+				if b then b.Visible = false end
+				if l then l.Visible = false end
+				if r then r.Visible = false end
 			end
 			
 			if Storage.HitmarkerAlpha > 0 then
@@ -1551,7 +1737,7 @@ function Runtime.Init()
 				br.Visible = true; br.From = Vector2.new(center.X + hmSize, center.Y + hmSize); br.To = Vector2.new(center.X + 2, center.Y + 2); br.Color = hmColor
 				Storage.HitmarkerAlpha = math.max(0, Storage.HitmarkerAlpha - 0.05)
 			else
-				for _, line in pairs(Storage.HitmarkerLines) do line.Visible = false end
+				for _, line in pairs(Storage.HitmarkerLines) do if line.Visible then line.Visible = false end end
 			end
 		end
 		
@@ -1615,47 +1801,77 @@ function Runtime.Init()
 			end
 		end
 		
-		for plr, esp in pairs(Storage.ESPObjects) do
-			local pChar = plr.Character; local root = pChar and pChar:FindFirstChild("HumanoidRootPart")
-			local head = pChar and pChar:FindFirstChild("Head"); local hum = pChar and pChar:FindFirstChild("Humanoid")
-			esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
-			if Storage.SkeletonParts[plr] then for _, part in pairs(Storage.SkeletonParts[plr]) do part.Visible = false end end
-			if Storage.TracerLines[plr] then Storage.TracerLines[plr].Visible = false end
-			if pChar and root and head and hum and hum.Health > 0 then
-				local vector, onScreen = CurrentCam:WorldToViewportPoint(root.Position)
-				local drawColor = Config.Theme.Stroke
-				if Storage.LockedTarget == plr then drawColor = Config.Theme.LockColor
-				elseif Config.States.TeamCheck and Utils.IsTeammate(plr) then drawColor = Config.Theme.Team end
-				if Config.States.VisibilityCheck and not Utils.IsVisible(head) then drawColor = Color3.new(0.5, 0.5, 0.5) end
-				if Config.States.Tracers then
-					local from = Vector2.new(CurrentCam.ViewportSize.X/2, CurrentCam.ViewportSize.Y/2)
-					local to = Vector2.new(vector.X, vector.Y)
-					if not onScreen then
-						local dir = to - from
-						if dir.Magnitude > 0 then
-							local t = math.huge
-							if dir.X > 0 then t = math.min(t, (CurrentCam.ViewportSize.X - from.X) / dir.X)
-							elseif dir.X < 0 then t = math.min(t, -from.X / dir.X) end
-							if dir.Y > 0 then t = math.min(t, (CurrentCam.ViewportSize.Y - from.Y) / dir.Y)
-							elseif dir.Y < 0 then t = math.min(t, -from.Y / dir.Y) end
-							to = from + dir * t
-						end
+		-- [ZERO-LAG ESP ENGINE] Skip entire loop if visual features are disabled
+		local anyESP = Config.States.ESP or Config.States.ESPSkeleton or Config.States.Tracers
+		if Drawing then
+			if not anyESP then
+				if not Storage.ESPHidden then
+					Storage.ESPHidden = true
+					for plr, esp in pairs(Storage.ESPObjects) do
+						esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
+						if Storage.SkeletonParts[plr] then for _, part in pairs(Storage.SkeletonParts[plr]) do part.Visible = false end end
+						if Storage.TracerLines[plr] then Storage.TracerLines[plr].Visible = false end
 					end
-					local ln = Storage.TracerLines[plr] or Drawing.new("Line"); Storage.TracerLines[plr] = ln
-					ln.Visible = true; ln.Thickness = 1.5; ln.Color = drawColor; ln.From = from; ln.To = to
 				end
-				if onScreen then
-					local headPos = CurrentCam:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
-					local height = math.abs(headPos.Y - CurrentCam:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0)).Y)
-					local width = height / 1.8; local boxX = vector.X - width/2; local boxY = vector.Y - height/2
+			else
+				Storage.ESPHidden = false
+				for plr, esp in pairs(Storage.ESPObjects) do
+					local data = Storage.PlayerCache[plr]
+					if not data or not data.Char.Parent then
+						esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
+						if Storage.SkeletonParts[plr] then for _, part in pairs(Storage.SkeletonParts[plr]) do part.Visible = false end end
+						if Storage.TracerLines[plr] then Storage.TracerLines[plr].Visible = false end
+						continue
+					end
+					local pChar = data.Char; local root = data.Root; local head = data.Head; local hum = data.Hum
+					local isAlive = (not hum) or (hum.Health > 0)
+					if not isAlive then
+						esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
+						if Storage.SkeletonParts[plr] then for _, part in pairs(Storage.SkeletonParts[plr]) do part.Visible = false end end
+						if Storage.TracerLines[plr] then Storage.TracerLines[plr].Visible = false end
+						continue
+					end
+					
+					local vector, onScreen = CurrentCam:WorldToViewportPoint(root.Position)
+					local drawColor = Config.Theme.Stroke
+					if Storage.LockedTarget == plr then drawColor = Config.Theme.LockColor
+					elseif Config.States.TeamCheck and Utils.IsTeammate(plr) then drawColor = Config.Theme.Team end
+					if Config.States.VisibilityCheck and not Utils.IsVisible(head, plr) then drawColor = Color3.new(0.5, 0.5, 0.5) end
+					
+					if Config.States.Tracers then
+						local from = center
+						local to = Vector2.new(vector.X, vector.Y)
+						if not onScreen or vector.Z <= 0 then
+							local dir = to - from
+							if dir.Magnitude > 0 then
+								local t = math.huge
+								if dir.X > 0 then t = math.min(t, (CurrentCam.ViewportSize.X - from.X) / dir.X)
+								elseif dir.X < 0 then t = math.min(t, -from.X / dir.X) end
+								if dir.Y > 0 then t = math.min(t, (CurrentCam.ViewportSize.Y - from.Y) / dir.Y)
+								elseif dir.Y < 0 then t = math.min(t, -from.Y / dir.Y) end
+								to = from + dir * t
+							end
+						end
+						local ln = Storage.TracerLines[plr] or Drawing.new("Line"); Storage.TracerLines[plr] = ln
+						ln.Visible = true; ln.Thickness = 1.5; ln.Color = drawColor; ln.From = from; ln.To = to
+					elseif Storage.TracerLines[plr] and Storage.TracerLines[plr].Visible then
+						Storage.TracerLines[plr].Visible = false
+					end
+					
+					if onScreen and vector.Z > 0 then
+						local headPos = CurrentCam:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+						local height = math.abs(headPos.Y - CurrentCam:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0)).Y)
+						local width = height / 1.8; local boxX = vector.X - width/2; local boxY = vector.Y - height/2
 					if Config.States.ESP then
 						esp.Box.Visible = true; esp.Box.Size = Vector2.new(width, height); esp.Box.Position = Vector2.new(boxX, boxY); esp.Box.Color = drawColor
 						esp.Name.Visible = true; esp.Name.Text = plr.Name; esp.Name.Position = Vector2.new(vector.X, boxY - 18); esp.Name.Color = drawColor
-						esp.HealthBar.Visible = true; local healthRatio = hum.Health / hum.MaxHealth
+						esp.HealthBar.Visible = true; local healthRatio = (hum and hum.MaxHealth > 0) and math.clamp(hum.Health / hum.MaxHealth, 0, 1) or 1
 						esp.HealthBar.Color = Color3.new(1 - healthRatio, healthRatio, 0)
 						esp.HealthBar.From = Vector2.new(boxX - 5, boxY + height); esp.HealthBar.To = Vector2.new(boxX - 5, boxY + height - height * healthRatio)
 						esp.Distance.Visible = true; esp.Distance.Text = string.format("%.0fm", (root.Position - (hrp and hrp.Position or root.Position)).Magnitude)
 						esp.Distance.Position = Vector2.new(vector.X, boxY + height + 5); esp.Distance.Color = drawColor
+					else
+						esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
 					end
 					if Config.States.ESPSkeleton and Storage.SkeletonParts[plr] then
 						local torso = pChar:FindFirstChild("Torso") or pChar:FindFirstChild("UpperTorso") or root
@@ -1674,10 +1890,16 @@ function Runtime.Init()
 						skel.TorsoToRightArm.Visible = true; skel.TorsoToRightArm.From = Vector2.new(torsoPos.X, torsoPos.Y); skel.TorsoToRightArm.To = Vector2.new(rArmPos.X, rArmPos.Y); skel.TorsoToRightArm.Color = drawColor
 						skel.TorsoToLeftLeg.Visible = true; skel.TorsoToLeftLeg.From = Vector2.new(torsoPos.X, torsoPos.Y); skel.TorsoToLeftLeg.To = Vector2.new(lLegPos.X, lLegPos.Y); skel.TorsoToLeftLeg.Color = drawColor
 						skel.TorsoToRightLeg.Visible = true; skel.TorsoToRightLeg.From = Vector2.new(torsoPos.X, torsoPos.Y); skel.TorsoToRightLeg.To = Vector2.new(rLegPos.X, rLegPos.Y); skel.TorsoToRightLeg.Color = drawColor
+					elseif Storage.SkeletonParts[plr] then
+						for _, part in pairs(Storage.SkeletonParts[plr]) do if part.Visible then part.Visible = false end end
 					end
+				else
+					esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
+					if Storage.SkeletonParts[plr] then for _, part in pairs(Storage.SkeletonParts[plr]) do if part.Visible then part.Visible = false end end end
 				end
 			end
 		end
+	end
 	end)
 	table.insert(Storage.Connections, renderConn)
 	
@@ -1692,11 +1914,11 @@ function Runtime.Init()
 			Config.Theme.Stroke = rainbow
 		end
 
-		-- [V5.0.0] Touch Fling Logic
+		-- [V5.0.0] Touch Fling Logic (PlayerCache Optimized)
 		if Config.States.TouchFling and hrp then
-			for _, p in pairs(Services.Players:GetPlayers()) do
-				if p ~= LocalPlayer and p.Character and not (Config.States.TeamCheck and Utils.IsTeammate(p)) then
-					local tHRP = p.Character:FindFirstChild("HumanoidRootPart")
+			for p, data in pairs(Storage.PlayerCache) do
+				if not (Config.States.TeamCheck and Utils.IsTeammate(p)) then
+					local tHRP = data.Root
 					if tHRP and (tHRP.Position - hrp.Position).Magnitude < 8 then
 						hrp.AssemblyAngularVelocity = Vector3.new(999999, 999999, 999999)
 						tHRP.AssemblyLinearVelocity = Vector3.new(math.random(-50000, 50000), 100000, math.random(-50000, 50000))
@@ -1716,18 +1938,16 @@ function Runtime.Init()
 			end
 		end
 
-		-- [V5.0.0] Anti-Fling Immortality
+		-- [V5.0.0] Anti-Fling Immortality (PlayerCache Optimized)
 		if Config.States.AntiFling and hrp then
-			for _, p in pairs(Services.Players:GetPlayers()) do
-				if p ~= LocalPlayer and p.Character then
-					local otherHRP = p.Character:FindFirstChild("HumanoidRootPart")
-					if otherHRP and (otherHRP.Position - hrp.Position).Magnitude < 15 then
-						if otherHRP.AssemblyLinearVelocity.Magnitude > 70 or otherHRP.AssemblyAngularVelocity.Magnitude > 70 then
-							for _, part in pairs(p.Character:GetDescendants()) do
-								if part:IsA("BasePart") then part.CanCollide = false end
-							end
-							hrp.AssemblyAngularVelocity = Vector3.zero
+			for p, data in pairs(Storage.PlayerCache) do
+				local otherHRP = data.Root
+				if otherHRP and (otherHRP.Position - hrp.Position).Magnitude < 15 then
+					if otherHRP.AssemblyLinearVelocity.Magnitude > 70 or otherHRP.AssemblyAngularVelocity.Magnitude > 70 then
+						for _, part in pairs(data.Char:GetDescendants()) do
+							if part:IsA("BasePart") then part.CanCollide = false end
 						end
+						hrp.AssemblyAngularVelocity = Vector3.zero
 					end
 				end
 			end
@@ -1822,25 +2042,34 @@ function Runtime.Init()
 			Storage.RootAttachmentOwned = true
 		end
 		
-		-- [P2 FIX] Optimized Collision Loop
+		-- [ZERO-LAG COLLISION ENGINE] Only modify/restore when active states change
 		local needsNoCollide = Config.States.Noclip or Config.States.Fly or Storage.IsHiding
 		local needsNoTouch = Config.States.AntiKillbrick
 		if needsNoCollide then
-			Utils.SaveCollision(char, "collide")
+			if not Storage.NoCollideActive then
+				Storage.NoCollideActive = true
+				Utils.SaveCollision(char, "collide")
+			end
 			for _, v in pairs(char:GetDescendants()) do
 				if v:IsA("BasePart") and v.CanCollide then v.CanCollide = false end
 			end
-		else
+		elseif Storage.NoCollideActive then
+			Storage.NoCollideActive = false
 			Utils.RestoreCollision(char, "collide")
 		end
 		if needsNoTouch then
-			Utils.SaveCollision(char, "touch")
+			if not Storage.NoTouchActive then
+				Storage.NoTouchActive = true
+				Utils.SaveCollision(char, "touch")
+				Services.Workspace.FallenPartsDestroyHeight = 0/0
+			end
 			for _, v in pairs(char:GetDescendants()) do
 				if v:IsA("BasePart") and v.CanTouch then v.CanTouch = false end
 			end
-			Services.Workspace.FallenPartsDestroyHeight = 0/0
-		else
+		elseif Storage.NoTouchActive then
+			Storage.NoTouchActive = false
 			Utils.RestoreCollision(char, "touch")
+			Services.Workspace.FallenPartsDestroyHeight = Storage.OriginalFallenHeight or -500
 		end
 		
 		if Storage.IsHiding then
@@ -2094,14 +2323,16 @@ function Runtime.Init()
 	table.insert(Storage.Connections, inputEndedConn)
 end
 
-task.spawn(function()
+local itemLoop = task.spawn(function()
 	while true do
-		task.wait(0.7)
+		task.wait(0.8)
+		if Storage.IsUnloaded then break end
 		if Config.States.ItemESP then
 			pcall(UpdateItemESP)
 		end
 	end
 end)
+table.insert(Storage.Loops, itemLoop)
 
 Runtime.Init()
 Utils.Notify("✅ X TITAN V5.0.0 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
