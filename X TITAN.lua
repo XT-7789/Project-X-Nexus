@@ -141,10 +141,98 @@ function Utils.Notify(title, text, dur)
 end
 
 function Utils.IsTeammate(plr)
-	if not plr or not LocalPlayer then return false end
+	if not plr or not LocalPlayer or plr == LocalPlayer then return true end
+	-- Arsenal & Universal FFA check: In FFA mode, everyone is an opponent even if assigned to FFA team
+	if plr.Team and plr.Team.Name == "FFA" then return false end
 	if plr.Team and LocalPlayer.Team and plr.Team == LocalPlayer.Team then return true end
 	if plr.TeamColor and LocalPlayer.TeamColor and plr.TeamColor == LocalPlayer.TeamColor then return true end
 	return false
+end
+
+function Utils.GetHealth(plr, char)
+	if not plr then return 0, 100 end
+	char = char or plr.Character
+
+	-- Arsenal NRPBS Health System
+	local nrpbs = plr:FindFirstChild("NRPBS")
+	if nrpbs then
+		local hpVal = nrpbs:FindFirstChild("Health")
+		local maxHpVal = nrpbs:FindFirstChild("MaxHealth")
+		if hpVal and hpVal:IsA("ValueBase") then
+			local cur = tonumber(hpVal.Value) or 0
+			local max = (maxHpVal and maxHpVal:IsA("ValueBase") and tonumber(maxHpVal.Value)) or 100
+			return cur, (max > 0 and max or 100)
+		end
+	end
+
+	-- Standard Roblox Humanoid Health
+	if char then
+		local hum = char:FindFirstChildOfClass("Humanoid")
+		if hum then
+			local cur = hum.Health
+			local max = hum.MaxHealth > 0 and hum.MaxHealth or 100
+			return cur, max
+		end
+	end
+	return 0, 100
+end
+
+function Utils.IsAlive(plr, char)
+	if not plr then return false end
+	char = char or plr.Character
+	if not char or not char.Parent then return false end
+	if not char:IsDescendantOf(Services.Workspace) then return false end
+
+	-- 1. Arsenal Specific Death & Spawn Checks
+	local isArsenal = (game.PlaceId == 286090429 or game.GameId == 111958650 or plr:FindFirstChild("NRPBS") ~= nil or Services.Workspace:FindFirstChild("Debris") ~= nil)
+	
+	local nrpbs = plr:FindFirstChild("NRPBS")
+	if nrpbs then
+		local hpVal = nrpbs:FindFirstChild("Health")
+		if hpVal and hpVal:IsA("ValueBase") and (tonumber(hpVal.Value) or 0) <= 0 then
+			return false
+		end
+		if not char:FindFirstChild("Spawned") then
+			return false
+		end
+	end
+
+	if isArsenal then
+		if not char:FindFirstChild("Spawned") then
+			return false
+		end
+	end
+
+	-- 2. General Dead / Ragdoll tags check
+	if char:FindFirstChild("Dead") or char:FindFirstChild("Ragdoll") or char:FindFirstChild("Died") or char:FindFirstChild("Corpse") then
+		return false
+	end
+
+	-- 3. Vital Body Parts Check
+	local head = char:FindFirstChild("Head")
+	local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+	if not head or not head.Parent or not root or not root.Parent then
+		return false
+	end
+
+	-- 4. Humanoid State & Health
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	if hum then
+		if hum.Health <= 0 then return false end
+		local ok, state = pcall(function() return hum:GetState() end)
+		if ok and state == Enum.HumanoidStateType.Dead then
+			return false
+		end
+	else
+		if not isArsenal then return false end
+	end
+
+	-- 5. Fallen out of world / Void
+	if root.Position.Y < -300 or math.abs(root.Position.X) > 100000 or math.abs(root.Position.Z) > 100000 then
+		return false
+	end
+
+	return true
 end
 
 function Utils.GetCurrentCamera()
@@ -255,8 +343,7 @@ function Utils.GetClosestToCenter()
 	
 	if Storage.LockedTarget and Storage.LockedTarget.Character then
 		local tChar = Storage.LockedTarget.Character
-		local tHum = tChar:FindFirstChild("Humanoid")
-		if tHum and tHum.Health > 0 then
+		if Utils.IsAlive(Storage.LockedTarget, tChar) then
 			local aimPart = Utils.GetSmartAimPart(tChar)
 			if aimPart then
 				local pos, onScreen = Camera:WorldToViewportPoint(aimPart.Position)
@@ -269,15 +356,15 @@ function Utils.GetClosestToCenter()
 			Utils.Notify("🔓 Target Eliminated", "Target lock released: " .. Storage.LockedTarget.Name)
 			Storage.LockedTarget = nil
 			Storage.CurrentHPRatio = 0
+			if Storage.TacticalHUD then Storage.TacticalHUD.Main.Visible = false end
 		end
 	end
 	
 	local highestThreat, targetPart = -1, nil
 	for p, data in pairs(Storage.PlayerCache) do
 		if not data.Char.Parent then continue end
+		if not Utils.IsAlive(p, data.Char) then continue end
 		if Config.States.TeamCheck and Utils.IsTeammate(p) then continue end
-		local hum = data.Hum
-		if hum and hum.Health <= 0 and hum.MaxHealth > 0 then continue end
 		local aimPart = Utils.GetSmartAimPart(data.Char)
 		if not aimPart then continue end
 		local pos, onScreen = Camera:WorldToViewportPoint(aimPart.Position)
@@ -524,6 +611,7 @@ function Features.UpdateHitboxes()
 	Storage.HitboxLastUpdate = now
 	for _, p in pairs(Services.Players:GetPlayers()) do
 		if p ~= LocalPlayer and p.Character then
+			if not Utils.IsAlive(p, p.Character) then continue end
 			if Config.States.TeamCheck and Utils.IsTeammate(p) then continue end
 			local eHead = p.Character:FindFirstChild("Head")
 			local eBody = p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("HumanoidRootPart")
@@ -578,12 +666,11 @@ function Features.GetAuraTarget()
 	local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 	if not myHRP then return nil end
 	for _, p in pairs(Services.Players:GetPlayers()) do
-		if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") then
+		if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+			if not Utils.IsAlive(p, p.Character) then continue end
 			if Config.States.TeamCheck and Utils.IsTeammate(p) then continue end
-			if p.Character.Humanoid.Health > 0 then
-				local d = (p.Character.HumanoidRootPart.Position - myHRP.Position).Magnitude
-				if d < dist then dist = d; target = p.Character end
-			end
+			local d = (p.Character.HumanoidRootPart.Position - myHRP.Position).Magnitude
+			if d < dist then dist = d; target = p.Character end
 		end
 	end
 	return target
@@ -1072,8 +1159,10 @@ function UI.Init()
 			local teamName = p.Team and p.Team.Name or "Neutral"
 			local teamColor = p.Team and p.Team.TeamColor.Color or Config.Theme.Text
 			local hpText = "💀 DEAD"
-			if p.Character and p.Character:FindFirstChild("Humanoid") then
-				local hum = p.Character.Humanoid; if hum and hum.Health > 0 then hpText = "❤️ " .. math.floor(hum.Health) end
+			if p.Character then
+				local isAlive = Utils.IsAlive(p, p.Character)
+				local curHp, _ = Utils.GetHealth(p, p.Character)
+				hpText = isAlive and ("❤️ " .. math.floor(curHp)) or "💀 DEAD"
 			end
 			local Row = Instance.new("Frame", PlayerListFrame); Row.Size = UDim2.new(1, -8, 0, 28); Row.BackgroundTransparency = 1
 			local PBtn = Instance.new("TextButton", Row); PBtn.Size = UDim2.new(0.62, 0, 1, 0); PBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
@@ -1307,9 +1396,8 @@ if not _G.X_TITAN_HOOK_INITIALIZED and type(hookmetamethod) == "function" and ty
 				end
 				if hitInstance then
 					local hitChar = hitInstance:FindFirstAncestorOfClass("Model")
-					local hitHum = hitChar and hitChar:FindFirstChildOfClass("Humanoid")
-					if hitHum and hitHum.Health > 0 and hitChar ~= LocalPlayer.Character then
-						local hitPlr = Services.Players:GetPlayerFromCharacter(hitChar)
+					local hitPlr = Services.Players:GetPlayerFromCharacter(hitChar)
+					if hitPlr and hitPlr ~= LocalPlayer and CurrentUtils.IsAlive(hitPlr, hitChar) then
 						if not CurrentConfig.States.TeamCheck or not CurrentUtils.IsTeammate(hitPlr) then
 							CurrentStorage.HitmarkerAlpha = 1.0
 						end
@@ -1644,6 +1732,15 @@ function Runtime.Init()
 				UpdatePlayerCache(p)
 			end)
 			table.insert(Storage.Connections, cAdded)
+			local cRemoved = p.CharacterRemoving:Connect(function()
+				Storage.PlayerCache[p] = nil
+				if Storage.LockedTarget == p then
+					Storage.LockedTarget = nil
+					Storage.CurrentHPRatio = 0
+					if Storage.TacticalHUD then Storage.TacticalHUD.Main.Visible = false end
+				end
+			end)
+			table.insert(Storage.Connections, cRemoved)
 		end
 	end
 
@@ -1653,6 +1750,15 @@ function Runtime.Init()
 			UpdatePlayerCache(p)
 		end)
 		table.insert(Storage.Connections, cAdded)
+		local cRemoved = p.CharacterRemoving:Connect(function()
+			Storage.PlayerCache[p] = nil
+			if Storage.LockedTarget == p then
+				Storage.LockedTarget = nil
+				Storage.CurrentHPRatio = 0
+				if Storage.TacticalHUD then Storage.TacticalHUD.Main.Visible = false end
+			end
+		end)
+		table.insert(Storage.Connections, cRemoved)
 		UpdatePlayerCache(p)
 	end)
 	table.insert(Storage.Connections, cachePAdded)
@@ -1760,27 +1866,33 @@ function Runtime.Init()
 				if (now - Storage.LastHUDUpdate) > 0.05 then
 					Storage.LastHUDUpdate = now
 					local lockedPlr = Storage.LockedTarget
-					local hum = lockedPlr.Character:FindFirstChild("Humanoid")
-					local hrp_t = lockedPlr.Character:FindFirstChild("HumanoidRootPart")
-					local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-				if hum and hrp_t and myHRP then
-					local dist = math.floor((hrp_t.Position - myHRP.Position).Magnitude)
-					local targetRatio = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
-					Storage.CurrentHPRatio = Storage.CurrentHPRatio + (targetRatio - Storage.CurrentHPRatio) * 0.2
-					local hpColor = Color3.new(1 - Storage.CurrentHPRatio, Storage.CurrentHPRatio, 0)
-					Storage.TacticalHUD.HPFill.Size = UDim2.new(Storage.CurrentHPRatio, 0, 1, 0)
-					Storage.TacticalHUD.HPFill.BackgroundColor3 = hpColor
-					local threat, tColor = "LOW", Config.Theme.ThreatLow
-					if dist < 30 then threat, tColor = "HIGH", Config.Theme.ThreatHigh
-					elseif dist < 80 then threat, tColor = "MED", Config.Theme.ThreatMed end
-					local breath = math.sin(now * 3) * 0.2 + 0.8
-					if threat == "HIGH" then tColor = Color3.fromRGB(255, 40 * breath, 40 * breath)
-					elseif threat == "MED" then tColor = Color3.fromRGB(255, 180 * breath, 0) end
-					Storage.TacticalHUD.Header.Text = string.format("[%s] %s", threat, lockedPlr.Name)
-					Storage.TacticalHUD.Header.TextColor3 = tColor
-					Storage.TacticalHUD.Footer.Text = string.format("DIST: %dm | AIM: %s", dist, Config.Vals.AimPart)
-					Storage.TacticalHUD.Stroke.Color = tColor
-				end
+					if not Utils.IsAlive(lockedPlr, lockedPlr.Character) then
+						Storage.LockedTarget = nil
+						Storage.CurrentHPRatio = 0
+						Storage.TacticalHUD.Main.Visible = false
+					else
+						local hrp_t = lockedPlr.Character:FindFirstChild("HumanoidRootPart")
+						local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+						if hrp_t and myHRP then
+							local dist = math.floor((hrp_t.Position - myHRP.Position).Magnitude)
+							local curHp, maxHp = Utils.GetHealth(lockedPlr, lockedPlr.Character)
+							local targetRatio = math.clamp(curHp / maxHp, 0, 1)
+							Storage.CurrentHPRatio = Storage.CurrentHPRatio + (targetRatio - Storage.CurrentHPRatio) * 0.2
+							local hpColor = Color3.new(1 - Storage.CurrentHPRatio, Storage.CurrentHPRatio, 0)
+							Storage.TacticalHUD.HPFill.Size = UDim2.new(Storage.CurrentHPRatio, 0, 1, 0)
+							Storage.TacticalHUD.HPFill.BackgroundColor3 = hpColor
+							local threat, tColor = "LOW", Config.Theme.ThreatLow
+							if dist < 30 then threat, tColor = "HIGH", Config.Theme.ThreatHigh
+							elseif dist < 80 then threat, tColor = "MED", Config.Theme.ThreatMed end
+							local breath = math.sin(now * 3) * 0.2 + 0.8
+							if threat == "HIGH" then tColor = Color3.fromRGB(255, 40 * breath, 40 * breath)
+							elseif threat == "MED" then tColor = Color3.fromRGB(255, 180 * breath, 0) end
+							Storage.TacticalHUD.Header.Text = string.format("[%s] %s", threat, lockedPlr.Name)
+							Storage.TacticalHUD.Header.TextColor3 = tColor
+							Storage.TacticalHUD.Footer.Text = string.format("DIST: %dm | AIM: %s", dist, Config.Vals.AimPart)
+							Storage.TacticalHUD.Stroke.Color = tColor
+						end
+					end
 				end
 			elseif Storage.TacticalHUD.Main.Visible then
 				Storage.TacticalHUD.Main.Visible = false
@@ -1879,8 +1991,9 @@ function Runtime.Init()
 		end
 		
 		if Config.States.TriggerBot then
-			-- Use cached target
-			if cachedTarget and cachedTarget.Parent and (not Config.States.WallCheck or Utils.IsVisible(cachedTarget)) then
+			-- Use cached target (with alive validation)
+			local trigPlr = cachedTarget and cachedTarget.Parent and Services.Players:GetPlayerFromCharacter(cachedTarget.Parent)
+			if cachedTarget and cachedTarget.Parent and trigPlr and Utils.IsAlive(trigPlr, cachedTarget.Parent) and (not Config.States.WallCheck or Utils.IsVisible(cachedTarget)) then
 				if tick() - Storage.TriggerBotCooldown > Config.Vals.TriggerDelay then
 					mouse1click(); Storage.TriggerBotCooldown = tick()
 				end
@@ -1910,7 +2023,7 @@ function Runtime.Init()
 						continue
 					end
 					local pChar = data.Char; local root = data.Root; local head = data.Head; local hum = data.Hum
-					local isAlive = (not hum) or (hum.Health > 0)
+					local isAlive = Utils.IsAlive(plr, pChar)
 					if not isAlive then
 						esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
 						if Storage.SkeletonParts[plr] then for _, part in pairs(Storage.SkeletonParts[plr]) do part.Visible = false end end
@@ -1951,7 +2064,7 @@ function Runtime.Init()
 					if Config.States.ESP then
 						esp.Box.Visible = true; esp.Box.Size = Vector2.new(width, height); esp.Box.Position = Vector2.new(boxX, boxY); esp.Box.Color = drawColor
 						esp.Name.Visible = true; esp.Name.Text = plr.Name; esp.Name.Position = Vector2.new(vector.X, boxY - 18); esp.Name.Color = drawColor
-						esp.HealthBar.Visible = true; local healthRatio = (hum and hum.MaxHealth > 0) and math.clamp(hum.Health / hum.MaxHealth, 0, 1) or 1
+						esp.HealthBar.Visible = true; local curHp, maxHp = Utils.GetHealth(plr, pChar); local healthRatio = math.clamp(curHp / maxHp, 0, 1)
 						esp.HealthBar.Color = Color3.new(1 - healthRatio, healthRatio, 0)
 						esp.HealthBar.From = Vector2.new(boxX - 5, boxY + height); esp.HealthBar.To = Vector2.new(boxX - 5, boxY + height - height * healthRatio)
 						esp.Distance.Visible = true; esp.Distance.Text = string.format("%.0fm", (root.Position - (hrp and hrp.Position or root.Position)).Magnitude)
@@ -1993,7 +2106,17 @@ function Runtime.Init()
 	-- HEARTBEAT (V5.0.0: P1 FIXED - dt math & Fly/Desync Mutex)
 	-- ======================================================================
 	local heartbeatConn = Services.RunService.Heartbeat:Connect(function(dt)
-
+		if not Utils.IsAlive(LocalPlayer, LocalPlayer.Character) then
+			if LocalPlayer.Character then
+				local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+				if hrp then
+					local bv = hrp:FindFirstChild("X_Fly_BV"); if bv then bv:Destroy() end
+					local bg = hrp:FindFirstChild("X_Fly_BG"); if bg then bg:Destroy() end
+					local lv = hrp:FindFirstChild("X_Speed_LV"); if lv then lv:Destroy() end
+				end
+			end
+			return
+		end
 		-- [V5.1.0] Rainbow Chams & HUD Accent
 		if Config.States.RainbowChams then
 			local rainbow = Color3.fromHSV((tick() * 0.4) % 1, 0.9, 1)
@@ -2316,11 +2439,10 @@ function Runtime.Init()
 				local highestThreat, target = -1, nil
 				for p, data in pairs(Storage.PlayerCache) do
 					if not data.Char.Parent then continue end
+					if not Utils.IsAlive(p, data.Char) then continue end
 					if Config.States.TeamCheck and Utils.IsTeammate(p) then continue end
 					local aimPart = Utils.GetSmartAimPart(data.Char)
 					if not aimPart then continue end
-					local hum = data.Hum
-					if hum and hum.Health <= 0 and hum.MaxHealth > 0 then continue end
 					local pos, onScreen = Camera:WorldToViewportPoint(aimPart.Position)
 					if onScreen and pos.Z > 0 and (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude <= Config.Vals.FOV then
 						local score = Utils.CalculateThreatScore(p, myHRP)
