@@ -674,10 +674,26 @@ function UI.Init()
 		local Page = Instance.new("ScrollingFrame", PageHolder)
 		Page.Size = UDim2.new(1, 0, 1, 0); Page.BackgroundTransparency = 1; Page.Visible = false
 		Page.ScrollBarThickness = 4; Page.ScrollBarImageColor3 = Config.Theme.Stroke
+		Page.CanvasSize = UDim2.new(0, 0, 2.5, 0)
+		pcall(function() Page.AutomaticCanvasSize = Enum.AutomaticSize.Y end)
+		
 		local List = Instance.new("UIListLayout", Page); List.Padding = UDim.new(0, 5); List.SortOrder = Enum.SortOrder.LayoutOrder
-		List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			Page.CanvasSize = UDim2.new(0, 0, 0, List.AbsoluteContentSize.Y + 12)
+		local function refreshCanvas()
+			local y = List.AbsoluteContentSize.Y
+			if y > 50 then
+				Page.CanvasSize = UDim2.new(0, 0, 0, y + 25)
+			else
+				Page.CanvasSize = UDim2.new(0, 0, 2.5, 0)
+			end
+		end
+		List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(refreshCanvas)
+		Page:GetPropertyChangedSignal("Visible"):Connect(function()
+			if Page.Visible then
+				Page.CanvasPosition = Vector2.new(0, 0)
+				task.defer(refreshCanvas)
+			end
 		end)
+		
 		local TabBtn = Instance.new("TextButton", TabHolder)
 		TabBtn.Size = UDim2.new(1, 0, 0, 32); TabBtn.BackgroundColor3 = Color3.fromRGB(30,30,35)
 		TabBtn.Text = name; TabBtn.TextColor3 = Config.Theme.TextDim; TabBtn.Font = Enum.Font.GothamBold; TabBtn.TextSize = 11; TabBtn.AutoButtonColor = false
@@ -686,6 +702,8 @@ function UI.Init()
 			for _,v in pairs(PageHolder:GetChildren()) do if v:IsA("ScrollingFrame") then v.Visible = false end end
 			for _,v in pairs(TabHolder:GetChildren()) do if v:IsA("TextButton") then v.BackgroundColor3 = Color3.fromRGB(30,30,35); v.TextColor3 = Config.Theme.TextDim end end
 			Page.Visible = true; TabBtn.BackgroundColor3 = Config.Theme.Stroke; TabBtn.TextColor3 = Config.Theme.Main
+			Page.CanvasPosition = Vector2.new(0, 0)
+			task.defer(refreshCanvas)
 		end)
 		return Page, TabBtn, getNextOrder
 	end
@@ -1003,7 +1021,9 @@ function UI.Init()
 				end
 			end)
 		end
-		PlayerListFrame.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y)
+		pcall(function() PlayerListFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y end)
+		local pListY = ListLayout.AbsoluteContentSize.Y
+		PlayerListFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(pListY + 10, 400))
 	end
 	RefreshPlayerList()
 	
@@ -1039,6 +1059,20 @@ function UI.Init()
 	AddKeybindInfo(P6, "MOVEMENT", {{"Fly Mode", "Z"}, {"Noclip", "V"}, {"Sky Hide", "X"}, {"Click TP", "Ctrl + Click"}, {"Destroy Map", "P"}, {"Restore Map", "L"}}, getOrder6)
 	AddKeybindInfo(P6, "PLAYER & UI", {{"Open Menu", "Insert"}, {"Tactical TP", "B"}}, getOrder6)
 	AddKeybindInfo(P6, "SYSTEM", {{"Unload Script", "End"}}, getOrder6)
+	
+	-- Ensure all tabs have non-zero canvas size so elements are immediately visible
+	for _, page in ipairs({P1, P2, P3, P4, P5, P6}) do
+		pcall(function()
+			page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+			local l = page:FindFirstChildOfClass("UIListLayout")
+			local y = l and l.AbsoluteContentSize.Y or 0
+			if y > 50 then
+				page.CanvasSize = UDim2.new(0, 0, 0, y + 25)
+			else
+				page.CanvasSize = UDim2.new(0, 0, 2.5, 0)
+			end
+		end)
+	end
 end
 
 -- ==============================================================================
