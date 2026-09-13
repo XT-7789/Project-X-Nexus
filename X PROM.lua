@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PROM V3.4.2 - PROFESSIONAL MOBILE SUITE ]]
+-- [[ X PROM V3.4.3 - PROFESSIONAL MOBILE SUITE ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- High-Performance Zero-Lag Character Caching & 60+ FPS Optimization
 -- ==============================================================================
@@ -360,17 +360,31 @@ function Utils.IsAlive(arg1, arg2, arg3)
 	end
 	if not char or not char.Parent then return false, false end
 
+	-- 1. If player has an active character assigned that differs from char, this char is an obsolete dead corpse
+	if plr and plr.Character and plr.Character ~= char then
+		return false, false
+	end
+
+	-- 2. Check if parented to corpse/debris/graveyard containers
+	if char.Parent then
+		local pName = char.Parent.Name
+		if pName == "Debris" or pName == "Corpses" or pName == "Corpse" or pName == "Dead" or pName == "Ragdolls" or pName == "Ragdoll" or pName == "DeadBodies" or pName == "Graveyard" or pName == "Trash" then
+			return false, false
+		end
+	end
+
+	-- 3. Vital root part & boundary check
 	local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or char.PrimaryPart
-	if not root then return false, false end
+	if not root or not root.Parent then return false, false end
 
 	local rPos = root.Position
 	if rPos.Y < -3000 or math.abs(rPos.X) > 200000 or math.abs(rPos.Z) > 200000 then
 		return false, false
 	end
 
-	local isFarawayLobby = (rPos.Y > 3000 or math.abs(rPos.X) > 6000 or math.abs(rPos.Z) > 6000)
+	local isFarawayLobby = (rPos.Y > 3000 or math.abs(rPos.X) > 30000 or math.abs(rPos.Z) > 30000)
 
-	-- Arsenal check
+	-- 4. Arsenal & specialized game NRPBS checks
 	if plr and (game.PlaceId == 286090429 or game.GameId == 111958650 or plr:FindFirstChild("NRPBS")) then
 		local nrpbs = plr:FindFirstChild("NRPBS")
 		if nrpbs then
@@ -384,17 +398,69 @@ function Utils.IsAlive(arg1, arg2, arg3)
 		end
 	end
 
-	-- Dead tags (Fast BoolValue only)
-	local deadTag = char:FindFirstChild("Dead") or char:FindFirstChild("Ragdoll") or char:FindFirstChild("Died")
-	if deadTag and deadTag:IsA("BoolValue") and deadTag.Value == true then
+	-- 5. Universal Dead & Ragdoll markers (children, folders, scripts, values)
+	local deadNames = {"Dead", "Ragdoll", "Ragdolled", "Died", "Corpse", "Downed", "Knocked", "Death", "KO", "Ko", "Fainted", "BleedOut", "Unconscious", "Eliminated", "IsDead", "Killed"}
+	for _, dName in ipairs(deadNames) do
+		local marker = char:FindFirstChild(dName)
+		if marker then
+			if marker:IsA("BoolValue") then
+				if marker.Value == true then return false, false end
+			elseif marker:IsA("IntValue") or marker:IsA("NumberValue") then
+				if marker.Value == 1 or marker.Value == true then return false, false end
+			else
+				return false, false
+			end
+		end
+	end
+
+	-- 6. Universal Dead & Ragdoll Attributes
+	for _, dAttr in ipairs({"Dead", "IsDead", "Ragdoll", "Ragdolled", "Downed", "Knocked", "Killed", "Unconscious", "Fainted"}) do
+		if char:GetAttribute(dAttr) == true or (plr and plr:GetAttribute(dAttr) == true) then
+			return false, false
+		end
+	end
+
+	-- 7. Universal Health Calculation (NRPBS, Humanoid, HP Value, Attributes)
+	local curHp, _ = Utils.GetHealth(plr, char)
+	if curHp <= 0 then
 		return false, false
 	end
 
-	-- Humanoid
+	-- 8. Roblox Humanoid State & Health
 	hum = hum or char:FindFirstChildOfClass("Humanoid")
 	if hum then
 		if hum.Health <= 0 then
-			return false, isFarawayLobby
+			return false, false
+		end
+		local ok, state = pcall(function() return hum:GetState() end)
+		if ok then
+			if state == Enum.HumanoidStateType.Dead then
+				return false, false
+			end
+			if (state == Enum.HumanoidStateType.Physics or state == Enum.HumanoidStateType.Ragdoll) then
+				if hum.Health <= 1 or not hum.RequiresNeck then
+					return false, false
+				end
+			end
+		end
+	else
+		-- In Roblox standard games, an active alive character MUST have a Humanoid!
+		local hasCustomHpSystem = (plr and plr:FindFirstChild("NRPBS")) or char:FindFirstChild("Health") or char:FindFirstChild("HP") or char:GetAttribute("Health") or char:GetAttribute("HP")
+		if not hasCustomHpSystem and not isFarawayLobby then
+			return false, false
+		end
+	end
+
+	-- 9. Check BreakJointsOnDeath (severed head / broken neck)
+	local head = char:FindFirstChild("Head")
+	if not head or not head.Parent then
+		return false, false
+	end
+	local torso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+	if torso and not hum then
+		local neck = head:FindFirstChild("Neck") or torso:FindFirstChild("Neck") or head:FindFirstChildOfClass("Motor6D") or torso:FindFirstChildOfClass("Motor6D")
+		if not neck then
+			return false, false
 		end
 	end
 
@@ -443,12 +509,12 @@ function Utils.GetClosestTarget()
     local closestDist, target = Config.Vals.FOV, nil
 
     for _, p in pairs(Services.Players:GetPlayers()) do
-        if p == LocalPlayer or not p.Character then continue end
-        local hum = p.Character:FindFirstChildOfClass("Humanoid")
-        if not Utils.IsAlive(p.Character, hum, p) then continue end
+        if p == LocalPlayer then continue end
         if Config.States.TeamCheck and Utils.IsTeammate(p) then continue end
+        local cData = Utils.GetCharacterData(p)
+        if not cData or not cData.IsAlive then continue end
 
-        local aimPart = Utils.GetAimPart(p.Character)
+        local aimPart = Utils.GetAimPart(cData.Char)
         if not aimPart then continue end
 
         if Config.States.WallCheck and not Utils.IsVisible(aimPart) then continue end
@@ -831,7 +897,7 @@ local function BuildMobileUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "📱 X PROM <font color='#00dcff'>V3.4.2</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
+    Title.Text = "📱 X PROM <font color='#00dcff'>V3.4.3</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
     Title.Size = UDim2.new(0, 240, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 13; Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -1394,7 +1460,7 @@ local function Init()
         end
     end)
 
-    Notify("X PROM V3.4.2", "Delta Mobile Pro Active! Tap [⚡] for menu")
+    Notify("X PROM V3.4.3", "Delta Mobile Pro Active! Tap [⚡] for menu")
 end
 
 Init()
