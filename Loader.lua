@@ -26,13 +26,28 @@ local function Notify(title, text, dur)
 end
 
 local function GetHWID()
-	if gethwid then return tostring(gethwid()) end
-	if syn and syn.get_hwid then return tostring(syn.get_hwid()) end
+	if type(gethwid) == "function" then
+		local s, h = pcall(gethwid)
+		if s and h and h ~= "" then return tostring(h) end
+	end
+	if syn and type(syn.get_hwid) == "function" then
+		local s, h = pcall(syn.get_hwid)
+		if s and h and h ~= "" then return tostring(h) end
+	end
 	local ok, clientId = pcall(function()
 		return game:GetService("RbxAnalyticsService"):GetClientId()
 	end)
 	if ok and clientId and clientId ~= "" then return tostring(clientId) end
-	return tostring(LocalPlayer.UserId) .. "_DEV"
+	local lp = Services.Players.LocalPlayer or Services.Players.PlayerAdded:Wait()
+	if lp and lp.UserId and lp.UserId ~= 0 then
+		return tostring(lp.UserId) .. "_PC"
+	end
+	return "X_CLIENT_" .. tostring(math.floor(tick()))
+end
+
+local function SafeHttpGet(url)
+	local sep = string.find(url, "?") and "&" or "?"
+	return game:HttpGet(url .. sep .. "t=" .. tostring(math.floor(tick())))
 end
 
 local key = getgenv().Key or getgenv().ScriptKey or script_key
@@ -49,11 +64,14 @@ local tier
 Notify("⚡ X SUITE", "Authenticating Key & Verifying HWID...", 2)
 
 local hwid = GetHWID()
+print("🔑 [X SUITE AUTH] Verifying Key: " .. tostring(key) .. " | Device HWID: " .. tostring(hwid))
 local verifyUrl = "https://x-auth.alex-x-7789-x.workers.dev/verify?key=" .. tostring(key) .. "&hwid=" .. tostring(hwid)
 
 local success, response = pcall(function()
 	return game:HttpGet(verifyUrl)
 end)
+
+print("📡 [X SUITE AUTH] Cloud Server Response: " .. tostring(response))
 
 if not success or not response then
 	Notify("❌ X SUITE", "Connection Error! Could not reach Auth Server.", 4)
@@ -119,40 +137,40 @@ print("==========================================")
 
 if isMasterMiniPlus then
 	if isMobile then
-		loadstring(game:HttpGet(repo .. "X%20MINIM.lua"))()
+		loadstring(SafeHttpGet(repo .. "X%20MINIM.lua"))()
 	else
-		loadstring(game:HttpGet(repo .. "X%20MINI.lua"))()
+		loadstring(SafeHttpGet(repo .. "X%20MINI.lua"))()
 	end
 elseif string.lower(tier) == "litem" then
-	loadstring(game:HttpGet(repo .. "X%20LITEM.lua"))()
+	loadstring(SafeHttpGet(repo .. "X%20LITEM.lua"))()
 elseif string.lower(tier) == "lite" then
 	if isMobile then
-		loadstring(game:HttpGet(repo .. "X%20LITEM.lua"))()
+		loadstring(SafeHttpGet(repo .. "X%20LITEM.lua"))()
 	else
-		loadstring(game:HttpGet(repo .. "X%20LITE.lua"))()
+		loadstring(SafeHttpGet(repo .. "X%20LITE.lua"))()
 	end
 elseif string.lower(tier) == "prom" then
-	loadstring(game:HttpGet(repo .. "X%20PROM.lua"))()
+	loadstring(SafeHttpGet(repo .. "X%20PROM.lua"))()
 elseif string.lower(tier) == "minim" then
-	loadstring(game:HttpGet(repo .. "X%20MINIM.lua"))()
+	loadstring(SafeHttpGet(repo .. "X%20MINIM.lua"))()
 elseif string.lower(tier) == "nanom" then
-	loadstring(game:HttpGet(repo .. "X%20NANOM.lua"))()
+	loadstring(SafeHttpGet(repo .. "X%20NANOM.lua"))()
 elseif string.lower(tier) == "nano" then
 	if isMobile then
-		loadstring(game:HttpGet(repo .. "X%20NANOM.lua"))()
+		loadstring(SafeHttpGet(repo .. "X%20NANOM.lua"))()
 	else
-		loadstring(game:HttpGet(repo .. "X%20NANO.lua"))()
+		loadstring(SafeHttpGet(repo .. "X%20NANO.lua"))()
 	end
 elseif string.lower(tier) == "mini" then
-	loadstring(game:HttpGet(repo .. "X%20MINI.lua"))()
+	loadstring(SafeHttpGet(repo .. "X%20MINI.lua"))()
 elseif string.lower(tier) == "pro" then
 	if isMobile then
-		loadstring(game:HttpGet(repo .. "X%20PROM.lua"))()
+		loadstring(SafeHttpGet(repo .. "X%20PROM.lua"))()
 	else
-		loadstring(game:HttpGet(repo .. "X%20PRO.lua"))()
+		loadstring(SafeHttpGet(repo .. "X%20PRO.lua"))()
 	end
 elseif string.lower(tier) == "titan" then
-	loadstring(game:HttpGet(repo .. "X%20TITAN.lua"))()
+	loadstring(SafeHttpGet(repo .. "X%20TITAN.lua"))()
 else
-	loadstring(game:HttpGet(repo .. "X%20NANO.lua"))()
+	loadstring(SafeHttpGet(repo .. "X%20NANO.lua"))()
 end

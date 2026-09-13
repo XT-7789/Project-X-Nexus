@@ -38,24 +38,12 @@ if type(gethui) == "function" then
     pcall(function() targetGui = gethui() end)
 end
 if not targetGui then
-    local canCore = false
-    pcall(function()
-        local test = Instance.new("ScreenGui")
-        test.Name = "_X_TEST_"
-        test.Parent = game:GetService("CoreGui")
-        test:Destroy()
-        canCore = true
-    end)
-    if canCore then
-        targetGui = game:GetService("CoreGui")
-    else
-        targetGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui", 10)
-    end
+    targetGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui", 10)
 end
 if not targetGui then
     pcall(function() targetGui = LocalPlayer:WaitForChild("PlayerGui") end)
 end
-if not targetGui then warn("X MINI: GUI Target failed!") return end
+if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==================================================================
 -- CONFIGURATION & STORAGE
@@ -459,7 +447,31 @@ local function BuildUI()
     Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
     local Stroke = Instance.new("UIStroke", Main)
     Stroke.Color = Config.Theme.Accent; Stroke.Thickness = 1.5; Stroke.Transparency = 0.5
-    Storage.MainFrame = Main
+        Storage.MainFrame = Main
+
+    -- Floating Open/Close Button (Always visible on screen, click to toggle menu)
+    local ToggleBtn = Instance.new("TextButton", ScreenGui)
+    ToggleBtn.Name = "X_Mini_Floating_Toggle"
+    ToggleBtn.Size = UDim2.new(0, 42, 0, 42)
+    ToggleBtn.Position = UDim2.new(0, 16, 0.45, 0)
+    ToggleBtn.BackgroundColor3 = Config.Theme.Sec
+    ToggleBtn.Text = "X"
+    ToggleBtn.TextColor3 = Config.Theme.Accent
+    ToggleBtn.Font = Enum.Font.GothamBold
+    ToggleBtn.TextSize = 18
+    ToggleBtn.Active = true
+    ToggleBtn.Draggable = true
+    Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 10)
+    local tbStroke = Instance.new("UIStroke", ToggleBtn)
+    tbStroke.Color = Config.Theme.Accent
+    tbStroke.Thickness = 1.5
+    tbStroke.Transparency = 0.3
+
+    ToggleBtn.MouseButton1Click:Connect(function()
+        if Storage.MainFrame then
+            Storage.MainFrame.Visible = not Storage.MainFrame.Visible
+        end
+    end)
 
     -- Header
     local Header = Instance.new("Frame", Main)

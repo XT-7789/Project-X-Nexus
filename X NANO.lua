@@ -33,27 +33,15 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 
 local targetGui
 if type(gethui) == "function" then
-	pcall(function() targetGui = gethui() end)
+    pcall(function() targetGui = gethui() end)
 end
 if not targetGui then
-	local canCore = false
-	pcall(function()
-		local test = Instance.new("ScreenGui")
-		test.Name = "_X_TEST_"
-		test.Parent = game:GetService("CoreGui")
-		test:Destroy()
-		canCore = true
-	end)
-	if canCore then
-		targetGui = game:GetService("CoreGui")
-	else
-		targetGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui", 10)
-	end
+    targetGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui", 10)
 end
 if not targetGui then
-	pcall(function() targetGui = LocalPlayer:WaitForChild("PlayerGui") end)
+    pcall(function() targetGui = LocalPlayer:WaitForChild("PlayerGui") end)
 end
-if not targetGui then warn("X NANO: GUI Target failed!") return end
+if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==================================================================
 -- CONFIG & STORAGE
