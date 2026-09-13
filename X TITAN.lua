@@ -1120,7 +1120,9 @@ if not _G.X_TITAN_HOOK_INITIALIZED and type(hookmetamethod) == "function" and ty
 					if myHRP and origin then
 						local distToHRP = (origin - myHRP.Position).Magnitude
 						local distToTool = toolHandle and (origin - toolHandle.Position).Magnitude or math.huge
-						if distToHRP < 10 or distToTool < 5 then
+						local cam = CurrentUtils.GetCurrentCamera()
+						local distToCam = cam and (origin - cam.CFrame.Position).Magnitude or math.huge
+						if distToHRP < 15 or distToTool < 8 or distToCam < 8 then
 							shouldProcessSilent = true
 						end
 					end
@@ -1143,17 +1145,19 @@ if not _G.X_TITAN_HOOK_INITIALIZED and type(hookmetamethod) == "function" and ty
 			if shouldProcessSilent then
 				local target, isWall = CurrentUtils.GetClosestToCenter()
 				if target and target.Parent then
-					local head = target.Parent:FindFirstChild("Head")
+					local predPos = target.Position
 					local eRoot = target.Parent:FindFirstChild("HumanoidRootPart")
-					if head then
-						local predPos = head.Position
-						if eRoot then predPos = predPos + (eRoot.AssemblyLinearVelocity * CurrentConfig.Vals.PredictionStrength) end
-						if method == "Raycast" then
-							local origin = args[1]; local direction = (predPos - origin).Unit * 5000; args[2] = direction
-						else
-							local ray = args[1]; local origin = ray.Origin; local direction = (predPos - origin).Unit * 5000
-							args[1] = Ray.new(origin, direction)
-						end
+					if eRoot and CurrentConfig.States.SmartPrediction then
+						local predTime = CurrentConfig.Vals.PredictionStrength
+						local ping = CurrentUtils.GetPing() / 1000
+						predTime = predTime + ping * CurrentConfig.Vals.PingCompensation
+						predPos = predPos + (eRoot.AssemblyLinearVelocity * predTime)
+					end
+					if method == "Raycast" then
+						local origin = args[1]; local direction = (predPos - origin).Unit * 5000; args[2] = direction
+					else
+						local ray = args[1]; local origin = ray.Origin; local direction = (predPos - origin).Unit * 5000
+						args[1] = Ray.new(origin, direction)
 					end
 				end
 			end
@@ -1790,31 +1794,27 @@ function Runtime.Init()
 		end
 		
 		if Config.States.Aimbot then
-			-- Use cached target
+			-- Magnetic tracking without acceleration noise
 			if cachedTarget and cachedTarget.Parent then
 				local targetPos = cachedTarget.Position
 				local eRoot = cachedTarget.Parent:FindFirstChild("HumanoidRootPart")
 				local predTime = Config.Vals.PredictionStrength
 				if Config.States.SmartPrediction then
-					local ping = Utils.GetPing() / 1000; predTime = predTime + ping * Config.Vals.PingCompensation
+					local ping = Utils.GetPing() / 1000
+					predTime = predTime + ping * Config.Vals.PingCompensation
 				end
 				if eRoot then
-					local currentVel = eRoot.AssemblyLinearVelocity
-					local prevVel = Storage.LastTargetVel[eRoot] or currentVel
-					local currentTick = tick(); local lastTick = Storage.LastTargetTick[eRoot] or currentTick
-					local dt = math.max(currentTick - lastTick, 0.001); Storage.LastTargetTick[eRoot] = currentTick
-					local accel = (currentVel - prevVel) / dt; Storage.LastTargetVel[eRoot] = currentVel
-					targetPos = targetPos + (currentVel * predTime) + (0.5 * accel * predTime * predTime)
+					targetPos = targetPos + (eRoot.AssemblyLinearVelocity * predTime)
 				end
 				local screenPos, onScreen = CurrentCam:WorldToViewportPoint(targetPos)
 				local screenDist = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
 				if screenDist < Config.Vals.Deadzone then
 					CurrentCam.CFrame = CFrame.lookAt(CurrentCam.CFrame.Position, targetPos)
 				else
-					local baseSmooth = Config.Vals.AimbotSmoothness; local dynamicAlpha = 1.0 - baseSmooth
-					if screenDist > 150 then dynamicAlpha = math.clamp(dynamicAlpha + 0.4, 0.15, 1.0)
-					elseif screenDist < 30 then dynamicAlpha = math.clamp(dynamicAlpha - 0.2, 0.05, 1.0) end
-					CurrentCam.CFrame = CurrentCam.CFrame:Lerp(CFrame.lookAt(CurrentCam.CFrame.Position, targetPos), dynamicAlpha)
+					-- Smooth magnetic aim tracking (clamped 0.08 to 1.0)
+					local smoothFactor = math.clamp(1.0 - Config.Vals.AimbotSmoothness, 0.08, 1.0)
+					if screenDist > 120 then smoothFactor = math.clamp(smoothFactor + 0.25, 0.12, 1.0) end
+					CurrentCam.CFrame = CurrentCam.CFrame:Lerp(CFrame.lookAt(CurrentCam.CFrame.Position, targetPos), smoothFactor)
 				end
 			end
 		end
@@ -2225,51 +2225,35 @@ function Runtime.Init()
 		if i.KeyCode == Config.Keys.LockTarget then
 			local Camera = Utils.GetCurrentCamera()
 			if not Camera then return end
-			if Storage.LockedTarget and Storage.LockedTarget.Character then
-				local tHum = Storage.LockedTarget.Character:FindFirstChild("Humanoid")
-				if tHum and tHum.Health > 0 then
-					local oldName = Storage.LockedTarget.Name; Storage.LockedTarget = nil; Storage.CurrentHPRatio = 0
-					Utils.Notify("🔓 Target Unlocked", "Unlocked: " .. oldName)
-					local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-					local highestThreat, nextTarget = -1, nil
-					for _, p in pairs(Services.Players:GetPlayers()) do
-						if p == LocalPlayer or not p.Character then continue end
-						if Config.States.TeamCheck and Utils.IsTeammate(p) then continue end
-						local aimPart = Utils.GetSmartAimPart(p.Character)
-						if not aimPart then continue end
-						local pHum = p.Character:FindFirstChild("Humanoid")
-						if not pHum or pHum.Health <= 0 then continue end
-						local pos, onScreen = Camera:WorldToViewportPoint(aimPart.Position)
-						if onScreen and (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude <= Config.Vals.FOV then
-							local score = Utils.CalculateThreatScore(p, myHRP)
-							if score > highestThreat then highestThreat = score; nextTarget = p end
-						end
-					end
-					if nextTarget then Storage.LockedTarget = nextTarget; Utils.Notify("🎯 Target Locked", "Locked: " .. nextTarget.Name) end
-				else
-					Storage.LockedTarget = nil; Storage.CurrentHPRatio = 0
-					Utils.Notify("🔓 Target Dead", "Target lock released")
-				end
+			if Storage.LockedTarget then
+				local oldName = Storage.LockedTarget.Name
+				Storage.LockedTarget = nil
+				Storage.CurrentHPRatio = 0
+				if Storage.TacticalHUD then Storage.TacticalHUD.Main.Visible = false end
+				Utils.Notify("🔓 Target Unlocked", "Released focus on: " .. oldName)
 			else
 				local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 				local highestThreat, target = -1, nil
-				for _, p in pairs(Services.Players:GetPlayers()) do
-					if p == LocalPlayer or not p.Character then continue end
+				for p, data in pairs(Storage.PlayerCache) do
+					if not data.Char.Parent then continue end
 					if Config.States.TeamCheck and Utils.IsTeammate(p) then continue end
-					local aimPart = Utils.GetSmartAimPart(p.Character)
+					local aimPart = Utils.GetSmartAimPart(data.Char)
 					if not aimPart then continue end
-					local pHum = p.Character:FindFirstChild("Humanoid")
-					if not pHum or pHum.Health <= 0 then continue end
+					local hum = data.Hum
+					if hum and hum.Health <= 0 and hum.MaxHealth > 0 then continue end
 					local pos, onScreen = Camera:WorldToViewportPoint(aimPart.Position)
-					if onScreen and (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude <= Config.Vals.FOV then
+					if onScreen and pos.Z > 0 and (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude <= Config.Vals.FOV then
 						local score = Utils.CalculateThreatScore(p, myHRP)
 						if score > highestThreat then highestThreat = score; target = p end
 					end
 				end
 				if target then
-					Storage.LockedTarget = target; Storage.CurrentHPRatio = 0
-					Utils.Notify("🎯 Target Locked", "Locked: " .. target.Name .. " (Persistent)")
-				else Utils.Notify("❌ No Target", "No valid target inside FOV!") end
+					Storage.LockedTarget = target
+					Storage.CurrentHPRatio = 0
+					Utils.Notify("🎯 Target Locked", "Locked: " .. target.Name .. " (1-Target Focus)")
+				else
+					Utils.Notify("❌ No Target", "No valid enemy inside FOV circle!")
+				end
 			end
 		end
 		if i.KeyCode == Config.Keys.Hide and Config.States.SkyHide then
