@@ -628,6 +628,10 @@ function UI.Init()
 	ToggleBtn.MouseButton1Click:Connect(function()
 		if Storage.MainFrame then
 			Storage.MainFrame.Visible = not Storage.MainFrame.Visible
+			ToggleBtn.Text = Storage.MainFrame.Visible and "✕" or "X"
+			ToggleBtn.TextColor3 = Storage.MainFrame.Visible and Color3.fromRGB(255, 80, 80) or Config.Theme.Stroke
+			tbStroke.Color = Storage.MainFrame.Visible and Color3.fromRGB(255, 80, 80) or Config.Theme.Stroke
+			Utils.Notify("📱 Menu", Storage.MainFrame.Visible and "OPENED" or "CLOSED", 1)
 		end
 	end)
 	
@@ -702,7 +706,7 @@ function UI.Init()
 		Dot.Size = UDim2.new(0, 14, 0, 14); Dot.Position = UDim2.new(0, 2, 0.5, -7); Dot.BackgroundColor3 = Color3.fromRGB(150, 150, 160)
 		Instance.new("UICorner", Dot).CornerRadius = UDim.new(1, 0)
 		
-		local function Update(val)
+		local function Update(val, skipNotify)
 			local c = val and Config.Theme.Stroke or Color3.fromRGB(150, 150, 160)
 			local bgC = val and Color3.fromRGB(0, 60, 75) or Color3.fromRGB(45, 45, 55)
 			local p = val and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
@@ -716,8 +720,24 @@ function UI.Init()
 				Services.Workspace.FallenPartsDestroyHeight = Storage.OriginalFallenHeight
 			end
 			if flag == "Chams" then Features.UpdateChams() end
+			if flag == "ItemESP" and not val then ClearItemESP() end
+			if flag == "Radar" and Storage.RadarFrame then
+				Storage.RadarFrame.Visible = val
+				if not val then
+					for _, obj in pairs(Storage.RadarObjects) do if obj.Visible then obj.Visible = false end end
+				end
+			end
+			if flag == "ShowFOV" and Storage.FOVRingUI then
+				Storage.FOVRingUI.Visible = val
+			end
+			if flag == "ShowLockStatus" and Storage.TacticalHUD then
+				Storage.TacticalHUD.Main.Visible = val and (Storage.LockedTarget ~= nil)
+			end
+			if not skipNotify then
+				Utils.Notify(text, val and "ENABLED" or "DISABLED", 1.5)
+			end
 		end
-		Storage.ToggleFuncs[flag] = Update; Update(Config.States[flag])
+		Storage.ToggleFuncs[flag] = Update; Update(Config.States[flag], true)
 		Btn.MouseButton1Click:Connect(function() Update(not Config.States[flag]) end)
 	end
 	
@@ -2201,7 +2221,16 @@ function Runtime.Init()
 			local focused = Services.UIS:GetFocusedTextBox()
 			if not focused then
 				if not Storage.MenuDebounce then
-					Storage.MenuDebounce = true; Storage.MainFrame.Visible = not Storage.MainFrame.Visible
+					Storage.MenuDebounce = true
+					Storage.MainFrame.Visible = not Storage.MainFrame.Visible
+					local floatBtn = targetGui:FindFirstChild("X_Titan_Floating_Toggle", true)
+					if floatBtn then
+						floatBtn.Text = Storage.MainFrame.Visible and "✕" or "X"
+						floatBtn.TextColor3 = Storage.MainFrame.Visible and Color3.fromRGB(255, 80, 80) or Config.Theme.Stroke
+						local strk = floatBtn:FindFirstChildOfClass("UIStroke")
+						if strk then strk.Color = Storage.MainFrame.Visible and Color3.fromRGB(255, 80, 80) or Config.Theme.Stroke end
+					end
+					Utils.Notify("📱 Menu", Storage.MainFrame.Visible and "OPENED" or "CLOSED", 1)
 					task.delay(0.2, function() Storage.MenuDebounce = false end)
 				end
 				return
@@ -2211,16 +2240,28 @@ function Runtime.Init()
 		if i.KeyCode == Config.Keys.Unload then Runtime.Unload(); return end
 		if i.UserInputType == Enum.UserInputType.MouseButton2 and Config.States.RightClickToggle then Config.States.Aimbot = true end
 		if i.KeyCode == Config.Keys.Fly then
-			Config.States.Fly = not Config.States.Fly
-			if Storage.ToggleFuncs.Fly then Storage.ToggleFuncs.Fly(Config.States.Fly) end
+			if Storage.ToggleFuncs.Fly then
+				Storage.ToggleFuncs.Fly(not Config.States.Fly)
+			else
+				Config.States.Fly = not Config.States.Fly
+				Utils.Notify("✈️ Fly Mode", Config.States.Fly and "ENABLED" or "DISABLED", 1.5)
+			end
 		end
 		if i.KeyCode == Config.Keys.Noclip then
-			Config.States.Noclip = not Config.States.Noclip
-			if Storage.ToggleFuncs.Noclip then Storage.ToggleFuncs.Noclip(Config.States.Noclip) end
+			if Storage.ToggleFuncs.Noclip then
+				Storage.ToggleFuncs.Noclip(not Config.States.Noclip)
+			else
+				Config.States.Noclip = not Config.States.Noclip
+				Utils.Notify("👻 Noclip", Config.States.Noclip and "ENABLED" or "DISABLED", 1.5)
+			end
 		end
 		if i.KeyCode == Config.Keys.Trigger then
-			Config.States.TriggerBot = not Config.States.TriggerBot
-			if Storage.ToggleFuncs.TriggerBot then Storage.ToggleFuncs.TriggerBot(Config.States.TriggerBot) end
+			if Storage.ToggleFuncs.TriggerBot then
+				Storage.ToggleFuncs.TriggerBot(not Config.States.TriggerBot)
+			else
+				Config.States.TriggerBot = not Config.States.TriggerBot
+				Utils.Notify("⚡ TriggerBot", Config.States.TriggerBot and "ENABLED" or "DISABLED", 1.5)
+			end
 		end
 		if i.KeyCode == Config.Keys.LockTarget then
 			local Camera = Utils.GetCurrentCamera()
@@ -2321,8 +2362,13 @@ function Runtime.Init()
 			Utils.Notify("🔄 Map Restored", "Restored " .. count .. " obstacle parts")
 		end
 		if i.KeyCode == Config.Keys.ToggleLockMenu then
-			Config.States.ShowFOV = not Config.States.ShowFOV
-			Utils.Notify("🎯 HUD", Config.States.ShowFOV and "Visible" or "Hidden")
+			if Storage.ToggleFuncs.ShowFOV then
+				Storage.ToggleFuncs.ShowFOV(not Config.States.ShowFOV)
+			else
+				Config.States.ShowFOV = not Config.States.ShowFOV
+				if Storage.FOVRingUI then Storage.FOVRingUI.Visible = Config.States.ShowFOV end
+				Utils.Notify("🎯 FOV Ring", Config.States.ShowFOV and "ENABLED" or "DISABLED", 1.5)
+			end
 		end
 	end)
 	table.insert(Storage.Connections, inputBeganConn)
