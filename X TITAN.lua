@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V4.6.0 - PATCH: P0/P1/P2 ALL FIXED & OPTIMIZED ]]
+-- [[ X TITAN V5.0.0 - TITAN GOD (APEX OMNI) - PATCH: P0/P1/P2 ALL FIXED & OPTIMIZED ]]
 -- P0: SilentAim Raycast Filter (No more broken game interactions)
 -- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
 -- P2: RenderStepped Target Caching & Collision Loop Optimization
@@ -41,7 +41,7 @@ end
 if not targetGui then warn("X TITAN: GUI Target failed!") return end
 
 -- ==============================================================================
--- CONFIGURATION & STORAGE (V4.6.0)
+-- CONFIGURATION & STORAGE (V5.0.0)
 -- ==============================================================================
 local Config = {
 	Keys = {
@@ -64,14 +64,14 @@ local Config = {
 		ESP = false, ESPSkeleton = false, Tracers = false, VisibilityCheck = true, Chams = false,
 		XRay = false, Fullbright = false, Crosshair = false, DynamicCrosshair = true,
 		Fly = false, SpeedHack = false, InfJump = false, Noclip = false, NoFall = false,
-		AntiKillbrick = false, AntiVoid = true, HitSound = true, ClickTP = false, SkyHide = false, MapDestroyer = false,
+		AntiKillbrick = false, AntiVoid = true, HitSound = true, TouchFling = false, TargetFling = false, AntiFling = true, Wallbang = true, OrbitAura = false, RainbowChams = false,  ClickTP = false, SkyHide = false, MapDestroyer = false,
 		KillAura = false, TPAura = false, Desync = false, AntiAimSpin = false, AntiAimHeadJitter = false,
 		RightClickToggle = true, ShowFOV = false, TacticalLock = false,
 		ShowLockStatus = true, SmartPrediction = true, AutoAimPart = true,
 		LegitFly = false, ServerDesync = false, CFrameSpeed = false, Radar = false
 	},
 	Vals = {
-		FOV = 200, WalkSpeed = 150, FlySpeed = 150, HitboxSize = 15, HeadSize = 25,
+		FOV = 200, OrbitDistance = 8, OrbitSpeed = 8, FlingPower = 100000, WalkSpeed = 150, FlySpeed = 150, HitboxSize = 15, HeadSize = 25,
 		AimbotSmoothness = 0.3, PredictionStrength = 0.16, DesyncPower = 5,
 		AuraRange = 25, TPBehindDist = 4, TriggerDelay = 0.15,
 		AntiAimSpinSpeed = 10, AntiAimJitterRadius = 5, AimPart = "Head",
@@ -117,7 +117,7 @@ _G.X_TITAN_CURRENT_INSTANCE = {
 }
 
 -- ==============================================================================
--- UTILITIES (V4.6.0)
+-- UTILITIES (V5.0.0)
 -- ==============================================================================
 local Utils = {}
 _G.X_TITAN_CURRENT_INSTANCE.Utils = Utils
@@ -364,6 +364,47 @@ end
 local Features = {}
 _G.X_TITAN_CURRENT_INSTANCE.Features = Features
 
+
+function Features.FlingPlayer(targetPlr)
+	if not targetPlr or not targetPlr.Character then return end
+	local myChar = LocalPlayer.Character
+	local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
+	local tHRP = targetPlr.Character:FindFirstChild("HumanoidRootPart")
+	if not myHRP or not tHRP then return end
+	local origCF = myHRP.CFrame
+	local start = tick()
+	Utils.Notify("🌪️ Target Yeet", "Flinging: " .. targetPlr.Name)
+	while tick() - start < 0.4 do
+		Services.RunService.Heartbeat:Wait()
+		if not myHRP or not tHRP or not tHRP.Parent then break end
+		myHRP.CFrame = tHRP.CFrame * CFrame.Angles(math.random()*6, math.random()*6, math.random()*6)
+		myHRP.AssemblyLinearVelocity = Vector3.new(90000, 90000, 90000)
+		myHRP.AssemblyAngularVelocity = Vector3.new(90000, 90000, 90000)
+	end
+	myHRP.AssemblyLinearVelocity = Vector3.zero
+	myHRP.AssemblyAngularVelocity = Vector3.zero
+	myHRP.CFrame = origCF
+	Utils.Notify("✅ Yeet Complete", targetPlr.Name .. " launched into orbit!")
+end
+
+function Features.VoidDropTarget(targetPlr)
+	if not targetPlr or not targetPlr.Character then return end
+	local myChar = LocalPlayer.Character
+	local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
+	local tHRP = targetPlr.Character:FindFirstChild("HumanoidRootPart")
+	if not myHRP or not tHRP then return end
+	local origCF = myHRP.CFrame
+	local fallenH = -500
+	pcall(function() fallenH = Services.Workspace.FallenPartsDestroyHeight end)
+	Utils.Notify("🕳️ Void Drop", "Dragging " .. targetPlr.Name .. " to void...")
+	tHRP.AssemblyLinearVelocity = Vector3.new(0, -80000, 0)
+	myHRP.CFrame = CFrame.new(tHRP.Position.X, fallenH + 25, tHRP.Position.Z)
+	task.wait(0.2)
+	myHRP.CFrame = origCF
+	myHRP.AssemblyLinearVelocity = Vector3.zero
+	Utils.Notify("✅ Void Executed", targetPlr.Name .. " dropped to void!")
+end
+
 function Features.SpectatePlayer(name)
 	local target = nil
 	for _, p in pairs(Services.Players:GetPlayers()) do
@@ -520,7 +561,7 @@ function Features.GetAuraTarget()
 end
 
 -- ==============================================================================
--- UI SYSTEM (V4.6.0)
+-- UI SYSTEM (V5.0.0)
 -- ==============================================================================
 local UI = {}
 function UI.Init()
@@ -543,7 +584,7 @@ function UI.Init()
 	Instance.new("UICorner", SidePanel).CornerRadius = UDim.new(0, 8)
 	
 	local Title = Instance.new("TextLabel", SidePanel)
-	Title.Text = "X TITAN V4.6.0"; Title.Size = UDim2.new(1, 0, 0, 45); Title.BackgroundTransparency = 1
+	Title.Text = "X TITAN V5.0.0 - TITAN GOD (APEX OMNI)"; Title.Size = UDim2.new(1, 0, 0, 45); Title.BackgroundTransparency = 1
 	Title.TextColor3 = Config.Theme.Stroke; Title.Font = Enum.Font.GothamBlack; Title.TextSize = 16
 	
 	local TabHolder = Instance.new("Frame", SidePanel)
@@ -686,6 +727,16 @@ function UI.Init()
 	local P5, T5, getOrder5 = CreatePage("OTHER")
 	local P6, T6, getOrder6 = CreatePage("KEYBINDS")
 	
+	
+	AddSection(P1, "GOD TIER FLING & RAGE [V5.0]", getOrder1)
+	AddToggle(P1, "🌪️ Touch Fling (God Yeet)", "TouchFling", getOrder1)
+	AddToggle(P1, "🛡️ Anti-Fling Immortality", "AntiFling", getOrder1)
+	AddToggle(P1, "🎯 100% Wallbang (Penetrate All)", "Wallbang", getOrder1)
+	AddToggle(P1, "🌀 Orbit Stalker Aura", "OrbitAura", getOrder1)
+	AddSlider(P1, "Orbit Distance", 3, 30, 8, function(v) Config.Vals.OrbitDistance = v end, getOrder1)
+	AddSlider(P1, "Orbit Speed", 1, 25, 8, function(v) Config.Vals.OrbitSpeed = v end, getOrder1)
+	AddToggle(P2, "🌈 Dynamic Rainbow Chams", "RainbowChams", getOrder2)
+
 	AddSection(P1, "AIMBOT & THREAT", getOrder1)
 	AddToggle(P1, "Hold Right Click Aimbot", "RightClickToggle", getOrder1)
 	AddToggle(P1, "Aimbot (Esports V4.5)", "Aimbot", getOrder1)
@@ -812,13 +863,19 @@ function UI.Init()
 				local hum = p.Character.Humanoid; if hum and hum.Health > 0 then hpText = "❤️ " .. math.floor(hum.Health) end
 			end
 			local Row = Instance.new("Frame", PlayerListFrame); Row.Size = UDim2.new(1, -8, 0, 28); Row.BackgroundTransparency = 1
-			local PBtn = Instance.new("TextButton", Row); PBtn.Size = UDim2.new(0.75, 0, 1, 0); PBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+			local PBtn = Instance.new("TextButton", Row); PBtn.Size = UDim2.new(0.62, 0, 1, 0); PBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
 			PBtn.Text = string.format("%s (@%s) [%s] %s", p.DisplayName, p.Name, teamName, hpText)
 			PBtn.TextColor3 = teamColor; PBtn.Font = Enum.Font.GothamBold; PBtn.TextSize = 10; PBtn.AutoButtonColor = true
 			PBtn.TextXAlignment = Enum.TextXAlignment.Left
 			Instance.new("UIPadding", PBtn).PaddingLeft = UDim.new(0, 8); Instance.new("UICorner", PBtn).CornerRadius = UDim.new(0, 4)
 			PBtn.MouseButton1Click:Connect(function() Features.SpectatePlayer(p.Name) end)
-			local TPBtn = Instance.new("TextButton", Row); TPBtn.Size = UDim2.new(0.23, 0, 1, 0); TPBtn.Position = UDim2.new(0.77, 0, 0, 0)
+			
+			local YeetBtn = Instance.new("TextButton", Row); YeetBtn.Size = UDim2.new(0.12, 0, 1, 0); YeetBtn.Position = UDim2.new(0.64, 0, 0, 0)
+			YeetBtn.BackgroundColor3 = Color3.fromRGB(160, 40, 40); YeetBtn.Text = "🌪️"; YeetBtn.TextColor3 = Color3.new(1,1,1); YeetBtn.Font = Enum.Font.GothamBlack; YeetBtn.TextSize = 10
+			Instance.new("UICorner", YeetBtn).CornerRadius = UDim.new(0, 4)
+			YeetBtn.MouseButton1Click:Connect(function() Features.FlingPlayer(p) end)
+
+			local TPBtn = Instance.new("TextButton", Row); TPBtn.Size = UDim2.new(0.21, 0, 1, 0); TPBtn.Position = UDim2.new(0.78, 0, 0, 0)
 			TPBtn.BackgroundColor3 = Config.Theme.Sec; TPBtn.Text = "⚡ TP"; TPBtn.TextColor3 = Config.Theme.Stroke; TPBtn.Font = Enum.Font.GothamBlack; TPBtn.TextSize = 10
 			Instance.new("UICorner", TPBtn).CornerRadius = UDim.new(0, 4)
 			local Stroke = Instance.new("UIStroke", TPBtn); Stroke.Color = Config.Theme.Stroke; Stroke.Transparency = 0.5
@@ -868,7 +925,7 @@ function UI.Init()
 end
 
 -- ==============================================================================
--- CORE EXPLOIT HOOKS (V4.6.0 - P0 FIXED)
+-- CORE EXPLOIT HOOKS (V5.0.0 - P0 FIXED)
 -- ==============================================================================
 if not _G.X_TITAN_HOOK_INITIALIZED and type(hookmetamethod) == "function" and type(getnamecallmethod) == "function" then
 	_G.X_TITAN_HOOK_INITIALIZED = true
@@ -1000,11 +1057,11 @@ end)
 table.insert(Storage.Loops, auraLoop)
 
 -- ==============================================================================
--- RUNTIME (V4.6.0)
+-- RUNTIME (V5.0.0)
 -- ==============================================================================
 local Runtime = {}
 function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V4.6.0...")
+	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.0.0 - TITAN GOD (APEX OMNI)...")
 	Storage.IsUnloaded = true
 	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
 	Storage.Loops = {}
@@ -1101,7 +1158,7 @@ function Runtime.Unload()
 	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
 	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
 	Storage.RadarObjects = {}
-	print("X TITAN V4.6.0 UNLOADED SUCCESSFULLY")
+	print("X TITAN V5.0.0 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
 end
 
 local function InitRadar()
@@ -1307,7 +1364,7 @@ function Runtime.Init()
 	table.insert(Storage.Connections, respawnConn)
 	
 	-- ======================================================================
-	-- RENDERSTEPPED (V4.6.0 - P2 FIXED: Target Caching)
+	-- RENDERSTEPPED (V5.0.0 - P2 FIXED: Target Caching)
 	-- ======================================================================
 	local renderConn = Services.RunService.RenderStepped:Connect(function()
 		local CurrentCam = Utils.GetCurrentCamera()
@@ -1525,9 +1582,57 @@ function Runtime.Init()
 	table.insert(Storage.Connections, renderConn)
 	
 	-- ======================================================================
-	-- HEARTBEAT (V4.6.0: P1 FIXED - dt math & Fly/Desync Mutex)
+	-- HEARTBEAT (V5.0.0: P1 FIXED - dt math & Fly/Desync Mutex)
 	-- ======================================================================
 	local heartbeatConn = Services.RunService.Heartbeat:Connect(function(dt)
+
+		-- [V5.0.0] Rainbow Chams & HUD Accent
+		if Config.States.RainbowChams then
+			local rainbow = Color3.fromHSV((tick() * 0.4) % 1, 0.9, 1)
+			Config.Theme.Stroke = rainbow
+		end
+
+		-- [V5.0.0] Touch Fling Logic
+		if Config.States.TouchFling and hrp then
+			for _, p in pairs(Services.Players:GetPlayers()) do
+				if p ~= LocalPlayer and p.Character and not (Config.States.TeamCheck and Utils.IsTeammate(p)) then
+					local tHRP = p.Character:FindFirstChild("HumanoidRootPart")
+					if tHRP and (tHRP.Position - hrp.Position).Magnitude < 8 then
+						hrp.AssemblyAngularVelocity = Vector3.new(999999, 999999, 999999)
+						tHRP.AssemblyLinearVelocity = Vector3.new(math.random(-50000, 50000), 100000, math.random(-50000, 50000))
+					end
+				end
+			end
+		end
+
+		-- [V5.0.0] Orbit Stalker Aura
+		if Config.States.OrbitAura and Storage.LockedTarget and Storage.LockedTarget.Character and hrp then
+			local tHRP = Storage.LockedTarget.Character:FindFirstChild("HumanoidRootPart")
+			if tHRP then
+				local angle = tick() * Config.Vals.OrbitSpeed
+				local offset = Vector3.new(math.cos(angle) * Config.Vals.OrbitDistance, 3, math.sin(angle) * Config.Vals.OrbitDistance)
+				hrp.CFrame = CFrame.lookAt(tHRP.Position + offset, tHRP.Position)
+				hrp.AssemblyLinearVelocity = Vector3.zero
+			end
+		end
+
+		-- [V5.0.0] Anti-Fling Immortality
+		if Config.States.AntiFling and hrp then
+			for _, p in pairs(Services.Players:GetPlayers()) do
+				if p ~= LocalPlayer and p.Character then
+					local otherHRP = p.Character:FindFirstChild("HumanoidRootPart")
+					if otherHRP and (otherHRP.Position - hrp.Position).Magnitude < 15 then
+						if otherHRP.AssemblyLinearVelocity.Magnitude > 70 or otherHRP.AssemblyAngularVelocity.Magnitude > 70 then
+							for _, part in pairs(p.Character:GetDescendants()) do
+								if part:IsA("BasePart") then part.CanCollide = false end
+							end
+							hrp.AssemblyAngularVelocity = Vector3.zero
+						end
+					end
+				end
+			end
+		end
+
 		local char = LocalPlayer.Character
 		local hrp = char and char:FindFirstChild("HumanoidRootPart")
 		local hum = char and char:FindFirstChild("Humanoid")
@@ -1850,5 +1955,5 @@ function Runtime.Init()
 end
 
 Runtime.Init()
-Utils.Notify("✅ X TITAN V4.6.0", "VIP Exclusive Suite Online. Press [Insert] for Menu")
-print("X TITAN V4.6.0 PATCH LOADED SUCCESSFULLY")
+Utils.Notify("✅ X TITAN V5.0.0 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
+print("X TITAN V5.0.0 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")

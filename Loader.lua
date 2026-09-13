@@ -95,7 +95,7 @@ elseif string.lower(tier) == "nano" then
 elseif string.lower(tier) == "pro" then
 	print("⚡ X PRO V3.0.0 LOADED")
 elseif string.lower(tier) == "titan" then
-	print("🔥 X TITAN V4.6.0 LOADED")
+	print("🔥 X TITAN V5.0.0 (TITAN GOD) LOADED")
 else
 	print("⚡ X " .. string.upper(tostring(tier)) .. " LOADED")
 end
