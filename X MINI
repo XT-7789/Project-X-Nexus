@@ -92,6 +92,7 @@ end
 -- ==================================================================
 -- UTILITIES & CHECKS
 -- ==================================================================
+local Unload
 local Utils = {}
 
 function Utils.GetPlayerCharacter(p)
@@ -532,18 +533,30 @@ local function BuildUI()
 
     local Title = Instance.new("TextLabel", Header)
     if isMiniPlus then
-        Title.Text = "📦 X MINI<font color='#00d2ff'>+ PLUS</font> <font color='#ffcd32'>[PRO-X]</font>"
+        Title.Text = "📦 X MINI<font color='#00d2ff'>+</font> <font color='#ffcd32'>[PRO-X]</font>"
     else
         Title.Text = "📦 X MINI <font color='#00d2ff'>V4.0</font>"
     end
     Title.RichText = true
-    Title.Size = UDim2.new(0, 200, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
+    Title.Size = UDim2.new(0, 160, 1, 0); Title.Position = UDim2.new(0, 12, 0, 0)
+
+    -- Header Unload Button
+    local HdrUnloadBtn = Instance.new("TextButton", Header)
+    HdrUnloadBtn.Name = "HeaderUnload"
+    HdrUnloadBtn.Size = UDim2.new(0, 60, 0, 26); HdrUnloadBtn.Position = UDim2.new(1, -70, 0.5, -13)
+    HdrUnloadBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+    HdrUnloadBtn.Text = "UNLOAD"; HdrUnloadBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    HdrUnloadBtn.Font = Enum.Font.GothamBold; HdrUnloadBtn.TextSize = 10
+    Instance.new("UICorner", HdrUnloadBtn).CornerRadius = UDim.new(0, 6)
+    local hubStroke = Instance.new("UIStroke", HdrUnloadBtn)
+    hubStroke.Color = Color3.fromRGB(255, 80, 80); hubStroke.Thickness = 1
+    HdrUnloadBtn.MouseButton1Click:Connect(function() if Unload then Unload() end end)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 15; Title.TextXAlignment = Enum.TextXAlignment.Left
 
     -- Tabs inside Header
     local TabBar = Instance.new("Frame", Header)
-    TabBar.Size = UDim2.new(0, 200, 0, 28); TabBar.Position = UDim2.new(1, -240, 0.5, -14)
+    TabBar.Size = UDim2.new(0, 190, 0, 28); TabBar.Position = UDim2.new(1, -270, 0.5, -14)
     TabBar.BackgroundTransparency = 1
     local TabList = Instance.new("UIListLayout", TabBar); TabList.FillDirection = Enum.FillDirection.Horizontal; TabList.Padding = UDim.new(0, 8)
 
@@ -697,14 +710,30 @@ local function BuildUI()
     AddToggle(UtilityPage, "🪂 No Fall Damage", "NoFall")
     AddToggle(UtilityPage, "📍 Click TP [Ctrl+Click]", "ClickTP")
 
+    -- Prominent In-Menu Unload Button
+    local UnloadCard = Instance.new("TextButton", UtilityPage)
+    UnloadCard.Name = "UnloadScriptBtn"
+    UnloadCard.Size = UDim2.new(1, -6, 0, 38)
+    UnloadCard.BackgroundColor3 = Color3.fromRGB(50, 18, 22)
+    UnloadCard.Text = "❌ UNLOAD SCRIPT & CLEAN ALL [End]"
+    UnloadCard.TextColor3 = Color3.fromRGB(255, 90, 90)
+    UnloadCard.Font = Enum.Font.GothamBold
+    UnloadCard.TextSize = 12
+    Instance.new("UICorner", UnloadCard).CornerRadius = UDim.new(0, 6)
+    local ucStroke = Instance.new("UIStroke", UnloadCard)
+    ucStroke.Color = Color3.fromRGB(255, 70, 70); ucStroke.Thickness = 1.2; ucStroke.Transparency = 0.4
+    UnloadCard.MouseButton1Click:Connect(function()
+        if Unload then Unload() end
+    end)
+
     CombatPage.CanvasSize = UDim2.new(0, 0, 0, 420)
-    UtilityPage.CanvasSize = UDim2.new(0, 0, 0, 520)
+    UtilityPage.CanvasSize = UDim2.new(0, 0, 0, 580)
 end
 
 -- ==================================================================
 -- UNLOAD & CLEANUP
 -- ==================================================================
-local function Unload()
+Unload = function()
     for _, c in pairs(Storage.Connections) do pcall(function() c:Disconnect() end) end
     Storage.Connections = {}
     for _, p in pairs(Services.Players:GetPlayers()) do RemoveESP(p) end

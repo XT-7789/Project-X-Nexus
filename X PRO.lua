@@ -119,6 +119,7 @@ end
 -- ==================================================================
 -- UTILITIES & PREDICTION
 -- ==================================================================
+local Unload
 local Utils = {}
 
 function Utils.GetPlayerCharacter(p)
@@ -545,8 +546,20 @@ local function BuildUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 8)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "⚡ X PRO <font color='#00dcff'>V3.0.0</font> <font color='#8c8c9b'>| TOURNAMENT</font>"; Title.RichText = true
-    Title.Size = UDim2.new(0, 240, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
+    Title.Text = "⚡ X PRO <font color='#00dcff'>V3.0.0</font>"; Title.RichText = true
+    Title.Size = UDim2.new(0, 160, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
+
+    -- Header Unload Button
+    local HdrUnloadBtn = Instance.new("TextButton", Header)
+    HdrUnloadBtn.Name = "HeaderUnload"
+    HdrUnloadBtn.Size = UDim2.new(0, 60, 0, 26); HdrUnloadBtn.Position = UDim2.new(1, -70, 0.5, -13)
+    HdrUnloadBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+    HdrUnloadBtn.Text = "UNLOAD"; HdrUnloadBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    HdrUnloadBtn.Font = Enum.Font.GothamBold; HdrUnloadBtn.TextSize = 10
+    Instance.new("UICorner", HdrUnloadBtn).CornerRadius = UDim.new(0, 6)
+    local hubStroke = Instance.new("UIStroke", HdrUnloadBtn)
+    hubStroke.Color = Color3.fromRGB(255, 80, 80); hubStroke.Thickness = 1
+    HdrUnloadBtn.MouseButton1Click:Connect(function() if Unload then Unload() end end)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 14; Title.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -727,7 +740,7 @@ end
 -- ==================================================================
 -- UNLOAD & CLEANUP
 -- ==================================================================
-local function Unload()
+Unload = function()
     for _, c in pairs(Storage.Connections) do pcall(function() c:Disconnect() end) end
     Storage.Connections = {}
     for _, p in pairs(Services.Players:GetPlayers()) do
