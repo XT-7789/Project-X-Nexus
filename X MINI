@@ -75,7 +75,8 @@ local Config = {
 local Storage = {
     Connections = {}, ESPObjects = {}, CrosshairLines = {}, ToggleFuncs = {},
     FOVRingUI = nil, MainFrame = nil, OriginalLighting = {}, OriginalCollisions = {},
-    OriginalWalkSpeed = 16, IsRightMouseDown = false, TriggerCooldown = 0, ItemESPObjects = {}
+    OriginalWalkSpeed = 16, IsRightMouseDown = false, TriggerCooldown = 0, ItemESPObjects = {},
+    PlayerCache = {}
 }
 
 local function TrackConn(c)
@@ -95,52 +96,42 @@ end
 local Unload
 local Utils = {}
 
-function Utils.GetPlayerCharacter(p)
-    if not p then return nil end
-    if p.Character and p.Character.Parent then return p.Character end
-    local direct = Services.Workspace:FindFirstChild(p.Name)
-    if direct and direct:IsA("Model") then return direct end
-    for _, fName in ipairs({"Characters", "Players", "Alive", "Entities", "Spawns", "Map"}) do
-        local f = Services.Workspace:FindFirstChild(fName)
-        if f then
-            local c = f:FindFirstChild(p.Name)
-            if c and c:IsA("Model") then return c end
+local function CachePlayer(p)
+    if not p or p == LocalPlayer then return end
+    local char = p.Character
+    if not char or not char.Parent then
+        char = Services.Workspace:FindFirstChild(p.Name)
+        if not char then
+            for _, fName in ipairs({"Characters", "Players", "Alive"}) do
+                local f = Services.Workspace:FindFirstChild(fName)
+                if f then
+                    local c = f:FindFirstChild(p.Name)
+                    if c and c:IsA("Model") then char = c break end
+                end
+            end
         end
     end
-    return nil
-end
 
-function Utils.GetCharacterParts(char)
-    if not char then return nil, nil, nil end
-    local head = char:FindFirstChild("Head") or char:FindFirstChildWhichIsA("BasePart")
-    local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or char:FindFirstChild("LowerTorso") or char.PrimaryPart or head
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    return head, root, hum
-end
-
-function Utils.IsAlive(char, hum)
-    if not char or not char.Parent then return false end
-    if hum then
-        if hum.Health > 0 then return true end
-        if hum.MaxHealth <= 0 then return true end
-        local hAttr = char:GetAttribute("Health")
-        if hAttr and hAttr > 0 then return true end
-        return false
+    if not char or not char.Parent then
+        Storage.PlayerCache[p] = nil
+        return
     end
-    return true
+
+    local head = char:FindFirstChild("Head") or char:FindFirstChildWhichIsA("BasePart")
+    local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or head
+    local hum = char:FindFirstChildOfClass("Humanoid")
+
+    if head and root then
+        Storage.PlayerCache[p] = { Char = char, Head = head, Root = root, Hum = hum }
+    else
+        Storage.PlayerCache[p] = nil
+    end
 end
 
 function Utils.IsTeammate(plr)
     if not plr or not LocalPlayer or plr == LocalPlayer then return false end
     if plr.Team and LocalPlayer.Team and plr.Team == LocalPlayer.Team then return true end
     if plr.TeamColor and LocalPlayer.TeamColor and plr.TeamColor == LocalPlayer.TeamColor then return true end
-    local pChar = Utils.GetPlayerCharacter(plr)
-    local myChar = Utils.GetPlayerCharacter(LocalPlayer)
-    if pChar and myChar then
-        local t1 = pChar:GetAttribute("Team")
-        local t2 = myChar:GetAttribute("Team")
-        if t1 and t2 and t1 == t2 then return true end
-    end
     return false
 end
 
@@ -160,29 +151,28 @@ end
 
 function Utils.GetClosestTarget()
     local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-    local closestDist, target = Config.Vals.FOV, nil
+    local closestDist, bestTarget = Config.Vals.FOV, nil
 
-    for _, p in pairs(Services.Players:GetPlayers()) do
-        if p == LocalPlayer then continue end
-        local char = Utils.GetPlayerCharacter(p)
-        if not char then continue end
+    for p, data in pairs(Storage.PlayerCache) do
+        if not data.Char.Parent then continue end
         if Config.States.TeamCheck and Utils.IsTeammate(p) then continue end
 
-        local head, root, hum = Utils.GetCharacterParts(char)
-        if not head or not Utils.IsAlive(char, hum) then continue end
+        local hum = data.Hum
+        if hum and hum.Health <= 0 and hum.MaxHealth > 0 then continue end
 
-        if Config.States.WallCheck and not Utils.IsVisible(head) then continue end
-
+        local head = data.Head
         local pos, onScreen = Camera:WorldToViewportPoint(head.Position)
-        if onScreen then
+        if onScreen and pos.Z > 0 then
             local dist = (Vector2.new(pos.X, pos.Y) - center).Magnitude
             if dist < closestDist then
-                closestDist = dist
-                target = head
+                if not Config.States.WallCheck or Utils.IsVisible(head) then
+                    closestDist = dist
+                    bestTarget = head
+                end
             end
         end
     end
-    return target
+    return bestTarget
 end
 
 function Utils.UpdateCollisions()
@@ -223,31 +213,36 @@ function Utils.ToggleFullbright(state)
 end
 
 function Utils.UpdateChams()
-    for _, p in pairs(Services.Players:GetPlayers()) do
-        if p ~= LocalPlayer then
-            local char = Utils.GetPlayerCharacter(p)
-            if char then
-                local chams = char:FindFirstChild("X_Mini_Chams")
-                if Config.States.Chams then
-                    local _, _, hum = Utils.GetCharacterParts(char)
-                    if Utils.IsAlive(char, hum) then
-                        if not chams then
-                            chams = Instance.new("Highlight")
-                            chams.Name = "X_Mini_Chams"
-                            chams.FillTransparency = 0.5
-                            chams.OutlineTransparency = 0.1
-                            chams.Parent = char
-                        end
-                        local isTeam = Config.States.TeamCheck and Utils.IsTeammate(p)
-                        local col = isTeam and Config.Theme.Team or Config.Theme.Accent
-                        chams.FillColor = col
-                        chams.OutlineColor = col
-                    elseif chams then
-                        chams:Destroy()
-                    end
-                elseif chams then
-                    chams:Destroy()
+    if not Config.States.Chams then
+        for _, p in pairs(Services.Players:GetPlayers()) do
+            if p.Character then
+                local c = p.Character:FindFirstChild("X_Mini_Chams")
+                if c then c:Destroy() end
+            end
+        end
+        return
+    end
+
+    for p, data in pairs(Storage.PlayerCache) do
+        local char = data.Char
+        if char and char.Parent then
+            local chams = char:FindFirstChild("X_Mini_Chams")
+            local hum = data.Hum
+            local isAlive = (not hum) or (hum.Health > 0) or (hum.MaxHealth <= 0)
+            if isAlive then
+                if not chams then
+                    chams = Instance.new("Highlight")
+                    chams.Name = "X_Mini_Chams"
+                    chams.FillTransparency = 0.5
+                    chams.OutlineTransparency = 0.1
+                    chams.Parent = char
                 end
+                local isTeam = Config.States.TeamCheck and Utils.IsTeammate(p)
+                local col = isTeam and Config.Theme.Team or Config.Theme.Accent
+                chams.FillColor = col
+                chams.OutlineColor = col
+            elseif chams then
+                chams:Destroy()
             end
         end
     end
@@ -325,26 +320,23 @@ local function UpdateItemESP()
         return
     end
     local myChar = LocalPlayer.Character
-    local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
+    local myHrp = myChar and (myChar:FindFirstChild("HumanoidRootPart") or myChar:FindFirstChild("Torso"))
     if not myHrp then return end
 
+    local myPos = myHrp.Position
     local found = {}
-    for _, prompt in pairs(Services.Workspace:GetDescendants()) do
-        if prompt:IsA("ProximityPrompt") and prompt.Enabled then
-            local pPart = prompt.Parent
-            if pPart and pPart:IsA("BasePart") and not pPart:IsDescendantOf(myChar) then
-                local dist = (pPart.Position - myHrp.Position).Magnitude
-                if dist <= 500 then
-                    local name = prompt.ObjectText ~= "" and prompt.ObjectText or prompt.ActionText ~= "" and prompt.ActionText or pPart.Name
-                    found[pPart] = { Name = name, Dist = math.floor(dist) }
-                end
-            end
-        elseif prompt:IsA("Tool") and prompt.Parent == Services.Workspace then
-            local handle = prompt:FindFirstChild("Handle") or prompt:FindFirstChildWhichIsA("BasePart")
-            if handle then
-                local dist = (handle.Position - myHrp.Position).Magnitude
-                if dist <= 500 then
-                    found[handle] = { Name = prompt.Name, Dist = math.floor(dist) }
+
+    -- Zero-Lag Shallow Workspace Scan (Avoids scanning 50,000 descendants)
+    for _, item in ipairs(Services.Workspace:GetChildren()) do
+        if item:IsA("Tool") and item:FindFirstChild("Handle") then
+            local dist = (item.Handle.Position - myPos).Magnitude
+            if dist <= 500 then found[item.Handle] = { Name = item.Name, Dist = math.floor(dist) } end
+        elseif item.Name == "Drops" or item.Name == "Items" or item.Name == "Loot" or item.Name == "Tools" then
+            for _, sub in ipairs(item:GetChildren()) do
+                local p = sub:IsA("BasePart") and sub or sub:FindFirstChildWhichIsA("BasePart")
+                if p then
+                    local dist = (p.Position - myPos).Magnitude
+                    if dist <= 500 then found[p] = { Name = sub.Name, Dist = math.floor(dist) } end
                 end
             end
         end
@@ -667,7 +659,7 @@ local function BuildUI()
 
     -- ================= TAB 1: COMBAT =================
     AddToggle(CombatPage, "🎯 Smooth Aimbot", "Aimbot")
-    AddToggle(CombatPage, "🖱️ Right Click Hold Only", "RightClickOnly")
+    AddToggle(CombatPage, "🖱️ Right Click to Aim [HOLD]", "RightClickOnly")
     AddToggle(CombatPage, "⭕ Show FOV Circle", "ShowFOV", function(v) if Storage.FOVRingUI then Storage.FOVRingUI.Visible = v end end)
     AddSlider(CombatPage, "FOV Size", 50, 500, "FOV", function(v)
         if Storage.FOVRingUI then Storage.FOVRingUI.Size = UDim2.new(0, v * 2, 0, v * 2) end
@@ -774,9 +766,22 @@ local function Init()
     local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
     if hum then Storage.OriginalWalkSpeed = hum.WalkSpeed end
 
-    for _, p in pairs(Services.Players:GetPlayers()) do CreateESP(p) end
-    TrackConn(Services.Players.PlayerAdded:Connect(CreateESP))
-    TrackConn(Services.Players.PlayerRemoving:Connect(RemoveESP))
+    for _, p in pairs(Services.Players:GetPlayers()) do
+        CreateESP(p)
+        if p ~= LocalPlayer then
+            CachePlayer(p)
+            TrackConn(p.CharacterAdded:Connect(function() task.wait(0.2); CachePlayer(p) end))
+        end
+    end
+    TrackConn(Services.Players.PlayerAdded:Connect(function(p)
+        CreateESP(p)
+        CachePlayer(p)
+        TrackConn(p.CharacterAdded:Connect(function() task.wait(0.2); CachePlayer(p) end))
+    end))
+    TrackConn(Services.Players.PlayerRemoving:Connect(function(p)
+        RemoveESP(p)
+        Storage.PlayerCache[p] = nil
+    end))
 
     TrackConn(LocalPlayer.CharacterAdded:Connect(function(char)
         task.wait(0.5)
@@ -840,34 +845,41 @@ local function Init()
             end
         end
 
-        -- Drawing ESP
+        -- Drawing ESP (Ultra High-Performance Zero-Lag Loop)
         if Drawing then
             if Config.States.ESP then
                 for plr, esp in pairs(Storage.ESPObjects) do
-                    local char = Utils.GetPlayerCharacter(plr)
-                    local head, root, hum = Utils.GetCharacterParts(char)
+                    local data = Storage.PlayerCache[plr]
+                    if data and data.Char.Parent then
+                        local hum = data.Hum
+                        local isAlive = (not hum) or (hum.Health > 0) or (hum.MaxHealth <= 0)
+                        if isAlive then
+                            local root = data.Root
+                            local head = data.Head
+                            local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
+                            if onScreen and pos.Z > 0 then
+                                local isTeam = Config.States.TeamCheck and Utils.IsTeammate(plr)
+                                local color = isTeam and Config.Theme.Team or Config.Theme.Accent
 
-                    if char and root and head and Utils.IsAlive(char, hum) then
-                        local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
-                        local isTeam = Config.States.TeamCheck and Utils.IsTeammate(plr)
-                        local color = isTeam and Config.Theme.Team or Config.Theme.Accent
-                        if onScreen then
-                            local headPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
-                            local height = math.abs(headPos.Y - Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0)).Y)
-                            local width = math.clamp(height / 1.8, 12, 350)
+                                local headPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+                                local height = math.abs(headPos.Y - Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0)).Y)
+                                local width = math.clamp(height / 1.8, 10, 300)
 
-                            esp.Box.Visible = true; esp.Box.Size = Vector2.new(width, height)
-                            esp.Box.Position = Vector2.new(pos.X - width / 2, pos.Y - height / 2); esp.Box.Color = color
+                                esp.Box.Visible = true; esp.Box.Size = Vector2.new(width, height)
+                                esp.Box.Position = Vector2.new(pos.X - width / 2, pos.Y - height / 2); esp.Box.Color = color
 
-                            local dist = math.floor((Camera.CFrame.Position - root.Position).Magnitude)
-                            esp.Name.Visible = true; esp.Name.Text = plr.DisplayName .. " [" .. tostring(dist) .. "m]"
-                            esp.Name.Position = Vector2.new(pos.X, esp.Box.Position.Y - 16); esp.Name.Color = color
+                                local dist = math.floor((Camera.CFrame.Position - root.Position).Magnitude)
+                                esp.Name.Visible = true; esp.Name.Text = plr.DisplayName .. " [" .. tostring(dist) .. "m]"
+                                esp.Name.Position = Vector2.new(pos.X, esp.Box.Position.Y - 16); esp.Name.Color = color
 
-                            esp.HealthBar.Visible = true
-                            local hpPercent = (hum and hum.MaxHealth > 0) and math.clamp(hum.Health / hum.MaxHealth, 0, 1) or 1
-                            esp.HealthBar.Color = Color3.fromRGB(math.floor(255 * (1 - hpPercent)), math.floor(255 * hpPercent), 0)
-                            esp.HealthBar.From = Vector2.new(esp.Box.Position.X - 5, esp.Box.Position.Y + height)
-                            esp.HealthBar.To = Vector2.new(esp.Box.Position.X - 5, esp.Box.Position.Y + height - height * hpPercent)
+                                esp.HealthBar.Visible = true
+                                local hpPercent = (hum and hum.MaxHealth > 0) and math.clamp(hum.Health / hum.MaxHealth, 0, 1) or 1
+                                esp.HealthBar.Color = Color3.fromRGB(math.floor(255 * (1 - hpPercent)), math.floor(255 * hpPercent), 0)
+                                esp.HealthBar.From = Vector2.new(esp.Box.Position.X - 5, esp.Box.Position.Y + height)
+                                esp.HealthBar.To = Vector2.new(esp.Box.Position.X - 5, esp.Box.Position.Y + height - height * hpPercent)
+                            else
+                                esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false
+                            end
                         else
                             esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false
                         end
@@ -997,7 +1009,13 @@ local function Init()
 
     task.spawn(function()
         while true do
-            task.wait(0.5)
+            task.wait(1.0)
+            -- Lightweight 1s cache sync for seamless round respawns
+            for _, p in pairs(Services.Players:GetPlayers()) do
+                if p ~= LocalPlayer and (not Storage.PlayerCache[p] or not Storage.PlayerCache[p].Char.Parent) then
+                    CachePlayer(p)
+                end
+            end
             if Config.States.Chams then
                 pcall(Utils.UpdateChams)
             end
