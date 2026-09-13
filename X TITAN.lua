@@ -601,8 +601,10 @@ function UI.Init()
 	ScreenGui.Name = guiName; ScreenGui.ResetOnSpawn = false; ScreenGui.IgnoreGuiInset = true; ScreenGui.DisplayOrder = 999999999
 	
 	local Main = Instance.new("Frame", ScreenGui)
-	Main.Size = UDim2.new(0, 620, 0, 460); Main.Position = UDim2.new(0.5, -310, 0.5, -230)
+	Main.Size = UDim2.new(0, 640, 0, 480); Main.Position = UDim2.new(0.5, -320, 0.5, -240)
 	Main.BackgroundColor3 = Config.Theme.Main; Main.Active = true; Main.Draggable = true
+	Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
+	local UIStroke = Instance.new("UIStroke", Main); UIStroke.Color = Config.Theme.Stroke; UIStroke.Thickness = 1.5; UIStroke.Transparency = 0.35
 	Storage.MainFrame = Main
 
 	-- Floating Open/Close Button (Always visible on screen, click to toggle menu)
@@ -629,24 +631,27 @@ function UI.Init()
 		end
 	end)
 	
-	local UIStroke = Instance.new("UIStroke", Main); UIStroke.Color = Config.Theme.Stroke; UIStroke.Thickness = 2
-	Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
-	
 	local SidePanel = Instance.new("Frame", Main)
-	SidePanel.Size = UDim2.new(0, 140, 1, 0); SidePanel.BackgroundColor3 = Config.Theme.Sec
-	Instance.new("UICorner", SidePanel).CornerRadius = UDim.new(0, 8)
+	SidePanel.Size = UDim2.new(0, 155, 1, 0); SidePanel.BackgroundColor3 = Config.Theme.Sec
+	Instance.new("UICorner", SidePanel).CornerRadius = UDim.new(0, 10)
 	
 	local Title = Instance.new("TextLabel", SidePanel)
-	Title.Text = "X TITAN [VOID WALKER]"; Title.Size = UDim2.new(1, 0, 0, 45); Title.BackgroundTransparency = 1
-	Title.TextColor3 = Config.Theme.Stroke; Title.Font = Enum.Font.GothamBlack; Title.TextSize = 13
+	Title.Text = "⚡ X TITAN"; Title.Size = UDim2.new(1, -16, 0, 24); Title.Position = UDim2.new(0, 12, 0, 12)
+	Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Stroke
+	Title.Font = Enum.Font.GothamBlack; Title.TextSize = 16; Title.TextXAlignment = Enum.TextXAlignment.Left
+
+	local Subtitle = Instance.new("TextLabel", SidePanel)
+	Subtitle.Text = "VOID WALKER • V5.0"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
+	Subtitle.BackgroundTransparency = 1; Subtitle.TextColor3 = Config.Theme.TextDim
+	Subtitle.Font = Enum.Font.GothamBold; Subtitle.TextSize = 9; Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 	
 	local TabHolder = Instance.new("Frame", SidePanel)
-	TabHolder.Size = UDim2.new(1, -16, 1, -95); TabHolder.Position = UDim2.new(0, 8, 0, 50); TabHolder.BackgroundTransparency = 1
+	TabHolder.Size = UDim2.new(1, -16, 1, -100); TabHolder.Position = UDim2.new(0, 8, 0, 56); TabHolder.BackgroundTransparency = 1
 	local TabLayout = Instance.new("UIListLayout", TabHolder); TabLayout.Padding = UDim.new(0, 4)
 
 	local SideUnloadBtn = Instance.new("TextButton", SidePanel)
 	SideUnloadBtn.Name = "SideUnload"
-	SideUnloadBtn.Size = UDim2.new(1, -16, 0, 28); SideUnloadBtn.Position = UDim2.new(0, 8, 1, -34)
+	SideUnloadBtn.Size = UDim2.new(1, -16, 0, 30); SideUnloadBtn.Position = UDim2.new(0, 8, 1, -38)
 	SideUnloadBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
 	SideUnloadBtn.Text = "❌ UNLOAD [End]"; SideUnloadBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 	SideUnloadBtn.Font = Enum.Font.GothamBold; SideUnloadBtn.TextSize = 11
@@ -656,7 +661,7 @@ function UI.Init()
 	end)
 	
 	local PageHolder = Instance.new("Frame", Main)
-	PageHolder.Size = UDim2.new(1, -155, 1, -10); PageHolder.Position = UDim2.new(0, 150, 0, 5); PageHolder.BackgroundTransparency = 1
+	PageHolder.Size = UDim2.new(1, -170, 1, -14); PageHolder.Position = UDim2.new(0, 162, 0, 7); PageHolder.BackgroundTransparency = 1
 	
 	local uiOrderCounter = 0
 	local function getNextOrder() uiOrderCounter = uiOrderCounter + 1; return uiOrderCounter end
@@ -665,12 +670,12 @@ function UI.Init()
 		local Page = Instance.new("ScrollingFrame", PageHolder)
 		Page.Size = UDim2.new(1, 0, 1, 0); Page.BackgroundTransparency = 1; Page.Visible = false
 		Page.ScrollBarThickness = 4; Page.ScrollBarImageColor3 = Config.Theme.Stroke
-		local List = Instance.new("UIListLayout", Page); List.Padding = UDim.new(0, 4); List.SortOrder = Enum.SortOrder.LayoutOrder
+		local List = Instance.new("UIListLayout", Page); List.Padding = UDim.new(0, 5); List.SortOrder = Enum.SortOrder.LayoutOrder
 		List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			Page.CanvasSize = UDim2.new(0, 0, 0, List.AbsoluteContentSize.Y + 10)
+			Page.CanvasSize = UDim2.new(0, 0, 0, List.AbsoluteContentSize.Y + 12)
 		end)
 		local TabBtn = Instance.new("TextButton", TabHolder)
-		TabBtn.Size = UDim2.new(1, 0, 0, 30); TabBtn.BackgroundColor3 = Color3.fromRGB(30,30,35)
+		TabBtn.Size = UDim2.new(1, 0, 0, 32); TabBtn.BackgroundColor3 = Color3.fromRGB(30,30,35)
 		TabBtn.Text = name; TabBtn.TextColor3 = Config.Theme.TextDim; TabBtn.Font = Enum.Font.GothamBold; TabBtn.TextSize = 11; TabBtn.AutoButtonColor = false
 		Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 6)
 		TabBtn.MouseButton1Click:Connect(function()
@@ -683,24 +688,27 @@ function UI.Init()
 	
 	local function AddToggle(page, text, flag, getOrder)
 		local Btn = Instance.new("TextButton", page)
-		Btn.LayoutOrder = getOrder(); Btn.Size = UDim2.new(1, -4, 0, 34); Btn.BackgroundColor3 = Config.Theme.Sec; Btn.Text = "  "; Btn.AutoButtonColor = false
+		Btn.LayoutOrder = getOrder(); Btn.Size = UDim2.new(1, -4, 0, 36); Btn.BackgroundColor3 = Config.Theme.Sec; Btn.Text = "  "; Btn.AutoButtonColor = false
 		Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
-		local Stroke = Instance.new("UIStroke", Btn); Stroke.Color = Config.Theme.Stroke; Stroke.Transparency = 0.8
+		local Stroke = Instance.new("UIStroke", Btn); Stroke.Color = Config.Theme.Stroke; Stroke.Transparency = 0.85
 		local Label = Instance.new("TextLabel", Btn)
-		Label.Text = text; Label.Size = UDim2.new(0.72, 0, 1, 0); Label.Position = UDim2.new(0, 10, 0, 0)
+		Label.Text = text; Label.Size = UDim2.new(0.74, 0, 1, 0); Label.Position = UDim2.new(0, 12, 0, 0)
 		Label.BackgroundTransparency = 1; Label.TextColor3 = Config.Theme.Text; Label.Font = Enum.Font.GothamSemibold; Label.TextSize = 11; Label.TextXAlignment = Enum.TextXAlignment.Left
 		local Indicator = Instance.new("Frame", Btn)
-		Indicator.Size = UDim2.new(0, 32, 0, 16); Indicator.Position = UDim2.new(1, -42, 0.5, -8); Indicator.BackgroundColor3 = Color3.fromRGB(60,60,70)
+		Indicator.Size = UDim2.new(0, 34, 0, 18); Indicator.Position = UDim2.new(1, -46, 0.5, -9); Indicator.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
 		Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
+		local indStroke = Instance.new("UIStroke", Indicator); indStroke.Color = Config.Theme.Stroke; indStroke.Transparency = 0.75; indStroke.Thickness = 1
 		local Dot = Instance.new("Frame", Indicator)
-		Dot.Size = UDim2.new(0, 12, 0, 12); Dot.Position = UDim2.new(0, 2, 0.5, -6); Dot.BackgroundColor3 = Color3.fromRGB(120,120,130)
+		Dot.Size = UDim2.new(0, 14, 0, 14); Dot.Position = UDim2.new(0, 2, 0.5, -7); Dot.BackgroundColor3 = Color3.fromRGB(150, 150, 160)
 		Instance.new("UICorner", Dot).CornerRadius = UDim.new(1, 0)
 		
 		local function Update(val)
-			local c = val and Config.Theme.Stroke or Color3.fromRGB(120,120,130)
-			local p = val and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
-			Services.TweenService:Create(Dot, TweenInfo.new(0.25), {Position = p, BackgroundColor3 = c}):Play()
-			Services.TweenService:Create(Stroke, TweenInfo.new(0.25), {Transparency = val and 0.2 or 0.8}):Play()
+			local c = val and Config.Theme.Stroke or Color3.fromRGB(150, 150, 160)
+			local bgC = val and Color3.fromRGB(0, 60, 75) or Color3.fromRGB(45, 45, 55)
+			local p = val and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
+			Services.TweenService:Create(Dot, TweenInfo.new(0.2), {Position = p, BackgroundColor3 = c}):Play()
+			Services.TweenService:Create(Indicator, TweenInfo.new(0.2), {BackgroundColor3 = bgC}):Play()
+			Services.TweenService:Create(Stroke, TweenInfo.new(0.2), {Transparency = val and 0.4 or 0.85}):Play()
 			Config.States[flag] = val
 			if flag == "XRay" then Utils.ToggleXRay(val) end
 			if flag == "Fullbright" then Utils.ToggleFullbright(val) end
@@ -715,21 +723,33 @@ function UI.Init()
 	
 	local function AddSlider(page, text, min, max, def, cb, getOrder)
 		local Frame = Instance.new("Frame", page)
-		Frame.LayoutOrder = getOrder(); Frame.Size = UDim2.new(1, -4, 0, 42); Frame.BackgroundColor3 = Config.Theme.Sec
+		Frame.LayoutOrder = getOrder(); Frame.Size = UDim2.new(1, -4, 0, 46); Frame.BackgroundColor3 = Config.Theme.Sec
 		Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6)
+		local fStroke = Instance.new("UIStroke", Frame); fStroke.Color = Config.Theme.Stroke; fStroke.Transparency = 0.85
+		
 		local Label = Instance.new("TextLabel", Frame)
-		Label.Text = text .. ": " .. def; Label.Size = UDim2.new(1, -16, 0, 16); Label.Position = UDim2.new(0, 8, 0, 4)
-		Label.BackgroundTransparency = 1; Label.TextColor3 = Config.Theme.Text; Label.Font = Enum.Font.GothamBold; Label.TextSize = 10
+		Label.Text = text; Label.Size = UDim2.new(0.72, 0, 0, 18); Label.Position = UDim2.new(0, 10, 0, 4)
+		Label.BackgroundTransparency = 1; Label.TextColor3 = Config.Theme.Text; Label.Font = Enum.Font.GothamSemibold; Label.TextSize = 11
+		Label.TextXAlignment = Enum.TextXAlignment.Left
+
+		local ValLabel = Instance.new("TextLabel", Frame)
+		ValLabel.Text = tostring(def); ValLabel.Size = UDim2.new(0.24, 0, 0, 18); ValLabel.Position = UDim2.new(0.74, -10, 0, 4)
+		ValLabel.BackgroundTransparency = 1; ValLabel.TextColor3 = Config.Theme.Stroke; ValLabel.Font = Enum.Font.GothamBold; ValLabel.TextSize = 11
+		ValLabel.TextXAlignment = Enum.TextXAlignment.Right
+
 		local SlideBar = Instance.new("TextButton", Frame)
-		SlideBar.Size = UDim2.new(1, -16, 0, 4); SlideBar.Position = UDim2.new(0, 8, 0, 26); SlideBar.BackgroundColor3 = Color3.fromRGB(60,60,70); SlideBar.Text = "  "
-		Instance.new("UICorner", SlideBar).CornerRadius = UDim.new(0, 2)
+		SlideBar.Size = UDim2.new(1, -20, 0, 6); SlideBar.Position = UDim2.new(0, 10, 0, 28); SlideBar.BackgroundColor3 = Color3.fromRGB(45,45,55); SlideBar.Text = "  "
+		Instance.new("UICorner", SlideBar).CornerRadius = UDim.new(1, 0)
+		local barStroke = Instance.new("UIStroke", SlideBar); barStroke.Color = Config.Theme.Stroke; barStroke.Transparency = 0.85
+
 		local Fill = Instance.new("Frame", SlideBar)
 		Fill.Size = UDim2.new((def-min)/(max-min), 0, 1, 0); Fill.BackgroundColor3 = Config.Theme.Stroke
 		Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
-		local SliderData = {Bar = SlideBar, Fill = Fill, Label = Label, Min = min, Max = max, Callback = cb, Text = text}
+		
+		local SliderData = {Bar = SlideBar, Fill = Fill, Label = Label, ValLabel = ValLabel, Min = min, Max = max, Callback = cb, Text = text}
 		function SliderData:SetValue(val)
 			val = math.clamp(val, min, max); local pct = (val - min) / (max - min)
-			Fill.Size = UDim2.new(pct, 0, 1, 0); Label.Text = text .. ": " .. math.floor(val)
+			Fill.Size = UDim2.new(pct, 0, 1, 0); ValLabel.Text = tostring(math.floor(val))
 			if cb then cb(math.floor(val)) end
 		end
 		SlideBar.MouseButton1Down:Connect(function() Storage.ActiveSlider = SliderData; Storage.SliderDrag = true end)
@@ -764,10 +784,17 @@ function UI.Init()
 	end
 	
 	local function AddSection(page, text, getOrder)
-		local Label = Instance.new("TextLabel", page); Label.LayoutOrder = getOrder()
-		Label.Size = UDim2.new(1, -4, 0, 18); Label.BackgroundTransparency = 1
-		Label.Text = "-- " .. text .. " --"; Label.TextColor3 = Config.Theme.Stroke; Label.Font = Enum.Font.GothamBlack; Label.TextSize = 10
-		Label.TextXAlignment = Enum.TextXAlignment.Left
+		local SecFrame = Instance.new("Frame", page); SecFrame.LayoutOrder = getOrder()
+		SecFrame.Size = UDim2.new(1, -4, 0, 26); SecFrame.BackgroundTransparency = 1
+		
+		local Bar = Instance.new("Frame", SecFrame)
+		Bar.Size = UDim2.new(0, 3, 0, 14); Bar.Position = UDim2.new(0, 2, 0.5, -7)
+		Bar.BackgroundColor3 = Config.Theme.Stroke; Instance.new("UICorner", Bar).CornerRadius = UDim.new(1, 0)
+
+		local Label = Instance.new("TextLabel", SecFrame)
+		Label.Size = UDim2.new(1, -16, 1, 0); Label.Position = UDim2.new(0, 10, 0, 0)
+		Label.BackgroundTransparency = 1; Label.Text = string.upper(text); Label.TextColor3 = Config.Theme.Stroke
+		Label.Font = Enum.Font.GothamBlack; Label.TextSize = 11; Label.TextXAlignment = Enum.TextXAlignment.Left
 	end
 	
 	local function AddKeybindInfo(page, section, binds, getOrder)
@@ -784,12 +811,12 @@ function UI.Init()
 		end
 	end
 	
-	local P1, T1, getOrder1 = CreatePage("COMBAT"); P1.Visible = true; T1.BackgroundColor3 = Config.Theme.Stroke; T1.TextColor3 = Config.Theme.Main
-	local P2, T2, getOrder2 = CreatePage("VISUAL")
-	local P3, T3, getOrder3 = CreatePage("MOVEMENT")
-	local P4, T4, getOrder4 = CreatePage("PLAYER")
-	local P5, T5, getOrder5 = CreatePage("OTHER")
-	local P6, T6, getOrder6 = CreatePage("KEYBINDS")
+	local P1, T1, getOrder1 = CreatePage("🎯 COMBAT"); P1.Visible = true; T1.BackgroundColor3 = Config.Theme.Stroke; T1.TextColor3 = Config.Theme.Main
+	local P2, T2, getOrder2 = CreatePage("👁️ VISUAL")
+	local P3, T3, getOrder3 = CreatePage("🏃 MOVEMENT")
+	local P4, T4, getOrder4 = CreatePage("👥 PLAYER")
+	local P5, T5, getOrder5 = CreatePage("⚙️ OTHER")
+	local P6, T6, getOrder6 = CreatePage("⌨️ KEYBINDS")
 	
 	
 	AddSection(P1, "GOD TIER FLING & RAGE [V5.0]", getOrder1)
@@ -1698,7 +1725,7 @@ function Runtime.Init()
 		end
 		
 		if Drawing then
-			local showCross = Config.States.Crosshair or Config.States.DynamicCrosshair
+			local showCross = (Config.States.Crosshair or Config.States.DynamicCrosshair) and not (Storage.MainFrame and Storage.MainFrame.Visible)
 			if showCross then
 				local spread = 6
 				local crosshairColor = Config.Theme.Stroke
