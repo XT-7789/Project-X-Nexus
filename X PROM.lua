@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PROM V3.2.1 - MOBILE TOURNAMENT SUITE ]]
+-- [[ X PROM V3.3.0 - MOBILE TOURNAMENT SUITE ]]
 -- Official Seller: vlilayz | Tier: PROM (RM 20)
 -- Specially Crafted for Delta Mobile / iOS / Android / Tablet
 -- 100% Zero Keyboard Required | Touch Floating Bubble | Mobile Silent Aim
@@ -89,11 +89,170 @@ local function TrackConn(c)
     return c
 end
 
-local function Notify(title, text)
-    pcall(function()
-        Services.StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = 2.5 })
-    end)
+local NotifyStorage = {
+	Container = nil,
+	ActiveCards = {}
+}
+
+local function InitNotifyContainer()
+	if NotifyStorage.Container and NotifyStorage.Container.Parent then return NotifyStorage.Container end
+	local gui = targetGui:FindFirstChild("X_NOTIFICATIONS")
+	if not gui then
+		gui = Instance.new("ScreenGui")
+		gui.Name = "X_NOTIFICATIONS"
+		gui.ResetOnSpawn = false
+		gui.IgnoreGuiInset = true
+		gui.DisplayOrder = 999999
+		gui.Parent = targetGui
+	end
+	
+	local frame = gui:FindFirstChild("NotifyList")
+	if not frame then
+		frame = Instance.new("Frame")
+		frame.Name = "NotifyList"
+		frame.Size = UDim2.new(0, 260, 1, -20)
+		frame.Position = UDim2.new(1, -270, 0, 10)
+		frame.BackgroundTransparency = 1
+		local list = Instance.new("UIListLayout", frame)
+		list.FillDirection = Enum.FillDirection.Vertical
+		list.VerticalAlignment = Enum.VerticalAlignment.Bottom
+		list.HorizontalAlignment = Enum.HorizontalAlignment.Right
+		list.Padding = UDim.new(0, 8)
+		frame.Parent = gui
+	end
+	NotifyStorage.Container = frame
+	return frame
 end
+
+function Utils.Notify(title, text, dur)
+	dur = dur or 2.5
+	local ok, container = pcall(InitNotifyContainer)
+	if not ok or not container then
+		pcall(function() print("[" .. tostring(title) .. "] " .. tostring(text)) end)
+		return
+	end
+
+	-- De-duplicate / update existing notification with same title smoothly
+	if NotifyStorage.ActiveCards[title] then
+		local cardData = NotifyStorage.ActiveCards[title]
+		if cardData.Card and cardData.Card.Parent then
+			cardData.Desc.Text = tostring(text)
+			cardData.Expiry = tick() + dur
+			if cardData.ProgressBar then
+				cardData.ProgressBar.Size = UDim2.new(1, 0, 0, 2)
+				Services.TweenService:Create(cardData.ProgressBar, TweenInfo.new(dur, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 0, 2)}):Play()
+			end
+			local flashColor = (string.find(text, "CLOSED") or string.find(text, "DISABLED")) and Color3.fromRGB(255, 80, 80) or Color3.fromRGB(0, 220, 255)
+			Services.TweenService:Create(cardData.Stroke, TweenInfo.new(0.12), {Color = flashColor}):Play()
+			Services.TweenService:Create(cardData.Bar, TweenInfo.new(0.12), {BackgroundColor3 = flashColor}):Play()
+			return
+		end
+	end
+
+	-- Color palette based on context
+	local accent = (Config.Theme and (Config.Theme.Stroke or Config.Theme.Accent)) or Color3.fromRGB(0, 220, 255)
+	if string.find(title, "❌") or string.find(text, "CLOSED") or string.find(title, "Unload") or string.find(text, "DISABLED") or string.find(text, "Descent") then
+		accent = Color3.fromRGB(255, 75, 85)
+	elseif string.find(title, "✅") or string.find(text, "OPENED") or string.find(text, "ENABLED") or string.find(text, "SUCCESS") then
+		accent = Color3.fromRGB(50, 225, 135)
+	elseif string.find(title, "🎯") or string.find(title, "⚡") or string.find(title, "👑") then
+		accent = Color3.fromRGB(0, 220, 255)
+	elseif string.find(title, "⚠️") or string.find(title, "📦") or string.find(title, "💥") then
+		accent = Color3.fromRGB(255, 200, 60)
+	end
+
+	local card = Instance.new("Frame")
+	card.Name = "ToastCard"
+	card.Size = UDim2.new(0, 250, 0, 52)
+	card.BackgroundColor3 = Color3.fromRGB(16, 18, 26)
+	card.BackgroundTransparency = 1
+	card.ClipsDescendants = true
+	Instance.new("UICorner", card).CornerRadius = UDim.new(0, 8)
+
+	local stroke = Instance.new("UIStroke", card)
+	stroke.Color = accent
+	stroke.Thickness = 1.2
+	stroke.Transparency = 1
+
+	local bar = Instance.new("Frame", card)
+	bar.Name = "AccentBar"
+	bar.Size = UDim2.new(0, 4, 1, 0)
+	bar.BackgroundColor3 = accent
+	bar.BorderSizePixel = 0
+
+	local tLbl = Instance.new("TextLabel", card)
+	tLbl.Name = "Title"
+	tLbl.Size = UDim2.new(1, -16, 0, 18)
+	tLbl.Position = UDim2.new(0, 12, 0, 8)
+	tLbl.BackgroundTransparency = 1
+	tLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+	tLbl.Font = Enum.Font.GothamBold
+	tLbl.TextSize = 12
+	tLbl.TextXAlignment = Enum.TextXAlignment.Left
+	tLbl.Text = tostring(title)
+	tLbl.TextTransparency = 1
+
+	local dLbl = Instance.new("TextLabel", card)
+	dLbl.Name = "Text"
+	dLbl.Size = UDim2.new(1, -16, 0, 16)
+	dLbl.Position = UDim2.new(0, 12, 0, 27)
+	dLbl.BackgroundTransparency = 1
+	dLbl.TextColor3 = Color3.fromRGB(185, 190, 205)
+	dLbl.Font = Enum.Font.GothamMedium
+	dLbl.TextSize = 11
+	dLbl.TextXAlignment = Enum.TextXAlignment.Left
+	dLbl.Text = tostring(text)
+	dLbl.TextTransparency = 1
+
+	local pBar = Instance.new("Frame", card)
+	pBar.Name = "Progress"
+	pBar.Size = UDim2.new(1, 0, 0, 2)
+	pBar.Position = UDim2.new(0, 0, 1, -2)
+	pBar.BackgroundColor3 = accent
+	pBar.BorderSizePixel = 0
+	pBar.BackgroundTransparency = 0.2
+
+	card.Parent = container
+
+	local cardInfo = {
+		Card = card,
+		Stroke = stroke,
+		Bar = bar,
+		Desc = dLbl,
+		ProgressBar = pBar,
+		AccentColor = accent,
+		Expiry = tick() + dur
+	}
+	NotifyStorage.ActiveCards[title] = cardInfo
+
+	-- Slide & Fade in
+	Services.TweenService:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0.08}):Play()
+	Services.TweenService:Create(stroke, TweenInfo.new(0.25), {Transparency = 0.25}):Play()
+	Services.TweenService:Create(tLbl, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
+	Services.TweenService:Create(dLbl, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
+	Services.TweenService:Create(pBar, TweenInfo.new(dur, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 0, 2)}):Play()
+
+	task.spawn(function()
+		while tick() < cardInfo.Expiry do
+			task.wait(0.1)
+			if not card.Parent then return end
+		end
+		if card and card.Parent then
+			Services.TweenService:Create(card, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
+			Services.TweenService:Create(stroke, TweenInfo.new(0.22), {Transparency = 1}):Play()
+			Services.TweenService:Create(tLbl, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
+			Services.TweenService:Create(dLbl, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
+			task.wait(0.22)
+			if card and card.Parent then card:Destroy() end
+			if NotifyStorage.ActiveCards[title] == cardInfo then
+				NotifyStorage.ActiveCards[title] = nil
+			end
+		end
+	end)
+end
+
+local function Notify(title, text, dur) Utils.Notify(title, text, dur) end
+
 
 -- ==================================================================
 -- SOUND FEEDBACK
@@ -732,7 +891,7 @@ local function BuildMobileUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "📱 X PROM <font color='#00dcff'>V3.2.1</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
+    Title.Text = "📱 X PROM <font color='#00dcff'>V3.3.0</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
     Title.Size = UDim2.new(0, 240, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 13; Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -1293,7 +1452,7 @@ local function Init()
         end
     end)
 
-    Notify("X PROM V3.2.1", "Delta Mobile Pro Active! Tap [⚡] for menu")
+    Notify("X PROM V3.3.0", "Delta Mobile Pro Active! Tap [⚡] for menu")
 end
 
 Init()

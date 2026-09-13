@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V5.3.1 - VOID WALKER (SPECIAL VIP EXCLUSIVE) ]]
+-- [[ X TITAN V5.4.0 - VOID WALKER (SPECIAL VIP EXCLUSIVE) ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
 -- P2: RenderStepped Target Caching & Collision Loop Optimization
@@ -45,7 +45,7 @@ end
 if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==============================================================================
--- CONFIGURATION & STORAGE (V5.3.1)
+-- CONFIGURATION & STORAGE (V5.4.0)
 -- ==============================================================================
 local Config = {
 	Keys = {
@@ -133,14 +133,173 @@ _G.X_TITAN_CURRENT_INSTANCE = {
 }
 
 -- ==============================================================================
--- UTILITIES (V5.3.1)
+-- UTILITIES (V5.4.0)
 -- ==============================================================================
 local Utils = {}
 _G.X_TITAN_CURRENT_INSTANCE.Utils = Utils
 
-function Utils.Notify(title, text, dur)
-	pcall(function() Services.StarterGui:SetCore("SendNotification", {Title=title, Text=text, Duration=dur or 2}) end)
+local NotifyStorage = {
+	Container = nil,
+	ActiveCards = {}
+}
+
+local function InitNotifyContainer()
+	if NotifyStorage.Container and NotifyStorage.Container.Parent then return NotifyStorage.Container end
+	local gui = targetGui:FindFirstChild("X_NOTIFICATIONS")
+	if not gui then
+		gui = Instance.new("ScreenGui")
+		gui.Name = "X_NOTIFICATIONS"
+		gui.ResetOnSpawn = false
+		gui.IgnoreGuiInset = true
+		gui.DisplayOrder = 999999
+		gui.Parent = targetGui
+	end
+	
+	local frame = gui:FindFirstChild("NotifyList")
+	if not frame then
+		frame = Instance.new("Frame")
+		frame.Name = "NotifyList"
+		frame.Size = UDim2.new(0, 260, 1, -20)
+		frame.Position = UDim2.new(1, -270, 0, 10)
+		frame.BackgroundTransparency = 1
+		local list = Instance.new("UIListLayout", frame)
+		list.FillDirection = Enum.FillDirection.Vertical
+		list.VerticalAlignment = Enum.VerticalAlignment.Bottom
+		list.HorizontalAlignment = Enum.HorizontalAlignment.Right
+		list.Padding = UDim.new(0, 8)
+		frame.Parent = gui
+	end
+	NotifyStorage.Container = frame
+	return frame
 end
+
+function Utils.Notify(title, text, dur)
+	dur = dur or 2.5
+	local ok, container = pcall(InitNotifyContainer)
+	if not ok or not container then
+		pcall(function() print("[" .. tostring(title) .. "] " .. tostring(text)) end)
+		return
+	end
+
+	-- De-duplicate / update existing notification with same title smoothly
+	if NotifyStorage.ActiveCards[title] then
+		local cardData = NotifyStorage.ActiveCards[title]
+		if cardData.Card and cardData.Card.Parent then
+			cardData.Desc.Text = tostring(text)
+			cardData.Expiry = tick() + dur
+			if cardData.ProgressBar then
+				cardData.ProgressBar.Size = UDim2.new(1, 0, 0, 2)
+				Services.TweenService:Create(cardData.ProgressBar, TweenInfo.new(dur, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 0, 2)}):Play()
+			end
+			local flashColor = (string.find(text, "CLOSED") or string.find(text, "DISABLED")) and Color3.fromRGB(255, 80, 80) or Color3.fromRGB(0, 220, 255)
+			Services.TweenService:Create(cardData.Stroke, TweenInfo.new(0.12), {Color = flashColor}):Play()
+			Services.TweenService:Create(cardData.Bar, TweenInfo.new(0.12), {BackgroundColor3 = flashColor}):Play()
+			return
+		end
+	end
+
+	-- Color palette based on context
+	local accent = (Config.Theme and (Config.Theme.Stroke or Config.Theme.Accent)) or Color3.fromRGB(0, 220, 255)
+	if string.find(title, "❌") or string.find(text, "CLOSED") or string.find(title, "Unload") or string.find(text, "DISABLED") or string.find(text, "Descent") then
+		accent = Color3.fromRGB(255, 75, 85)
+	elseif string.find(title, "✅") or string.find(text, "OPENED") or string.find(text, "ENABLED") or string.find(text, "SUCCESS") then
+		accent = Color3.fromRGB(50, 225, 135)
+	elseif string.find(title, "🎯") or string.find(title, "⚡") or string.find(title, "👑") then
+		accent = Color3.fromRGB(0, 220, 255)
+	elseif string.find(title, "⚠️") or string.find(title, "📦") or string.find(title, "💥") then
+		accent = Color3.fromRGB(255, 200, 60)
+	end
+
+	local card = Instance.new("Frame")
+	card.Name = "ToastCard"
+	card.Size = UDim2.new(0, 250, 0, 52)
+	card.BackgroundColor3 = Color3.fromRGB(16, 18, 26)
+	card.BackgroundTransparency = 1
+	card.ClipsDescendants = true
+	Instance.new("UICorner", card).CornerRadius = UDim.new(0, 8)
+
+	local stroke = Instance.new("UIStroke", card)
+	stroke.Color = accent
+	stroke.Thickness = 1.2
+	stroke.Transparency = 1
+
+	local bar = Instance.new("Frame", card)
+	bar.Name = "AccentBar"
+	bar.Size = UDim2.new(0, 4, 1, 0)
+	bar.BackgroundColor3 = accent
+	bar.BorderSizePixel = 0
+
+	local tLbl = Instance.new("TextLabel", card)
+	tLbl.Name = "Title"
+	tLbl.Size = UDim2.new(1, -16, 0, 18)
+	tLbl.Position = UDim2.new(0, 12, 0, 8)
+	tLbl.BackgroundTransparency = 1
+	tLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+	tLbl.Font = Enum.Font.GothamBold
+	tLbl.TextSize = 12
+	tLbl.TextXAlignment = Enum.TextXAlignment.Left
+	tLbl.Text = tostring(title)
+	tLbl.TextTransparency = 1
+
+	local dLbl = Instance.new("TextLabel", card)
+	dLbl.Name = "Text"
+	dLbl.Size = UDim2.new(1, -16, 0, 16)
+	dLbl.Position = UDim2.new(0, 12, 0, 27)
+	dLbl.BackgroundTransparency = 1
+	dLbl.TextColor3 = Color3.fromRGB(185, 190, 205)
+	dLbl.Font = Enum.Font.GothamMedium
+	dLbl.TextSize = 11
+	dLbl.TextXAlignment = Enum.TextXAlignment.Left
+	dLbl.Text = tostring(text)
+	dLbl.TextTransparency = 1
+
+	local pBar = Instance.new("Frame", card)
+	pBar.Name = "Progress"
+	pBar.Size = UDim2.new(1, 0, 0, 2)
+	pBar.Position = UDim2.new(0, 0, 1, -2)
+	pBar.BackgroundColor3 = accent
+	pBar.BorderSizePixel = 0
+	pBar.BackgroundTransparency = 0.2
+
+	card.Parent = container
+
+	local cardInfo = {
+		Card = card,
+		Stroke = stroke,
+		Bar = bar,
+		Desc = dLbl,
+		ProgressBar = pBar,
+		AccentColor = accent,
+		Expiry = tick() + dur
+	}
+	NotifyStorage.ActiveCards[title] = cardInfo
+
+	-- Slide & Fade in
+	Services.TweenService:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0.08}):Play()
+	Services.TweenService:Create(stroke, TweenInfo.new(0.25), {Transparency = 0.25}):Play()
+	Services.TweenService:Create(tLbl, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
+	Services.TweenService:Create(dLbl, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
+	Services.TweenService:Create(pBar, TweenInfo.new(dur, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 0, 2)}):Play()
+
+	task.spawn(function()
+		while tick() < cardInfo.Expiry do
+			task.wait(0.1)
+			if not card.Parent then return end
+		end
+		if card and card.Parent then
+			Services.TweenService:Create(card, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
+			Services.TweenService:Create(stroke, TweenInfo.new(0.22), {Transparency = 1}):Play()
+			Services.TweenService:Create(tLbl, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
+			Services.TweenService:Create(dLbl, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
+			task.wait(0.22)
+			if card and card.Parent then card:Destroy() end
+			if NotifyStorage.ActiveCards[title] == cardInfo then
+				NotifyStorage.ActiveCards[title] = nil
+			end
+		end
+	end)
+end
+
 
 function Utils.IsTeammate(plr)
 	if not plr or not LocalPlayer or plr == LocalPlayer then return true end
@@ -758,9 +917,9 @@ function Features.GetAuraTarget()
 end
 
 -- ==============================================================================
--- UI SYSTEM (V5.3.1)
+-- UI SYSTEM (V5.4.0)
 -- ==============================================================================
--- ITEM & LOOT ESP SUBSYSTEM (V5.3.1)
+-- ITEM & LOOT ESP SUBSYSTEM (V5.4.0)
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
 		pcall(function() bg:Destroy() end)
@@ -931,7 +1090,7 @@ function UI.Init()
 	Title.Font = Enum.Font.GothamBlack; Title.TextSize = 16; Title.TextXAlignment = Enum.TextXAlignment.Left
 
 	local Subtitle = Instance.new("TextLabel", SidePanel)
-	Subtitle.Text = "VOID WALKER • V5.3.1"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
+	Subtitle.Text = "VOID WALKER • V5.4.0"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
 	Subtitle.BackgroundTransparency = 1; Subtitle.TextColor3 = Config.Theme.TextDim
 	Subtitle.Font = Enum.Font.GothamBold; Subtitle.TextSize = 9; Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 	
@@ -1386,7 +1545,7 @@ function UI.Init()
 end
 
 -- ==============================================================================
--- CORE EXPLOIT HOOKS (V5.3.1 - ALL BUGS FIXED)
+-- CORE EXPLOIT HOOKS (V5.4.0 - ALL BUGS FIXED)
 -- ==============================================================================
 local HasTitanMetamethodHook = false
 
@@ -1576,11 +1735,11 @@ end)
 table.insert(Storage.Loops, auraLoop)
 
 -- ==============================================================================
--- RUNTIME (V5.3.1)
+-- RUNTIME (V5.4.0)
 -- ==============================================================================
 local Runtime = {}
 function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.3.1 - TITAN GOD (APEX OMNI)...")
+	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.4.0 - TITAN GOD (APEX OMNI)...")
 	Storage.IsUnloaded = true
 	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
 	Storage.Loops = {}
@@ -1681,7 +1840,7 @@ function Runtime.Unload()
 	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
 	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
 	Storage.RadarObjects = {}
-	print("X TITAN V5.3.1 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
+	print("X TITAN V5.4.0 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
 end
 
 local function InitRadar()
@@ -2333,7 +2492,7 @@ function Runtime.Init()
 			end
 			return
 		end
-		-- [V5.3.1] Rainbow Chams & HUD Accent
+		-- [V5.4.0] Rainbow Chams & HUD Accent
 		if Config.States.NoRecoil and LocalPlayer.Character then
 			pcall(function()
 				local myChar = LocalPlayer.Character
@@ -2354,7 +2513,7 @@ function Runtime.Init()
 			Config.Theme.Stroke = rainbow
 		end
 
-		-- [V5.3.1] Touch Fling Logic (PlayerCache Optimized)
+		-- [V5.4.0] Touch Fling Logic (PlayerCache Optimized)
 		if Config.States.TouchFling and hrp then
 			for p, data in pairs(Storage.PlayerCache) do
 				if not (Config.States.TeamCheck and Utils.IsTeammate(p)) then
@@ -2367,7 +2526,7 @@ function Runtime.Init()
 			end
 		end
 
-		-- [V5.3.1] Orbit Stalker Aura
+		-- [V5.4.0] Orbit Stalker Aura
 		if Config.States.OrbitAura and Storage.LockedTarget and Storage.LockedTarget.Character and hrp then
 			local tHRP = Storage.LockedTarget.Character:FindFirstChild("HumanoidRootPart")
 			if tHRP then
@@ -2378,7 +2537,7 @@ function Runtime.Init()
 			end
 		end
 
-		-- [V5.3.1] Anti-Fling Immortality (PlayerCache Optimized)
+		-- [V5.4.0] Anti-Fling Immortality (PlayerCache Optimized)
 		if Config.States.AntiFling and hrp then
 			for p, data in pairs(Storage.PlayerCache) do
 				local otherHRP = data.Root
@@ -2784,5 +2943,5 @@ end)
 table.insert(Storage.Loops, itemLoop)
 
 Runtime.Init()
-Utils.Notify("✅ X TITAN V5.3.1 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
-print("X TITAN V5.3.1 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
+Utils.Notify("✅ X TITAN V5.4.0 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
+print("X TITAN V5.4.0 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
