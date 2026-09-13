@@ -46,41 +46,40 @@ end
 local isMasterMiniPlus = (string.upper(tostring(key)) == "X-MINI-PRO-X")
 local tier
 
+Notify("⚡ X SUITE", "Authenticating Key & Verifying HWID...", 2)
+
+local hwid = GetHWID()
+local verifyUrl = "https://x-auth.alex-x-7789-x.workers.dev/verify?key=" .. tostring(key) .. "&hwid=" .. tostring(hwid)
+
+local success, response = pcall(function()
+	return game:HttpGet(verifyUrl)
+end)
+
+if not success or not response then
+	Notify("❌ X SUITE", "Connection Error! Could not reach Auth Server.", 4)
+	warn("[X SUITE] Connection Error: " .. tostring(response))
+	return
+end
+
+local ok, data = pcall(function()
+	return Services.HttpService:JSONDecode(response)
+end)
+
+if not ok or not data then
+	Notify("❌ X SUITE", "Invalid response from Auth Server.", 4)
+	return
+end
+
+if not data.success then
+	Notify("❌ AUTH FAILED", data.message or "Authentication failed.", 5)
+	warn("[X SUITE] Auth Error: " .. tostring(data.message))
+	return
+end
+
+tier = data.tier or (isMasterMiniPlus and "Mini" or "Nano")
+
 if isMasterMiniPlus then
-	tier = "Mini"
-	Notify("👑 X MINI+ PRIVILEGED", "Founder Key X-MINI-PRO-X Accepted! Loading MINI+...", 3)
-else
-	Notify("⚡ X SUITE", "Authenticating Key & Verifying HWID...", 2)
-
-	local hwid = GetHWID()
-	local verifyUrl = "https://x-auth.alex-x-7789-x.workers.dev/verify?key=" .. tostring(key) .. "&hwid=" .. tostring(hwid)
-
-	local success, response = pcall(function()
-		return game:HttpGet(verifyUrl)
-	end)
-
-	if not success or not response then
-		Notify("❌ X SUITE", "Connection Error! Could not reach Auth Server.", 4)
-		warn("[X SUITE] Connection Error: " .. tostring(response))
-		return
-	end
-
-	local ok, data = pcall(function()
-		return Services.HttpService:JSONDecode(response)
-	end)
-
-	if not ok or not data then
-		Notify("❌ X SUITE", "Invalid response from Auth Server.", 4)
-		return
-	end
-
-	if not data.success then
-		Notify("❌ AUTH FAILED", data.message or "Authentication failed.", 5)
-		warn("[X SUITE] Auth Error: " .. tostring(data.message))
-		return
-	end
-
-	tier = data.tier or "Nano"
+	Notify("👑 X MINI+ PRIVILEGED", "Founder Key X-MINI-PRO-X Verified! Silent Aim Unlocked.", 3)
 end
 
 -- Set one-time security authentication token for guarded scripts
