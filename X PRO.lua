@@ -375,50 +375,105 @@ local function UpdateSkeletonESP()
 end
 
 -- ==================================================================
--- EXPLOIT HOOKS (SILENT AIM & ANTI-KILLBRICK)
+-- MULTI-LAYER COMPATIBLE SILENT AIM ENGINE (Xeno & Delta Universal)
 -- ==================================================================
+local HasMetamethodHook = false
+
+-- [TIER 1] Metamethod __namecall Hook (Delta / Advanced PC Executors)
 if type(hookmetamethod) == "function" and type(getnamecallmethod) == "function" then
     local safeUnpack = table.unpack or unpack
-    local oldNamecall
-    oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-        local method = getnamecallmethod()
-        local args = {...}
+    local ok, oldNamecall = pcall(function()
+        return hookmetamethod(game, "__namecall", function(self, ...)
+            local method = getnamecallmethod()
+            local args = {...}
 
-        if Config.States.AntiKillbrick and method == "TakeDamage" and self:IsA("Humanoid") and self:IsDescendantOf(LocalPlayer.Character) then
-            return
-        end
+            if Config.States.AntiKillbrick and method == "TakeDamage" and self:IsA("Humanoid") and self:IsDescendantOf(LocalPlayer.Character) then
+                return
+            end
 
-        if Config.States.SilentAim and (method == "Raycast" or method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRay" or method == "FindPartOnRayWithWhitelist") then
-            local targetPart = Utils.GetClosestTarget()
-            if targetPart and targetPart.Parent then
-                local predPos = targetPart.Position
-                local root = targetPart.Parent:FindFirstChild("HumanoidRootPart")
-                if Config.States.SmartPrediction and root then
-                    predPos = predPos + (root.AssemblyLinearVelocity * Config.Vals.PredictionStrength)
-                end
+            if Config.States.SilentAim and (method == "Raycast" or method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRay" or method == "FindPartOnRayWithWhitelist") then
+                local targetPart = Utils.GetClosestTarget()
+                if targetPart and targetPart.Parent then
+                    local predPos = targetPart.Position
+                    local root = targetPart.Parent:FindFirstChild("HumanoidRootPart")
+                    if Config.States.SmartPrediction and root then
+                        predPos = predPos + (root.AssemblyLinearVelocity * Config.Vals.PredictionStrength)
+                    end
 
-                PlayHitSound()
+                    PlayHitSound()
 
-                if method == "Raycast" then
-                    local origin = args[1]
-                    args[2] = (predPos - origin).Unit * 5000
-                    return oldNamecall(self, safeUnpack(args))
-                elseif method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRay" or method == "FindPartOnRayWithWhitelist" then
-                    local ray = args[1]
-                    args[1] = Ray.new(ray.Origin, (predPos - ray.Origin).Unit * 5000)
-                    return oldNamecall(self, safeUnpack(args))
+                    if method == "Raycast" then
+                        local origin = args[1]
+                        args[2] = (predPos - origin).Unit * 5000
+                        return oldNamecall(self, safeUnpack(args))
+                    elseif method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRay" or method == "FindPartOnRayWithWhitelist" then
+                        local ray = args[1]
+                        args[1] = Ray.new(ray.Origin, (predPos - ray.Origin).Unit * 5000)
+                        return oldNamecall(self, safeUnpack(args))
+                    end
                 end
             end
-        end
-        return oldNamecall(self, ...)
+            return oldNamecall(self, ...)
+        end)
     end)
+    if ok and oldNamecall then HasMetamethodHook = true end
 
-    local oldNewIndex
-    oldNewIndex = hookmetamethod(game, "__newindex", function(t, k, v)
-        if Config.States.AntiKillbrick and not checkcaller() and t:IsA("Humanoid") and t:IsDescendantOf(LocalPlayer.Character) and k == "Health" then
-            if type(v) == "number" and v < t.Health then return end
+    pcall(function()
+        local oldNewIndex
+        oldNewIndex = hookmetamethod(game, "__newindex", function(t, k, v)
+            if Config.States.AntiKillbrick and not checkcaller() and t:IsA("Humanoid") and t:IsDescendantOf(LocalPlayer.Character) and k == "Health" then
+                if type(v) == "number" and v < t.Health then return end
+            end
+            return oldNewIndex(t, k, v)
+        end)
+    end)
+end
+
+-- [TIER 2] Mouse.Hit & Target Spoofing (Xeno / Solara getrawmetatable Hook)
+pcall(function()
+    if type(getrawmetatable) == "function" and type(setreadonly) == "function" then
+        local mt = getrawmetatable(game)
+        if mt then
+            setreadonly(mt, false)
+            local oldIndex = mt.__index
+            mt.__index = function(t, k)
+                if Config.States.SilentAim and (t:IsA("Mouse") or tostring(t) == "Mouse") then
+                    local targetPart = Utils.GetClosestTarget()
+                    if targetPart then
+                        local predPos = targetPart.Position
+                        local root = targetPart.Parent and targetPart.Parent:FindFirstChild("HumanoidRootPart")
+                        if Config.States.SmartPrediction and root then
+                            predPos = predPos + (root.AssemblyLinearVelocity * Config.Vals.PredictionStrength)
+                        end
+                        if k == "Hit" then return CFrame.new(predPos)
+                        elseif k == "Target" then return targetPart end
+                    end
+                end
+                return oldIndex(t, k)
+            end
+            setreadonly(mt, true)
         end
-        return oldNewIndex(t, k, v)
+    end
+end)
+
+-- [TIER 3] Micro-Flick Bullet Snap (100% Works on ALL Free PC Executors with ZERO hooks)
+local function MicroFlickSilentAim()
+    if not Config.States.SilentAim then return end
+    local targetPart = Utils.GetClosestTarget()
+    if not targetPart or not targetPart.Parent then return end
+
+    local predPos = targetPart.Position
+    local root = targetPart.Parent:FindFirstChild("HumanoidRootPart")
+    if Config.States.SmartPrediction and root then
+        predPos = predPos + (root.AssemblyLinearVelocity * Config.Vals.PredictionStrength)
+    end
+
+    local origCF = Camera.CFrame
+    Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, predPos)
+    PlayHitSound()
+    task.spawn(function()
+        Services.RunService.RenderStepped:Wait()
+        Camera.CFrame = origCF
     end)
 end
 
@@ -955,6 +1010,11 @@ local function Init()
             end
         elseif input.KeyCode == Config.Keys.Unload then
             Unload()
+        end
+
+        -- Xeno / No-Hook Silent Aim Trigger
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and Config.States.SilentAim and not HasMetamethodHook then
+            MicroFlickSilentAim()
         end
 
         -- Click TP

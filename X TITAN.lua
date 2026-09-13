@@ -933,8 +933,63 @@ end
 -- ==============================================================================
 -- CORE EXPLOIT HOOKS (V5.0.0 - P0 FIXED)
 -- ==============================================================================
+local HasTitanMetamethodHook = false
+
+-- [TIER 2] Mouse.Hit & Target Spoofing (Xeno / Free PC Executors)
+pcall(function()
+	if type(getrawmetatable) == "function" and type(setreadonly) == "function" then
+		local mt = getrawmetatable(game)
+		if mt then
+			setreadonly(mt, false)
+			local oldIndex = mt.__index
+			mt.__index = function(t, k)
+				local inst = _G.X_TITAN_CURRENT_INSTANCE
+				if inst and inst.Config and inst.Config.States.SilentAim and (t:IsA("Mouse") or tostring(t) == "Mouse") then
+					local targetPart, _ = inst.Utils.GetClosestToCenter()
+					if targetPart then
+						local predPos = targetPart.Position
+						local root = targetPart.Parent and targetPart.Parent:FindFirstChild("HumanoidRootPart")
+						if inst.Config.States.SmartPrediction and root then
+							predPos = predPos + (root.AssemblyLinearVelocity * inst.Config.Vals.PredictionStrength)
+						end
+						if k == "Hit" then return CFrame.new(predPos)
+						elseif k == "Target" then return targetPart end
+					end
+				end
+				return oldIndex(t, k)
+			end
+			setreadonly(mt, true)
+		end
+	end
+end)
+
+-- [TIER 3] Micro-Flick Silent Aim Fallback for Xeno
+local function TitanMicroFlickSilentAim()
+	local inst = _G.X_TITAN_CURRENT_INSTANCE
+	if not inst or not inst.Config or not inst.Config.States.SilentAim then return end
+	local targetPart, _ = inst.Utils.GetClosestToCenter()
+	if not targetPart or not targetPart.Parent then return end
+
+	local predPos = targetPart.Position
+	local root = targetPart.Parent:FindFirstChild("HumanoidRootPart")
+	if inst.Config.States.SmartPrediction and root then
+		predPos = predPos + (root.AssemblyLinearVelocity * inst.Config.Vals.PredictionStrength)
+	end
+
+	local Camera = inst.Utils.GetCurrentCamera()
+	if not Camera then return end
+	local origCF = Camera.CFrame
+	Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, predPos)
+	if inst.Config.States.HitSound then inst.Utils.PlayHitSound() end
+	task.spawn(function()
+		Services.RunService.RenderStepped:Wait()
+		Camera.CFrame = origCF
+	end)
+end
+
 if not _G.X_TITAN_HOOK_INITIALIZED and type(hookmetamethod) == "function" and type(getnamecallmethod) == "function" then
 	_G.X_TITAN_HOOK_INITIALIZED = true
+	HasTitanMetamethodHook = true
 	local safeUnpack = table.unpack or unpack
 	local oldNamecall
 	
@@ -1940,6 +1995,9 @@ Runtime.Init()
 					Utils.Notify("🛸 UFO Sky Hide", "Flight active. Press [X] to return", 3)
 				end
 			end
+		end
+		if i.UserInputType == Enum.UserInputType.MouseButton1 and Config.States.SilentAim and not HasTitanMetamethodHook then
+			TitanMicroFlickSilentAim()
 		end
 		if i.UserInputType == Enum.UserInputType.MouseButton1 and Config.States.ClickTP and Services.UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
 			if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and Mouse.Target then
