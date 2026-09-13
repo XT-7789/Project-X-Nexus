@@ -66,7 +66,7 @@ local Config = {
         Aimbot = false, SilentAim = false, SmartPrediction = true, AutoAimPart = true,
         RightClickToggle = true, TeamCheck = true, WallCheck = false,
         TriggerBot = false, ShowFOV = false, TacticalLock = false,
-        ESP = false, ESPSkeleton = false, WeaponESP = true, OffscreenArrows = true,
+        ESP = false, ESPSkeleton = false, WeaponESP = true, OffscreenArrows = false,
         Tracers = false, Chams = false, Fullbright = false, Crosshair = false,
         Radar = false, HitSound = true, NoRecoil = false,
         Fly = false, LegitFly = false, SpeedHack = false, InfJump = false,
@@ -1024,38 +1024,41 @@ local function Init()
 
                         -- Off-screen Indicator Arrow
                         if Config.States.OffscreenArrows then
-                            local arrow = Storage.OffscreenArrows[plr]
-                            if not arrow then
-                                arrow = Drawing.new("Triangle")
-                                arrow.Filled = true
-                                Storage.OffscreenArrows[plr] = arrow
-                            end
+                            local arrowOk = pcall(function()
+                                local arrow = Storage.OffscreenArrows[plr]
+                                if not arrow then
+                                    arrow = Drawing.new("Triangle")
+                                    arrow.Filled = true
+                                    Storage.OffscreenArrows[plr] = arrow
+                                end
 
-                            if not onScreen and not (Config.States.TeamCheck and Utils.IsTeammate(plr)) then
-                                local rel = (root.Position - Camera.CFrame.Position)
-                                local forward = Camera.CFrame.LookVector
-                                local right = Camera.CFrame.RightVector
-                                local dotForward = forward:Dot(rel)
-                                local dotRight = right:Dot(rel)
+                                if not onScreen and not (Config.States.TeamCheck and Utils.IsTeammate(plr)) then
+                                    local rel = (root.Position - Camera.CFrame.Position)
+                                    local forward = Camera.CFrame.LookVector
+                                    local right = Camera.CFrame.RightVector
+                                    local dotForward = forward:Dot(rel)
+                                    local dotRight = right:Dot(rel)
 
-                                local angle = math.atan2(dotRight, dotForward)
-                                local arrowRadius = math.min(center.X, center.Y) * 0.75
-                                local arrowCenter = center + Vector2.new(math.sin(angle) * arrowRadius, -math.cos(angle) * arrowRadius)
+                                    local angle = math.atan2(dotRight, dotForward)
+                                    local arrowRadius = math.min(center.X, center.Y) * 0.75
+                                    local arrowCenter = center + Vector2.new(math.sin(angle) * arrowRadius, -math.cos(angle) * arrowRadius)
 
-                                local tip = arrowCenter + Vector2.new(math.sin(angle) * 12, -math.cos(angle) * 12)
-                                local leftPt = arrowCenter + Vector2.new(math.sin(angle + 2.5) * 8, -math.cos(angle + 2.5) * 8)
-                                local rightPt = arrowCenter + Vector2.new(math.sin(angle - 2.5) * 8, -math.cos(angle - 2.5) * 8)
+                                    local tip = arrowCenter + Vector2.new(math.sin(angle) * 12, -math.cos(angle) * 12)
+                                    local leftPt = arrowCenter + Vector2.new(math.sin(angle + 2.5) * 8, -math.cos(angle + 2.5) * 8)
+                                    local rightPt = arrowCenter + Vector2.new(math.sin(angle - 2.5) * 8, -math.cos(angle - 2.5) * 8)
 
-                                arrow.PointA = tip
-                                arrow.PointB = leftPt
-                                arrow.PointC = rightPt
-                                arrow.Color = Config.Theme.LockColor
-                                arrow.Visible = true
-                            else
-                                arrow.Visible = false
-                            end
+                                    arrow.PointA = tip
+                                    arrow.PointB = leftPt
+                                    arrow.PointC = rightPt
+                                    arrow.Color = Config.Theme.LockColor
+                                    arrow.Visible = true
+                                else
+                                    arrow.Visible = false
+                                end
+                            end)
+                            if not arrowOk then Config.States.OffscreenArrows = false end
                         elseif Storage.OffscreenArrows[plr] then
-                            Storage.OffscreenArrows[plr].Visible = false
+                            pcall(function() Storage.OffscreenArrows[plr].Visible = false end)
                         end
                     end
                 end

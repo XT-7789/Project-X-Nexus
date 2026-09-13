@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V5.2.1.1 - VOID WALKER (SPECIAL VIP EXCLUSIVE) ]]
+-- [[ X TITAN V5.2.2.1 - VOID WALKER (SPECIAL VIP EXCLUSIVE) ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
 -- P2: RenderStepped Target Caching & Collision Loop Optimization
@@ -45,7 +45,7 @@ end
 if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==============================================================================
--- CONFIGURATION & STORAGE (V5.2.1.1)
+-- CONFIGURATION & STORAGE (V5.2.2.1)
 -- ==============================================================================
 local Config = {
 	Keys = {
@@ -73,7 +73,7 @@ local Config = {
 		RightClickToggle = true, ShowFOV = false, TacticalLock = false,
 		ShowLockStatus = true, SmartPrediction = true, AutoAimPart = true,
 		LegitFly = false, ServerDesync = false, CFrameSpeed = false, Radar = false, ItemESP = false, VehicleBoost = false, VehicleFly = false,
-		WeaponESP = true, OffscreenArrows = true, NoRecoil = false
+		WeaponESP = true, OffscreenArrows = false, NoRecoil = false
 	},
 	Vals = {
 		FOV = 200, OrbitDistance = 8, OrbitSpeed = 8, FlingPower = 100000, WalkSpeed = 150, FlySpeed = 150, HitboxSize = 15, HeadSize = 25,
@@ -133,7 +133,7 @@ _G.X_TITAN_CURRENT_INSTANCE = {
 }
 
 -- ==============================================================================
--- UTILITIES (V5.2.1.1)
+-- UTILITIES (V5.2.2.1)
 -- ==============================================================================
 local Utils = {}
 _G.X_TITAN_CURRENT_INSTANCE.Utils = Utils
@@ -685,9 +685,9 @@ function Features.GetAuraTarget()
 end
 
 -- ==============================================================================
--- UI SYSTEM (V5.2.1.1)
+-- UI SYSTEM (V5.2.2.1)
 -- ==============================================================================
--- ITEM & LOOT ESP SUBSYSTEM (V5.2.1.1)
+-- ITEM & LOOT ESP SUBSYSTEM (V5.2.2.1)
 local function ClearItemESP()
 	for obj, gui in pairs(Storage.ItemESPObjects) do
 		if gui and gui.Parent then pcall(function() gui:Destroy() end) end
@@ -814,7 +814,7 @@ function UI.Init()
 	Title.Font = Enum.Font.GothamBlack; Title.TextSize = 16; Title.TextXAlignment = Enum.TextXAlignment.Left
 
 	local Subtitle = Instance.new("TextLabel", SidePanel)
-	Subtitle.Text = "VOID WALKER • V5.2.1"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
+	Subtitle.Text = "VOID WALKER • V5.2.2"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
 	Subtitle.BackgroundTransparency = 1; Subtitle.TextColor3 = Config.Theme.TextDim
 	Subtitle.Font = Enum.Font.GothamBold; Subtitle.TextSize = 9; Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 	
@@ -843,16 +843,22 @@ function UI.Init()
 		local Page = Instance.new("ScrollingFrame", PageHolder)
 		Page.Size = UDim2.new(1, 0, 1, 0); Page.BackgroundTransparency = 1; Page.Visible = false
 		Page.ScrollBarThickness = 4; Page.ScrollBarImageColor3 = Config.Theme.Stroke
-		Page.CanvasSize = UDim2.new(0, 0, 2.5, 0)
+		Page.BorderSizePixel = 0
+		Page.CanvasSize = UDim2.new(0, 0, 0, 0)
 		pcall(function() Page.AutomaticCanvasSize = Enum.AutomaticSize.Y end)
 		
 		local List = Instance.new("UIListLayout", Page); List.Padding = UDim.new(0, 5); List.SortOrder = Enum.SortOrder.LayoutOrder
+		local Pad = Instance.new("UIPadding", Page)
+		Pad.PaddingBottom = UDim.new(0, 24)
+		Pad.PaddingRight = UDim.new(0, 6)
+		Pad.PaddingTop = UDim.new(0, 2)
+		
 		local function refreshCanvas()
 			local y = List.AbsoluteContentSize.Y
 			if y > 50 then
-				Page.CanvasSize = UDim2.new(0, 0, 0, y + 25)
+				Page.CanvasSize = UDim2.new(0, 0, 0, y + 30)
 			else
-				Page.CanvasSize = UDim2.new(0, 0, 2.5, 0)
+				Page.CanvasSize = UDim2.new(0, 0, 0, 0)
 			end
 		end
 		List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(refreshCanvas)
@@ -1037,7 +1043,6 @@ function UI.Init()
 	AddToggle(P1, "🌀 Orbit Stalker Aura", "OrbitAura", getOrder1)
 	AddSlider(P1, "Orbit Distance", 3, 30, 8, function(v) Config.Vals.OrbitDistance = v end, getOrder1)
 	AddSlider(P1, "Orbit Speed", 1, 25, 8, function(v) Config.Vals.OrbitSpeed = v end, getOrder1)
-	AddToggle(P2, "🌈 Dynamic Rainbow Chams", "RainbowChams", getOrder2)
 
 	AddSection(P1, "AIMBOT & THREAT", getOrder1)
 	AddToggle(P1, "Hold Right Click Aimbot", "RightClickToggle", getOrder1)
@@ -1087,6 +1092,7 @@ function UI.Init()
 	AddToggle(P2, "360° Tracers", "Tracers", getOrder2)
 	AddToggle(P2, "Visibility Check", "VisibilityCheck", getOrder2)
 	AddToggle(P2, "Chams", "Chams", getOrder2)
+	AddToggle(P2, "🌈 Dynamic Rainbow Chams", "RainbowChams", getOrder2)
 	AddToggle(P2, "X-Ray", "XRay", getOrder2)
 	AddToggle(P2, "Fullbright", "Fullbright", getOrder2)
 	
@@ -1254,7 +1260,7 @@ function UI.Init()
 end
 
 -- ==============================================================================
--- CORE EXPLOIT HOOKS (V5.2.1.1 - ALL BUGS FIXED)
+-- CORE EXPLOIT HOOKS (V5.2.2.1 - ALL BUGS FIXED)
 -- ==============================================================================
 local HasTitanMetamethodHook = false
 
@@ -1444,11 +1450,11 @@ end)
 table.insert(Storage.Loops, auraLoop)
 
 -- ==============================================================================
--- RUNTIME (V5.2.1.1)
+-- RUNTIME (V5.2.2.1)
 -- ==============================================================================
 local Runtime = {}
 function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.2.1.1 - TITAN GOD (APEX OMNI)...")
+	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.2.2.1 - TITAN GOD (APEX OMNI)...")
 	Storage.IsUnloaded = true
 	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
 	Storage.Loops = {}
@@ -1549,7 +1555,7 @@ function Runtime.Unload()
 	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
 	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
 	Storage.RadarObjects = {}
-	print("X TITAN V5.2.1.1 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
+	print("X TITAN V5.2.2.1 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
 end
 
 local function InitRadar()
@@ -2053,101 +2059,116 @@ function Runtime.Init()
 					if Config.States.VisibilityCheck and not Utils.IsVisible(head, plr) then drawColor = Color3.new(0.5, 0.5, 0.5) end
 					
 					if Config.States.Tracers then
-						local from = center
-						local to = Vector2.new(vector.X, vector.Y)
-						if not onScreen or vector.Z <= 0 then
-							local dir = to - from
-							if dir.Magnitude > 0 then
-								local t = math.huge
-								if dir.X > 0 then t = math.min(t, (CurrentCam.ViewportSize.X - from.X) / dir.X)
-								elseif dir.X < 0 then t = math.min(t, -from.X / dir.X) end
-								if dir.Y > 0 then t = math.min(t, (CurrentCam.ViewportSize.Y - from.Y) / dir.Y)
-								elseif dir.Y < 0 then t = math.min(t, -from.Y / dir.Y) end
-								to = from + dir * t
+						pcall(function()
+							local from = center
+							local to = Vector2.new(vector.X, vector.Y)
+							if not onScreen or vector.Z <= 0 then
+								local dir = to - from
+								if dir.Magnitude > 0 then
+									local t = math.huge
+									if dir.X > 0 then t = math.min(t, (CurrentCam.ViewportSize.X - from.X) / dir.X)
+									elseif dir.X < 0 then t = math.min(t, -from.X / dir.X) end
+									if dir.Y > 0 then t = math.min(t, (CurrentCam.ViewportSize.Y - from.Y) / dir.Y)
+									elseif dir.Y < 0 then t = math.min(t, -from.Y / dir.Y) end
+									to = from + dir * t
+								end
 							end
-						end
-						local ln = Storage.TracerLines[plr] or Drawing.new("Line"); Storage.TracerLines[plr] = ln
-						ln.Visible = true; ln.Thickness = 1.5; ln.Color = drawColor; ln.From = from; ln.To = to
+							local ln = Storage.TracerLines[plr] or Drawing.new("Line"); Storage.TracerLines[plr] = ln
+							ln.Visible = true; ln.Thickness = 1.5; ln.Color = drawColor; ln.From = from; ln.To = to
+						end)
 					elseif Storage.TracerLines[plr] and Storage.TracerLines[plr].Visible then
-						Storage.TracerLines[plr].Visible = false
+						pcall(function() Storage.TracerLines[plr].Visible = false end)
 					end
 					
-					-- Off-screen Target Arrows (Synced from Pro)
+					-- Off-screen Target Arrows (Guarded against buggy executor Drawing libraries)
 					if Config.States.OffscreenArrows then
-						local arrow = Storage.OffscreenArrows[plr]
-						if not arrow then
-							arrow = Drawing.new("Triangle"); arrow.Filled = true; Storage.OffscreenArrows[plr] = arrow
-						end
-						if (not onScreen or vector.Z <= 0) and not (Config.States.TeamCheck and Utils.IsTeammate(plr)) then
-							local rel = (root.Position - CurrentCam.CFrame.Position)
-							local forward = CurrentCam.CFrame.LookVector
-							local right = CurrentCam.CFrame.RightVector
-							local dotForward = forward:Dot(rel); local dotRight = right:Dot(rel)
-							local angle = math.atan2(dotRight, dotForward)
-							local arrowRadius = math.min(CurrentCam.ViewportSize.X/2, CurrentCam.ViewportSize.Y/2) * 0.75
-							local arrowCenter = center + Vector2.new(math.sin(angle) * arrowRadius, -math.cos(angle) * arrowRadius)
-							local tip = arrowCenter + Vector2.new(math.sin(angle) * 12, -math.cos(angle) * 12)
-							local leftPt = arrowCenter + Vector2.new(math.sin(angle + 2.5) * 8, -math.cos(angle + 2.5) * 8)
-							local rightPt = arrowCenter + Vector2.new(math.sin(angle - 2.5) * 8, -math.cos(angle - 2.5) * 8)
-							arrow.PointA = tip; arrow.PointB = leftPt; arrow.PointC = rightPt
-							arrow.Color = drawColor; arrow.Visible = true
-						else
-							arrow.Visible = false
+						local arrowOk = pcall(function()
+							local arrow = Storage.OffscreenArrows[plr]
+							if not arrow then
+								arrow = Drawing.new("Triangle"); arrow.Filled = true; Storage.OffscreenArrows[plr] = arrow
+							end
+							if (not onScreen or vector.Z <= 0) and not (Config.States.TeamCheck and Utils.IsTeammate(plr)) then
+								local rel = (root.Position - CurrentCam.CFrame.Position)
+								local forward = CurrentCam.CFrame.LookVector
+								local right = CurrentCam.CFrame.RightVector
+								local dotForward = forward:Dot(rel); local dotRight = right:Dot(rel)
+								local angle = math.atan2(dotRight, dotForward)
+								local arrowRadius = math.min(CurrentCam.ViewportSize.X/2, CurrentCam.ViewportSize.Y/2) * 0.75
+								local arrowCenter = center + Vector2.new(math.sin(angle) * arrowRadius, -math.cos(angle) * arrowRadius)
+								local tip = arrowCenter + Vector2.new(math.sin(angle) * 12, -math.cos(angle) * 12)
+								local leftPt = arrowCenter + Vector2.new(math.sin(angle + 2.5) * 8, -math.cos(angle + 2.5) * 8)
+								local rightPt = arrowCenter + Vector2.new(math.sin(angle - 2.5) * 8, -math.cos(angle - 2.5) * 8)
+								arrow.PointA = tip; arrow.PointB = leftPt; arrow.PointC = rightPt
+								arrow.Color = drawColor; arrow.Visible = true
+							else
+								arrow.Visible = false
+							end
+						end)
+						if not arrowOk then
+							Config.States.OffscreenArrows = false
 						end
 					elseif Storage.OffscreenArrows[plr] then
-						Storage.OffscreenArrows[plr].Visible = false
+						pcall(function() Storage.OffscreenArrows[plr].Visible = false end)
 					end
 					
 					if onScreen and vector.Z > 0 then
 						local headPos = CurrentCam:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
 						local height = math.abs(headPos.Y - CurrentCam:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0)).Y)
 						local width = height / 1.8; local boxX = vector.X - width/2; local boxY = vector.Y - height/2
-					if Config.States.ESP then
-						esp.Box.Visible = true; esp.Box.Size = Vector2.new(width, height); esp.Box.Position = Vector2.new(boxX, boxY); esp.Box.Color = drawColor
-						esp.Name.Visible = true; esp.Name.Text = plr.Name; esp.Name.Position = Vector2.new(vector.X, boxY - 18); esp.Name.Color = drawColor
-						esp.HealthBar.Visible = true; local curHp, maxHp = Utils.GetHealth(plr, pChar); local healthRatio = math.clamp(curHp / maxHp, 0, 1)
-						esp.HealthBar.Color = Color3.new(1 - healthRatio, healthRatio, 0)
-						esp.HealthBar.From = Vector2.new(boxX - 5, boxY + height); esp.HealthBar.To = Vector2.new(boxX - 5, boxY + height - height * healthRatio)
-						esp.Distance.Visible = true; esp.Distance.Text = string.format("%.0fm", (root.Position - (hrp and hrp.Position or root.Position)).Magnitude)
-						esp.Distance.Position = Vector2.new(vector.X, boxY + height + 5); esp.Distance.Color = drawColor
-						if Config.States.WeaponESP and esp.Weapon then
-							local tool = pChar:FindFirstChildOfClass("Tool") or pChar:FindFirstChild("Gun") or pChar:FindFirstChild("EquippedTool")
-							local wName = tool and tool.Name or "Unarmed"
-							esp.Weapon.Visible = true
-							esp.Weapon.Text = "[" .. wName .. "]"
-							esp.Weapon.Position = Vector2.new(vector.X, boxY + height + 18)
-							esp.Weapon.Color = Color3.fromRGB(255, 230, 100)
-						elseif esp.Weapon then
-							esp.Weapon.Visible = false
+						if Config.States.ESP then
+							pcall(function()
+								esp.Box.Visible = true; esp.Box.Size = Vector2.new(width, height); esp.Box.Position = Vector2.new(boxX, boxY); esp.Box.Color = drawColor
+								esp.Name.Visible = true; esp.Name.Text = plr.Name; esp.Name.Position = Vector2.new(vector.X, boxY - 18); esp.Name.Color = drawColor
+								esp.HealthBar.Visible = true; local curHp, maxHp = Utils.GetHealth(plr, pChar); local healthRatio = math.clamp(curHp / maxHp, 0, 1)
+								esp.HealthBar.Color = Color3.new(1 - healthRatio, healthRatio, 0)
+								esp.HealthBar.From = Vector2.new(boxX - 5, boxY + height); esp.HealthBar.To = Vector2.new(boxX - 5, boxY + height - height * healthRatio)
+								esp.Distance.Visible = true; esp.Distance.Text = string.format("%.0fm", (root.Position - (hrp and hrp.Position or root.Position)).Magnitude)
+								esp.Distance.Position = Vector2.new(vector.X, boxY + height + 5); esp.Distance.Color = drawColor
+								if Config.States.WeaponESP and esp.Weapon then
+									local tool = pChar:FindFirstChildOfClass("Tool") or pChar:FindFirstChild("Gun") or pChar:FindFirstChild("EquippedTool")
+									local wName = tool and tool.Name or "Unarmed"
+									esp.Weapon.Visible = true
+									esp.Weapon.Text = "[" .. wName .. "]"
+									esp.Weapon.Position = Vector2.new(vector.X, boxY + height + 18)
+									esp.Weapon.Color = Color3.fromRGB(255, 230, 100)
+								elseif esp.Weapon then
+									esp.Weapon.Visible = false
+								end
+							end)
+						else
+							pcall(function()
+								esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
+								if esp.Weapon then esp.Weapon.Visible = false end
+							end)
+						end
+						if Config.States.ESPSkeleton and Storage.SkeletonParts[plr] then
+							pcall(function()
+								local torso = pChar:FindFirstChild("Torso") or pChar:FindFirstChild("UpperTorso") or root
+								local lArm = pChar:FindFirstChild("Left Arm") or pChar:FindFirstChild("LeftUpperArm")
+								local rArm = pChar:FindFirstChild("Right Arm") or pChar:FindFirstChild("RightUpperArm")
+								local lLeg = pChar:FindFirstChild("Left Leg") or pChar:FindFirstChild("LeftUpperLeg")
+								local rLeg = pChar:FindFirstChild("Right Leg") or pChar:FindFirstChild("RightUpperLeg")
+								local torsoPos = CurrentCam:WorldToViewportPoint(torso.Position)
+								local lArmPos = lArm and CurrentCam:WorldToViewportPoint(lArm.Position) or Vector2.new(torsoPos.X - 20, torsoPos.Y)
+								local rArmPos = rArm and CurrentCam:WorldToViewportPoint(rArm.Position) or Vector2.new(torsoPos.X + 20, torsoPos.Y)
+								local lLegPos = lLeg and CurrentCam:WorldToViewportPoint(lLeg.Position) or Vector2.new(torsoPos.X - 10, torsoPos.Y + 30)
+								local rLegPos = rLeg and CurrentCam:WorldToViewportPoint(rLeg.Position) or Vector2.new(torsoPos.X + 10, torsoPos.Y + 30)
+								local skel = Storage.SkeletonParts[plr]
+								skel.HeadToTorso.Visible = true; skel.HeadToTorso.From = Vector2.new(headPos.X, headPos.Y); skel.HeadToTorso.To = Vector2.new(torsoPos.X, torsoPos.Y); skel.HeadToTorso.Color = drawColor
+								skel.TorsoToLeftArm.Visible = true; skel.TorsoToLeftArm.From = Vector2.new(torsoPos.X, torsoPos.Y); skel.TorsoToLeftArm.To = Vector2.new(lArmPos.X, lArmPos.Y); skel.TorsoToLeftArm.Color = drawColor
+								skel.TorsoToRightArm.Visible = true; skel.TorsoToRightArm.From = Vector2.new(torsoPos.X, torsoPos.Y); skel.TorsoToRightArm.To = Vector2.new(rArmPos.X, rArmPos.Y); skel.TorsoToRightArm.Color = drawColor
+								skel.TorsoToLeftLeg.Visible = true; skel.TorsoToLeftLeg.From = Vector2.new(torsoPos.X, torsoPos.Y); skel.TorsoToLeftLeg.To = Vector2.new(lLegPos.X, lLegPos.Y); skel.TorsoToLeftLeg.Color = drawColor
+								skel.TorsoToRightLeg.Visible = true; skel.TorsoToRightLeg.From = Vector2.new(torsoPos.X, torsoPos.Y); skel.TorsoToRightLeg.To = Vector2.new(rLegPos.X, rLegPos.Y); skel.TorsoToRightLeg.Color = drawColor
+							end)
+						elseif Storage.SkeletonParts[plr] then
+							pcall(function() for _, part in pairs(Storage.SkeletonParts[plr]) do if part.Visible then part.Visible = false end end end)
 						end
 					else
-						esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
-						if esp.Weapon then esp.Weapon.Visible = false end
+						pcall(function()
+							esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
+							if Storage.SkeletonParts[plr] then for _, part in pairs(Storage.SkeletonParts[plr]) do if part.Visible then part.Visible = false end end end
+						end)
 					end
-					if Config.States.ESPSkeleton and Storage.SkeletonParts[plr] then
-						local torso = pChar:FindFirstChild("Torso") or pChar:FindFirstChild("UpperTorso") or root
-						local lArm = pChar:FindFirstChild("Left Arm") or pChar:FindFirstChild("LeftUpperArm")
-						local rArm = pChar:FindFirstChild("Right Arm") or pChar:FindFirstChild("RightUpperArm")
-						local lLeg = pChar:FindFirstChild("Left Leg") or pChar:FindFirstChild("LeftUpperLeg")
-						local rLeg = pChar:FindFirstChild("Right Leg") or pChar:FindFirstChild("RightUpperLeg")
-						local torsoPos = CurrentCam:WorldToViewportPoint(torso.Position)
-						local lArmPos = lArm and CurrentCam:WorldToViewportPoint(lArm.Position) or Vector2.new(torsoPos.X - 20, torsoPos.Y)
-						local rArmPos = rArm and CurrentCam:WorldToViewportPoint(rArm.Position) or Vector2.new(torsoPos.X + 20, torsoPos.Y)
-						local lLegPos = lLeg and CurrentCam:WorldToViewportPoint(lLeg.Position) or Vector2.new(torsoPos.X - 10, torsoPos.Y + 30)
-						local rLegPos = rLeg and CurrentCam:WorldToViewportPoint(rLeg.Position) or Vector2.new(torsoPos.X + 10, torsoPos.Y + 30)
-						local skel = Storage.SkeletonParts[plr]
-						skel.HeadToTorso.Visible = true; skel.HeadToTorso.From = Vector2.new(headPos.X, headPos.Y); skel.HeadToTorso.To = Vector2.new(torsoPos.X, torsoPos.Y); skel.HeadToTorso.Color = drawColor
-						skel.TorsoToLeftArm.Visible = true; skel.TorsoToLeftArm.From = Vector2.new(torsoPos.X, torsoPos.Y); skel.TorsoToLeftArm.To = Vector2.new(lArmPos.X, lArmPos.Y); skel.TorsoToLeftArm.Color = drawColor
-						skel.TorsoToRightArm.Visible = true; skel.TorsoToRightArm.From = Vector2.new(torsoPos.X, torsoPos.Y); skel.TorsoToRightArm.To = Vector2.new(rArmPos.X, rArmPos.Y); skel.TorsoToRightArm.Color = drawColor
-						skel.TorsoToLeftLeg.Visible = true; skel.TorsoToLeftLeg.From = Vector2.new(torsoPos.X, torsoPos.Y); skel.TorsoToLeftLeg.To = Vector2.new(lLegPos.X, lLegPos.Y); skel.TorsoToLeftLeg.Color = drawColor
-						skel.TorsoToRightLeg.Visible = true; skel.TorsoToRightLeg.From = Vector2.new(torsoPos.X, torsoPos.Y); skel.TorsoToRightLeg.To = Vector2.new(rLegPos.X, rLegPos.Y); skel.TorsoToRightLeg.Color = drawColor
-					elseif Storage.SkeletonParts[plr] then
-						for _, part in pairs(Storage.SkeletonParts[plr]) do if part.Visible then part.Visible = false end end
-					end
-				else
-					esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
-					if Storage.SkeletonParts[plr] then for _, part in pairs(Storage.SkeletonParts[plr]) do if part.Visible then part.Visible = false end end end
-				end
 			end
 		end
 	end
@@ -2169,7 +2190,7 @@ function Runtime.Init()
 			end
 			return
 		end
-		-- [V5.2.1.1] Rainbow Chams & HUD Accent
+		-- [V5.2.2.1] Rainbow Chams & HUD Accent
 		if Config.States.NoRecoil and LocalPlayer.Character then
 			pcall(function()
 				local myChar = LocalPlayer.Character
@@ -2190,7 +2211,7 @@ function Runtime.Init()
 			Config.Theme.Stroke = rainbow
 		end
 
-		-- [V5.2.1.1] Touch Fling Logic (PlayerCache Optimized)
+		-- [V5.2.2.1] Touch Fling Logic (PlayerCache Optimized)
 		if Config.States.TouchFling and hrp then
 			for p, data in pairs(Storage.PlayerCache) do
 				if not (Config.States.TeamCheck and Utils.IsTeammate(p)) then
@@ -2203,7 +2224,7 @@ function Runtime.Init()
 			end
 		end
 
-		-- [V5.2.1.1] Orbit Stalker Aura
+		-- [V5.2.2.1] Orbit Stalker Aura
 		if Config.States.OrbitAura and Storage.LockedTarget and Storage.LockedTarget.Character and hrp then
 			local tHRP = Storage.LockedTarget.Character:FindFirstChild("HumanoidRootPart")
 			if tHRP then
@@ -2214,7 +2235,7 @@ function Runtime.Init()
 			end
 		end
 
-		-- [V5.2.1.1] Anti-Fling Immortality (PlayerCache Optimized)
+		-- [V5.2.2.1] Anti-Fling Immortality (PlayerCache Optimized)
 		if Config.States.AntiFling and hrp then
 			for p, data in pairs(Storage.PlayerCache) do
 				local otherHRP = data.Root
@@ -2620,5 +2641,5 @@ end)
 table.insert(Storage.Loops, itemLoop)
 
 Runtime.Init()
-Utils.Notify("✅ X TITAN V5.2.1.1 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
-print("X TITAN V5.2.1.1 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
+Utils.Notify("✅ X TITAN V5.2.2.1 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
+print("X TITAN V5.2.2.1 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
