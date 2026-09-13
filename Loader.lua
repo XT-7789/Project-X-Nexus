@@ -88,12 +88,14 @@ if string.lower(tier) == "mini" then
 	print("📦 X MINI V4.0.0 LOADED")
 elseif string.lower(tier) == "minim" then
 	print("📱 X MINIM V4.0.0 LOADED")
+elseif string.lower(tier) == "prom" then
+	print("📱 X PROM V3.0.0 LOADED")
 elseif string.lower(tier) == "nanom" then
 	print("📱 X NANOM V3.0.0 LOADED")
 elseif string.lower(tier) == "nano" then
 	print(isMobile and "📱 X NANOM V3.0.0 LOADED" or "🪶 X NANO V3.0.0 LOADED")
 elseif string.lower(tier) == "pro" then
-	print("⚡ X PRO V3.0.0 LOADED")
+	print(isMobile and "📱 X PROM V3.0.0 LOADED" or "⚡ X PRO V3.0.0 LOADED")
 elseif string.lower(tier) == "titan" then
 	print("🔥 X TITAN V5.0.0 (TITAN GOD) LOADED")
 else
@@ -102,7 +104,9 @@ end
 print("💬 DISCORD SELLER: vlilayz")
 print("==========================================")
 
-if string.lower(tier) == "minim" then
+if string.lower(tier) == "prom" then
+	loadstring(game:HttpGet(repo .. "X%20PROM.lua"))()
+elseif string.lower(tier) == "minim" then
 	loadstring(game:HttpGet(repo .. "X%20MINIM.lua"))()
 elseif string.lower(tier) == "nanom" then
 	loadstring(game:HttpGet(repo .. "X%20NANOM.lua"))()
@@ -115,7 +119,11 @@ elseif string.lower(tier) == "nano" then
 elseif string.lower(tier) == "mini" then
 	loadstring(game:HttpGet(repo .. "X%20MINI"))()
 elseif string.lower(tier) == "pro" then
-	loadstring(game:HttpGet(repo .. "X%20PRO.lua"))()
+	if isMobile then
+		loadstring(game:HttpGet(repo .. "X%20PROM.lua"))()
+	else
+		loadstring(game:HttpGet(repo .. "X%20PRO.lua"))()
+	end
 elseif string.lower(tier) == "titan" then
 	loadstring(game:HttpGet(repo .. "X%20TITAN.lua"))()
 else
