@@ -112,23 +112,23 @@ Notify("✅ SUCCESS", "Welcome! Loading X " .. tostring(tier) .. "...", 3)
 print("==========================================")
 print("✅ [PROJECT X NEXUS] ACCESS GRANTED")
 if isMasterNanoPlus then
-	print("👑 X NANO+ V3.1.0 [PRO-X EDITION] LOADED - SILENT AIM UNLOCKED")
+	print("👑 X NANO+ V3.2.0 [PRO-X EDITION] LOADED - SILENT AIM UNLOCKED")
 elseif isMasterMiniPlus then
-	print("👑 X MINI+ V4.0.1 [PRO-X EDITION] LOADED - SILENT AIM UNLOCKED")
+	print("👑 X MINI+ V4.1.0 [PRO-X EDITION] LOADED - SILENT AIM UNLOCKED")
 elseif string.lower(tier) == "litem" then
 	print("📱 X LITEM V1.0.0 LOADED")
 elseif string.lower(tier) == "lite" then
 	print(isMobile and "📱 X LITEM V1.0.0 LOADED" or "🎁 X LITE V1.0.0 LOADED")
 elseif string.lower(tier) == "mini" then
-	print("📦 X MINI V4.0.1 LOADED")
+	print("📦 X MINI V4.1.0 LOADED")
 elseif string.lower(tier) == "minim" then
-	print("📱 X MINIM V4.0.1 LOADED")
+	print("📱 X MINIM V4.1.0 LOADED")
 elseif string.lower(tier) == "prom" then
 	print("📱 X PROM V3.5.0 LOADED")
 elseif string.lower(tier) == "nanom" then
-	print("📱 X NANOM V3.1.0 LOADED")
+	print("📱 X NANOM V3.2.0 LOADED")
 elseif string.lower(tier) == "nano" then
-	print(isMobile and "📱 X NANOM V3.1.0 LOADED" or "🪶 X NANO V3.1.0 LOADED")
+	print(isMobile and "📱 X NANOM V3.2.0 LOADED" or "🪶 X NANO V3.2.0 LOADED")
 elseif string.lower(tier) == "pro" then
 	print(isMobile and "📱 X PROM V3.5.0 LOADED" or "⚡ X PRO V3.5.0 LOADED")
 elseif string.lower(tier) == "titan" then
