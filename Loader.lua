@@ -76,16 +76,27 @@ end
 -- Set one-time security authentication token for guarded scripts
 getgenv()._X_AUTH_TOKEN = "X_NEXUS_VERIFIED_7789"
 
+local repo = "https://raw.githubusercontent.com/XT-7789/Project-X-Nexus/main/"
+local isMobile = Services.UIS.TouchEnabled and not Services.UIS.KeyboardEnabled
+
 -- Success! Dispatch correct script tier
 local tier = data.tier or "Nano"
 Notify("✅ SUCCESS", "Welcome! Loading X " .. tostring(tier) .. "...", 3)
 print("==========================================")
-print("✅ [X SUITE] ACCESS GRANTED | TIER: " .. tostring(tier))
-print("💬 SELLER DISCORD: vlilayz")
+print("✅ [PROJECT X NEXUS] ACCESS GRANTED")
+if string.lower(tier) == "mini" then
+	print("📦 X MINI V4.0.0 LOADED")
+elseif string.lower(tier) == "nano" then
+	print(isMobile and "📱 X NANOM V3.0.0 LOADED" or "🪶 X NANO V3.0.0 LOADED")
+elseif string.lower(tier) == "pro" then
+	print("⚡ X PRO V2.0.0 LOADED")
+elseif string.lower(tier) == "titan" then
+	print("🔥 X TITAN V4.5.8 LOADED")
+else
+	print("⚡ X " .. string.upper(tostring(tier)) .. " LOADED")
+end
+print("💬 DISCORD SELLER: vlilayz")
 print("==========================================")
-
-local repo = "https://raw.githubusercontent.com/XT-7789/Project-X-Nexus/main/"
-local isMobile = Services.UIS.TouchEnabled and not Services.UIS.KeyboardEnabled
 
 if string.lower(tier) == "nano" then
 	if isMobile then
