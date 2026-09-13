@@ -14,8 +14,8 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V5.0.0 - TITAN GOD (APEX OMNI) - PATCH: P0/P1/P2 ALL FIXED & OPTIMIZED ]]
--- P0: SilentAim Raycast Filter (No more broken game interactions)
+-- [[ X TITAN V5.0.0 - VOID WALKER (SPECIAL VIP EXCLUSIVE) ]]
+-- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
 -- P2: RenderStepped Target Caching & Collision Loop Optimization
 -- ==============================================================================
@@ -584,8 +584,8 @@ function UI.Init()
 	Instance.new("UICorner", SidePanel).CornerRadius = UDim.new(0, 8)
 	
 	local Title = Instance.new("TextLabel", SidePanel)
-	Title.Text = "X TITAN V5.0.0 - TITAN GOD (APEX OMNI)"; Title.Size = UDim2.new(1, 0, 0, 45); Title.BackgroundTransparency = 1
-	Title.TextColor3 = Config.Theme.Stroke; Title.Font = Enum.Font.GothamBlack; Title.TextSize = 16
+	Title.Text = "X TITAN [VOID WALKER]"; Title.Size = UDim2.new(1, 0, 0, 45); Title.BackgroundTransparency = 1
+	Title.TextColor3 = Config.Theme.Stroke; Title.Font = Enum.Font.GothamBlack; Title.TextSize = 13
 	
 	local TabHolder = Instance.new("Frame", SidePanel)
 	TabHolder.Size = UDim2.new(1, -16, 1, -60); TabHolder.Position = UDim2.new(0, 8, 0, 50); TabHolder.BackgroundTransparency = 1

@@ -97,7 +97,7 @@ elseif string.lower(tier) == "nano" then
 elseif string.lower(tier) == "pro" then
 	print(isMobile and "📱 X PROM V3.0.0 LOADED" or "⚡ X PRO V3.0.0 LOADED")
 elseif string.lower(tier) == "titan" then
-	print("🔥 X TITAN V5.0.0 (TITAN GOD) LOADED")
+	print("🔥 X TITAN V5.0.0 [VOID WALKER] LOADED")
 else
 	print("⚡ X " .. string.upper(tostring(tier)) .. " LOADED")
 end
