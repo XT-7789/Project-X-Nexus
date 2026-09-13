@@ -14,12 +14,21 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PROM V3.4.1 - MOBILE TOURNAMENT SUITE ]]
--- Official Seller: vlilayz | Tier: PROM (RM 20)
--- Specially Crafted for Delta Mobile / iOS / Android / Tablet
--- 100% Zero Keyboard Required | Touch Floating Bubble | Mobile Silent Aim
--- Features: Touch Silent Aim | Smart Prediction | Weapon ESP | Off-screen Arrows | 2D Radar | Skeleton ESP | Touch Fly with Virtual Buttons | Hit Sound
--- ==================================================================
+-- [[ X PROM V3.4.2 - PROFESSIONAL MOBILE SUITE ]]
+-- Founder & Developer: XT-7789 | Official Seller: vlilayz
+-- High-Performance Zero-Lag Character Caching & 60+ FPS Optimization
+-- ==============================================================================
+if _G.X_PROM_INSTANCE then
+	pcall(function()
+		if _G.X_PROM_INSTANCE.Storage then
+			local s = _G.X_PROM_INSTANCE.Storage
+			s.IsUnloaded = true
+			for _, l in pairs(s.Loops or {}) do pcall(function() task.cancel(l) end) end
+			for _, c in pairs(s.Connections or {}) do pcall(function() c:Disconnect() end) end
+		end
+	end)
+	task.wait(0.05)
+end
 local Services = {
     Players = game:GetService("Players"),
     RunService = game:GetService("RunService"),
@@ -822,7 +831,7 @@ local function BuildMobileUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "📱 X PROM <font color='#00dcff'>V3.4.1</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
+    Title.Text = "📱 X PROM <font color='#00dcff'>V3.4.2</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
     Title.Size = UDim2.new(0, 240, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 13; Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -1385,7 +1394,7 @@ local function Init()
         end
     end)
 
-    Notify("X PROM V3.4.1", "Delta Mobile Pro Active! Tap [⚡] for menu")
+    Notify("X PROM V3.4.2", "Delta Mobile Pro Active! Tap [⚡] for menu")
 end
 
 Init()

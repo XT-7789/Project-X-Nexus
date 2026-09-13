@@ -14,11 +14,24 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V5.5.1 - VOID WALKER (SPECIAL VIP EXCLUSIVE) ]]
+-- [[ X TITAN V5.5.2 - TITAN GOD (APEX OMNI) ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
--- P2: RenderStepped Target Caching & Collision Loop Optimization
+-- P2: Zero-Lag Character Caching, Throttled Raycasts & High-FPS Engine
 -- ==============================================================================
+if _G.X_TITAN_INSTANCE then
+	pcall(function()
+		if _G.X_TITAN_INSTANCE.Runtime and _G.X_TITAN_INSTANCE.Runtime.Unload then
+			_G.X_TITAN_INSTANCE.Runtime.Unload()
+		elseif _G.X_TITAN_INSTANCE.Storage then
+			local s = _G.X_TITAN_INSTANCE.Storage
+			s.IsUnloaded = true
+			for _, l in pairs(s.Loops or {}) do pcall(function() task.cancel(l) end) end
+			for _, c in pairs(s.Connections or {}) do pcall(function() c:Disconnect() end) end
+		end
+	end)
+	task.wait(0.05)
+end
 local Services = {
 	Players = game:GetService("Players"),
 	RunService = game:GetService("RunService"),
@@ -45,7 +58,7 @@ end
 if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==============================================================================
--- CONFIGURATION & STORAGE (V5.5.1)
+-- CONFIGURATION & STORAGE (V5.5.2)
 -- ==============================================================================
 local Config = {
 	Keys = {
@@ -65,7 +78,7 @@ local Config = {
 	States = {
 		Aimbot = false, SilentAim = false, HeadExpander = false, Hitbox = false,
 		TriggerBot = false, TeamCheck = true, WallCheck = false,
-		ESP = false, ESPSkeleton = false, Tracers = false, VisibilityCheck = true, Chams = false,
+		ESP = false, ESPSkeleton = false, Tracers = false, VisibilityCheck = false, Chams = false,
 		XRay = false, Fullbright = false, Crosshair = false, DynamicCrosshair = true,
 		Fly = false, SpeedHack = false, InfJump = false, Noclip = false, NoFall = false,
 		AntiKillbrick = false, AntiVoid = true, HitSound = true, TouchFling = false, TargetFling = false, AntiFling = true, Wallbang = true, OrbitAura = false, RainbowChams = false,  ClickTP = false, SkyHide = false, MapDestroyer = false,
@@ -122,7 +135,9 @@ local Storage = {
 	LastTargetScan = 0,
 	CachedTargetPart = nil,
 	CachedIsWall = false,
-	CrosshairVisible = false
+	CrosshairVisible = false,
+	CharCache = {},
+	VisCache = {}
 }
 
 _G.X_TITAN_CURRENT_INSTANCE = {
@@ -133,7 +148,7 @@ _G.X_TITAN_CURRENT_INSTANCE = {
 }
 
 -- ==============================================================================
--- UTILITIES (V5.5.1)
+-- UTILITIES (V5.5.2)
 -- ==============================================================================
 local Utils = {}
 _G.X_TITAN_CURRENT_INSTANCE.Utils = Utils
@@ -310,29 +325,65 @@ function Utils.IsTeammate(plr)
 	return false
 end
 
+local SharedRaycastParams = RaycastParams.new()
+SharedRaycastParams.FilterType = Enum.RaycastFilterType.Exclude
+SharedRaycastParams.IgnoreWater = true
+
 function Utils.GetCharacterData(plr)
 	if not plr then return nil end
+	local now = tick()
+	local cached = Storage.CharCache[plr]
+	if cached and (now - cached.LastResolve < 0.4) then
+		if cached.Char and cached.Char.Parent and cached.Root and cached.Root.Parent then
+			return cached
+		end
+	end
+
 	local char = plr.Character
-	if not char or not char.Parent or not char:IsDescendantOf(Services.Workspace) then
+	if not (char and char.Parent and char:IsDescendantOf(Services.Workspace)) then
 		char = Services.Workspace:FindFirstChild(plr.Name)
 		if not char then
 			local f = Services.Workspace:FindFirstChild("Characters") or Services.Workspace:FindFirstChild("Players")
 			if f then char = f:FindFirstChild(plr.Name) end
 		end
 	end
-	if not char or not char:IsDescendantOf(Services.Workspace) then return nil end
+	if not (char and char.Parent and char:IsDescendantOf(Services.Workspace)) then
+		Storage.CharCache[plr] = nil
+		return nil
+	end
 
 	local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or char.PrimaryPart
-	if not root then return nil end
+	if not root then
+		Storage.CharCache[plr] = nil
+		return nil
+	end
 
 	local head = char:FindFirstChild("Head") or root
 	local hum = char:FindFirstChildOfClass("Humanoid")
-	return {
+	local isAlive, isUnspawned = Utils.IsAlive(plr, char)
+
+	if cached then
+		cached.Char = char
+		cached.Root = root
+		cached.Head = head
+		cached.Hum = hum
+		cached.IsAlive = isAlive
+		cached.IsUnspawned = isUnspawned
+		cached.LastResolve = now
+		return cached
+	end
+
+	local data = {
 		Char = char,
 		Root = root,
 		Head = head,
-		Hum = hum
+		Hum = hum,
+		IsAlive = isAlive,
+		IsUnspawned = isUnspawned,
+		LastResolve = now
 	}
+	Storage.CharCache[plr] = data
+	return data
 end
 
 function Utils.GetHealth(plr, char)
@@ -443,30 +494,35 @@ end
 function Utils.IsVisible(targetHead, targetPlr)
 	if not targetHead or not targetHead.Parent then return false end
 	local now = tick()
-	if targetPlr and Storage.PlayerCache[targetPlr] then
-		local c = Storage.PlayerCache[targetPlr]
-		if (now - c.LastVisCheck) < 0.15 then
-			return c.IsVisible
+	if targetPlr then
+		local c = Storage.VisCache[targetPlr]
+		if c and (now - c.LastCheck < 0.25) then
+			return c.Visible
 		end
 	end
+
 	local Camera = Utils.GetCurrentCamera()
 	if not Camera then return false end
 	local origin = Camera.CFrame.Position
 	local direction = (targetHead.Position - origin)
-	local params = RaycastParams.new()
-	params.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
-	params.FilterType = Enum.RaycastFilterType.Exclude
-	params.IgnoreWater = true
-	local success, result = pcall(function() return Services.Workspace:Raycast(origin, direction, params) end)
+
+	SharedRaycastParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
+	local success, result = pcall(function() return Services.Workspace:Raycast(origin, direction, SharedRaycastParams) end)
 	local isVis = false
 	if not success or not result then
 		isVis = true
 	elseif result.Instance and result.Instance:IsDescendantOf(targetHead.Parent) then
 		isVis = true
 	end
-	if targetPlr and Storage.PlayerCache[targetPlr] then
-		Storage.PlayerCache[targetPlr].LastVisCheck = now
-		Storage.PlayerCache[targetPlr].IsVisible = isVis
+
+	if targetPlr then
+		local c = Storage.VisCache[targetPlr]
+		if c then
+			c.LastCheck = now
+			c.Visible = isVis
+		else
+			Storage.VisCache[targetPlr] = { LastCheck = now, Visible = isVis }
+		end
 	end
 	return isVis
 end
@@ -878,9 +934,9 @@ function Features.GetAuraTarget()
 end
 
 -- ==============================================================================
--- UI SYSTEM (V5.5.1)
+-- UI SYSTEM (V5.5.2)
 -- ==============================================================================
--- ITEM & LOOT ESP SUBSYSTEM (V5.5.1)
+-- ITEM & LOOT ESP SUBSYSTEM (V5.5.2)
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
 		pcall(function() bg:Destroy() end)
@@ -1021,7 +1077,7 @@ function UI.Init()
 	Title.Font = Enum.Font.GothamBlack; Title.TextSize = 16; Title.TextXAlignment = Enum.TextXAlignment.Left
 
 	local Subtitle = Instance.new("TextLabel", SidePanel)
-	Subtitle.Text = "VOID WALKER • V5.5.1"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
+	Subtitle.Text = "VOID WALKER • V5.5.2"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
 	Subtitle.BackgroundTransparency = 1; Subtitle.TextColor3 = Config.Theme.TextDim
 	Subtitle.Font = Enum.Font.GothamBold; Subtitle.TextSize = 9; Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 	
@@ -1477,7 +1533,7 @@ function UI.Init()
 end
 
 -- ==============================================================================
--- CORE EXPLOIT HOOKS (V5.5.1 - ALL BUGS FIXED)
+-- CORE EXPLOIT HOOKS (V5.5.2 - ALL BUGS FIXED)
 -- ==============================================================================
 local HasTitanMetamethodHook = false
 
@@ -1667,11 +1723,11 @@ end)
 table.insert(Storage.Loops, auraLoop)
 
 -- ==============================================================================
--- RUNTIME (V5.5.1)
+-- RUNTIME (V5.5.2)
 -- ==============================================================================
 local Runtime = {}
 function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.5.1 - TITAN GOD (APEX OMNI)...")
+	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.5.2 - TITAN GOD (APEX OMNI)...")
 	Storage.IsUnloaded = true
 	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
 	Storage.Loops = {}
@@ -1728,6 +1784,8 @@ function Runtime.Unload()
 	
 	ClearItemESP()
 	table.clear(Storage.PlayerCache)
+	table.clear(Storage.CharCache)
+	table.clear(Storage.VisCache)
 	Utils.ToggleXRay(false); Utils.ToggleFullbright(false)
 	for plr, esp in pairs(Storage.ESPObjects) do for _, d in pairs(esp) do pcall(function() d:Remove() end) end end
 	for plr, skel in pairs(Storage.SkeletonParts) do for _, d in pairs(skel) do pcall(function() d:Remove() end) end end
@@ -1772,7 +1830,7 @@ function Runtime.Unload()
 	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
 	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
 	Storage.RadarObjects = {}
-	print("X TITAN V5.5.1 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
+	print("X TITAN V5.5.2 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
 end
 
 local function InitRadar()
@@ -1960,6 +2018,8 @@ function Runtime.Init()
 	end
 
 	table.clear(Storage.PlayerCache)
+	table.clear(Storage.CharCache)
+	table.clear(Storage.VisCache)
 	for _, p in ipairs(Services.Players:GetPlayers()) do
 		if p ~= LocalPlayer then
 			UpdatePlayerCache(p)
@@ -2001,6 +2061,8 @@ function Runtime.Init()
 
 	local cachePRemoved = Services.Players.PlayerRemoving:Connect(function(p)
 		Storage.PlayerCache[p] = nil
+		Storage.CharCache[p] = nil
+		Storage.VisCache[p] = nil
 		Features.RemoveESP(p)
 	end)
 	table.insert(Storage.Connections, cachePRemoved)
@@ -2069,7 +2131,7 @@ function Runtime.Init()
 		local cachedTarget, cachedIsWall = nil, false
 		if Config.States.Aimbot or Config.States.TriggerBot or Config.States.ShowFOV or Storage.LockedTarget then
 			local now = tick()
-			if (now - Storage.LastTargetScan) > 0.016 then
+			if (now - Storage.LastTargetScan) > 0.04 then
 				Storage.LastTargetScan = now
 				cachedTarget, cachedIsWall = Utils.GetClosestToCenter()
 				Storage.CachedTargetPart = cachedTarget
@@ -2237,7 +2299,7 @@ function Runtime.Init()
 		end
 		
 		-- [ZERO-LAG ESP ENGINE] Skip entire loop if visual features are disabled
-		local anyESP = Config.States.ESP or Config.States.ESPSkeleton or Config.States.Tracers or Config.States.WeaponESP or Config.States.OffscreenArrows
+		local anyESP = Config.States.ESP or Config.States.ESPSkeleton or Config.States.Tracers or Config.States.OffscreenArrows
 		if Drawing then
 			if not anyESP then
 				if not Storage.ESPHidden then
@@ -2302,7 +2364,9 @@ function Runtime.Init()
 					elseif Config.States.TeamCheck and Utils.IsTeammate(plr) then
 						drawColor = Config.Theme.Team
 					end
-					if Config.States.VisibilityCheck and not Utils.IsVisible(head, plr) and not isUnspawned then drawColor = Color3.new(0.5, 0.5, 0.5) end
+					if Config.States.VisibilityCheck and onScreen and topPos.Z > 0 and not isUnspawned and not Utils.IsVisible(head, plr) then
+						drawColor = Color3.new(0.5, 0.5, 0.5)
+					end
 
 					if Config.States.Tracers then
 						pcall(function()
@@ -2429,7 +2493,7 @@ function Runtime.Init()
 			end
 			return
 		end
-		-- [V5.5.1] Rainbow Chams & HUD Accent
+		-- [V5.5.2] Rainbow Chams & HUD Accent
 		if Config.States.NoRecoil and LocalPlayer.Character then
 			pcall(function()
 				local myChar = LocalPlayer.Character
@@ -2450,7 +2514,7 @@ function Runtime.Init()
 			Config.Theme.Stroke = rainbow
 		end
 
-		-- [V5.5.1] Touch Fling Logic (PlayerCache Optimized)
+		-- [V5.5.2] Touch Fling Logic (PlayerCache Optimized)
 		if Config.States.TouchFling and hrp then
 			for p, data in pairs(Storage.PlayerCache) do
 				if not (Config.States.TeamCheck and Utils.IsTeammate(p)) then
@@ -2463,7 +2527,7 @@ function Runtime.Init()
 			end
 		end
 
-		-- [V5.5.1] Orbit Stalker Aura
+		-- [V5.5.2] Orbit Stalker Aura
 		if Config.States.OrbitAura and Storage.LockedTarget and Storage.LockedTarget.Character and hrp then
 			local tHRP = Storage.LockedTarget.Character:FindFirstChild("HumanoidRootPart")
 			if tHRP then
@@ -2474,7 +2538,7 @@ function Runtime.Init()
 			end
 		end
 
-		-- [V5.5.1] Anti-Fling Immortality (PlayerCache Optimized)
+		-- [V5.5.2] Anti-Fling Immortality (PlayerCache Optimized)
 		if Config.States.AntiFling and hrp then
 			for p, data in pairs(Storage.PlayerCache) do
 				local otherHRP = data.Root
@@ -2870,7 +2934,7 @@ end
 
 local itemLoop = task.spawn(function()
 	while true do
-		task.wait(0.8)
+		task.wait(1.5)
 		if Storage.IsUnloaded then break end
 		if Config.States.ItemESP then
 			pcall(UpdateItemESP)
@@ -2880,5 +2944,6 @@ end)
 table.insert(Storage.Loops, itemLoop)
 
 Runtime.Init()
-Utils.Notify("✅ X TITAN V5.5.1 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
-print("X TITAN V5.5.1 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
+_G.X_TITAN_INSTANCE = { Config = Config, Storage = Storage, Utils = Utils, Features = Features, Runtime = Runtime }
+Utils.Notify("✅ X TITAN V5.5.2 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
+print("X TITAN V5.5.2 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")

@@ -14,11 +14,21 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PRO V3.4.1 - COMPETITIVE & TOURNAMENT SUITE ]]
--- Official Seller: vlilayz | Tier: PRO (RM 20)
--- 100% English UI | Zero Memory Leak | High Performance
--- Features: Smart Prediction | Auto Bone Target | Silent Aim Metamethod | Skeleton ESP | 2D Tactical Radar | Weapon ESP | Off-screen Target Arrows | TriggerBot | LegitFly | Anti-Killbrick
--- ==================================================================
+-- [[ X PRO V3.4.2 - PROFESSIONAL SUITE ]]
+-- Founder & Developer: XT-7789 | Official Seller: vlilayz
+-- High-Performance Zero-Lag Character Caching & 60+ FPS Optimization
+-- ==============================================================================
+if _G.X_PRO_INSTANCE then
+	pcall(function()
+		if _G.X_PRO_INSTANCE.Storage then
+			local s = _G.X_PRO_INSTANCE.Storage
+			s.IsUnloaded = true
+			for _, l in pairs(s.Loops or {}) do pcall(function() task.cancel(l) end) end
+			for _, c in pairs(s.Connections or {}) do pcall(function() c:Disconnect() end) end
+		end
+	end)
+	task.wait(0.05)
+end
 local Services = {
     Players = game:GetService("Players"),
     RunService = game:GetService("RunService"),
@@ -792,7 +802,7 @@ local function MicroFlickSilentAim()
 end
 
 -- ==================================================================
--- MODERN 3-TAB UI (V3.4.1)
+-- MODERN 3-TAB UI (V3.4.2)
 -- ==================================================================
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
@@ -901,7 +911,7 @@ local function BuildUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 8)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "⚡ X PRO <font color='#00dcff'>V3.4.1</font>"; Title.RichText = true
+    Title.Text = "⚡ X PRO <font color='#00dcff'>V3.4.2</font>"; Title.RichText = true
     Title.Size = UDim2.new(0, 130, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 14; Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -1234,8 +1244,9 @@ local function Init()
             end
         end
 
-        -- ESP, Visuals, Offscreen Arrows
-        if Drawing then
+        -- ESP, Visuals, Offscreen Arrows (ZERO-LAG GUARDED)
+        local anyESP = Config.States.ESP or Config.States.Tracers or Config.States.OffscreenArrows or Config.States.ESPSkeleton
+        if Drawing and anyESP then
             UpdateSkeletonESP()
 
             local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
@@ -1494,7 +1505,7 @@ local function Init()
         end
     end)
 
-    Notify("X PRO V3.4.1", "Tournament Pro Active! [Insert] Menu [F] Lock Target [End] Unload")
+    Notify("X PRO V3.4.2", "Tournament Pro Active! [Insert] Menu [F] Lock Target [End] Unload")
 end
 
 Init()
