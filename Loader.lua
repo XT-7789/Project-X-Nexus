@@ -86,21 +86,25 @@ print("==========================================")
 print("✅ [PROJECT X NEXUS] ACCESS GRANTED")
 if string.lower(tier) == "mini" then
 	print("📦 X MINI V4.0.0 LOADED")
+elseif string.lower(tier) == "minim" then
+	print("📱 X MINIM V4.0.0 LOADED")
 elseif string.lower(tier) == "nanom" then
 	print("📱 X NANOM V3.0.0 LOADED")
 elseif string.lower(tier) == "nano" then
 	print(isMobile and "📱 X NANOM V3.0.0 LOADED" or "🪶 X NANO V3.0.0 LOADED")
 elseif string.lower(tier) == "pro" then
-	print("⚡ X PRO V2.0.0 LOADED")
+	print("⚡ X PRO V3.0.0 LOADED")
 elseif string.lower(tier) == "titan" then
-	print("🔥 X TITAN V4.5.8 LOADED")
+	print("🔥 X TITAN V4.6.0 LOADED")
 else
 	print("⚡ X " .. string.upper(tostring(tier)) .. " LOADED")
 end
 print("💬 DISCORD SELLER: vlilayz")
 print("==========================================")
 
-if string.lower(tier) == "nanom" then
+if string.lower(tier) == "minim" then
+	loadstring(game:HttpGet(repo .. "X%20MINIM.lua"))()
+elseif string.lower(tier) == "nanom" then
 	loadstring(game:HttpGet(repo .. "X%20NANOM.lua"))()
 elseif string.lower(tier) == "nano" then
 	if isMobile then
