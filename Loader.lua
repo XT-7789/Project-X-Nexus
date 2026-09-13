@@ -84,7 +84,11 @@ local tier = data.tier or "Nano"
 Notify("✅ SUCCESS", "Welcome! Loading X " .. tostring(tier) .. "...", 3)
 print("==========================================")
 print("✅ [PROJECT X NEXUS] ACCESS GRANTED")
-if string.lower(tier) == "mini" then
+if string.lower(tier) == "litem" then
+	print("📱 X LITEM V1.0.0 LOADED")
+elseif string.lower(tier) == "lite" then
+	print(isMobile and "📱 X LITEM V1.0.0 LOADED" or "🎁 X LITE V1.0.0 LOADED")
+elseif string.lower(tier) == "mini" then
 	print("📦 X MINI V4.0.0 LOADED")
 elseif string.lower(tier) == "minim" then
 	print("📱 X MINIM V4.0.0 LOADED")
@@ -105,7 +109,15 @@ print("👑 FOUNDER & DEV : XT-7789")
 print("💬 DISCORD SELLER: vlilayz")
 print("==========================================")
 
-if string.lower(tier) == "prom" then
+if string.lower(tier) == "litem" then
+	loadstring(game:HttpGet(repo .. "X%20LITEM.lua"))()
+elseif string.lower(tier) == "lite" then
+	if isMobile then
+		loadstring(game:HttpGet(repo .. "X%20LITEM.lua"))()
+	else
+		loadstring(game:HttpGet(repo .. "X%20LITE.lua"))()
+	end
+elseif string.lower(tier) == "prom" then
 	loadstring(game:HttpGet(repo .. "X%20PROM.lua"))()
 elseif string.lower(tier) == "minim" then
 	loadstring(game:HttpGet(repo .. "X%20MINIM.lua"))()
