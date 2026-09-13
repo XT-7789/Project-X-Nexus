@@ -101,6 +101,7 @@ elseif string.lower(tier) == "titan" then
 else
 	print("⚡ X " .. string.upper(tostring(tier)) .. " LOADED")
 end
+print("👑 FOUNDER & DEV : XT-7789")
 print("💬 DISCORD SELLER: vlilayz")
 print("==========================================")
 

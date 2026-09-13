@@ -1,5 +1,5 @@
 -- [[ PROJECT X NEXUS - PROTECTED DISTRIBUTION ]]
--- Official Seller: vlilayz
+-- Founder & Developer: XT-7789 | Official Seller: vlilayz
 local _0xAUTH = getgenv()._X_AUTH_TOKEN
 local _0xKEY = getgenv().Key or getgenv().ScriptKey or script_key
 if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
