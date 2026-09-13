@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X NANO V3.2.0 - ULTRA LIGHTWEIGHT EDITION ]]
+-- [[ X NANO V3.2.1 - ULTRA LIGHTWEIGHT EDITION ]]
 -- 定位: 极速启动 / 低配友好 / 核心战斗 / 零卡顿
 -- 包含: 平滑自瞄(带FOV) | 极简ESP(Box+Chams) | 极速移动(Fly/Noclip/Speed/Jump) | 干净卸载
 -- ==================================================================
@@ -391,16 +391,16 @@ local function BuildUI()
 	end
 	AddToggle("🎯 Aimbot (Smooth)", "Aimbot")
 	AddToggle("⭕ Show FOV", "ShowFOV", function(v) if Storage.FOVRingUI then Storage.FOVRingUI.Visible = v end end)
-	local maxFOV = isNanoPlus and 400 or 120
-	local maxFly = isNanoPlus and 300 or 120
-	local maxWalk = isNanoPlus and 250 or 75
+	local maxFOV = isNanoPlus and 400 or 150
+	local maxFly = isNanoPlus and 300 or 150
+	local maxWalk = isNanoPlus and 250 or 150
 	if not isNanoPlus then
 		Config.Vals.FOV = math.min(Config.Vals.FOV, maxFOV)
 		Config.Vals.FlySpeed = math.min(Config.Vals.FlySpeed, maxFly)
 		Config.Vals.WalkSpeed = math.min(Config.Vals.WalkSpeed, maxWalk)
 	end
 
-	AddSlider("FOV Radius" .. (isNanoPlus and " (PRO-X)" or " (Max 120)"), 50, maxFOV, "FOV", function(v)
+	AddSlider("FOV Radius" .. (isNanoPlus and " (PRO-X)" or " (Max 150)"), 50, maxFOV, "FOV", function(v)
 		if Storage.FOVRingUI then Storage.FOVRingUI.Size = UDim2.new(0, v * 2, 0, v * 2) end
 	end)
 	AddToggle("🛡️ Team Check", "TeamCheck")
@@ -414,13 +414,13 @@ local function BuildUI()
     end)
 	AddToggle("✨ Chams (Glow)", "Chams", function() UpdateChams() end)
 	AddToggle("🦅 Fly Mode [Z]", "Fly", function() UpdateCollisions() end)
-	AddSlider("Fly Speed" .. (isNanoPlus and " (PRO-X)" or " (Max 120)"), 20, maxFly, "FlySpeed")
+	AddSlider("Fly Speed" .. (isNanoPlus and " (PRO-X)" or " (Max 150)"), 20, maxFly, "FlySpeed")
 	AddToggle("👻 Noclip [V]", "Noclip", function() UpdateCollisions() end)
 	AddToggle("⚡ Speed Hack", "SpeedHack", function(v)
 		local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 		if hum then hum.WalkSpeed = v and Config.Vals.WalkSpeed or Storage.OriginalWalkSpeed end
 	end)
-	AddSlider("Walk Speed" .. (isNanoPlus and " (PRO-X)" or " (Max 75)"), 20, maxWalk, "WalkSpeed", function(v)
+	AddSlider("Walk Speed" .. (isNanoPlus and " (PRO-X)" or " (Max 150)"), 20, maxWalk, "WalkSpeed", function(v)
 		if Config.States.SpeedHack and LocalPlayer.Character then
 			local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 			if hum then hum.WalkSpeed = v end
@@ -494,9 +494,9 @@ local function Init()
 		end
 	end))
 
-	-- RenderStepped: Aimbot & ESP (Tier Refresh Rate: Nano=120Hz/75Hz, Nano+=Uncapped)
+	-- RenderStepped: Aimbot & ESP (Tier Refresh Rate: Nano=75Hz/60Hz, Nano+=Uncapped)
 	local lastNanoRender = 0
-	local maxNanoHz = isNanoPlus and 240 or 120
+	local maxNanoHz = isNanoPlus and 240 or 75
 	TrackConn(Services.RunService.RenderStepped:Connect(function()
 		local now = tick()
 		if not isNanoPlus and (now - lastNanoRender < (1 / maxNanoHz)) then return end

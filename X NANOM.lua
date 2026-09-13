@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X NANO M V3.2.0 - MOBILE TOUCH EDITION ]]
+-- [[ X NANO M V3.2.1 - MOBILE TOUCH EDITION ]]
 -- 定位: 移动端全触控 / Delta / 手机平板专属 / 零键盘依赖
 -- 手机专属: 可拖拽浮窗悬浮球(☰) | 屏幕▲▼飞行按键 | 触控大滑块 | 自动平滑吸附锁头 | 一键触控卸载
 -- 卖家: vlilayz | 售价: RM5
@@ -64,7 +64,7 @@ local Config = {
 	},
 	Seller = {
 		Discord = "vlilayz",
-		Version = "V3.2.0 Mobile"
+		Version = "V3.2.1 Mobile"
 	}
 }
 
@@ -528,7 +528,16 @@ local function BuildMobileUI()
 	end
 	AddToggle("🎯 Auto Lock Aimbot", "Aimbot")
 	AddToggle("⭕ Show FOV Circle", "ShowFOV", function(v) if Storage.FOVRingUI then Storage.FOVRingUI.Visible = v end end)
-	AddSlider("FOV Radius", 50, 400, "FOV", function(v)
+	local maxFOV = isNanoPlus and 400 or 150
+	local maxFly = isNanoPlus and 250 or 150
+	local maxWalk = isNanoPlus and 200 or 150
+	if not isNanoPlus then
+		Config.Vals.FOV = math.min(Config.Vals.FOV, maxFOV)
+		Config.Vals.FlySpeed = math.min(Config.Vals.FlySpeed, maxFly)
+		Config.Vals.WalkSpeed = math.min(Config.Vals.WalkSpeed, maxWalk)
+	end
+
+	AddSlider("FOV Radius" .. (isNanoPlus and " (PRO-X)" or " (Max 150)"), 50, maxFOV, "FOV", function(v)
 		if Storage.FOVRingUI then Storage.FOVRingUI.Size = UDim2.new(0, v * 2, 0, v * 2) end
 	end)
 	AddToggle("🛡️ Team Check", "TeamCheck")
@@ -546,13 +555,13 @@ local function BuildMobileUI()
 		UpdateCollisions()
 		if Storage.FlyUpBtn then Storage.FlyUpBtn.Visible = v end
 	end)
-	AddSlider("Fly Speed", 20, 250, "FlySpeed")
+	AddSlider("Fly Speed" .. (isNanoPlus and " (PRO-X)" or " (Max 150)"), 20, maxFly, "FlySpeed")
 	AddToggle("👻 Noclip", "Noclip", function() UpdateCollisions() end)
 	AddToggle("⚡ Speed Hack", "SpeedHack", function(v)
 		local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 		if hum then hum.WalkSpeed = v and Config.Vals.WalkSpeed or Storage.OriginalWalkSpeed end
 	end)
-	AddSlider("Walk Speed", 20, 200, "WalkSpeed", function(v)
+	AddSlider("Walk Speed" .. (isNanoPlus and " (PRO-X)" or " (Max 150)"), 20, maxWalk, "WalkSpeed", function(v)
 		if Config.States.SpeedHack and LocalPlayer.Character then
 			local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 			if hum then hum.WalkSpeed = v end
@@ -613,9 +622,9 @@ local function Init()
 		end
 	end))
 
-	-- RenderStepped: Aimbot & ESP (Tier Refresh Rate: Nano=120Hz/75Hz, Nano+=Uncapped)
+	-- RenderStepped: Aimbot & ESP (Tier Refresh Rate: Nano=75Hz/60Hz, Nano+=Uncapped)
 	local lastNanomRender = 0
-	local maxNanomHz = isNanoPlus and 240 or 120
+	local maxNanomHz = isNanoPlus and 240 or 75
 	TrackConn(Services.RunService.RenderStepped:Connect(function()
 		local now = tick()
 		if not isNanoPlus and (now - lastNanomRender < (1 / maxNanomHz)) then return end
@@ -698,7 +707,7 @@ local function Init()
 
 	Notify("X NANO M V3.0", "Mobile Edition Ready! Tap the [⚡] bubble on screen to open menu!")
 	print("==========================================")
-	print("📱 X NANO M V3.2.0 MOBILE EDITION LOADED!")
+	print("📱 X NANO M V3.2.1 MOBILE EDITION LOADED!")
 	print("💬 DISCORD: " .. Config.Seller.Discord)
 	print("==========================================")
 end
