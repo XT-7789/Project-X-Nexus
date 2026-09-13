@@ -579,6 +579,30 @@ function UI.Init()
 	Main.Size = UDim2.new(0, 620, 0, 460); Main.Position = UDim2.new(0.5, -310, 0.5, -230)
 	Main.BackgroundColor3 = Config.Theme.Main; Main.Active = true; Main.Draggable = true
 	Storage.MainFrame = Main
+
+	-- Floating Open/Close Button (Always visible on screen, click to toggle menu)
+	local ToggleBtn = Instance.new("TextButton", ScreenGui)
+	ToggleBtn.Name = "X_Titan_Floating_Toggle"
+	ToggleBtn.Size = UDim2.new(0, 42, 0, 42)
+	ToggleBtn.Position = UDim2.new(0, 16, 0.45, 0)
+	ToggleBtn.BackgroundColor3 = Config.Theme.Sec
+	ToggleBtn.Text = "X"
+	ToggleBtn.TextColor3 = Config.Theme.Stroke
+	ToggleBtn.Font = Enum.Font.GothamBold
+	ToggleBtn.TextSize = 18
+	ToggleBtn.Active = true
+	ToggleBtn.Draggable = true
+	Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 10)
+	local tbStroke = Instance.new("UIStroke", ToggleBtn)
+	tbStroke.Color = Config.Theme.Stroke
+	tbStroke.Thickness = 1.5
+	tbStroke.Transparency = 0.3
+
+	ToggleBtn.MouseButton1Click:Connect(function()
+		if Storage.MainFrame then
+			Storage.MainFrame.Visible = not Storage.MainFrame.Visible
+		end
+	end)
 	
 	local UIStroke = Instance.new("UIStroke", Main); UIStroke.Color = Config.Theme.Stroke; UIStroke.Thickness = 2
 	Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
@@ -592,8 +616,19 @@ function UI.Init()
 	Title.TextColor3 = Config.Theme.Stroke; Title.Font = Enum.Font.GothamBlack; Title.TextSize = 13
 	
 	local TabHolder = Instance.new("Frame", SidePanel)
-	TabHolder.Size = UDim2.new(1, -16, 1, -60); TabHolder.Position = UDim2.new(0, 8, 0, 50); TabHolder.BackgroundTransparency = 1
+	TabHolder.Size = UDim2.new(1, -16, 1, -95); TabHolder.Position = UDim2.new(0, 8, 0, 50); TabHolder.BackgroundTransparency = 1
 	local TabLayout = Instance.new("UIListLayout", TabHolder); TabLayout.Padding = UDim.new(0, 4)
+
+	local SideUnloadBtn = Instance.new("TextButton", SidePanel)
+	SideUnloadBtn.Name = "SideUnload"
+	SideUnloadBtn.Size = UDim2.new(1, -16, 0, 28); SideUnloadBtn.Position = UDim2.new(0, 8, 1, -34)
+	SideUnloadBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+	SideUnloadBtn.Text = "❌ UNLOAD [End]"; SideUnloadBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	SideUnloadBtn.Font = Enum.Font.GothamBold; SideUnloadBtn.TextSize = 11
+	Instance.new("UICorner", SideUnloadBtn).CornerRadius = UDim.new(0, 6)
+	SideUnloadBtn.MouseButton1Click:Connect(function()
+		Runtime.Unload()
+	end)
 	
 	local PageHolder = Instance.new("Frame", Main)
 	PageHolder.Size = UDim2.new(1, -155, 1, -10); PageHolder.Position = UDim2.new(0, 150, 0, 5); PageHolder.BackgroundTransparency = 1
@@ -1314,16 +1349,7 @@ local function UpdateRadar()
 	end
 end
 
-function task.spawn(function()
-	while true do
-		task.wait(0.7)
-		if Config.States.ItemESP then
-			pcall(UpdateItemESP)
-		end
-	end
-end)
-
-Runtime.Init()
+function Runtime.Init()
 	if _G.X_TITAN_RUNTIME_INITIALIZED then
 		print("X TITAN: Detected existing instance, unloading first...")
 		local oldInstance = _G.X_TITAN_CURRENT_INSTANCE
@@ -1397,26 +1423,26 @@ Runtime.Init()
 		local hum = char:FindFirstChild("Humanoid")
 		if hum and not Config.States.SpeedHack then
 			Storage.OriginalWalkSpeed = hum.WalkSpeed
-			Storage.WalkSpeedSnapshotPending = false,
-	LastSafeCFrame = nil,
-	HitSoundObj = nil
+			Storage.WalkSpeedSnapshotPending = false
+			Storage.LastSafeCFrame = nil
+			Storage.HitSoundObj = nil
 		else
 			Storage.WalkSpeedSnapshotPending = true
 			local humanoidAddedConn
 			humanoidAddedConn = char.ChildAdded:Connect(function(child)
 				if child:IsA("Humanoid") and not Config.States.SpeedHack then
 					Storage.OriginalWalkSpeed = child.WalkSpeed
-					Storage.WalkSpeedSnapshotPending = false,
-	LastSafeCFrame = nil,
-	HitSoundObj = nil
+					Storage.WalkSpeedSnapshotPending = false
+			Storage.LastSafeCFrame = nil
+			Storage.HitSoundObj = nil
 					humanoidAddedConn:Disconnect()
 				end
 			end)
 			task.delay(5, function()
 				if humanoidAddedConn then pcall(function() humanoidAddedConn:Disconnect() end) end
-				Storage.WalkSpeedSnapshotPending = false,
-	LastSafeCFrame = nil,
-	HitSoundObj = nil
+				Storage.WalkSpeedSnapshotPending = false
+			Storage.LastSafeCFrame = nil
+			Storage.HitSoundObj = nil
 			end)
 		end
 		task.wait(1)
@@ -1716,9 +1742,9 @@ Runtime.Init()
 			local currentHum = char:FindFirstChild("Humanoid")
 			if currentHum then
 				Storage.OriginalWalkSpeed = currentHum.WalkSpeed
-				Storage.WalkSpeedSnapshotPending = false,
-	LastSafeCFrame = nil,
-	HitSoundObj = nil
+				Storage.WalkSpeedSnapshotPending = false
+			Storage.LastSafeCFrame = nil
+			Storage.HitSoundObj = nil
 			end
 		end
 		
