@@ -145,20 +145,87 @@ function Utils.GetCharacterParts(char)
     return head, root, hum
 end
 
-function Utils.IsAlive(char, hum)
+function Utils.GetHealth(plr, char)
+    if not plr then return 0, 100 end
+    char = char or (plr and plr.Character)
+    local nrpbs = plr:FindFirstChild("NRPBS")
+    if nrpbs then
+        local hpVal = nrpbs:FindFirstChild("Health")
+        local maxHpVal = nrpbs:FindFirstChild("MaxHealth")
+        if hpVal and hpVal:IsA("ValueBase") then
+            local cur = tonumber(hpVal.Value) or 0
+            local max = (maxHpVal and maxHpVal:IsA("ValueBase") and tonumber(maxHpVal.Value)) or 100
+            return cur, (max > 0 and max or 100)
+        end
+    end
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            return hum.Health, (hum.MaxHealth > 0 and hum.MaxHealth or 100)
+        end
+    end
+    return 0, 100
+end
+
+function Utils.IsAlive(char, hum, plr)
     if not char or not char.Parent then return false end
-    if hum then
-        if hum.Health > 0 then return true end
-        if hum.MaxHealth <= 0 then return true end
-        local hAttr = char:GetAttribute("Health")
-        if hAttr and hAttr > 0 then return true end
+    if not char:IsDescendantOf(Services.Workspace) then return false end
+    if type(char) == "userdata" and char:IsA("Player") then
+        plr = char
+        char = plr.Character
+        if not char then return false end
+    end
+    plr = plr or (char and Services.Players:GetPlayerFromCharacter(char))
+
+    local isArsenal = (game.PlaceId == 286090429 or game.GameId == 111958650 or (plr and plr:FindFirstChild("NRPBS") ~= nil) or Services.Workspace:FindFirstChild("Debris") ~= nil)
+    if plr then
+        local nrpbs = plr:FindFirstChild("NRPBS")
+        if nrpbs then
+            local hpVal = nrpbs:FindFirstChild("Health")
+            if hpVal and hpVal:IsA("ValueBase") and (tonumber(hpVal.Value) or 0) <= 0 then
+                return false
+            end
+            if not char:FindFirstChild("Spawned") then
+                return false
+            end
+        end
+    end
+
+    if isArsenal and not char:FindFirstChild("Spawned") then
         return false
     end
+
+    if char:FindFirstChild("Dead") or char:FindFirstChild("Ragdoll") or char:FindFirstChild("Died") or char:FindFirstChild("Corpse") then
+        return false
+    end
+
+    local head = char:FindFirstChild("Head")
+    local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+    if not head or not head.Parent or not root or not root.Parent then
+        return false
+    end
+
+    hum = hum or char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        if hum.Health <= 0 then return false end
+        local ok, state = pcall(function() return hum:GetState() end)
+        if ok and state == Enum.HumanoidStateType.Dead then
+            return false
+        end
+    else
+        if not isArsenal then return false end
+    end
+
+    if root.Position.Y < -300 or math.abs(root.Position.X) > 100000 or math.abs(root.Position.Z) > 100000 then
+        return false
+    end
+
     return true
 end
 
 function Utils.IsTeammate(plr)
     if not plr or not LocalPlayer or plr == LocalPlayer then return false end
+    if plr.Team and plr.Team.Name == "FFA" then return false end
     if plr.Team and LocalPlayer.Team and plr.Team == LocalPlayer.Team then return true end
     if plr.TeamColor and LocalPlayer.TeamColor and plr.TeamColor == LocalPlayer.TeamColor then return true end
     local pChar = Utils.GetPlayerCharacter(plr)
@@ -207,9 +274,9 @@ function Utils.GetClosestTarget()
 
     for _, p in pairs(Services.Players:GetPlayers()) do
         if p == LocalPlayer or not p.Character then continue end
-        if Config.States.TeamCheck and Utils.IsTeammate(p) then continue end
         local hum = p.Character:FindFirstChildOfClass("Humanoid")
-        if not hum or hum.Health <= 0 then continue end
+        if not Utils.IsAlive(p.Character, hum, p) then continue end
+        if Config.States.TeamCheck and Utils.IsTeammate(p) then continue end
 
         local aimPart = Utils.GetAimPart(p.Character)
         if not aimPart then continue end
@@ -871,7 +938,7 @@ local function Init()
                     local head = plr.Character:FindFirstChild("Head")
                     local hum = plr.Character:FindFirstChildOfClass("Humanoid")
 
-                    if root and head and hum and hum.Health > 0 then
+                    if root and head and Utils.IsAlive(plr.Character, hum, plr) then
                         local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
                         local color = (Config.States.TeamCheck and Utils.IsTeammate(plr)) and Config.Theme.Team or Config.Theme.Accent
 
@@ -905,7 +972,7 @@ local function Init()
 
                                 esp.HealthBar.Visible = true
                                 esp.HealthBar.From = Vector2.new(esp.Box.Position.X - 5, esp.Box.Position.Y + height)
-                                esp.HealthBar.To = Vector2.new(esp.Box.Position.X - 5, esp.Box.Position.Y + height - height * math.clamp(hum.Health / hum.MaxHealth, 0, 1))
+                                local curHp, maxHp = Utils.GetHealth(plr, plr.Character); esp.HealthBar.To = Vector2.new(esp.Box.Position.X - 5, esp.Box.Position.Y + height - height * math.clamp(curHp / maxHp, 0, 1))
 
                                 if Config.States.WeaponESP then
                                     local tool = plr.Character:FindFirstChildOfClass("Tool")

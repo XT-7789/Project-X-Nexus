@@ -72,7 +72,8 @@ local Config = {
 		KillAura = false, TPAura = false, Desync = false, AntiAimSpin = false, AntiAimHeadJitter = false,
 		RightClickToggle = true, ShowFOV = false, TacticalLock = false,
 		ShowLockStatus = true, SmartPrediction = true, AutoAimPart = true,
-		LegitFly = false, ServerDesync = false, CFrameSpeed = false, Radar = false, ItemESP = false, VehicleBoost = false, VehicleFly = false
+		LegitFly = false, ServerDesync = false, CFrameSpeed = false, Radar = false, ItemESP = false, VehicleBoost = false, VehicleFly = false,
+		WeaponESP = true, OffscreenArrows = true, NoRecoil = false
 	},
 	Vals = {
 		FOV = 200, OrbitDistance = 8, OrbitSpeed = 8, FlingPower = 100000, WalkSpeed = 150, FlySpeed = 150, HitboxSize = 15, HeadSize = 25,
@@ -96,6 +97,7 @@ local Storage = {
 	PlayerListFrame = nil, Connections = {}, Loops = {},
 	TriggerBotCooldown = 0,
 	LastTargetVel = {}, LastTargetTick = {},
+	OffscreenArrows = {},
 	RadarObjects = {}, RadarGui = nil, RadarFrame = nil,
 	TacticalHUD = nil, CurrentHPRatio = 0,
 	CrosshairLines = {Top=nil, Bottom=nil, Left=nil, Right=nil},
@@ -573,12 +575,14 @@ function Features.CreateESP(plr)
 	if not Drawing then return end
 	local esp = {
 		Box = Drawing.new("Square"), Name = Drawing.new("Text"),
-		HealthBar = Drawing.new("Line"), Distance = Drawing.new("Text")
+		HealthBar = Drawing.new("Line"), Distance = Drawing.new("Text"),
+		Weapon = Drawing.new("Text")
 	}
 	esp.Box.Thickness = 1.5; esp.Box.Color = Config.Theme.Stroke; esp.Box.Filled = false; esp.Box.Visible = false
 	esp.Name.Size = 14; esp.Name.Center = true; esp.Name.Outline = true; esp.Name.Color = Color3.new(1,1,1); esp.Name.Visible = false
 	esp.HealthBar.Thickness = 1.5; esp.HealthBar.Color = Color3.new(0,1,0); esp.HealthBar.Visible = false
 	esp.Distance.Size = 12; esp.Distance.Center = true; esp.Distance.Outline = true; esp.Distance.Color = Color3.new(1,1,1); esp.Distance.Visible = false
+	esp.Weapon.Size = 11; esp.Weapon.Center = true; esp.Weapon.Outline = true; esp.Weapon.Color = Color3.fromRGB(255, 230, 100); esp.Weapon.Visible = false
 	Storage.ESPObjects[plr] = esp
 	Storage.SkeletonParts[plr] = {
 		HeadToTorso = Drawing.new("Line"), TorsoToLeftArm = Drawing.new("Line"),
@@ -602,6 +606,10 @@ function Features.RemoveESP(plr)
 	if Storage.TracerLines[plr] then
 		pcall(function() Storage.TracerLines[plr]:Remove() end)
 		Storage.TracerLines[plr] = nil
+	end
+	if Storage.OffscreenArrows[plr] then
+		pcall(function() Storage.OffscreenArrows[plr]:Remove() end)
+		Storage.OffscreenArrows[plr] = nil
 	end
 end
 
@@ -1047,6 +1055,7 @@ function UI.Init()
 	AddSection(P1, "SILENT & TRIGGER", getOrder1)
 	AddToggle(P1, "Silent Aim 🔥", "SilentAim", getOrder1)
 	AddToggle(P1, "TriggerBot [T]", "TriggerBot", getOrder1)
+	AddToggle(P1, "🛡️ No Camera Recoil", "NoRecoil", getOrder1)
 	
 	AddSection(P1, "AURA & LOCK", getOrder1)
 	AddToggle(P1, "Kill Aura", "KillAura", getOrder1)
@@ -1072,7 +1081,9 @@ function UI.Init()
 	AddSection(P2, "ESP", getOrder2)
 	AddToggle(P2, "ESP Master", "ESP", getOrder2)
 	AddToggle(P2, "📦 Item & Loot ESP", "ItemESP", getOrder2)
-	AddToggle(P2, "ESP Skeleton", "ESPSkeleton", getOrder2)
+	AddToggle(P2, "🔫 Weapon / Tool ESP", "WeaponESP", getOrder2)
+	AddToggle(P2, "🦴 Skeleton ESP", "ESPSkeleton", getOrder2)
+	AddToggle(P2, "🧭 Off-screen Target Arrows", "OffscreenArrows", getOrder2)
 	AddToggle(P2, "360° Tracers", "Tracers", getOrder2)
 	AddToggle(P2, "Visibility Check", "VisibilityCheck", getOrder2)
 	AddToggle(P2, "Chams", "Chams", getOrder2)
@@ -1498,6 +1509,8 @@ function Runtime.Unload()
 	for plr, esp in pairs(Storage.ESPObjects) do for _, d in pairs(esp) do pcall(function() d:Remove() end) end end
 	for plr, skel in pairs(Storage.SkeletonParts) do for _, d in pairs(skel) do pcall(function() d:Remove() end) end end
 	for _, l in pairs(Storage.TracerLines) do pcall(function() l:Remove() end) end
+	for _, a in pairs(Storage.OffscreenArrows) do pcall(function() a:Remove() end) end
+	Storage.OffscreenArrows = {}
 	for _, line in pairs(Storage.CrosshairLines) do if line then pcall(function() line:Remove() end) end end
 	for _, line in pairs(Storage.HitmarkerLines) do if line then pcall(function() line:Remove() end) end end
 	
@@ -2001,15 +2014,17 @@ function Runtime.Init()
 		end
 		
 		-- [ZERO-LAG ESP ENGINE] Skip entire loop if visual features are disabled
-		local anyESP = Config.States.ESP or Config.States.ESPSkeleton or Config.States.Tracers
+		local anyESP = Config.States.ESP or Config.States.ESPSkeleton or Config.States.Tracers or Config.States.WeaponESP or Config.States.OffscreenArrows
 		if Drawing then
 			if not anyESP then
 				if not Storage.ESPHidden then
 					Storage.ESPHidden = true
 					for plr, esp in pairs(Storage.ESPObjects) do
 						esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
+						if esp.Weapon then esp.Weapon.Visible = false end
 						if Storage.SkeletonParts[plr] then for _, part in pairs(Storage.SkeletonParts[plr]) do part.Visible = false end end
 						if Storage.TracerLines[plr] then Storage.TracerLines[plr].Visible = false end
+						if Storage.OffscreenArrows[plr] then Storage.OffscreenArrows[plr].Visible = false end
 					end
 				end
 			else
@@ -2057,6 +2072,32 @@ function Runtime.Init()
 						Storage.TracerLines[plr].Visible = false
 					end
 					
+					-- Off-screen Target Arrows (Synced from Pro)
+					if Config.States.OffscreenArrows then
+						local arrow = Storage.OffscreenArrows[plr]
+						if not arrow then
+							arrow = Drawing.new("Triangle"); arrow.Filled = true; Storage.OffscreenArrows[plr] = arrow
+						end
+						if (not onScreen or vector.Z <= 0) and not (Config.States.TeamCheck and Utils.IsTeammate(plr)) then
+							local rel = (root.Position - CurrentCam.CFrame.Position)
+							local forward = CurrentCam.CFrame.LookVector
+							local right = CurrentCam.CFrame.RightVector
+							local dotForward = forward:Dot(rel); local dotRight = right:Dot(rel)
+							local angle = math.atan2(dotRight, dotForward)
+							local arrowRadius = math.min(CurrentCam.ViewportSize.X/2, CurrentCam.ViewportSize.Y/2) * 0.75
+							local arrowCenter = center + Vector2.new(math.sin(angle) * arrowRadius, -math.cos(angle) * arrowRadius)
+							local tip = arrowCenter + Vector2.new(math.sin(angle) * 12, -math.cos(angle) * 12)
+							local leftPt = arrowCenter + Vector2.new(math.sin(angle + 2.5) * 8, -math.cos(angle + 2.5) * 8)
+							local rightPt = arrowCenter + Vector2.new(math.sin(angle - 2.5) * 8, -math.cos(angle - 2.5) * 8)
+							arrow.PointA = tip; arrow.PointB = leftPt; arrow.PointC = rightPt
+							arrow.Color = drawColor; arrow.Visible = true
+						else
+							arrow.Visible = false
+						end
+					elseif Storage.OffscreenArrows[plr] then
+						Storage.OffscreenArrows[plr].Visible = false
+					end
+					
 					if onScreen and vector.Z > 0 then
 						local headPos = CurrentCam:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
 						local height = math.abs(headPos.Y - CurrentCam:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0)).Y)
@@ -2069,8 +2110,19 @@ function Runtime.Init()
 						esp.HealthBar.From = Vector2.new(boxX - 5, boxY + height); esp.HealthBar.To = Vector2.new(boxX - 5, boxY + height - height * healthRatio)
 						esp.Distance.Visible = true; esp.Distance.Text = string.format("%.0fm", (root.Position - (hrp and hrp.Position or root.Position)).Magnitude)
 						esp.Distance.Position = Vector2.new(vector.X, boxY + height + 5); esp.Distance.Color = drawColor
+						if Config.States.WeaponESP and esp.Weapon then
+							local tool = pChar:FindFirstChildOfClass("Tool") or pChar:FindFirstChild("Gun") or pChar:FindFirstChild("EquippedTool")
+							local wName = tool and tool.Name or "Unarmed"
+							esp.Weapon.Visible = true
+							esp.Weapon.Text = "[" .. wName .. "]"
+							esp.Weapon.Position = Vector2.new(vector.X, boxY + height + 18)
+							esp.Weapon.Color = Color3.fromRGB(255, 230, 100)
+						elseif esp.Weapon then
+							esp.Weapon.Visible = false
+						end
 					else
 						esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
+						if esp.Weapon then esp.Weapon.Visible = false end
 					end
 					if Config.States.ESPSkeleton and Storage.SkeletonParts[plr] then
 						local torso = pChar:FindFirstChild("Torso") or pChar:FindFirstChild("UpperTorso") or root
@@ -2118,6 +2170,21 @@ function Runtime.Init()
 			return
 		end
 		-- [V5.1.0] Rainbow Chams & HUD Accent
+		if Config.States.NoRecoil and LocalPlayer.Character then
+			pcall(function()
+				local myChar = LocalPlayer.Character
+				for _, item in ipairs(myChar:GetChildren()) do
+					if item:IsA("Tool") or item.Name == "Gun" then
+						for _, v in ipairs(item:GetDescendants()) do
+							if v:IsA("NumberValue") and (string.find(string.lower(v.Name), "recoil") or string.find(string.lower(v.Name), "spread")) then
+								v.Value = 0
+							end
+						end
+					end
+				end
+			end)
+		end
+
 		if Config.States.RainbowChams then
 			local rainbow = Color3.fromHSV((tick() * 0.4) % 1, 0.9, 1)
 			Config.Theme.Stroke = rainbow
