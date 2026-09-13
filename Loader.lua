@@ -43,34 +43,44 @@ if not key or key == "" or key == "PASTE_YOUR_KEY_HERE" or key == "YOUR_KEY_HERE
 	return
 end
 
-Notify("⚡ X SUITE", "Authenticating Key & Verifying HWID...", 2)
+local isMasterMiniPlus = (string.upper(tostring(key)) == "X-MINI-PRO-X")
+local tier
 
-local hwid = GetHWID()
-local verifyUrl = "https://x-auth.alex-x-7789-x.workers.dev/verify?key=" .. tostring(key) .. "&hwid=" .. tostring(hwid)
+if isMasterMiniPlus then
+	tier = "Mini"
+	Notify("👑 X MINI+ PRIVILEGED", "Founder Key X-MINI-PRO-X Accepted! Loading MINI+...", 3)
+else
+	Notify("⚡ X SUITE", "Authenticating Key & Verifying HWID...", 2)
 
-local success, response = pcall(function()
-	return game:HttpGet(verifyUrl)
-end)
+	local hwid = GetHWID()
+	local verifyUrl = "https://x-auth.alex-x-7789-x.workers.dev/verify?key=" .. tostring(key) .. "&hwid=" .. tostring(hwid)
 
-if not success or not response then
-	Notify("❌ X SUITE", "Connection Error! Could not reach Auth Server.", 4)
-	warn("[X SUITE] Connection Error: " .. tostring(response))
-	return
-end
+	local success, response = pcall(function()
+		return game:HttpGet(verifyUrl)
+	end)
 
-local ok, data = pcall(function()
-	return Services.HttpService:JSONDecode(response)
-end)
+	if not success or not response then
+		Notify("❌ X SUITE", "Connection Error! Could not reach Auth Server.", 4)
+		warn("[X SUITE] Connection Error: " .. tostring(response))
+		return
+	end
 
-if not ok or not data then
-	Notify("❌ X SUITE", "Invalid response from Auth Server.", 4)
-	return
-end
+	local ok, data = pcall(function()
+		return Services.HttpService:JSONDecode(response)
+	end)
 
-if not data.success then
-	Notify("❌ AUTH FAILED", data.message or "Authentication failed.", 5)
-	warn("[X SUITE] Auth Error: " .. tostring(data.message))
-	return
+	if not ok or not data then
+		Notify("❌ X SUITE", "Invalid response from Auth Server.", 4)
+		return
+	end
+
+	if not data.success then
+		Notify("❌ AUTH FAILED", data.message or "Authentication failed.", 5)
+		warn("[X SUITE] Auth Error: " .. tostring(data.message))
+		return
+	end
+
+	tier = data.tier or "Nano"
 end
 
 -- Set one-time security authentication token for guarded scripts
@@ -78,13 +88,12 @@ getgenv()._X_AUTH_TOKEN = "X_NEXUS_VERIFIED_7789"
 
 local repo = "https://raw.githubusercontent.com/XT-7789/Project-X-Nexus/main/"
 local isMobile = Services.UIS.TouchEnabled and not Services.UIS.KeyboardEnabled
-
--- Success! Dispatch correct script tier
-local tier = data.tier or "Nano"
 Notify("✅ SUCCESS", "Welcome! Loading X " .. tostring(tier) .. "...", 3)
 print("==========================================")
 print("✅ [PROJECT X NEXUS] ACCESS GRANTED")
-if string.lower(tier) == "litem" then
+if isMasterMiniPlus then
+	print("👑 X MINI+ V4.0.0 [PRO-X EDITION] LOADED - SILENT AIM UNLOCKED")
+elseif string.lower(tier) == "litem" then
 	print("📱 X LITEM V1.0.0 LOADED")
 elseif string.lower(tier) == "lite" then
 	print(isMobile and "📱 X LITEM V1.0.0 LOADED" or "🎁 X LITE V1.0.0 LOADED")
@@ -109,7 +118,9 @@ print("👑 FOUNDER & DEV : XT-7789")
 print("💬 DISCORD SELLER: vlilayz")
 print("==========================================")
 
-if string.lower(tier) == "litem" then
+if isMasterMiniPlus then
+	print("👑 X MINI+ V4.0.0 [PRO-X EDITION] LOADED - SILENT AIM UNLOCKED")
+elseif string.lower(tier) == "litem" then
 	loadstring(game:HttpGet(repo .. "X%20LITEM.lua"))()
 elseif string.lower(tier) == "lite" then
 	if isMobile then

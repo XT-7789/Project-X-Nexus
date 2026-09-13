@@ -61,7 +61,7 @@ local Config = {
         ShowFOV = false, HeadExpander = false, TriggerBot = false,
         ESP = false, Chams = false, Fullbright = false, Crosshair = false,
         Fly = false, LegitFly = false, Noclip = false, SpeedHack = false,
-        InfJump = false, NoFall = false, ClickTP = false, ItemESP = false
+        InfJump = false, NoFall = false, ClickTP = false, ItemESP = false, SilentAim = false
     },
     Vals = {
         FOV = 180, Smoothness = 0.3, WalkSpeed = 80, FlySpeed = 120,
@@ -330,6 +330,81 @@ end
 -- ==================================================================
 -- DUAL TAB UI (COMBAT & UTILITY)
 -- ==================================================================
+local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or "")
+local isMiniPlus = string.find(string.upper(activeKey), "X%-MINI%-PRO%-X") ~= nil
+
+-- ==================================================================
+-- MULTI-LAYER SILENT AIM ENGINE (EXCLUSIVE TO X-MINI-PRO-X)
+-- ==================================================================
+local HasMiniMetamethodHook = false
+
+if isMiniPlus then
+    -- [TIER 1] Metamethod __namecall Hook (Delta & Advanced PC Executors)
+    if type(hookmetamethod) == "function" and type(getnamecallmethod) == "function" then
+        local safeUnpack = table.unpack or unpack
+        local ok, oldNamecall = pcall(function()
+            return hookmetamethod(game, "__namecall", function(self, ...)
+                local method = getnamecallmethod()
+                local args = {...}
+
+                if Config.States.SilentAim and (method == "Raycast" or method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRay" or method == "FindPartOnRayWithWhitelist") then
+                    local targetPart = Utils.GetClosestTarget()
+                    if targetPart and targetPart.Parent then
+                        local predPos = targetPart.Position
+                        if method == "Raycast" then
+                            local origin = args[1]
+                            args[2] = (predPos - origin).Unit * 5000
+                            return oldNamecall(self, safeUnpack(args))
+                        elseif method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRay" or method == "FindPartOnRayWithWhitelist" then
+                            local ray = args[1]
+                            args[1] = Ray.new(ray.Origin, (predPos - ray.Origin).Unit * 5000)
+                            return oldNamecall(self, safeUnpack(args))
+                        end
+                    end
+                end
+                return oldNamecall(self, ...)
+            end)
+        end)
+        if ok and oldNamecall then HasMiniMetamethodHook = true end
+    end
+
+    -- [TIER 2] Mouse.Hit & Target Spoofing (Xeno / Free PC Executors)
+    pcall(function()
+        if type(getrawmetatable) == "function" and type(setreadonly) == "function" then
+            local mt = getrawmetatable(game)
+            if mt then
+                setreadonly(mt, false)
+                local oldIndex = mt.__index
+                mt.__index = function(t, k)
+                    if Config.States.SilentAim and (t:IsA("Mouse") or tostring(t) == "Mouse") then
+                        local targetPart = Utils.GetClosestTarget()
+                        if targetPart then
+                            if k == "Hit" then return CFrame.new(targetPart.Position)
+                            elseif k == "Target" then return targetPart end
+                        end
+                    end
+                    return oldIndex(t, k)
+                end
+                setreadonly(mt, true)
+            end
+        end
+    end)
+end
+
+-- [TIER 3] Micro-Flick Silent Aim Fallback for Xeno
+local function MiniMicroFlickSilentAim()
+    if not isMiniPlus or not Config.States.SilentAim then return end
+    local targetPart = Utils.GetClosestTarget()
+    if not targetPart or not targetPart.Parent then return end
+
+    local origCF = Camera.CFrame
+    Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, targetPart.Position)
+    task.spawn(function()
+        Services.RunService.RenderStepped:Wait()
+        Camera.CFrame = origCF
+    end)
+end
+
 local function BuildUI()
     local uiName = "X_MINI_V4_0_0"
     if targetGui:FindFirstChild(uiName) then targetGui[uiName]:Destroy() end
@@ -353,7 +428,12 @@ local function BuildUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 8)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "📦 X MINI <font color='#00d2ff'>V4.0</font>"; Title.RichText = true
+    if isMiniPlus then
+        Title.Text = "📦 X MINI<font color='#00d2ff'>+ PLUS</font> <font color='#ffcd32'>[PRO-X]</font>"
+    else
+        Title.Text = "📦 X MINI <font color='#00d2ff'>V4.0</font>"
+    end
+    Title.RichText = true
     Title.Size = UDim2.new(0, 200, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 15; Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -734,6 +814,9 @@ local function Init()
 
     -- User Inputs
     TrackConn(Services.UIS.InputBegan:Connect(function(input, gpe)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and isMiniPlus and Config.States.SilentAim and not HasMiniMetamethodHook then
+            MiniMicroFlickSilentAim()
+        end
         if input.UserInputType == Enum.UserInputType.MouseButton2 then
             Storage.IsRightMouseDown = true
         end
@@ -760,6 +843,9 @@ local function Init()
     end))
 
     TrackConn(Services.UIS.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and isMiniPlus and Config.States.SilentAim and not HasMiniMetamethodHook then
+            MiniMicroFlickSilentAim()
+        end
         if input.UserInputType == Enum.UserInputType.MouseButton2 then
             Storage.IsRightMouseDown = false
         end
@@ -774,7 +860,12 @@ local function Init()
         end
     end)
 
-    Notify("X MINI V4.0", "Combat Edition Ready! [Insert] Menu [End] Unload")
+    if isMiniPlus then
+        Notify("👑 X MINI+", "Master Key X-MINI-PRO-X Active! Silent Aim unlocked.")
+        print("👑 [X MINI+] PRIVILEGE UNLOCKED: Multi-Layer Silent Aim Active!")
+    else
+        Notify("X MINI V4.0", "Combat Edition Ready! [Insert] Menu [End] Unload")
+    end
 end
 
 Init()

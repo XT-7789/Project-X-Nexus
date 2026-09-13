@@ -58,7 +58,7 @@ local Config = {
         ShowFOV = false, HeadExpander = false, TriggerBot = false,
         ESP = false, Chams = false, Fullbright = false, Crosshair = false,
         Fly = false, Noclip = false, SpeedHack = false,
-        InfJump = false, NoFall = false, ItemESP = false
+        InfJump = false, NoFall = false, ItemESP = false, SilentAim = false
     },
     Vals = {
         FOV = 180, Smoothness = 0.32, WalkSpeed = 80, FlySpeed = 120,
@@ -222,6 +222,44 @@ end
 -- ==================================================================
 -- MOBILE TOUCH UI & FLOATING BUBBLE
 -- ==================================================================
+local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or "")
+local isMiniPlus = string.find(string.upper(activeKey), "X%-MINI%-PRO%-X") ~= nil
+
+-- ==================================================================
+-- MULTI-LAYER SILENT AIM ENGINE (EXCLUSIVE TO X-MINI-PRO-X)
+-- ==================================================================
+local HasMiniMetamethodHook = false
+
+if isMiniPlus then
+    if type(hookmetamethod) == "function" and type(getnamecallmethod) == "function" then
+        local safeUnpack = table.unpack or unpack
+        local ok, oldNamecall = pcall(function()
+            return hookmetamethod(game, "__namecall", function(self, ...)
+                local method = getnamecallmethod()
+                local args = {...}
+
+                if Config.States.SilentAim and (method == "Raycast" or method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRay" or method == "FindPartOnRayWithWhitelist") then
+                    local targetPart = Utils.GetClosestTarget()
+                    if targetPart and targetPart.Parent then
+                        local predPos = targetPart.Position
+                        if method == "Raycast" then
+                            local origin = args[1]
+                            args[2] = (predPos - origin).Unit * 5000
+                            return oldNamecall(self, safeUnpack(args))
+                        elseif method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRay" or method == "FindPartOnRayWithWhitelist" then
+                            local ray = args[1]
+                            args[1] = Ray.new(ray.Origin, (predPos - ray.Origin).Unit * 5000)
+                            return oldNamecall(self, safeUnpack(args))
+                        end
+                    end
+                end
+                return oldNamecall(self, ...)
+            end)
+        end)
+        if ok and oldNamecall then HasMiniMetamethodHook = true end
+    end
+end
+
 local function BuildMobileUI()
     local uiName = "X_MINIM_V4_0_0"
     if targetGui:FindFirstChild(uiName) then targetGui[uiName]:Destroy() end
@@ -389,6 +427,9 @@ local function BuildMobileUI()
     end
 
     -- TAB 1: COMBAT
+    if isMiniPlus then
+        AddToggle(P1, "👻 Silent Aim 🔥 [Mini+]", "SilentAim")
+    end
     AddToggle(P1, "🎯 Auto Lock Aimbot", "Aimbot")
     AddToggle(P1, "💀 Head Hitbox Expander", "HeadExpander", function() Utils.UpdateHeadExpander() end)
     AddSlider(P1, "Head Hitbox Size", 5, 40, "HeadSize", function() Utils.UpdateHeadExpander() end)
