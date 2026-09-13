@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V5.2.3.1 - VOID WALKER (SPECIAL VIP EXCLUSIVE) ]]
+-- [[ X TITAN V5.3.0.1 - VOID WALKER (SPECIAL VIP EXCLUSIVE) ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
 -- P2: RenderStepped Target Caching & Collision Loop Optimization
@@ -45,7 +45,7 @@ end
 if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==============================================================================
--- CONFIGURATION & STORAGE (V5.2.3.1)
+-- CONFIGURATION & STORAGE (V5.3.0.1)
 -- ==============================================================================
 local Config = {
 	Keys = {
@@ -133,7 +133,7 @@ _G.X_TITAN_CURRENT_INSTANCE = {
 }
 
 -- ==============================================================================
--- UTILITIES (V5.2.3.1)
+-- UTILITIES (V5.3.0.1)
 -- ==============================================================================
 local Utils = {}
 _G.X_TITAN_CURRENT_INSTANCE.Utils = Utils
@@ -149,6 +149,54 @@ function Utils.IsTeammate(plr)
 	if plr.Team and LocalPlayer.Team and plr.Team == LocalPlayer.Team then return true end
 	if plr.TeamColor and LocalPlayer.TeamColor and plr.TeamColor == LocalPlayer.TeamColor then return true end
 	return false
+end
+
+function Utils.GetCharacterData(plr)
+	if not plr then return nil end
+	local char = plr.Character
+	if not char or not char.Parent then
+		for _, fName in ipairs({"Characters", "Players", "Entities", "Soldiers", "Rigs", "Actors", "Zombies", "Bots", "NPCs", "Alive", "Spawns"}) do
+			local f = Services.Workspace:FindFirstChild(fName)
+			if f then
+				char = f:FindFirstChild(plr.Name) or f:FindFirstChild(tostring(plr.UserId))
+				if char and char:IsDescendantOf(Services.Workspace) then break end
+				char = nil
+			end
+		end
+		if not char then
+			char = Services.Workspace:FindFirstChild(plr.Name)
+		end
+	end
+	if not char or not char:IsDescendantOf(Services.Workspace) then return nil end
+
+	local root = nil
+	if char.PrimaryPart and char.PrimaryPart:IsA("BasePart") then
+		root = char.PrimaryPart
+	else
+		for _, name in ipairs({"HumanoidRootPart", "Torso", "UpperTorso", "RootPart", "Root", "MainPart", "Main", "HRP", "Center", "Collision", "Hitbox", "Pelvis", "Waist", "Base"}) do
+			local p = char:FindFirstChild(name)
+			if p and p:IsA("BasePart") then root = p; break end
+		end
+		if not root then
+			root = char:FindFirstChildWhichIsA("BasePart")
+		end
+	end
+	if not root then return nil end
+
+	local head = nil
+	for _, name in ipairs({"Head", "head", "Headshot", "FakeHead", "HitboxHead", "Head_Hitbox", "HeadPart"}) do
+		local h = char:FindFirstChild(name, true)
+		if h and h:IsA("BasePart") then head = h; break end
+	end
+	if not head then head = root end
+
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	return {
+		Char = char,
+		Root = root,
+		Head = head,
+		Hum = hum
+	}
 end
 
 function Utils.GetHealth(plr, char)
@@ -175,62 +223,75 @@ function Utils.GetHealth(plr, char)
 			local max = hum.MaxHealth > 0 and hum.MaxHealth or 100
 			return cur, max
 		end
+		-- Custom Body Games (Phantom Forces, Frontlines, Doors, Custom Rigs)
+		local hpVal = char:FindFirstChild("Health") or char:FindFirstChild("HP") or char:FindFirstChild("hp") or (plr and plr:FindFirstChild("Status") and plr.Status:FindFirstChild("Health"))
+		if hpVal and hpVal:IsA("ValueBase") and tonumber(hpVal.Value) then
+			return math.max(0, tonumber(hpVal.Value)), 100
+		end
+		local hpAttr = char:GetAttribute("Health") or char:GetAttribute("HP")
+		if hpAttr and tonumber(hpAttr) then
+			local maxAttr = char:GetAttribute("MaxHealth") or char:GetAttribute("MaxHP") or 100
+			return math.max(0, tonumber(hpAttr)), math.max(1, tonumber(maxAttr))
+		end
 	end
-	return 0, 100
+	return 100, 100
 end
 
-function Utils.IsAlive(plr, char)
-	if not plr then return false end
-	char = char or plr.Character
-	if not char or not char.Parent then return false end
-	if not char:IsDescendantOf(Services.Workspace) then return false end
+function Utils.IsAlive(arg1, arg2, arg3)
+	local plr, char, hum
+	if type(arg1) == "userdata" and arg1:IsA("Player") then
+		plr = arg1
+		char = arg2 or plr.Character
+		hum = char and char:FindFirstChildOfClass("Humanoid")
+	else
+		char = arg1
+		hum = arg2
+		plr = arg3 or (char and Services.Players:GetPlayerFromCharacter(char))
+	end
+	if not char or not char.Parent or not char:IsDescendantOf(Services.Workspace) then return false end
 
 	-- 1. Arsenal Specific Death & Spawn Checks
-	local isArsenal = (game.PlaceId == 286090429 or game.GameId == 111958650 or plr:FindFirstChild("NRPBS") ~= nil or Services.Workspace:FindFirstChild("Debris") ~= nil)
-	
-	local nrpbs = plr:FindFirstChild("NRPBS")
-	if nrpbs then
-		local hpVal = nrpbs:FindFirstChild("Health")
-		if hpVal and hpVal:IsA("ValueBase") and (tonumber(hpVal.Value) or 0) <= 0 then
-			return false
-		end
-		if not char:FindFirstChild("Spawned") then
-			return false
+	local isArsenal = (game.PlaceId == 286090429 or game.GameId == 111958650 or (plr and plr:FindFirstChild("NRPBS") ~= nil) or Services.Workspace:FindFirstChild("Debris") ~= nil)
+	if plr then
+		local nrpbs = plr:FindFirstChild("NRPBS")
+		if nrpbs then
+			local hpVal = nrpbs:FindFirstChild("Health")
+			if hpVal and hpVal:IsA("ValueBase") and (tonumber(hpVal.Value) or 0) <= 0 then return false end
+			if not char:FindFirstChild("Spawned") then return false end
 		end
 	end
-
-	if isArsenal then
-		if not char:FindFirstChild("Spawned") then
-			return false
-		end
-	end
+	if isArsenal and not char:FindFirstChild("Spawned") then return false end
 
 	-- 2. General Dead / Ragdoll tags check
-	if char:FindFirstChild("Dead") or char:FindFirstChild("Ragdoll") or char:FindFirstChild("Died") or char:FindFirstChild("Corpse") then
+	if char:FindFirstChild("Dead") or char:FindFirstChild("Ragdoll") or char:FindFirstChild("Died") or char:FindFirstChild("Corpse") or char:FindFirstChild("Killed") then
+		return false
+	end
+	if plr and plr:FindFirstChild("Status") and plr.Status:FindFirstChild("Dead") and plr.Status.Dead.Value == true then
 		return false
 	end
 
-	-- 3. Vital Body Parts Check
-	local head = char:FindFirstChild("Head")
-	local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
-	if not head or not head.Parent or not root or not root.Parent then
-		return false
-	end
-
-	-- 4. Humanoid State & Health
-	local hum = char:FindFirstChildOfClass("Humanoid")
+	-- 3. Humanoid State & Health Check (Standard Roblox)
+	hum = hum or char:FindFirstChildOfClass("Humanoid")
 	if hum then
 		if hum.Health <= 0 then return false end
 		local ok, state = pcall(function() return hum:GetState() end)
-		if ok and state == Enum.HumanoidStateType.Dead then
+		if ok and state == Enum.HumanoidStateType.Dead then return false end
+	else
+		-- Custom Body Games (Phantom Forces, Frontlines, Doors, Custom Rigs)
+		local hpVal = char:FindFirstChild("Health") or char:FindFirstChild("HP") or char:FindFirstChild("hp") or (plr and plr:FindFirstChild("Status") and plr.Status:FindFirstChild("Health"))
+		if hpVal and hpVal:IsA("ValueBase") and tonumber(hpVal.Value) ~= nil and tonumber(hpVal.Value) <= 0 then
 			return false
 		end
-	else
-		if not isArsenal then return false end
+		local hpAttr = char:GetAttribute("Health") or char:GetAttribute("HP") or char:GetAttribute("hp")
+		if hpAttr ~= nil and tonumber(hpAttr) ~= nil and tonumber(hpAttr) <= 0 then
+			return false
+		end
 	end
 
-	-- 5. Fallen out of world / Void
-	if root.Position.Y < -300 or math.abs(root.Position.X) > 100000 or math.abs(root.Position.Z) > 100000 then
+	-- 4. Root / BasePart Validation
+	local root = char.PrimaryPart or char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or char:FindFirstChildWhichIsA("BasePart")
+	if not root then return false end
+	if root.Position.Y < -400 or math.abs(root.Position.X) > 100000 or math.abs(root.Position.Z) > 100000 then
 		return false
 	end
 
@@ -685,14 +746,14 @@ function Features.GetAuraTarget()
 end
 
 -- ==============================================================================
--- UI SYSTEM (V5.2.3.1)
+-- UI SYSTEM (V5.3.0.1)
 -- ==============================================================================
--- ITEM & LOOT ESP SUBSYSTEM (V5.2.3.1)
+-- ITEM & LOOT ESP SUBSYSTEM (V5.3.0.1)
 local function ClearItemESP()
-	for obj, gui in pairs(Storage.ItemESPObjects) do
-		if gui and gui.Parent then pcall(function() gui:Destroy() end) end
+	for _, bg in pairs(Storage.ItemESPObjects) do
+		pcall(function() bg:Destroy() end)
 	end
-	Storage.ItemESPObjects = {}
+	table.clear(Storage.ItemESPObjects)
 end
 
 local function UpdateItemESP()
@@ -701,22 +762,64 @@ local function UpdateItemESP()
 		return
 	end
 	local myChar = LocalPlayer.Character
-	local myHrp = myChar and (myChar:FindFirstChild("HumanoidRootPart") or myChar:FindFirstChild("Torso"))
+	local myHrp = myChar and (myChar:FindFirstChild("HumanoidRootPart") or myChar:FindFirstChild("Torso") or myChar.PrimaryPart or myChar:FindFirstChildWhichIsA("BasePart"))
 	if not myHrp then return end
 
 	local myPos = myHrp.Position
 	local found = {}
 
-	for _, item in ipairs(Services.Workspace:GetChildren()) do
-		if item:IsA("Tool") and item:FindFirstChild("Handle") then
-			local dist = (item.Handle.Position - myPos).Magnitude
-			if dist <= 500 then found[item.Handle] = { Name = item.Name, Dist = math.floor(dist) } end
-		elseif item.Name == "Drops" or item.Name == "Items" or item.Name == "Loot" or item.Name == "Tools" then
-			for _, sub in ipairs(item:GetChildren()) do
-				local p = sub:IsA("BasePart") and sub or sub:FindFirstChildWhichIsA("BasePart")
-				if p then
-					local dist = (p.Position - myPos).Magnitude
-					if dist <= 500 then found[p] = { Name = sub.Name, Dist = math.floor(dist) } end
+	local function addItem(part, name, itemType)
+		if not part or not part:IsA("BasePart") or not part:IsDescendantOf(Services.Workspace) then return end
+		for _, p in pairs(Services.Players:GetPlayers()) do
+			if p.Character and part:IsDescendantOf(p.Character) then return end
+		end
+		local dist = (part.Position - myPos).Magnitude
+		if dist <= 1200 then
+			found[part] = { Name = name, Dist = math.floor(dist), Type = itemType or "item" }
+		end
+	end
+
+	-- 1. Universal ProximityPrompts (Doors, Evade, Blox Fruits, Pressure, etc.)
+	for _, prompt in ipairs(Services.Workspace:GetDescendants()) do
+		if prompt:IsA("ProximityPrompt") and prompt.Enabled then
+			local pObj = prompt.Parent
+			if pObj then
+				local targetPart = pObj:IsA("BasePart") and pObj or pObj:FindFirstChildWhichIsA("BasePart")
+				if targetPart then
+					local title = prompt.ObjectText ~= "" and prompt.ObjectText or prompt.ActionText
+					if title == "" or title == "Interact" or title == "Use" or title == "Pick Up" then title = pObj.Name end
+					addItem(targetPart, title, "prompt")
+				end
+			end
+		end
+	end
+
+	-- 2. ClickDetectors (Chests, Buttons, Items)
+	for _, cd in ipairs(Services.Workspace:GetDescendants()) do
+		if cd:IsA("ClickDetector") then
+			local pObj = cd.Parent
+			if pObj then
+				local targetPart = pObj:IsA("BasePart") and pObj or pObj:FindFirstChildWhichIsA("BasePart")
+				if targetPart and not found[targetPart] then addItem(targetPart, pObj.Name, "click") end
+			end
+		end
+	end
+
+	-- 3. Tools in Workspace (Dropped weapons, gear)
+	for _, tool in ipairs(Services.Workspace:GetDescendants()) do
+		if tool:IsA("Tool") then
+			local handle = tool:FindFirstChild("Handle") or tool:FindFirstChildWhichIsA("BasePart")
+			if handle and not found[handle] then addItem(handle, tool.Name, "tool") end
+		end
+	end
+
+	-- 4. Common Loot Containers & Folders
+	for _, containerName in ipairs({"drops", "items", "loot", "pickups", "spawneditems", "spawned", "chests", "ores", "cash", "money", "collectibles", "weapons", "debris", "interactables"}) do
+		for _, obj in ipairs(Services.Workspace:GetChildren()) do
+			if string.lower(obj.Name) == containerName then
+				for _, sub in ipairs(obj:GetChildren()) do
+					local p = sub:IsA("BasePart") and sub or sub:FindFirstChildWhichIsA("BasePart")
+					if p and not found[p] then addItem(p, sub.Name, "container") end
 				end
 			end
 		end
@@ -724,31 +827,33 @@ local function UpdateItemESP()
 
 	for part, data in pairs(found) do
 		local bg = Storage.ItemESPObjects[part]
+		local icon = (data.Type == "prompt" and "✨ ") or (data.Type == "tool" and "🔫 ") or (data.Type == "click" and "📦 ") or "💎 "
+		local color = (data.Type == "tool" and Color3.fromRGB(100, 220, 255)) or (data.Type == "prompt" and Color3.fromRGB(255, 230, 80)) or Color3.fromRGB(255, 200, 60)
 		if not bg or not bg.Parent then
 			bg = Instance.new("BillboardGui")
 			bg.Name = "X_ITEM_ESP"
 			bg.AlwaysOnTop = true
-			bg.Size = UDim2.new(0, 150, 0, 26)
+			bg.Size = UDim2.new(0, 160, 0, 24)
 			bg.Adornee = part
-			bg.MaxDistance = 500
+			bg.MaxDistance = 1200
 			
 			local lbl = Instance.new("TextLabel", bg)
 			lbl.Name = "Tag"
 			lbl.Size = UDim2.new(1, 0, 1, 0)
 			lbl.BackgroundTransparency = 1
-			lbl.TextColor3 = Color3.fromRGB(255, 215, 50)
+			lbl.TextColor3 = color
 			lbl.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 			lbl.TextStrokeTransparency = 0.2
 			lbl.Font = Enum.Font.GothamBold
 			lbl.TextSize = 11
-			lbl.Text = "📦 " .. data.Name .. " [" .. tostring(data.Dist) .. "m]"
+			lbl.Text = icon .. data.Name .. " [" .. tostring(data.Dist) .. "m]"
 			
 			bg.Parent = targetGui
 			Storage.ItemESPObjects[part] = bg
 		else
 			local lbl = bg:FindFirstChild("Tag")
 			if lbl then
-				lbl.Text = "📦 " .. data.Name .. " [" .. tostring(data.Dist) .. "m]"
+				lbl.Text = icon .. data.Name .. " [" .. tostring(data.Dist) .. "m]"
 			end
 		end
 	end
@@ -814,7 +919,7 @@ function UI.Init()
 	Title.Font = Enum.Font.GothamBlack; Title.TextSize = 16; Title.TextXAlignment = Enum.TextXAlignment.Left
 
 	local Subtitle = Instance.new("TextLabel", SidePanel)
-	Subtitle.Text = "VOID WALKER • V5.2.3"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
+	Subtitle.Text = "VOID WALKER • V5.3.0"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
 	Subtitle.BackgroundTransparency = 1; Subtitle.TextColor3 = Config.Theme.TextDim
 	Subtitle.Font = Enum.Font.GothamBold; Subtitle.TextSize = 9; Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 	
@@ -1269,7 +1374,7 @@ function UI.Init()
 end
 
 -- ==============================================================================
--- CORE EXPLOIT HOOKS (V5.2.3.1 - ALL BUGS FIXED)
+-- CORE EXPLOIT HOOKS (V5.3.0.1 - ALL BUGS FIXED)
 -- ==============================================================================
 local HasTitanMetamethodHook = false
 
@@ -1459,11 +1564,11 @@ end)
 table.insert(Storage.Loops, auraLoop)
 
 -- ==============================================================================
--- RUNTIME (V5.2.3.1)
+-- RUNTIME (V5.3.0.1)
 -- ==============================================================================
 local Runtime = {}
 function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.2.3.1 - TITAN GOD (APEX OMNI)...")
+	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.3.0.1 - TITAN GOD (APEX OMNI)...")
 	Storage.IsUnloaded = true
 	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
 	Storage.Loops = {}
@@ -1564,7 +1669,7 @@ function Runtime.Unload()
 	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
 	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
 	Storage.RadarObjects = {}
-	print("X TITAN V5.2.3.1 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
+	print("X TITAN V5.3.0.1 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
 end
 
 local function InitRadar()
@@ -2053,11 +2158,13 @@ function Runtime.Init()
 			else
 				Storage.ESPHidden = false
 				for _, plr in pairs(Services.Players:GetPlayers()) do
-					if plr == LocalPlayer or not plr.Character then continue end
-					local pChar = plr.Character
-					local root = pChar:FindFirstChild("HumanoidRootPart") or pChar:FindFirstChild("Torso") or pChar:FindFirstChild("UpperTorso")
-					local head = pChar:FindFirstChild("Head") or root
-					local isAlive = root and Utils.IsAlive(plr, pChar)
+					if plr == LocalPlayer then continue end
+					local cData = Utils.GetCharacterData(plr)
+					if not cData then continue end
+					local pChar = cData.Char
+					local root = cData.Root
+					local head = cData.Head
+					local isAlive = Utils.IsAlive(plr, pChar)
 					local esp = Storage.ESPObjects[plr]
 
 					if not isAlive then
@@ -2214,7 +2321,7 @@ function Runtime.Init()
 			end
 			return
 		end
-		-- [V5.2.3.1] Rainbow Chams & HUD Accent
+		-- [V5.3.0.1] Rainbow Chams & HUD Accent
 		if Config.States.NoRecoil and LocalPlayer.Character then
 			pcall(function()
 				local myChar = LocalPlayer.Character
@@ -2235,7 +2342,7 @@ function Runtime.Init()
 			Config.Theme.Stroke = rainbow
 		end
 
-		-- [V5.2.3.1] Touch Fling Logic (PlayerCache Optimized)
+		-- [V5.3.0.1] Touch Fling Logic (PlayerCache Optimized)
 		if Config.States.TouchFling and hrp then
 			for p, data in pairs(Storage.PlayerCache) do
 				if not (Config.States.TeamCheck and Utils.IsTeammate(p)) then
@@ -2248,7 +2355,7 @@ function Runtime.Init()
 			end
 		end
 
-		-- [V5.2.3.1] Orbit Stalker Aura
+		-- [V5.3.0.1] Orbit Stalker Aura
 		if Config.States.OrbitAura and Storage.LockedTarget and Storage.LockedTarget.Character and hrp then
 			local tHRP = Storage.LockedTarget.Character:FindFirstChild("HumanoidRootPart")
 			if tHRP then
@@ -2259,7 +2366,7 @@ function Runtime.Init()
 			end
 		end
 
-		-- [V5.2.3.1] Anti-Fling Immortality (PlayerCache Optimized)
+		-- [V5.3.0.1] Anti-Fling Immortality (PlayerCache Optimized)
 		if Config.States.AntiFling and hrp then
 			for p, data in pairs(Storage.PlayerCache) do
 				local otherHRP = data.Root
@@ -2665,5 +2772,5 @@ end)
 table.insert(Storage.Loops, itemLoop)
 
 Runtime.Init()
-Utils.Notify("✅ X TITAN V5.2.3.1 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
-print("X TITAN V5.2.3.1 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
+Utils.Notify("✅ X TITAN V5.3.0.1 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
+print("X TITAN V5.3.0.1 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")

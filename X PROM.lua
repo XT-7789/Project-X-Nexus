@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PROM V3.1.2 - MOBILE TOURNAMENT SUITE ]]
+-- [[ X PROM V3.2.0 - MOBILE TOURNAMENT SUITE ]]
 -- Official Seller: vlilayz | Tier: PROM (RM 20)
 -- Specially Crafted for Delta Mobile / iOS / Android / Tablet
 -- 100% Zero Keyboard Required | Touch Floating Bubble | Mobile Silent Aim
@@ -117,82 +117,151 @@ end
 -- ==================================================================
 local Utils = {}
 
-function Utils.GetHealth(plr, char)
-    if not plr then return 0, 100 end
-    char = char or (plr and plr.Character)
-    local nrpbs = plr:FindFirstChild("NRPBS")
-    if nrpbs then
-        local hpVal = nrpbs:FindFirstChild("Health")
-        local maxHpVal = nrpbs:FindFirstChild("MaxHealth")
-        if hpVal and hpVal:IsA("ValueBase") then
-            local cur = tonumber(hpVal.Value) or 0
-            local max = (maxHpVal and maxHpVal:IsA("ValueBase") and tonumber(maxHpVal.Value)) or 100
-            return cur, (max > 0 and max or 100)
-        end
-    end
-    if char then
-        local hum = char:FindFirstChildOfClass("Humanoid")
-        if hum then
-            return hum.Health, (hum.MaxHealth > 0 and hum.MaxHealth or 100)
-        end
-    end
-    return 0, 100
+function Utils.GetCharacterData(plr)
+	if not plr then return nil end
+	local char = plr.Character
+	if not char or not char.Parent then
+		for _, fName in ipairs({"Characters", "Players", "Entities", "Soldiers", "Rigs", "Actors", "Zombies", "Bots", "NPCs", "Alive", "Spawns"}) do
+			local f = Services.Workspace:FindFirstChild(fName)
+			if f then
+				char = f:FindFirstChild(plr.Name) or f:FindFirstChild(tostring(plr.UserId))
+				if char and char:IsDescendantOf(Services.Workspace) then break end
+				char = nil
+			end
+		end
+		if not char then
+			char = Services.Workspace:FindFirstChild(plr.Name)
+		end
+	end
+	if not char or not char:IsDescendantOf(Services.Workspace) then return nil end
+
+	local root = nil
+	if char.PrimaryPart and char.PrimaryPart:IsA("BasePart") then
+		root = char.PrimaryPart
+	else
+		for _, name in ipairs({"HumanoidRootPart", "Torso", "UpperTorso", "RootPart", "Root", "MainPart", "Main", "HRP", "Center", "Collision", "Hitbox", "Pelvis", "Waist", "Base"}) do
+			local p = char:FindFirstChild(name)
+			if p and p:IsA("BasePart") then root = p; break end
+		end
+		if not root then
+			root = char:FindFirstChildWhichIsA("BasePart")
+		end
+	end
+	if not root then return nil end
+
+	local head = nil
+	for _, name in ipairs({"Head", "head", "Headshot", "FakeHead", "HitboxHead", "Head_Hitbox", "HeadPart"}) do
+		local h = char:FindFirstChild(name, true)
+		if h and h:IsA("BasePart") then head = h; break end
+	end
+	if not head then head = root end
+
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	return {
+		Char = char,
+		Root = root,
+		Head = head,
+		Hum = hum
+	}
 end
 
-function Utils.IsAlive(char, hum, plr)
-    if not char or not char.Parent then return false end
-    if not char:IsDescendantOf(Services.Workspace) then return false end
-    if type(char) == "userdata" and char:IsA("Player") then
-        plr = char
-        char = plr.Character
-        if not char then return false end
-    end
-    plr = plr or (char and Services.Players:GetPlayerFromCharacter(char))
+function Utils.GetHealth(plr, char)
+	if not plr then return 0, 100 end
+	char = char or plr.Character
 
-    local isArsenal = (game.PlaceId == 286090429 or game.GameId == 111958650 or (plr and plr:FindFirstChild("NRPBS") ~= nil) or Services.Workspace:FindFirstChild("Debris") ~= nil)
-    if plr then
-        local nrpbs = plr:FindFirstChild("NRPBS")
-        if nrpbs then
-            local hpVal = nrpbs:FindFirstChild("Health")
-            if hpVal and hpVal:IsA("ValueBase") and (tonumber(hpVal.Value) or 0) <= 0 then
-                return false
-            end
-            if not char:FindFirstChild("Spawned") then
-                return false
-            end
-        end
-    end
+	-- Arsenal NRPBS Health System
+	local nrpbs = plr:FindFirstChild("NRPBS")
+	if nrpbs then
+		local hpVal = nrpbs:FindFirstChild("Health")
+		local maxHpVal = nrpbs:FindFirstChild("MaxHealth")
+		if hpVal and hpVal:IsA("ValueBase") then
+			local cur = tonumber(hpVal.Value) or 0
+			local max = (maxHpVal and maxHpVal:IsA("ValueBase") and tonumber(maxHpVal.Value)) or 100
+			return cur, (max > 0 and max or 100)
+		end
+	end
 
-    if isArsenal and not char:FindFirstChild("Spawned") then
-        return false
-    end
+	-- Standard Roblox Humanoid Health
+	if char then
+		local hum = char:FindFirstChildOfClass("Humanoid")
+		if hum then
+			local cur = hum.Health
+			local max = hum.MaxHealth > 0 and hum.MaxHealth or 100
+			return cur, max
+		end
+		-- Custom Body Games (Phantom Forces, Frontlines, Doors, Custom Rigs)
+		local hpVal = char:FindFirstChild("Health") or char:FindFirstChild("HP") or char:FindFirstChild("hp") or (plr and plr:FindFirstChild("Status") and plr.Status:FindFirstChild("Health"))
+		if hpVal and hpVal:IsA("ValueBase") and tonumber(hpVal.Value) then
+			return math.max(0, tonumber(hpVal.Value)), 100
+		end
+		local hpAttr = char:GetAttribute("Health") or char:GetAttribute("HP")
+		if hpAttr and tonumber(hpAttr) then
+			local maxAttr = char:GetAttribute("MaxHealth") or char:GetAttribute("MaxHP") or 100
+			return math.max(0, tonumber(hpAttr)), math.max(1, tonumber(maxAttr))
+		end
+	end
+	return 100, 100
+end
 
-    if char:FindFirstChild("Dead") or char:FindFirstChild("Ragdoll") or char:FindFirstChild("Died") or char:FindFirstChild("Corpse") then
-        return false
-    end
+function Utils.IsAlive(arg1, arg2, arg3)
+	local plr, char, hum
+	if type(arg1) == "userdata" and arg1:IsA("Player") then
+		plr = arg1
+		char = arg2 or plr.Character
+		hum = char and char:FindFirstChildOfClass("Humanoid")
+	else
+		char = arg1
+		hum = arg2
+		plr = arg3 or (char and Services.Players:GetPlayerFromCharacter(char))
+	end
+	if not char or not char.Parent or not char:IsDescendantOf(Services.Workspace) then return false end
 
-    local head = char:FindFirstChild("Head")
-    local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
-    if not head or not head.Parent or not root or not root.Parent then
-        return false
-    end
+	-- 1. Arsenal Specific Death & Spawn Checks
+	local isArsenal = (game.PlaceId == 286090429 or game.GameId == 111958650 or (plr and plr:FindFirstChild("NRPBS") ~= nil) or Services.Workspace:FindFirstChild("Debris") ~= nil)
+	if plr then
+		local nrpbs = plr:FindFirstChild("NRPBS")
+		if nrpbs then
+			local hpVal = nrpbs:FindFirstChild("Health")
+			if hpVal and hpVal:IsA("ValueBase") and (tonumber(hpVal.Value) or 0) <= 0 then return false end
+			if not char:FindFirstChild("Spawned") then return false end
+		end
+	end
+	if isArsenal and not char:FindFirstChild("Spawned") then return false end
 
-    hum = hum or char:FindFirstChildOfClass("Humanoid")
-    if hum then
-        if hum.Health <= 0 then return false end
-        local ok, state = pcall(function() return hum:GetState() end)
-        if ok and state == Enum.HumanoidStateType.Dead then
-            return false
-        end
-    else
-        if not isArsenal then return false end
-    end
+	-- 2. General Dead / Ragdoll tags check
+	if char:FindFirstChild("Dead") or char:FindFirstChild("Ragdoll") or char:FindFirstChild("Died") or char:FindFirstChild("Corpse") or char:FindFirstChild("Killed") then
+		return false
+	end
+	if plr and plr:FindFirstChild("Status") and plr.Status:FindFirstChild("Dead") and plr.Status.Dead.Value == true then
+		return false
+	end
 
-    if root.Position.Y < -300 or math.abs(root.Position.X) > 100000 or math.abs(root.Position.Z) > 100000 then
-        return false
-    end
+	-- 3. Humanoid State & Health Check (Standard Roblox)
+	hum = hum or char:FindFirstChildOfClass("Humanoid")
+	if hum then
+		if hum.Health <= 0 then return false end
+		local ok, state = pcall(function() return hum:GetState() end)
+		if ok and state == Enum.HumanoidStateType.Dead then return false end
+	else
+		-- Custom Body Games (Phantom Forces, Frontlines, Doors, Custom Rigs)
+		local hpVal = char:FindFirstChild("Health") or char:FindFirstChild("HP") or char:FindFirstChild("hp") or (plr and plr:FindFirstChild("Status") and plr.Status:FindFirstChild("Health"))
+		if hpVal and hpVal:IsA("ValueBase") and tonumber(hpVal.Value) ~= nil and tonumber(hpVal.Value) <= 0 then
+			return false
+		end
+		local hpAttr = char:GetAttribute("Health") or char:GetAttribute("HP") or char:GetAttribute("hp")
+		if hpAttr ~= nil and tonumber(hpAttr) ~= nil and tonumber(hpAttr) <= 0 then
+			return false
+		end
+	end
 
-    return true
+	-- 4. Root / BasePart Validation
+	local root = char.PrimaryPart or char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or char:FindFirstChildWhichIsA("BasePart")
+	if not root then return false end
+	if root.Position.Y < -400 or math.abs(root.Position.X) > 100000 or math.abs(root.Position.Z) > 100000 then
+		return false
+	end
+
+	return true
 end
 
 function Utils.IsTeammate(plr)
@@ -498,6 +567,123 @@ end
 -- ==================================================================
 -- MOBILE TOUCH UI & FLOATING BUBBLE
 -- ==================================================================
+local function ClearItemESP()
+	for _, bg in pairs(Storage.ItemESPObjects) do
+		pcall(function() bg:Destroy() end)
+	end
+	table.clear(Storage.ItemESPObjects)
+end
+
+local function UpdateItemESP()
+	if not Config.States.ItemESP then
+		ClearItemESP()
+		return
+	end
+	local myChar = LocalPlayer.Character
+	local myHrp = myChar and (myChar:FindFirstChild("HumanoidRootPart") or myChar:FindFirstChild("Torso") or myChar.PrimaryPart or myChar:FindFirstChildWhichIsA("BasePart"))
+	if not myHrp then return end
+
+	local myPos = myHrp.Position
+	local found = {}
+
+	local function addItem(part, name, itemType)
+		if not part or not part:IsA("BasePart") or not part:IsDescendantOf(Services.Workspace) then return end
+		for _, p in pairs(Services.Players:GetPlayers()) do
+			if p.Character and part:IsDescendantOf(p.Character) then return end
+		end
+		local dist = (part.Position - myPos).Magnitude
+		if dist <= 1200 then
+			found[part] = { Name = name, Dist = math.floor(dist), Type = itemType or "item" }
+		end
+	end
+
+	-- 1. Universal ProximityPrompts (Doors, Evade, Blox Fruits, Pressure, etc.)
+	for _, prompt in ipairs(Services.Workspace:GetDescendants()) do
+		if prompt:IsA("ProximityPrompt") and prompt.Enabled then
+			local pObj = prompt.Parent
+			if pObj then
+				local targetPart = pObj:IsA("BasePart") and pObj or pObj:FindFirstChildWhichIsA("BasePart")
+				if targetPart then
+					local title = prompt.ObjectText ~= "" and prompt.ObjectText or prompt.ActionText
+					if title == "" or title == "Interact" or title == "Use" or title == "Pick Up" then title = pObj.Name end
+					addItem(targetPart, title, "prompt")
+				end
+			end
+		end
+	end
+
+	-- 2. ClickDetectors (Chests, Buttons, Items)
+	for _, cd in ipairs(Services.Workspace:GetDescendants()) do
+		if cd:IsA("ClickDetector") then
+			local pObj = cd.Parent
+			if pObj then
+				local targetPart = pObj:IsA("BasePart") and pObj or pObj:FindFirstChildWhichIsA("BasePart")
+				if targetPart and not found[targetPart] then addItem(targetPart, pObj.Name, "click") end
+			end
+		end
+	end
+
+	-- 3. Tools in Workspace (Dropped weapons, gear)
+	for _, tool in ipairs(Services.Workspace:GetDescendants()) do
+		if tool:IsA("Tool") then
+			local handle = tool:FindFirstChild("Handle") or tool:FindFirstChildWhichIsA("BasePart")
+			if handle and not found[handle] then addItem(handle, tool.Name, "tool") end
+		end
+	end
+
+	-- 4. Common Loot Containers & Folders
+	for _, containerName in ipairs({"drops", "items", "loot", "pickups", "spawneditems", "spawned", "chests", "ores", "cash", "money", "collectibles", "weapons", "debris", "interactables"}) do
+		for _, obj in ipairs(Services.Workspace:GetChildren()) do
+			if string.lower(obj.Name) == containerName then
+				for _, sub in ipairs(obj:GetChildren()) do
+					local p = sub:IsA("BasePart") and sub or sub:FindFirstChildWhichIsA("BasePart")
+					if p and not found[p] then addItem(p, sub.Name, "container") end
+				end
+			end
+		end
+	end
+
+	for part, data in pairs(found) do
+		local bg = Storage.ItemESPObjects[part]
+		local icon = (data.Type == "prompt" and "✨ ") or (data.Type == "tool" and "🔫 ") or (data.Type == "click" and "📦 ") or "💎 "
+		local color = (data.Type == "tool" and Color3.fromRGB(100, 220, 255)) or (data.Type == "prompt" and Color3.fromRGB(255, 230, 80)) or Color3.fromRGB(255, 200, 60)
+		if not bg or not bg.Parent then
+			bg = Instance.new("BillboardGui")
+			bg.Name = "X_ITEM_ESP"
+			bg.AlwaysOnTop = true
+			bg.Size = UDim2.new(0, 160, 0, 24)
+			bg.Adornee = part
+			bg.MaxDistance = 1200
+			
+			local lbl = Instance.new("TextLabel", bg)
+			lbl.Name = "Tag"
+			lbl.Size = UDim2.new(1, 0, 1, 0)
+			lbl.BackgroundTransparency = 1
+			lbl.TextColor3 = color
+			lbl.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+			lbl.TextStrokeTransparency = 0.2
+			lbl.Font = Enum.Font.GothamBold
+			lbl.TextSize = 11
+			lbl.Text = icon .. data.Name .. " [" .. tostring(data.Dist) .. "m]"
+			
+			bg.Parent = targetGui
+			Storage.ItemESPObjects[part] = bg
+		else
+			local lbl = bg:FindFirstChild("Tag")
+			if lbl then
+				lbl.Text = icon .. data.Name .. " [" .. tostring(data.Dist) .. "m]"
+			end
+		end
+	end
+
+	for part, bg in pairs(Storage.ItemESPObjects) do
+		if not found[part] or not part.Parent then
+			pcall(function() bg:Destroy() end)
+			Storage.ItemESPObjects[part] = nil
+		end
+	end
+end
+
 local function BuildMobileUI()
     local uiName = "X_PROM_V3_0_0"
     if targetGui:FindFirstChild(uiName) then targetGui[uiName]:Destroy() end
@@ -534,7 +720,7 @@ local function BuildMobileUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "📱 X PROM <font color='#00dcff'>V3.1.2</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
+    Title.Text = "📱 X PROM <font color='#00dcff'>V3.2.0</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
     Title.Size = UDim2.new(0, 240, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 13; Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -925,12 +1111,13 @@ local function Init()
             local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 
             for _, plr in pairs(Services.Players:GetPlayers()) do
-                if plr ~= LocalPlayer and plr.Character then
-                    local root = plr.Character:FindFirstChild("HumanoidRootPart")
-                    local head = plr.Character:FindFirstChild("Head")
-                    local hum = plr.Character:FindFirstChildOfClass("Humanoid")
+                local cData = (plr ~= LocalPlayer) and Utils.GetCharacterData(plr)
+                if cData then
+                    local root = cData.Root
+                    local head = cData.Head
+                    local hum = cData.Hum
 
-                    if root and head and Utils.IsAlive(plr.Character, hum, plr) then
+                    if Utils.IsAlive(cData.Char, hum, plr) then
                         local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
                         local color = (Config.States.TeamCheck and Utils.IsTeammate(plr)) and Config.Theme.Team or Config.Theme.Accent
 
@@ -963,7 +1150,7 @@ local function Init()
 
                                 esp.HealthBar.Visible = true
                                 esp.HealthBar.From = Vector2.new(esp.Box.Position.X - 5, esp.Box.Position.Y + height)
-                                local curHp, maxHp = Utils.GetHealth(plr, plr.Character); esp.HealthBar.To = Vector2.new(esp.Box.Position.X - 5, esp.Box.Position.Y + height - height * math.clamp(curHp / maxHp, 0, 1))
+                                local curHp, maxHp = Utils.GetHealth(plr, cData.Char); esp.HealthBar.To = Vector2.new(esp.Box.Position.X - 5, esp.Box.Position.Y + height - height * math.clamp(curHp / maxHp, 0, 1))
 
                                 if Config.States.WeaponESP then
                                     local tool = plr.Character:FindFirstChildOfClass("Tool")
@@ -1094,7 +1281,7 @@ local function Init()
         end
     end)
 
-    Notify("X PROM V3.1.2", "Delta Mobile Pro Active! Tap [⚡] for menu")
+    Notify("X PROM V3.2.0", "Delta Mobile Pro Active! Tap [⚡] for menu")
 end
 
 Init()
