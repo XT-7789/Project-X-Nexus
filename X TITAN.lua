@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V5.0.0 - VOID WALKER (SPECIAL VIP EXCLUSIVE) ]]
+-- [[ X TITAN V5.1.0 - VOID WALKER (SPECIAL VIP EXCLUSIVE) ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
 -- P2: RenderStepped Target Caching & Collision Loop Optimization
@@ -45,7 +45,7 @@ end
 if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==============================================================================
--- CONFIGURATION & STORAGE (V5.0.0)
+-- CONFIGURATION & STORAGE (V5.1.0)
 -- ==============================================================================
 local Config = {
 	Keys = {
@@ -131,7 +131,7 @@ _G.X_TITAN_CURRENT_INSTANCE = {
 }
 
 -- ==============================================================================
--- UTILITIES (V5.0.0)
+-- UTILITIES (V5.1.0)
 -- ==============================================================================
 local Utils = {}
 _G.X_TITAN_CURRENT_INSTANCE.Utils = Utils
@@ -590,11 +590,85 @@ function Features.GetAuraTarget()
 end
 
 -- ==============================================================================
--- UI SYSTEM (V5.0.0)
+-- UI SYSTEM (V5.1.0)
 -- ==============================================================================
+-- ITEM & LOOT ESP SUBSYSTEM (V5.1.0)
+local function ClearItemESP()
+	for obj, gui in pairs(Storage.ItemESPObjects) do
+		if gui and gui.Parent then pcall(function() gui:Destroy() end) end
+	end
+	Storage.ItemESPObjects = {}
+end
+
+local function UpdateItemESP()
+	if not Config.States.ItemESP then
+		ClearItemESP()
+		return
+	end
+	local myChar = LocalPlayer.Character
+	local myHrp = myChar and (myChar:FindFirstChild("HumanoidRootPart") or myChar:FindFirstChild("Torso"))
+	if not myHrp then return end
+
+	local myPos = myHrp.Position
+	local found = {}
+
+	for _, item in ipairs(Services.Workspace:GetChildren()) do
+		if item:IsA("Tool") and item:FindFirstChild("Handle") then
+			local dist = (item.Handle.Position - myPos).Magnitude
+			if dist <= 500 then found[item.Handle] = { Name = item.Name, Dist = math.floor(dist) } end
+		elseif item.Name == "Drops" or item.Name == "Items" or item.Name == "Loot" or item.Name == "Tools" then
+			for _, sub in ipairs(item:GetChildren()) do
+				local p = sub:IsA("BasePart") and sub or sub:FindFirstChildWhichIsA("BasePart")
+				if p then
+					local dist = (p.Position - myPos).Magnitude
+					if dist <= 500 then found[p] = { Name = sub.Name, Dist = math.floor(dist) } end
+				end
+			end
+		end
+	end
+
+	for part, data in pairs(found) do
+		local bg = Storage.ItemESPObjects[part]
+		if not bg or not bg.Parent then
+			bg = Instance.new("BillboardGui")
+			bg.Name = "X_ITEM_ESP"
+			bg.AlwaysOnTop = true
+			bg.Size = UDim2.new(0, 150, 0, 26)
+			bg.Adornee = part
+			bg.MaxDistance = 500
+			
+			local lbl = Instance.new("TextLabel", bg)
+			lbl.Name = "Tag"
+			lbl.Size = UDim2.new(1, 0, 1, 0)
+			lbl.BackgroundTransparency = 1
+			lbl.TextColor3 = Color3.fromRGB(255, 215, 50)
+			lbl.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+			lbl.TextStrokeTransparency = 0.2
+			lbl.Font = Enum.Font.GothamBold
+			lbl.TextSize = 11
+			lbl.Text = "📦 " .. data.Name .. " [" .. tostring(data.Dist) .. "m]"
+			
+			bg.Parent = targetGui
+			Storage.ItemESPObjects[part] = bg
+		else
+			local lbl = bg:FindFirstChild("Tag")
+			if lbl then
+				lbl.Text = "📦 " .. data.Name .. " [" .. tostring(data.Dist) .. "m]"
+			end
+		end
+	end
+
+	for part, bg in pairs(Storage.ItemESPObjects) do
+		if not found[part] or not part.Parent then
+			pcall(function() bg:Destroy() end)
+			Storage.ItemESPObjects[part] = nil
+		end
+	end
+end
+
 local UI = {}
 function UI.Init()
-	local guiName = "X_TITAN_V458"
+	local guiName = "X_TITAN_V510"
 	if targetGui:FindFirstChild(guiName) then targetGui[guiName]:Destroy() end
 	
 	local ScreenGui = Instance.new("ScreenGui", targetGui)
@@ -645,7 +719,7 @@ function UI.Init()
 	Title.Font = Enum.Font.GothamBlack; Title.TextSize = 16; Title.TextXAlignment = Enum.TextXAlignment.Left
 
 	local Subtitle = Instance.new("TextLabel", SidePanel)
-	Subtitle.Text = "VOID WALKER • V5.0"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
+	Subtitle.Text = "VOID WALKER • V5.1"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
 	Subtitle.BackgroundTransparency = 1; Subtitle.TextColor3 = Config.Theme.TextDim
 	Subtitle.Font = Enum.Font.GothamBold; Subtitle.TextSize = 9; Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 	
@@ -732,27 +806,31 @@ function UI.Init()
 			Services.TweenService:Create(Indicator, TweenInfo.new(0.2), {BackgroundColor3 = bgC}):Play()
 			Services.TweenService:Create(Stroke, TweenInfo.new(0.2), {Transparency = val and 0.4 or 0.85}):Play()
 			Config.States[flag] = val
-			if flag == "XRay" then Utils.ToggleXRay(val) end
-			if flag == "Fullbright" then Utils.ToggleFullbright(val) end
-			if flag == "AntiKillbrick" and not val then
-				Services.Workspace.FallenPartsDestroyHeight = Storage.OriginalFallenHeight
-			end
-			if flag == "Chams" then Features.UpdateChams() end
-			if flag == "ItemESP" and not val then ClearItemESP() end
-			if flag == "Radar" and Storage.RadarFrame then
-				Storage.RadarFrame.Visible = val
-				if not val then
-					for _, obj in pairs(Storage.RadarObjects) do if obj.Visible then obj.Visible = false end end
+			pcall(function()
+				if flag == "XRay" and Utils.ToggleXRay then Utils.ToggleXRay(val) end
+				if flag == "Fullbright" and Utils.ToggleFullbright then Utils.ToggleFullbright(val) end
+				if flag == "AntiKillbrick" and not val and Storage.OriginalFallenHeight then
+					Services.Workspace.FallenPartsDestroyHeight = Storage.OriginalFallenHeight
 				end
-			end
-			if flag == "ShowFOV" and Storage.FOVRingUI then
-				Storage.FOVRingUI.Visible = val
-			end
-			if flag == "ShowLockStatus" and Storage.TacticalHUD then
-				Storage.TacticalHUD.Main.Visible = val and (Storage.LockedTarget ~= nil)
-			end
-			if not skipNotify then
-				Utils.Notify(text, val and "ENABLED" or "DISABLED", 1.5)
+				if flag == "Chams" and Features.UpdateChams then Features.UpdateChams() end
+				if flag == "ItemESP" and not val and ClearItemESP then ClearItemESP() end
+				if flag == "Radar" and Storage.RadarFrame then
+					Storage.RadarFrame.Visible = val
+					if not val then
+						for _, obj in pairs(Storage.RadarObjects) do if obj.Visible then obj.Visible = false end end
+					end
+				end
+				if flag == "ShowFOV" and Storage.FOVRingUI then
+					Storage.FOVRingUI.Visible = val
+				end
+				if flag == "ShowLockStatus" and Storage.TacticalHUD then
+					Storage.TacticalHUD.Main.Visible = val and (Storage.LockedTarget ~= nil)
+				end
+			end)
+			if not skipNotify and Utils and Utils.Notify then
+				pcall(function()
+					Utils.Notify(text, val and "ENABLED" or "DISABLED", 1.5)
+				end)
 			end
 		end
 		Storage.ToggleFuncs[flag] = Update; Update(Config.States[flag], true)
@@ -1076,7 +1154,7 @@ function UI.Init()
 end
 
 -- ==============================================================================
--- CORE EXPLOIT HOOKS (V5.0.0 - P0 FIXED)
+-- CORE EXPLOIT HOOKS (V5.1.0 - ALL BUGS FIXED)
 -- ==============================================================================
 local HasTitanMetamethodHook = false
 
@@ -1267,84 +1345,11 @@ end)
 table.insert(Storage.Loops, auraLoop)
 
 -- ==============================================================================
--- RUNTIME (V5.0.0)
+-- RUNTIME (V5.1.0)
 -- ==============================================================================
-local function ClearItemESP()
-	for obj, gui in pairs(Storage.ItemESPObjects) do
-		if gui and gui.Parent then pcall(function() gui:Destroy() end) end
-	end
-	Storage.ItemESPObjects = {}
-end
-
-local function UpdateItemESP()
-	if not Config.States.ItemESP then
-		ClearItemESP()
-		return
-	end
-	local myChar = LocalPlayer.Character
-	local myHrp = myChar and (myChar:FindFirstChild("HumanoidRootPart") or myChar:FindFirstChild("Torso"))
-	if not myHrp then return end
-
-	local myPos = myHrp.Position
-	local found = {}
-
-	for _, item in ipairs(Services.Workspace:GetChildren()) do
-		if item:IsA("Tool") and item:FindFirstChild("Handle") then
-			local dist = (item.Handle.Position - myPos).Magnitude
-			if dist <= 500 then found[item.Handle] = { Name = item.Name, Dist = math.floor(dist) } end
-		elseif item.Name == "Drops" or item.Name == "Items" or item.Name == "Loot" or item.Name == "Tools" then
-			for _, sub in ipairs(item:GetChildren()) do
-				local p = sub:IsA("BasePart") and sub or sub:FindFirstChildWhichIsA("BasePart")
-				if p then
-					local dist = (p.Position - myPos).Magnitude
-					if dist <= 500 then found[p] = { Name = sub.Name, Dist = math.floor(dist) } end
-				end
-			end
-		end
-	end
-
-	for part, data in pairs(found) do
-		local bg = Storage.ItemESPObjects[part]
-		if not bg or not bg.Parent then
-			bg = Instance.new("BillboardGui")
-			bg.Name = "X_ITEM_ESP"
-			bg.AlwaysOnTop = true
-			bg.Size = UDim2.new(0, 150, 0, 26)
-			bg.Adornee = part
-			bg.MaxDistance = 500
-			
-			local lbl = Instance.new("TextLabel", bg)
-			lbl.Name = "Tag"
-			lbl.Size = UDim2.new(1, 0, 1, 0)
-			lbl.BackgroundTransparency = 1
-			lbl.TextColor3 = Color3.fromRGB(255, 215, 50)
-			lbl.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-			lbl.TextStrokeTransparency = 0.2
-			lbl.Font = Enum.Font.GothamBold
-			lbl.TextSize = 11
-			lbl.Text = "📦 " .. data.Name .. " [" .. tostring(data.Dist) .. "m]"
-			
-			bg.Parent = targetGui
-			Storage.ItemESPObjects[part] = bg
-		else
-			local lbl = bg:FindFirstChild("Tag")
-			if lbl then
-				lbl.Text = "📦 " .. data.Name .. " [" .. tostring(data.Dist) .. "m]"
-			end
-		end
-	end
-
-	for part, bg in pairs(Storage.ItemESPObjects) do
-		if not found[part] or not part.Parent then
-			pcall(function() bg:Destroy() end)
-			Storage.ItemESPObjects[part] = nil
-		end
-	end
-end
-
 local Runtime = {}
 function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.0.0 - TITAN GOD (APEX OMNI)...")
+	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.1.0 - TITAN GOD (APEX OMNI)...")
 	Storage.IsUnloaded = true
 	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
 	Storage.Loops = {}
@@ -1443,13 +1448,13 @@ function Runtime.Unload()
 	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
 	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
 	Storage.RadarObjects = {}
-	print("X TITAN V5.0.0 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
+	print("X TITAN V5.1.0 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
 end
 
 local function InitRadar()
 	if Storage.RadarGui then return end
 	local RadarGui = Instance.new("ScreenGui", targetGui)
-	RadarGui.Name = "X_RADAR_V458"; RadarGui.IgnoreGuiInset = true; RadarGui.DisplayOrder = 9999998
+	RadarGui.Name = "X_RADAR_V510"; RadarGui.IgnoreGuiInset = true; RadarGui.DisplayOrder = 9999998
 	Storage.RadarGui = RadarGui
 	
 	local RadarFrame = Instance.new("Frame", RadarGui)
@@ -1564,7 +1569,7 @@ function Runtime.Init()
 	end
 	Storage.OriginalFallenHeight = Services.Workspace.FallenPartsDestroyHeight
 	
-	local FOVGui = Instance.new("ScreenGui", targetGui); FOVGui.Name = "X_FOV_V458"; FOVGui.IgnoreGuiInset = true; FOVGui.DisplayOrder = 9999999
+	local FOVGui = Instance.new("ScreenGui", targetGui); FOVGui.Name = "X_FOV_V510"; FOVGui.IgnoreGuiInset = true; FOVGui.DisplayOrder = 9999999
 	local FOVFrame = Instance.new("Frame", FOVGui)
 	FOVFrame.AnchorPoint = Vector2.new(0.5, 0.5); FOVFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 	FOVFrame.BackgroundTransparency = 1; FOVFrame.Visible = false
@@ -1572,7 +1577,7 @@ function Runtime.Init()
 	Instance.new("UICorner", FOVFrame).CornerRadius = UDim.new(1, 0); Storage.FOVRingUI = FOVFrame
 	
 	local TacticalHUDGui = Instance.new("ScreenGui", targetGui)
-	TacticalHUDGui.Name = "X_TacticalHUD_V458"; TacticalHUDGui.IgnoreGuiInset = true; TacticalHUDGui.DisplayOrder = 9999998
+	TacticalHUDGui.Name = "X_TacticalHUD_V510"; TacticalHUDGui.IgnoreGuiInset = true; TacticalHUDGui.DisplayOrder = 9999998
 	local MainPanel = Instance.new("Frame", TacticalHUDGui)
 	MainPanel.Size = UDim2.new(0, 260, 0, 75); MainPanel.AnchorPoint = Vector2.new(0.5, 0)
 	MainPanel.Position = UDim2.new(0.5, 0, 0.65, 0); MainPanel.BackgroundColor3 = Color3.fromRGB(10, 12, 18)
@@ -1989,13 +1994,13 @@ function Runtime.Init()
 	-- ======================================================================
 	local heartbeatConn = Services.RunService.Heartbeat:Connect(function(dt)
 
-		-- [V5.0.0] Rainbow Chams & HUD Accent
+		-- [V5.1.0] Rainbow Chams & HUD Accent
 		if Config.States.RainbowChams then
 			local rainbow = Color3.fromHSV((tick() * 0.4) % 1, 0.9, 1)
 			Config.Theme.Stroke = rainbow
 		end
 
-		-- [V5.0.0] Touch Fling Logic (PlayerCache Optimized)
+		-- [V5.1.0] Touch Fling Logic (PlayerCache Optimized)
 		if Config.States.TouchFling and hrp then
 			for p, data in pairs(Storage.PlayerCache) do
 				if not (Config.States.TeamCheck and Utils.IsTeammate(p)) then
@@ -2008,7 +2013,7 @@ function Runtime.Init()
 			end
 		end
 
-		-- [V5.0.0] Orbit Stalker Aura
+		-- [V5.1.0] Orbit Stalker Aura
 		if Config.States.OrbitAura and Storage.LockedTarget and Storage.LockedTarget.Character and hrp then
 			local tHRP = Storage.LockedTarget.Character:FindFirstChild("HumanoidRootPart")
 			if tHRP then
@@ -2019,7 +2024,7 @@ function Runtime.Init()
 			end
 		end
 
-		-- [V5.0.0] Anti-Fling Immortality (PlayerCache Optimized)
+		-- [V5.1.0] Anti-Fling Immortality (PlayerCache Optimized)
 		if Config.States.AntiFling and hrp then
 			for p, data in pairs(Storage.PlayerCache) do
 				local otherHRP = data.Root
@@ -2251,7 +2256,7 @@ function Runtime.Init()
 	-- INPUT
 	-- ======================================================================
 	local inputBeganConn = Services.UIS.InputBegan:Connect(function(i, g)
-		if (i.KeyCode == Config.Keys.Menu or i.KeyCode == Enum.KeyCode.RightControl) and Storage.MainFrame then
+		if (i.KeyCode == Config.Keys.Menu or i.KeyCode == Enum.KeyCode.RightControl or i.KeyCode == Enum.KeyCode.RightShift) and Storage.MainFrame then
 			local focused = Services.UIS:GetFocusedTextBox()
 			if not focused then
 				if not Storage.MenuDebounce then
@@ -2426,5 +2431,5 @@ end)
 table.insert(Storage.Loops, itemLoop)
 
 Runtime.Init()
-Utils.Notify("✅ X TITAN V5.0.0 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
-print("X TITAN V5.0.0 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
+Utils.Notify("✅ X TITAN V5.1.0 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
+print("X TITAN V5.1.0 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
