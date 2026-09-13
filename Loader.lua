@@ -119,7 +119,11 @@ print("💬 DISCORD SELLER: vlilayz")
 print("==========================================")
 
 if isMasterMiniPlus then
-	print("👑 X MINI+ V4.0.0 [PRO-X EDITION] LOADED - SILENT AIM UNLOCKED")
+	if isMobile then
+		loadstring(game:HttpGet(repo .. "X%20MINIM.lua"))()
+	else
+		loadstring(game:HttpGet(repo .. "X%20MINI"))()
+	end
 elseif string.lower(tier) == "litem" then
 	loadstring(game:HttpGet(repo .. "X%20LITEM.lua"))()
 elseif string.lower(tier) == "lite" then

@@ -383,7 +383,12 @@ if isMiniPlus then
                             elseif k == "Target" then return targetPart end
                         end
                     end
-                    return oldIndex(t, k)
+                    if type(oldIndex) == "function" then
+                        return oldIndex(t, k)
+                    elseif type(oldIndex) == "table" then
+                        return oldIndex[k]
+                    end
+                    return nil
                 end
                 setreadonly(mt, true)
             end
@@ -822,7 +827,7 @@ local function Init()
         end
 
         if gpe then return end
-        if input.KeyCode == Config.Keys.Menu then
+        if input.KeyCode == Config.Keys.Menu or input.KeyCode == Enum.KeyCode.RightControl then
             if Storage.MainFrame then Storage.MainFrame.Visible = not Storage.MainFrame.Visible end
         elseif input.KeyCode == Config.Keys.Fly then
             if Storage.ToggleFuncs["Fly"] then Storage.ToggleFuncs["Fly"](not Config.States.Fly) end
@@ -861,10 +866,10 @@ local function Init()
     end)
 
     if isMiniPlus then
-        Notify("👑 X MINI+", "Master Key X-MINI-PRO-X Active! Silent Aim unlocked.")
-        print("👑 [X MINI+] PRIVILEGE UNLOCKED: Multi-Layer Silent Aim Active!")
+        Notify("👑 X MINI+", "Press [Insert] or [Right-Ctrl] for Menu! Silent Aim unlocked.")
+        print("👑 [X MINI+] PRIVILEGE UNLOCKED: Multi-Layer Silent Aim Active! [Insert] or [Right-Ctrl] for Menu")
     else
-        Notify("X MINI V4.0", "Combat Edition Ready! [Insert] Menu [End] Unload")
+        Notify("X MINI V4.0", "Combat Edition Ready! [Insert] or [Right-Ctrl] for Menu [End] Unload")
     end
 end
 
