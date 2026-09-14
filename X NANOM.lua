@@ -374,7 +374,7 @@ local function BuildMobileUI()
 	elseif isNanoPlus then
 		Title.Text = "📱 X NANO<font color='#00e6ff'>+</font> <font color='#ffcd32'>[PRO-X]</font>"; Title.RichText = true
 	else
-		Title.Text = "📱 X NANO <font color='#8c8c96'>V3.3.1</font>"; Title.RichText = true
+		Title.Text = "📱 X NANO <font color='#8c8c96'>V3.4.0</font>"; Title.RichText = true
 	end
 	Title.Size = UDim2.new(1, -44, 1, 0); Title.Position = UDim2.new(0, 12, 0, 0)
 	Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
@@ -719,7 +719,7 @@ local function Init()
 	elseif isNanoPlus then
 		Notify("📱 X NANOM+ [PRO-X]", "PRO-X Privileges Active! Silent Aim Unlocked.", 4)
 	else
-		Notify("📱 X NANOM V3.3.1", "Mobile Edition Ready! Tap [⚡] bubble to open menu!", 4)
+		Notify("📱 X NANOM V3.4.0", "Mobile Edition Ready! Tap [⚡] bubble to open menu!", 4)
 	end
 	print("==========================================")
 	print("📱 X NANO M V3.2.1 MOBILE EDITION LOADED!")

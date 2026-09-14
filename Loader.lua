@@ -1,4 +1,4 @@
--- [[ X SUITE - UNIVERSAL CLOUD LOADER ]]
+-- [[ X SUITE - UNIVERSAL CLOUD LOADER V2.0.0 ]]
 -- Official Discord: https://discord.gg/mQ3ASbfP8j | Seller: vlilayz | Dev: XT-7789
 -- Supported: Delta (Mobile iOS & Android Exclusive) / Xeno / Solara (PC)
 -- ==================================================================
@@ -25,6 +25,92 @@ local function Notify(title, text, dur)
 		})
 	end)
 end
+local targetGui
+if type(gethui) == "function" then pcall(function() targetGui = gethui() end) end
+if not targetGui then targetGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui", 5) end
+
+local splashFrame, splashBar, splashStatus
+if targetGui then
+	pcall(function()
+		local existing = targetGui:FindFirstChild("X_LOADER_SPLASH")
+		if existing then existing:Destroy() end
+
+		local sg = Instance.new("ScreenGui")
+		sg.Name = "X_LOADER_SPLASH"
+		sg.ResetOnSpawn = false
+		sg.IgnoreGuiInset = true
+		sg.DisplayOrder = 999999
+		sg.Parent = targetGui
+
+		local card = Instance.new("Frame", sg)
+		card.Size = UDim2.new(0, 320, 0, 72)
+		card.Position = UDim2.new(0.5, -160, 0.15, 0)
+		card.BackgroundColor3 = Color3.fromRGB(14, 15, 22)
+		Instance.new("UICorner", card).CornerRadius = UDim.new(0, 8)
+		local st = Instance.new("UIStroke", card)
+		st.Color = Color3.fromRGB(0, 220, 255)
+		st.Thickness = 1.5
+		st.Transparency = 0.3
+
+		local title = Instance.new("TextLabel", card)
+		title.Size = UDim2.new(1, -20, 0, 20)
+		title.Position = UDim2.new(0, 10, 0, 8)
+		title.BackgroundTransparency = 1
+		title.Text = "⚡ PROJECT X NEXUS | CLOUD LOADER V2.0"
+		title.TextColor3 = Color3.fromRGB(0, 230, 255)
+		title.Font = Enum.Font.GothamBold
+		title.TextSize = 12
+		title.TextXAlignment = Enum.TextXAlignment.Left
+
+		splashStatus = Instance.new("TextLabel", card)
+		splashStatus.Size = UDim2.new(1, -20, 0, 16)
+		splashStatus.Position = UDim2.new(0, 10, 0, 30)
+		splashStatus.BackgroundTransparency = 1
+		splashStatus.Text = "Connecting to Cloud Auth..."
+		splashStatus.TextColor3 = Color3.fromRGB(180, 190, 210)
+		splashStatus.Font = Enum.Font.GothamMedium
+		splashStatus.TextSize = 11
+		splashStatus.TextXAlignment = Enum.TextXAlignment.Left
+
+		local barBg = Instance.new("Frame", card)
+		barBg.Size = UDim2.new(1, -20, 0, 4)
+		barBg.Position = UDim2.new(0, 10, 0, 52)
+		barBg.BackgroundColor3 = Color3.fromRGB(28, 30, 42)
+		Instance.new("UICorner", barBg).CornerRadius = UDim.new(1, 0)
+
+		splashBar = Instance.new("Frame", barBg)
+		splashBar.Size = UDim2.new(0.15, 0, 1, 0)
+		splashBar.BackgroundColor3 = Color3.fromRGB(0, 220, 255)
+		Instance.new("UICorner", splashBar).CornerRadius = UDim.new(1, 0)
+
+		splashFrame = card
+	end)
+end
+
+local function UpdateSplash(text, progressRatio)
+	pcall(function()
+		if splashStatus then splashStatus.Text = text end
+		if splashBar then
+			Services.TweenService:Create(splashBar, TweenInfo.new(0.25), {
+				Size = UDim2.new(math.clamp(progressRatio, 0.05, 1), 0, 1, 0)
+			}):Play()
+		end
+	end)
+end
+
+local function CloseSplash()
+	pcall(function()
+		if splashFrame then
+			Services.TweenService:Create(splashFrame, TweenInfo.new(0.35), {
+				BackgroundTransparency = 1
+			}):Play()
+			task.delay(0.4, function()
+				if splashFrame and splashFrame.Parent then splashFrame.Parent:Destroy() end
+			end)
+		end
+	end)
+end
+
 
 local function GetHWID()
 	if type(gethwid) == "function" then
@@ -85,6 +171,7 @@ local isMasterNanoPlus = (cleanKey == "X-NANO-PLUS-XT7789") or (cleanKey == "X-N
 local tier
 
 Notify("⚡ X SUITE", "Authenticating Key & Verifying HWID...", 2)
+UpdateSplash("Verifying HWID & Cloud Key...", 0.45)
 
 local hwid = GetHWID()
 print("🔑 [X SUITE AUTH] Verifying Key: " .. tostring(key) .. " | Device HWID: " .. tostring(hwid))
@@ -135,10 +222,11 @@ getgenv()._X_AUTH_TOKEN = "X_NEXUS_VERIFIED_7789"
 local repo = "https://raw.githubusercontent.com/XT-7789/Project-X-Nexus/main/"
 local isMobile = Services.UIS.TouchEnabled and not Services.UIS.KeyboardEnabled
 Notify("✅ SUCCESS", "Welcome! Loading X " .. tostring(tier) .. "...", 3)
+UpdateSplash("Access Granted! Fetching X " .. tostring(tier) .. "...", 0.85)
 print("==========================================")
 print("✅ [PROJECT X NEXUS] ACCESS GRANTED")
 if isMasterTitanPlus then
-	print(isFounderKey and "👑 X TITAN+ V5.9.1 [XT7789 GODMODE] LOADED" or "💎 X TITAN+ V5.9.1 [PARTNER APEX] LOADED")
+	print(isFounderKey and "👑 X TITAN+ V6.0.0 [XT7789 GODMODE] LOADED" or "💎 X TITAN+ V6.0.0 [PARTNER APEX] LOADED")
 elseif isMasterProPlus then
 	print(isFounderKey and "👑 X PRO+ V3.7.3 [XT7789 FOUNDER] LOADED" or "💎 X PRO+ V3.7.3 [CO-FOUNDER EDITION] LOADED")
 elseif isMasterMiniPlus then
@@ -146,9 +234,9 @@ elseif isMasterMiniPlus then
 elseif isMasterNanoPlus then
 	print(isFounderKey and "👑 X NANO+ V3.3.1 [XT7789 FOUNDER] LOADED" or "💎 X NANO+ V3.3.1 [CO-FOUNDER EDITION] LOADED")
 elseif string.lower(tier) == "litem" then
-	print("📱 X LITEM V1.1.0 [DELTA EDITION] LOADED")
+	print("📱 X LITEM V2.0.0 [DELTA EDITION] LOADED")
 elseif string.lower(tier) == "lite" then
-	print(isMobile and "📱 X LITEM V1.1.0 [DELTA EDITION] LOADED" or "🎁 X LITE V1.1.0 LOADED")
+	print(isMobile and "📱 X LITEM V2.0.0 [DELTA EDITION] LOADED" or "🎁 X LITE V2.0.0 LOADED")
 elseif string.lower(tier) == "mini" then
 	print("📦 X MINI V4.2.1 LOADED")
 elseif string.lower(tier) == "minim" then
@@ -156,13 +244,13 @@ elseif string.lower(tier) == "minim" then
 elseif string.lower(tier) == "prom" then
 	print("📱 X PROM V3.7.3 [DELTA EDITION] LOADED")
 elseif string.lower(tier) == "nanom" then
-	print("📱 X NANOM V3.3.1 [DELTA EDITION] LOADED")
+	print("📱 X NANOM V3.4.0 [DELTA EDITION] LOADED")
 elseif string.lower(tier) == "nano" then
-	print(isMobile and "📱 X NANOM V3.3.1 [DELTA EDITION] LOADED" or "🪶 X NANO V3.3.1 LOADED")
+	print(isMobile and "📱 X NANOM V3.4.0 [DELTA EDITION] LOADED" or "🪶 X NANO V3.4.0 LOADED")
 elseif string.lower(tier) == "pro" then
 	print(isMobile and "📱 X PROM V3.7.3 [DELTA EDITION] LOADED" or "⚡ X PRO V3.7.3 LOADED")
 elseif string.lower(tier) == "titan" then
-	print("🔥 X TITAN V5.9.1 [APEX OMNI] LOADED")
+	print("🔥 X TITAN V6.0.0 [APEX OMNI] LOADED")
 else
 	print("⚡ X " .. string.upper(tostring(tier)) .. " LOADED")
 end
@@ -192,7 +280,9 @@ local function ExecuteRemote(scriptUrl)
 end
 
 if isMasterTitanPlus then
-	ExecuteRemote(repo .. "X%20TITAN.lua")
+	UpdateSplash("Launching X TITAN V6.0.0...", 1.0)
+task.delay(0.6, CloseSplash)
+ExecuteRemote(repo .. "X%20TITAN.lua")
 elseif isMasterProPlus then
 	if isMobile then
 		ExecuteRemote(repo .. "X%20PROM.lua")
@@ -240,7 +330,9 @@ elseif string.lower(tier) == "pro" then
 		ExecuteRemote(repo .. "X%20PRO.lua")
 	end
 elseif string.lower(tier) == "titan" then
-	ExecuteRemote(repo .. "X%20TITAN.lua")
+	UpdateSplash("Launching X TITAN V6.0.0...", 1.0)
+task.delay(0.6, CloseSplash)
+ExecuteRemote(repo .. "X%20TITAN.lua")
 else
 	ExecuteRemote(repo .. "X%20NANO.lua")
 end

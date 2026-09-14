@@ -1,4 +1,4 @@
--- [[ X LITE V1.1.0 - FREE STARTER EDITION ]]
+-- [[ X LITE V2.0.0 - FREE STARTER EDITION ]]
 -- Positioning: Free Starter / Pure Utility & Movement / Zero Risk / Instant Execution
 -- Controls: [Insert] Menu | [Z] Toggle Fly | [V] Toggle Noclip | [End] Safe Unload
 -- Features: Flight | Noclip | SpeedHack | Infinite Jump | No Fall Damage
@@ -48,7 +48,9 @@ local Config = {
 		Noclip = false,
 		SpeedHack = false,
 		InfJump = false,
-		NoFall = false
+		NoFall = false,
+		ESP = false,
+		Fullbright = false
 	},
 	Vals = {
 		FlySpeed = 100,
@@ -57,7 +59,7 @@ local Config = {
 	Links = {
 		Discord = "https://discord.gg/mQ3ASbfP8j",
 		Seller = "vlilayz",
-		Version = "V1.1.0 Free"
+		Version = "V2.0.0 Free"
 	}
 }
 
@@ -140,7 +142,7 @@ local function BuildUI()
 	Instance.new("UICorner", Bar).CornerRadius = UDim.new(0, 10)
 
 	local Title = Instance.new("TextLabel", Bar)
-	Title.Text = "🎁 X LITE <font color='#ffcd32'>FREE</font> <font color='#00e6ff'>V1.1.0</font>"
+	Title.Text = "🎁 X LITE <font color='#ffcd32'>FREE</font> <font color='#00e6ff'>V2.0.0</font>"
 	Title.RichText = true
 	Title.Size = UDim2.new(1, -44, 1, 0)
 	Title.Position = UDim2.new(0, 12, 0, 0)
@@ -288,6 +290,15 @@ local function BuildUI()
 	end)
 	AddToggle("🦘 Infinite Jump", "InfJump")
 	AddToggle("🪂 No Fall Damage", "NoFall")
+	AddToggle("💡 Fullbright", "Fullbright", function(v)
+		if v then
+			Services.Lighting.Ambient = Color3.new(1, 1, 1)
+			Services.Lighting.Brightness = 2
+		else
+			Services.Lighting.Ambient = Color3.fromRGB(128, 128, 128)
+			Services.Lighting.Brightness = 1
+		end
+	end)
 
 	Content.CanvasSize = UDim2.new(0, 0, 0, 255)
 
@@ -448,9 +459,9 @@ local function Init()
 		end
 	end))
 
-	Notify("🎁 X LITE V1.1.0", "Free Loaded! [Insert] Menu | Join Discord: " .. Config.Links.Discord, 4)
+	Notify("🎁 X LITE V2.0.0", "Free Loaded! [Insert] Menu | Join Discord: " .. Config.Links.Discord, 4)
 	print("==========================================")
-	print("🎁 X LITE V1.1.0 FREE EDITION LOADED!")
+	print("🎁 X LITE V2.0.0 FREE EDITION LOADED!")
 	print("🌐 DISCORD SERVER: " .. Config.Links.Discord)
 	print("💬 SELLER: " .. Config.Links.Seller)
 	print("==========================================")

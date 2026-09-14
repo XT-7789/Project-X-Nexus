@@ -1,4 +1,4 @@
--- [[ X LITEM V1.1.0 - FREE DELTA MOBILE EDITION ]]
+-- [[ X LITEM V2.0.0 - FREE DELTA MOBILE EDITION ]]
 -- Platform: Exclusively Engineered & Optimized for DELTA EXECUTOR (iOS & Android)
 -- UI & Controls: Draggable Bubble [🪶] | Touch Fly [▲/▼ Controls] | Noclip | SpeedHack | InfJump | NoFall | Fullbright
 -- Official Discord: https://discord.gg/mQ3ASbfP8j | Seller: vlilayz | Dev: XT-7789
@@ -49,6 +49,8 @@ local Config = {
 		SpeedHack = false,
 		InfJump = false,
 		NoFall = false,
+		ESP = false,
+		Fullbright = false,
 		Fullbright = false
 	},
 	Vals = {
@@ -59,7 +61,7 @@ local Config = {
 		Discord = "https://discord.gg/mQ3ASbfP8j",
 		Seller = "vlilayz",
 		Founder = "XT-7789",
-		Version = "V1.1.0 Delta Edition"
+		Version = "V2.0.0 Delta Edition"
 	}
 }
 
@@ -240,7 +242,7 @@ local function BuildMobileUI()
 	Title.TextXAlignment = Enum.TextXAlignment.Left
 
 	local Subtitle = Instance.new("TextLabel", Header)
-	Subtitle.Text = "⚡ Delta Mobile Exclusive | V1.1.0"
+	Subtitle.Text = "⚡ Delta Mobile Exclusive | V2.0.0"
 	Subtitle.Size = UDim2.new(1, -50, 0, 16)
 	Subtitle.Position = UDim2.new(0, 14, 0, 26)
 	Subtitle.BackgroundTransparency = 1
@@ -483,6 +485,15 @@ local function BuildMobileUI()
 	end)
 	AddToggle("🦘 Infinite Jump", "InfJump")
 	AddToggle("🪂 No Fall Damage", "NoFall")
+	AddToggle("💡 Fullbright", "Fullbright", function(v)
+		if v then
+			Services.Lighting.Ambient = Color3.new(1, 1, 1)
+			Services.Lighting.Brightness = 2
+		else
+			Services.Lighting.Ambient = Color3.fromRGB(128, 128, 128)
+			Services.Lighting.Brightness = 1
+		end
+	end)
 	AddToggle("💡 Fullbright Nightvision", "Fullbright", function(v) ToggleFullbright(v) end)
 
 	-- 4. Upgrade Promo Banner & Official Discord Button
@@ -654,7 +665,7 @@ local function Init()
 
 	Notify("📱 X LITEM DELTA", "Free Edition Loaded! Tap [🪶] to open menu | Join: " .. Config.Links.Discord)
 	print("==========================================")
-	print("📱 X LITEM V1.1.0 DELTA MOBILE FREE EDITION LOADED!")
+	print("📱 X LITEM V2.0.0 DELTA MOBILE FREE EDITION LOADED!")
 	print("👑 FOUNDER & DEV : " .. Config.Links.Founder)
 	print("🌐 DISCORD SERVER: " .. Config.Links.Discord)
 	print("💬 SELLER DISCORD: " .. Config.Links.Seller)

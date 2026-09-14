@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V5.9.1 - TITAN GOD (APEX OMNI) ]]
+-- [[ X TITAN V6.0.0 - GEN-6 TITAN GOD (APEX OMNI) ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
 -- P2: Zero-Lag Character Caching, Throttled Raycasts & High-FPS Engine
@@ -58,7 +58,7 @@ end
 if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==============================================================================
--- CONFIGURATION & STORAGE (V5.9.1)
+-- CONFIGURATION & STORAGE (V6.0.0)
 -- ==============================================================================
 local Config = {
 	Keys = {
@@ -78,7 +78,7 @@ local Config = {
 	States = {
 		Aimbot = false, SilentAim = false, HeadExpander = false, Hitbox = false,
 		TriggerBot = false, TeamCheck = true, WallCheck = false,
-		ESP = false, ESPSkeleton = false, Tracers = false, VisibilityCheck = false, Chams = false,
+		ESP = false, ESP3D = false, ESPSkeleton = false, Tracers = false, Resolver = true, VisibilityCheck = false, Chams = false,
 		XRay = false, Fullbright = false, Crosshair = false, DynamicCrosshair = true,
 		Fly = false, SpeedHack = false, InfJump = false, Noclip = false, NoFall = false,
 		AntiKillbrick = false, AntiVoid = true, HitSound = true, TouchFling = false, TargetFling = false, AntiFling = true, Wallbang = true, OrbitAura = false, ClickTP = false, SkyHide = false, MapDestroyer = false,
@@ -104,7 +104,7 @@ local Config = {
 
 local Storage = {
 	Checkpoints = {P1=nil, P2=nil, P3=nil},
-	ESPObjects = {}, SkeletonParts = {}, TracerLines = {},
+	ESPObjects = {}, SkeletonParts = {}, Box3DObjects = {}, TracerLines = {},
 	ToggleFuncs = {}, FOVRingUI = nil, MainFrame = nil,
 	RealVelocity = Vector3.zero, RealCFrame = nil,
 	OriginalLighting = {}, HitboxLastUpdate = 0,
@@ -159,7 +159,7 @@ _G.X_TITAN_CURRENT_INSTANCE = {
 }
 
 -- ==============================================================================
--- UTILITIES (V5.9.1)
+-- UTILITIES (V6.0.0)
 -- ==============================================================================
 -- ==============================================================================
 -- KEY & FOUNDER AUTHENTICATION (TITAN+ PRO-X APEX)
@@ -1354,14 +1354,27 @@ function Features.CreateESP(plr)
 	esp.Distance.Size = 12; esp.Distance.Center = true; esp.Distance.Outline = true; esp.Distance.Color = Color3.new(1,1,1); esp.Distance.Visible = false
 	esp.Weapon.Size = 11; esp.Weapon.Center = true; esp.Weapon.Outline = true; esp.Weapon.Color = Color3.fromRGB(255, 230, 100); esp.Weapon.Visible = false
 	Storage.ESPObjects[plr] = esp
-	Storage.SkeletonParts[plr] = {
-		HeadToTorso = Drawing.new("Line"), TorsoToLeftArm = Drawing.new("Line"),
-		TorsoToRightArm = Drawing.new("Line"), TorsoToLeftLeg = Drawing.new("Line"),
-		TorsoToRightLeg = Drawing.new("Line")
-	}
-	for _, part in pairs(Storage.SkeletonParts[plr]) do
-		part.Thickness = 1.2; part.Color = Config.Theme.Stroke; part.Visible = false
+	-- 14-Bone Anatomical Skeleton
+	local skelLines = {}
+	for i = 1, 14 do
+		local line = Drawing.new("Line")
+		line.Thickness = 1.5
+		line.Color = Config.Theme.Stroke
+		line.Visible = false
+		table.insert(skelLines, line)
 	end
+	Storage.SkeletonParts[plr] = skelLines
+
+	-- 12-Line 3D Oriented Bounding Box Wireframe
+	local box3DLines = {}
+	for i = 1, 12 do
+		local line = Drawing.new("Line")
+		line.Thickness = 1.5
+		line.Color = Config.Theme.Stroke
+		line.Visible = false
+		table.insert(box3DLines, line)
+	end
+	Storage.Box3DObjects[plr] = box3DLines
 end
 
 function Features.RemoveESP(plr)
@@ -1376,6 +1389,10 @@ function Features.RemoveESP(plr)
 	if Storage.SkeletonParts[plr] then
 		for _, part in pairs(Storage.SkeletonParts[plr]) do pcall(function() part:Remove() end) end
 		Storage.SkeletonParts[plr] = nil
+	end
+	if Storage.Box3DObjects[plr] then
+		for _, line in pairs(Storage.Box3DObjects[plr]) do pcall(function() line:Remove() end) end
+		Storage.Box3DObjects[plr] = nil
 	end
 	if Storage.TracerLines[plr] then
 		pcall(function() Storage.TracerLines[plr]:Remove() end)
@@ -1530,9 +1547,9 @@ function Features.GetAuraTarget()
 end
 
 -- ==============================================================================
--- UI SYSTEM (V5.9.1)
+-- UI SYSTEM (V6.0.0)
 -- ==============================================================================
--- ITEM & LOOT ESP SUBSYSTEM (V5.9.1)
+-- ITEM & LOOT ESP SUBSYSTEM (V6.0.0)
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
 		pcall(function() bg:Destroy() end)
@@ -1739,16 +1756,16 @@ function UI.Init()
 
 	local Subtitle = Instance.new("TextLabel", SidePanel)
 	if isFounder then
-		Subtitle.Text = "👑 GODMODE APEX • V5.9.1"
+		Subtitle.Text = "👑 GODMODE APEX • V6.0.0"
 		Subtitle.TextColor3 = Color3.fromRGB(255, 205, 50)
 	elseif isSeller then
-		Subtitle.Text = "💎 CO-FOUNDER VIP • V5.9.1"
+		Subtitle.Text = "💎 CO-FOUNDER VIP • V6.0.0"
 		Subtitle.TextColor3 = Color3.fromRGB(0, 210, 255)
 	elseif isTitanPlus then
-		Subtitle.Text = "⚡ PRO-X APEX • V5.9.1"
+		Subtitle.Text = "⚡ PRO-X APEX • V6.0.0"
 		Subtitle.TextColor3 = Color3.fromRGB(255, 205, 50)
 	else
-		Subtitle.Text = "VOID WALKER • V5.9.1"
+		Subtitle.Text = "VOID WALKER • V6.0.0"
 		Subtitle.TextColor3 = Config.Theme.TextDim
 	end
 	Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
@@ -2130,6 +2147,7 @@ function UI.Init()
 	AddToggle(P1, "Team Check", "TeamCheck", getOrder1)
 	AddToggle(P1, "Wall Check", "WallCheck", getOrder1)
 	AddToggle(P1, "Show FOV", "ShowFOV", getOrder1)
+	AddToggle(P1, "🛡️ Anti-Desync Resolver", "Resolver", getOrder1)
 	local maxTitanFOV = isTitanPlus and 1000 or 800
 	AddSlider(P1, "FOV Size" .. (isTitanPlus and " (TITAN+ APEX)" or ""), 50, maxTitanFOV, 200, function(v) Config.Vals.FOV = v end, getOrder1)
 	
@@ -2159,7 +2177,8 @@ function UI.Init()
 	UpdateESPEngineUI()
 	AddToggle(P2, "📦 Item & Loot ESP", "ItemESP", getOrder2)
 	AddToggle(P2, "🔫 Weapon / Tool ESP", "WeaponESP", getOrder2)
-	AddToggle(P2, "🦴 Skeleton ESP", "ESPSkeleton", getOrder2)
+	AddToggle(P2, "📦 3D Box Wireframe ESP", "ESP3D", getOrder2)
+	AddToggle(P2, "🦴 Full Anatomical Skeleton ESP", "ESPSkeleton", getOrder2)
 	AddToggle(P2, "🧭 Off-screen Target Arrows", "OffscreenArrows", getOrder2)
 	AddToggle(P2, "360° Tracers", "Tracers", getOrder2)
 	AddToggle(P2, "Visibility Check", "VisibilityCheck", getOrder2)
@@ -2577,7 +2596,7 @@ table.insert(Storage.Loops, auraLoop)
 -- ==============================================================================
 local Runtime = {}
 function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.9.1 - TITAN GOD (APEX OMNI)...")
+	Utils.Notify("⚠️ Unload", "Unloading X TITAN V6.0.0 - GEN-6 TITAN GOD (APEX OMNI)...")
 	Storage.IsUnloaded = true
 	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
 	Storage.Loops = {}
@@ -2681,7 +2700,7 @@ function Runtime.Unload()
 	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
 	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
 	Storage.RadarObjects = {}
-	print("X TITAN V5.9.1 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
+	print("X TITAN V6.0.0 - GEN-6 TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
 end
 
 local function InitRadar()
@@ -2834,7 +2853,7 @@ function Runtime.Init()
 	WmTitle.Size = UDim2.new(1, -12, 0, 16)
 	WmTitle.Position = UDim2.new(0, 8, 0, 3)
 	WmTitle.BackgroundTransparency = 1
-	WmTitle.Text = "⚡ PROJECT X TITAN • V5.9.1"
+	WmTitle.Text = "⚡ PROJECT X TITAN • V6.0.0"
 	WmTitle.TextColor3 = Config.Theme.Stroke
 	WmTitle.Font = Enum.Font.GothamBlack
 	WmTitle.TextSize = 10
@@ -3194,7 +3213,7 @@ function Runtime.Init()
 		end
 		
 		if Config.States.Aimbot then
-			-- [V5.9.1 CQB ENHANCED AIMBOT]: Dynamic ballistic damping & close-range responsiveness
+			-- [V6.0.0 CQB ENHANCED AIMBOT]: Dynamic ballistic damping & close-range responsiveness
 			if cachedTarget and cachedTarget.Parent then
 				local targetPos = cachedTarget.Position
 				local eRoot = cachedTarget.Parent:FindFirstChild("HumanoidRootPart")
@@ -3462,24 +3481,104 @@ function Runtime.Init()
 							end)
 						end
 
+						-- [GEN-6 3D ORIENTED BOUNDING BOX ESP]
+						if Config.States.ESP3D and Storage.Box3DObjects[plr] then
+							pcall(function()
+								local cf, size = pChar:GetBoundingBox()
+								local sx, sy, sz = size.X * 0.5, size.Y * 0.5, size.Z * 0.5
+								local corners = {
+									cf * Vector3.new(-sx, -sy, -sz), cf * Vector3.new( sx, -sy, -sz),
+									cf * Vector3.new( sx, -sy,  sz), cf * Vector3.new(-sx, -sy,  sz),
+									cf * Vector3.new(-sx,  sy, -sz), cf * Vector3.new( sx,  sy, -sz),
+									cf * Vector3.new( sx,  sy,  sz), cf * Vector3.new(-sx,  sy,  sz)
+								}
+								local sPts = {}
+								local anyVis = false
+								for idx, pt in ipairs(corners) do
+									local sp, onS = CurrentCam:WorldToViewportPoint(pt)
+									sPts[idx] = sp
+									if onS and sp.Z > 0 then anyVis = true end
+								end
+								if anyVis then
+									local edges = {
+										{1,2}, {2,3}, {3,4}, {4,1},
+										{5,6}, {6,7}, {7,8}, {8,5},
+										{1,5}, {2,6}, {3,7}, {4,8}
+									}
+									local b3d = Storage.Box3DObjects[plr]
+									local thick = Config.Vals.ESPBoxThickness or 1.5
+									for i, e in ipairs(edges) do
+										local l = b3d[i]
+										local pA = sPts[e[1]]
+										local pB = sPts[e[2]]
+										if pA and pB and pA.Z > 0 and pB.Z > 0 then
+											l.Visible = true
+											l.From = Vector2.new(pA.X, pA.Y)
+											l.To = Vector2.new(pB.X, pB.Y)
+											l.Color = drawColor
+											l.Thickness = thick
+										else
+											l.Visible = false
+										end
+									end
+								else
+									for _, l in pairs(Storage.Box3DObjects[plr]) do l.Visible = false end
+								end
+							end)
+						elseif Storage.Box3DObjects[plr] then
+							pcall(function() for _, l in pairs(Storage.Box3DObjects[plr]) do l.Visible = false end end)
+						end
+
+						-- [GEN-6 FULL ANATOMICAL SKELETON ESP: R15 & R6]
 						if Config.States.ESPSkeleton and Storage.SkeletonParts[plr] then
 							pcall(function()
-								local torso = pChar:FindFirstChild("Torso") or pChar:FindFirstChild("UpperTorso") or root
-								local lArm = pChar:FindFirstChild("Left Arm") or pChar:FindFirstChild("LeftUpperArm")
-								local rArm = pChar:FindFirstChild("Right Arm") or pChar:FindFirstChild("RightUpperArm")
-								local lLeg = pChar:FindFirstChild("Left Leg") or pChar:FindFirstChild("LeftUpperLeg")
-								local rLeg = pChar:FindFirstChild("Right Leg") or pChar:FindFirstChild("RightUpperLeg")
-								local torsoPos = CurrentCam:WorldToViewportPoint(torso.Position)
-								local lArmPos = lArm and CurrentCam:WorldToViewportPoint(lArm.Position) or Vector2.new(torsoPos.X - 20, torsoPos.Y)
-								local rArmPos = rArm and CurrentCam:WorldToViewportPoint(rArm.Position) or Vector2.new(torsoPos.X + 20, torsoPos.Y)
-								local lLegPos = lLeg and CurrentCam:WorldToViewportPoint(lLeg.Position) or Vector2.new(torsoPos.X - 10, torsoPos.Y + 30)
-								local rLegPos = rLeg and CurrentCam:WorldToViewportPoint(rLeg.Position) or Vector2.new(torsoPos.X + 10, torsoPos.Y + 30)
+								local pairsList = {}
+								local isR15 = pChar:FindFirstChild("UpperTorso") ~= nil
+								if isR15 then
+									pairsList = {
+										{"Head", "UpperTorso"},
+										{"UpperTorso", "LowerTorso"},
+										{"UpperTorso", "LeftUpperArm"}, {"LeftUpperArm", "LeftLowerArm"}, {"LeftLowerArm", "LeftHand"},
+										{"UpperTorso", "RightUpperArm"}, {"RightUpperArm", "RightLowerArm"}, {"RightLowerArm", "RightHand"},
+										{"LowerTorso", "LeftUpperLeg"}, {"LeftUpperLeg", "LeftLowerLeg"}, {"LeftLowerLeg", "LeftFoot"},
+										{"LowerTorso", "RightUpperLeg"}, {"RightUpperLeg", "RightLowerLeg"}, {"RightLowerLeg", "RightFoot"}
+									}
+								else
+									pairsList = {
+										{"Head", "Torso"},
+										{"Torso", "Left Arm"},
+										{"Torso", "Right Arm"},
+										{"Torso", "Left Leg"},
+										{"Torso", "Right Leg"}
+									}
+								end
+
 								local skel = Storage.SkeletonParts[plr]
-								local headPos = CurrentCam:WorldToViewportPoint(head.Position); skel.HeadToTorso.Visible = true; skel.HeadToTorso.From = Vector2.new(headPos.X, headPos.Y); skel.HeadToTorso.To = Vector2.new(torsoPos.X, torsoPos.Y); skel.HeadToTorso.Color = drawColor
-								skel.TorsoToLeftArm.Visible = true; skel.TorsoToLeftArm.From = Vector2.new(torsoPos.X, torsoPos.Y); skel.TorsoToLeftArm.To = Vector2.new(lArmPos.X, lArmPos.Y); skel.TorsoToLeftArm.Color = drawColor
-								skel.TorsoToRightArm.Visible = true; skel.TorsoToRightArm.From = Vector2.new(torsoPos.X, torsoPos.Y); skel.TorsoToRightArm.To = Vector2.new(rArmPos.X, rArmPos.Y); skel.TorsoToRightArm.Color = drawColor
-								skel.TorsoToLeftLeg.Visible = true; skel.TorsoToLeftLeg.From = Vector2.new(torsoPos.X, torsoPos.Y); skel.TorsoToLeftLeg.To = Vector2.new(lLegPos.X, lLegPos.Y); skel.TorsoToLeftLeg.Color = drawColor
-								skel.TorsoToRightLeg.Visible = true; skel.TorsoToRightLeg.From = Vector2.new(torsoPos.X, torsoPos.Y); skel.TorsoToRightLeg.To = Vector2.new(rLegPos.X, rLegPos.Y); skel.TorsoToRightLeg.Color = drawColor
+								for i = 1, 14 do
+									local l = skel[i]
+									local pair = pairsList[i]
+									if pair then
+										local pA = pChar:FindFirstChild(pair[1])
+										local pB = pChar:FindFirstChild(pair[2])
+										if pA and pB then
+											local posA, visA = CurrentCam:WorldToViewportPoint(pA.Position)
+											local posB, visB = CurrentCam:WorldToViewportPoint(pB.Position)
+											if (visA or visB) and posA.Z > 0 and posB.Z > 0 then
+												l.Visible = true
+												l.From = Vector2.new(posA.X, posA.Y)
+												l.To = Vector2.new(posB.X, posB.Y)
+												l.Color = drawColor
+												l.Thickness = Config.Vals.ESPBoxThickness or 1.5
+											else
+												l.Visible = false
+											end
+										else
+											l.Visible = false
+										end
+									else
+										l.Visible = false
+									end
+								end
 							end)
 						elseif Storage.SkeletonParts[plr] then
 							pcall(function() for _, part in pairs(Storage.SkeletonParts[plr]) do if part.Visible then part.Visible = false end end end)
@@ -3489,6 +3588,7 @@ function Runtime.Init()
 							esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
 							if esp.Weapon then esp.Weapon.Visible = false end
 							if Storage.SkeletonParts[plr] then for _, part in pairs(Storage.SkeletonParts[plr]) do if part.Visible then part.Visible = false end end end
+							if Storage.Box3DObjects[plr] then for _, l in pairs(Storage.Box3DObjects[plr]) do if l.Visible then l.Visible = false end end end
 						end)
 					end
 				end
@@ -4024,6 +4124,6 @@ elseif isTitanPlus then
 	Utils.Notify("🔥 X TITAN+ [PRO-X APEX]", "PRO-X Apex Godmode Active! 1000 FOV & Presets Unlocked.", 4)
 	print("🔥 [X TITAN+] PRO-X APEX UNLOCKED")
 else
-	Utils.Notify("✅ X TITAN V5.9.1 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu", 4)
-	print("X TITAN V5.9.1 - TITAN GOD (APEX OMNI) LOADED SUCCESSFULLY")
+	Utils.Notify("✅ X TITAN V6.0.0 - GEN-6 TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu", 4)
+	print("X TITAN V6.0.0 - GEN-6 TITAN GOD (APEX OMNI) LOADED SUCCESSFULLY")
 end
