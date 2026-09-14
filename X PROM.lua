@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PROM V3.5.0 - PROFESSIONAL MOBILE SUITE ]]
+-- [[ X PROM V3.6.0 - PROFESSIONAL MOBILE SUITE ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- High-Performance Zero-Lag Character Caching & 60+ FPS Optimization
 -- ==============================================================================
@@ -37,7 +37,8 @@ local Services = {
     TweenService = game:GetService("TweenService"),
     Workspace = game:GetService("Workspace"),
     StarterGui = game:GetService("StarterGui"),
-    SoundService = game:GetService("SoundService")
+    SoundService = game:GetService("SoundService"),
+    HttpService = game:GetService("HttpService")
 }
 
 local LocalPlayer = Services.Players.LocalPlayer
@@ -90,13 +91,15 @@ local Storage = {
     FlyUpBtn = nil, FlyDownBtn = nil, FlyUpState = false, FlyDownState = false,
     OriginalLighting = {}, OriginalCollisions = {}, OriginalWalkSpeed = 16,
     TriggerCooldown = 0, HitSoundObj = nil, RadarGui = nil, RadarFrame = nil, RadarObjects = {},
-    AimParts = {"Head", "Torso", "HumanoidRootPart"}, AimPartIndex = 1, ItemESPObjects = {}
+    AimParts = {"Head", "Torso", "HumanoidRootPart"}, AimPartIndex = 1, ItemESPObjects = {}, SliderFuncs = {}
 }
 
 local function TrackConn(c)
     if c then table.insert(Storage.Connections, c) end
     return c
 end
+
+local Utils = {}
 
 local NotifyStorage = {
 	Container = nil,
@@ -284,6 +287,113 @@ end
 -- UTILITIES & PREDICTION
 -- ==================================================================
 local Utils = {}
+
+local ConfigFolder = "ProjectX_Pro_Configs"
+
+function Utils.SyncAllUI()
+    if Storage.ToggleFuncs then
+        for k, v in pairs(Config.States) do
+            if Storage.ToggleFuncs[k] then
+                Storage.ToggleFuncs[k](v)
+            end
+        end
+    end
+    if Storage.SliderFuncs then
+        for k, v in pairs(Config.Vals) do
+            if Storage.SliderFuncs[k] then
+                Storage.SliderFuncs[k](v)
+            end
+        end
+    end
+end
+
+function Utils.SaveConfig(name)
+    if type(writefile) ~= "function" then
+        Utils.Notify("⚠️ Storage Notice", "Executor does not support writefile.")
+        return false
+    end
+    local ok = pcall(function()
+        if type(makefolder) == "function" and type(isfolder) == "function" and not isfolder(ConfigFolder) then
+            makefolder(ConfigFolder)
+        end
+        local payload = {
+            States = Config.States,
+            Vals = Config.Vals
+        }
+        writefile(ConfigFolder .. "/" .. name .. ".json", Services.HttpService:JSONEncode(payload))
+        Utils.Notify("💾 Config Saved", "Preset saved as: " .. name)
+    end)
+    return ok
+end
+
+function Utils.LoadConfig(name)
+    if type(readfile) ~= "function" or type(isfile) ~= "function" then
+        Utils.Notify("⚠️ Storage Notice", "Executor does not support readfile.")
+        return false
+    end
+    local path = ConfigFolder .. "/" .. name .. ".json"
+    if not isfile(path) then
+        Utils.Notify("❌ Config Missing", "Preset file not found: " .. name)
+        return false
+    end
+    local ok = pcall(function()
+        local content = readfile(path)
+        local data = Services.HttpService:JSONDecode(content)
+        if data and data.States then
+            for k, v in pairs(data.States) do
+                if Config.States[k] ~= nil then Config.States[k] = v end
+            end
+        end
+        if data and data.Vals then
+            for k, v in pairs(data.Vals) do
+                if Config.Vals[k] ~= nil then Config.Vals[k] = v end
+            end
+        end
+        Utils.SyncAllUI()
+        Utils.Notify("📂 Config Loaded", "Preset active: " .. name)
+    end)
+    return ok
+end
+
+function Utils.ApplyPreset(presetName)
+    if presetName == "Legit" then
+        Config.States.Aimbot = true
+        Config.Vals.Smoothness = 0.55
+        Config.Vals.FOV = 120
+        Config.States.TeamCheck = true
+        Config.States.WallCheck = true
+        Config.States.SilentAim = false
+        Config.States.ESP = true
+        Config.States.ESPSkeleton = false
+        Config.States.Chams = false
+        Config.States.SpeedHack = false
+        Config.States.Fly = false
+    elseif presetName == "Semi-Rage" then
+        Config.States.Aimbot = true
+        Config.Vals.Smoothness = 0.12
+        Config.Vals.FOV = 320
+        Config.States.TeamCheck = true
+        Config.States.WallCheck = false
+        Config.States.SilentAim = true
+        Config.States.ESP = true
+        Config.States.ESPSkeleton = true
+        Config.States.Chams = true
+        Config.States.SpeedHack = true
+        Config.Vals.WalkSpeed = 95
+    elseif presetName == "CQB" then
+        Config.States.Aimbot = true
+        Config.Vals.Smoothness = 0.20
+        Config.Vals.FOV = 220
+        Config.States.TeamCheck = true
+        Config.States.WallCheck = true
+        Config.States.TriggerBot = true
+        Config.States.SilentAim = false
+        Config.States.ESP = true
+        Config.States.WeaponESP = true
+    end
+    Utils.SyncAllUI()
+    Utils.Notify("⚡ Preset Applied", presetName .. " profile active.")
+end
 
 function Utils.GetCharacterData(plr)
 	if not plr then return nil end
@@ -897,8 +1007,8 @@ local function BuildMobileUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "📱 X PROM <font color='#00dcff'>V3.5.0</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
-    Title.Size = UDim2.new(0, 240, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
+    Title.Text = "📱 X PROM <font color='#00dcff'>V3.6.0</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
+    Title.Size = UDim2.new(0, 150, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 13; Title.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -911,9 +1021,9 @@ local function BuildMobileUI()
 
     -- Tab Bar
     local TabBar = Instance.new("Frame", Header)
-    TabBar.Size = UDim2.new(0, 260, 0, 26); TabBar.Position = UDim2.new(1, -305, 0.5, -13)
+    TabBar.Size = UDim2.new(0, 280, 0, 26); TabBar.Position = UDim2.new(1, -325, 0.5, -13)
     TabBar.BackgroundTransparency = 1
-    local TabList = Instance.new("UIListLayout", TabBar); TabList.FillDirection = Enum.FillDirection.Horizontal; TabList.Padding = UDim.new(0, 6)
+    local TabList = Instance.new("UIListLayout", TabBar); TabList.FillDirection = Enum.FillDirection.Horizontal; TabList.Padding = UDim.new(0, 4)
 
     local Pages = {}
     local TabButtons = {}
@@ -932,7 +1042,7 @@ local function BuildMobileUI()
         pagePadding.PaddingRight = UDim.new(0, 4)
 
         local btn = Instance.new("TextButton", TabBar)
-        btn.Size = UDim2.new(0, 80, 1, 0); btn.BackgroundColor3 = Color3.fromRGB(28, 30, 42)
+        btn.Size = UDim2.new(0, 65, 1, 0); btn.BackgroundColor3 = Color3.fromRGB(28, 30, 42)
         btn.Text = name; btn.TextColor3 = Config.Theme.Dim; btn.Font = Enum.Font.GothamBold; btn.TextSize = 11
         btn.AutoButtonColor = false; Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 
@@ -952,6 +1062,7 @@ local function BuildMobileUI()
     local P1, B1 = CreateTab("🎯 COMBAT")
     local P2, B2 = CreateTab("👁️ VISUALS")
     local P3, B3 = CreateTab("🏃 MOVEMENT")
+    local P4, B4 = CreateTab("💾 CONFIG")
     P1.Visible = true; B1.BackgroundColor3 = Config.Theme.Accent; B1.TextColor3 = Config.Theme.Main
 
     -- Builders
@@ -1011,6 +1122,17 @@ local function BuildMobileUI()
         fill.Size = UDim2.new((Config.Vals[valKey] - min) / (max - min), 0, 1, 0)
         fill.BackgroundColor3 = Config.Theme.Accent; Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
 
+        local function SetVal(v)
+            v = math.clamp(v, min, max)
+            Config.Vals[valKey] = v
+            local p = (v - min) / (max - min)
+            fill.Size = UDim2.new(p, 0, 1, 0)
+            lbl.Text = text .. ": " .. tostring(v)
+            if cb then cb(v) end
+        end
+        if not Storage.SliderFuncs then Storage.SliderFuncs = {} end
+        Storage.SliderFuncs[valKey] = SetVal
+
         local dragging = false
         bar.InputBegan:Connect(function(i)
             if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
@@ -1026,12 +1148,68 @@ local function BuildMobileUI()
             if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
                 local p = math.clamp((i.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
                 local v = math.floor(min + (max - min) * p)
-                fill.Size = UDim2.new(p, 0, 1, 0)
-                Config.Vals[valKey] = v
-                lbl.Text = text .. ": " .. tostring(v)
-                if cb then cb(v) end
+                SetVal(v)
             end
         end))
+    end
+
+
+    local function AddSection(page, text)
+        local frame = Instance.new("Frame", page)
+        frame.Size = UDim2.new(1, 0, 0, 24)
+        frame.BackgroundTransparency = 1
+        local lbl = Instance.new("TextLabel", frame)
+        lbl.Size = UDim2.new(1, 0, 1, 0); lbl.Position = UDim2.new(0, 4, 0, 0)
+        lbl.BackgroundTransparency = 1; lbl.TextColor3 = Config.Theme.Accent
+        lbl.Font = Enum.Font.GothamBold; lbl.TextSize = 11; lbl.TextXAlignment = Enum.TextXAlignment.Left
+        lbl.Text = text
+    end
+
+    local function AddButton(page, text, cb)
+        local btn = Instance.new("TextButton", page)
+        btn.Size = UDim2.new(1, 0, 0, 36); btn.BackgroundColor3 = Config.Theme.Sec
+        btn.Text = text; btn.TextColor3 = Config.Theme.Text
+        btn.Font = Enum.Font.GothamMedium; btn.TextSize = 12; btn.AutoButtonColor = false
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+        local s = Instance.new("UIStroke", btn); s.Color = Config.Theme.Accent; s.Transparency = 0.85
+        btn.MouseButton1Click:Connect(function()
+            Services.TweenService:Create(s, TweenInfo.new(0.1), { Transparency = 0.2 }):Play()
+            task.delay(0.12, function()
+                Services.TweenService:Create(s, TweenInfo.new(0.2), { Transparency = 0.85 }):Play()
+            end)
+            if cb then cb() end
+        end)
+        return btn
+    end
+
+    local function AddDual(page, text1, cb1, text2, cb2)
+        local row = Instance.new("Frame", page)
+        row.Size = UDim2.new(1, 0, 0, 36); row.BackgroundTransparency = 1
+
+        local b1 = Instance.new("TextButton", row)
+        b1.Size = UDim2.new(0.5, -4, 1, 0); b1.Position = UDim2.new(0, 0, 0, 0)
+        b1.BackgroundColor3 = Config.Theme.Sec; b1.Text = text1; b1.TextColor3 = Config.Theme.Text
+        b1.Font = Enum.Font.GothamMedium; b1.TextSize = 11; b1.AutoButtonColor = false
+        Instance.new("UICorner", b1).CornerRadius = UDim.new(0, 6)
+        local s1 = Instance.new("UIStroke", b1); s1.Color = Config.Theme.Accent; s1.Transparency = 0.85
+        b1.MouseButton1Click:Connect(function()
+            Services.TweenService:Create(s1, TweenInfo.new(0.1), { Transparency = 0.2 }):Play()
+            task.delay(0.12, function() Services.TweenService:Create(s1, TweenInfo.new(0.2), { Transparency = 0.85 }):Play() end)
+            if cb1 then cb1() end
+        end)
+
+        local b2 = Instance.new("TextButton", row)
+        b2.Size = UDim2.new(0.5, -4, 1, 0); b2.Position = UDim2.new(0.5, 4, 0, 0)
+        b2.BackgroundColor3 = Config.Theme.Sec; b2.Text = text2; b2.TextColor3 = Config.Theme.Text
+        b2.Font = Enum.Font.GothamMedium; b2.TextSize = 11; b2.AutoButtonColor = false
+        Instance.new("UICorner", b2).CornerRadius = UDim.new(0, 6)
+        local s2 = Instance.new("UIStroke", b2); s2.Color = Config.Theme.Accent; s2.Transparency = 0.85
+        b2.MouseButton1Click:Connect(function()
+            Services.TweenService:Create(s2, TweenInfo.new(0.1), { Transparency = 0.2 }):Play()
+            task.delay(0.12, function() Services.TweenService:Create(s2, TweenInfo.new(0.2), { Transparency = 0.85 }):Play() end)
+            if cb2 then cb2() end
+        end)
+        return row
     end
 
     -- TAB 1: COMBAT
@@ -1110,6 +1288,7 @@ local function BuildMobileUI()
     P1.CanvasSize = UDim2.new(0, 0, 0, 0)
     P2.CanvasSize = UDim2.new(0, 0, 0, 0)
     P3.CanvasSize = UDim2.new(0, 0, 0, 0)
+    P4.CanvasSize = UDim2.new(0, 0, 0, 0)
 
     -- Virtual Touch Fly Controls (▲ / ▼)
     local flyControls = Instance.new("Frame", ScreenGui)
@@ -1186,7 +1365,7 @@ local function Unload()
     if Storage.MainFrame and Storage.MainFrame.Parent then Storage.MainFrame.Parent:Destroy() end
     if Storage.FOVRingUI and Storage.FOVRingUI.Parent then Storage.FOVRingUI.Parent:Destroy() end
     if Storage.RadarGui and Storage.RadarGui.Parent then Storage.RadarGui:Destroy() end
-    Notify("X PROM V3.1", "Mobile Pro Suite successfully unloaded.")
+    Notify("X PROM V3.6.0", "Mobile Pro Suite successfully unloaded.")
 end
 _G.X_PROM_UNLOAD = Unload
 
@@ -1460,7 +1639,7 @@ local function Init()
         end
     end)
 
-    Notify("X PROM V3.5.0", "Delta Mobile Pro Active! Tap [⚡] for menu")
+    Notify("X PROM V3.6.0", "Delta Mobile Pro Active! Tap [⚡] for menu")
 end
 
 Init()
