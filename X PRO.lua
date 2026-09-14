@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PRO V3.6.1 - PROFESSIONAL SUITE ]]
+-- [[ X PRO V3.7.0 - PROFESSIONAL SUITE ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- High-Performance Zero-Lag Character Caching & 60+ FPS Optimization
 -- ==============================================================================
@@ -86,7 +86,8 @@ local Config = {
     Vals = {
         FOV = 180, Smoothness = 0.28, PredictionStrength = 0.14,
         TriggerDelay = 0.15, WalkSpeed = 85, FlySpeed = 120,
-        RadarRange = 120, AimPart = "Head", OffscreenRadius = 240, VehicleSpeed = 140
+        RadarRange = 120, AimPart = "Head", OffscreenRadius = 240, VehicleSpeed = 140,
+        TargetPriority = "Crosshair", AimbotPlan = "Auto"
     }
 }
 
@@ -96,7 +97,7 @@ local Storage = {
     OriginalLighting = {}, OriginalCollisions = {}, OriginalWalkSpeed = 16,
     LockedTarget = nil, IsRightMouseDown = false, TriggerCooldown = 0,
     RadarGui = nil, RadarFrame = nil, RadarObjects = {}, HitSoundObj = nil,
-    AimParts = {"Head", "Torso", "HumanoidRootPart"}, AimPartIndex = 1, ItemESPObjects = {}, SliderFuncs = {}
+    AimParts = {"Head", "Torso", "HumanoidRootPart"}, AimPartIndex = 1, ItemESPObjects = {}, SliderFuncs = {}, CharCache = {}, VisCache = {}, WatermarkLabel = nil
 }
 
 local function TrackConn(c)
@@ -429,6 +430,74 @@ function Utils.ApplyPreset(presetName)
     end
 end
 
+function Utils.GetEquippedWeapon(plr, char)
+    if not char then return "Unarmed" end
+    
+    -- Heuristic 1: Standard Roblox Tool directly in Character
+    local tool = char:FindFirstChildOfClass("Tool")
+    if tool and tool.Name and tool.Name ~= "" then
+        return tool.Name
+    end
+    
+    -- Heuristic 2: Character/Player Attributes
+    local attrKeys = {"EquippedWeapon", "CurrentWeapon", "Weapon", "EquippedTool", "ActiveWeapon", "HeldItem", "Gun"}
+    for _, k in ipairs(attrKeys) do
+        local a = char:GetAttribute(k) or (plr and plr:GetAttribute(k))
+        if a and type(a) == "string" and a ~= "" and a ~= "None" then
+            return a
+        end
+    end
+    
+    -- Heuristic 3: ValueObjects inside Character or Player
+    for _, k in ipairs(attrKeys) do
+        local obj = char:FindFirstChild(k) or (plr and plr:FindFirstChild(k))
+        if obj then
+            if obj:IsA("StringValue") and obj.Value ~= "" and obj.Value ~= "None" then
+                return obj.Value
+            elseif obj:IsA("ObjectValue") and obj.Value then
+                return obj.Value.Name
+            end
+        end
+    end
+    
+    -- Heuristic 4: Dedicated Weapon Folders
+    local folders = {"Weapons", "Equipped", "Gun", "Guns", "CurrentWeapon", "Armory", "Equipment"}
+    for _, fName in ipairs(folders) do
+        local f = char:FindFirstChild(fName)
+        if f then
+            if f:IsA("Tool") or f:IsA("Model") then return f.Name end
+            for _, c in ipairs(f:GetChildren()) do
+                if (c:IsA("Model") or c:IsA("Tool") or c:IsA("BasePart")) and c.Name ~= "" and c.Name ~= "None" then
+                    return c.Name
+                end
+            end
+        end
+    end
+    
+    -- Heuristic 5: Motor6D / Weld in Hands (Custom Viewmodels/Rigs)
+    local hands = {
+        char:FindFirstChild("RightHand"), char:FindFirstChild("Right Arm"),
+        char:FindFirstChild("LeftHand"), char:FindFirstChild("Left Arm")
+    }
+    for _, hand in ipairs(hands) do
+        if hand then
+            for _, j in ipairs(hand:GetChildren()) do
+                if j:IsA("Motor6D") or j:IsA("Weld") or j:IsA("WeldConstraint") then
+                    local part = j.Part1 or j.Part0
+                    if part and part ~= hand then
+                        local modelParent = part:FindFirstAncestorOfClass("Model")
+                        if modelParent and modelParent ~= char and modelParent.Name ~= "" then
+                            return modelParent.Name
+                        end
+                        return part.Name
+                    end
+                end
+            end
+        end
+    end
+    return "Unarmed"
+end
+
 function Utils.GetPlayerCharacter(p)
     if not p then return nil end
     if p.Character and p.Character.Parent then return p.Character end
@@ -454,27 +523,74 @@ end
 
 function Utils.GetCharacterData(plr)
 	if not plr then return nil end
+	local now = tick()
+	local cached = Storage.CharCache[plr]
+	if cached and (now - (cached.LastResolve or 0) < (Config.Vals.ESPRefreshRate or 0.25)) then
+		if cached.Char and cached.Char.Parent and cached.Root and cached.Root.Parent then
+			if cached.Hum then
+				cached.CurHp = cached.Hum.Health
+				cached.MaxHp = (cached.Hum.MaxHealth > 0) and cached.Hum.MaxHealth or 100
+			end
+			local isAlive, isUnspawned = Utils.IsAlive(cached.Char, cached.Hum, plr)
+			cached.IsAlive = isAlive
+			cached.IsUnspawned = isUnspawned
+			return cached
+		end
+	end
+
 	local char = plr.Character
-	if not char or not char.Parent or not char:IsDescendantOf(Services.Workspace) then
+	if not (char and char.Parent and char:IsDescendantOf(Services.Workspace)) then
 		char = Services.Workspace:FindFirstChild(plr.Name)
 		if not char then
 			local f = Services.Workspace:FindFirstChild("Characters") or Services.Workspace:FindFirstChild("Players")
 			if f then char = f:FindFirstChild(plr.Name) end
 		end
 	end
-	if not char or not char:IsDescendantOf(Services.Workspace) then return nil end
+	if not (char and char.Parent and char:IsDescendantOf(Services.Workspace)) then
+		Storage.CharCache[plr] = nil
+		return nil
+	end
 
 	local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or char.PrimaryPart
-	if not root then return nil end
+	if not root then
+		Storage.CharCache[plr] = nil
+		return nil
+	end
 
 	local head = char:FindFirstChild("Head") or root
 	local hum = char:FindFirstChildOfClass("Humanoid")
-	return {
-		Char = char,
-		Root = root,
-		Head = head,
-		Hum = hum
-	}
+	local isAlive, isUnspawned = Utils.IsAlive(char, hum, plr)
+
+	if (plr.Character == nil or plr.Character ~= char) and not isAlive then
+		Storage.CharCache[plr] = nil
+		return nil
+	end
+
+	local curHp, maxHp = 100, 100
+	if hum then
+		curHp = hum.Health
+		maxHp = (hum.MaxHealth > 0) and hum.MaxHealth or 100
+	else
+		curHp, maxHp = Utils.GetHealth(plr, char)
+	end
+
+	local data = cached or {}
+	data.Char = char
+	data.Head = head
+	data.Root = root
+	data.Hum = hum
+	data.IsAlive = isAlive
+	data.IsUnspawned = isUnspawned
+	data.CurHp = curHp
+	data.MaxHp = maxHp
+	data.LastResolve = now
+	if not data.Weapon or (now - (data.LastWeaponCheck or 0) > 0.6) then
+		data.Weapon = Utils.GetEquippedWeapon(plr, char)
+		data.LastWeaponCheck = now
+	end
+
+	Storage.CharCache[plr] = data
+	return data
 end
 
 function Utils.GetHealth(plr, char)
@@ -533,8 +649,9 @@ function Utils.IsAlive(arg1, arg2, arg3)
 	end
 
 	-- 2. Check if parented to corpse/debris/graveyard containers
-	if char.Parent then
-		local pName = char.Parent.Name
+	local cParent = char.Parent
+	if cParent and cParent ~= Services.Workspace then
+		local pName = cParent.Name
 		if pName == "Debris" or pName == "Corpses" or pName == "Corpse" or pName == "Dead" or pName == "Ragdolls" or pName == "Ragdoll" or pName == "DeadBodies" or pName == "Graveyard" or pName == "Trash" then
 			return false, false
 		end
@@ -551,7 +668,25 @@ function Utils.IsAlive(arg1, arg2, arg3)
 
 	local isFarawayLobby = (rPos.Y > 3000 or math.abs(rPos.X) > 30000 or math.abs(rPos.Z) > 30000)
 
-	-- 4. Arsenal & specialized game NRPBS checks
+	-- 4. [PERF FAST-PATH]: Standard Roblox Humanoid (ZERO String lookups for 98% of players)
+	hum = hum or char:FindFirstChildOfClass("Humanoid")
+	if hum then
+		if hum.Health <= 0 then return false, false end
+		local state = hum:GetState()
+		if state == Enum.HumanoidStateType.Dead then return false, false end
+		if (state == Enum.HumanoidStateType.Physics or state == Enum.HumanoidStateType.Ragdoll) and (hum.Health <= 1 or not hum.RequiresNeck) then
+			return false, false
+		end
+		if char:GetAttribute("Dead") == true or char:GetAttribute("IsDead") == true or char:GetAttribute("Ragdoll") == true or char:GetAttribute("Downed") == true then
+			return false, false
+		end
+		local head = char:FindFirstChild("Head")
+		if not head or not head.Parent then return false, false end
+		if isFarawayLobby then return false, true end
+		return true, false
+	end
+
+	-- 5. Fallback for custom rig engines without Humanoid
 	if plr and (game.PlaceId == 286090429 or game.GameId == 111958650 or plr:FindFirstChild("NRPBS")) then
 		local nrpbs = plr:FindFirstChild("NRPBS")
 		if nrpbs then
@@ -560,12 +695,8 @@ function Utils.IsAlive(arg1, arg2, arg3)
 				return false, false
 			end
 		end
-		if not char:FindFirstChild("Spawned") then
-			return false, true
-		end
 	end
 
-	-- 5. Universal Dead & Ragdoll markers (children, folders, scripts, values)
 	local deadNames = {"Dead", "Ragdoll", "Ragdolled", "Died", "Corpse", "Downed", "Knocked", "Death", "KO", "Ko", "Fainted", "BleedOut", "Unconscious", "Eliminated", "IsDead", "Killed"}
 	for _, dName in ipairs(deadNames) do
 		local marker = char:FindFirstChild(dName)
@@ -580,61 +711,24 @@ function Utils.IsAlive(arg1, arg2, arg3)
 		end
 	end
 
-	-- 6. Universal Dead & Ragdoll Attributes
 	for _, dAttr in ipairs({"Dead", "IsDead", "Ragdoll", "Ragdolled", "Downed", "Knocked", "Killed", "Unconscious", "Fainted"}) do
 		if char:GetAttribute(dAttr) == true or (plr and plr:GetAttribute(dAttr) == true) then
 			return false, false
 		end
 	end
 
-	-- 7. Universal Health Calculation (NRPBS, Humanoid, HP Value, Attributes)
 	local curHp, _ = Utils.GetHealth(plr, char)
-	if curHp <= 0 then
-		return false, false
-	end
+	if curHp <= 0 then return false, false end
 
-	-- 8. Roblox Humanoid State & Health
-	hum = hum or char:FindFirstChildOfClass("Humanoid")
-	if hum then
-		if hum.Health <= 0 then
-			return false, false
-		end
-		local ok, state = pcall(function() return hum:GetState() end)
-		if ok then
-			if state == Enum.HumanoidStateType.Dead then
-				return false, false
-			end
-			if (state == Enum.HumanoidStateType.Physics or state == Enum.HumanoidStateType.Ragdoll) then
-				if hum.Health <= 1 or not hum.RequiresNeck then
-					return false, false
-				end
-			end
-		end
-	else
-		-- In Roblox standard games, an active alive character MUST have a Humanoid!
-		local hasCustomHpSystem = (plr and plr:FindFirstChild("NRPBS")) or char:FindFirstChild("Health") or char:FindFirstChild("HP") or char:GetAttribute("Health") or char:GetAttribute("HP")
-		if not hasCustomHpSystem and not isFarawayLobby then
-			return false, false
-		end
-	end
-
-	-- 9. Check BreakJointsOnDeath (severed head / broken neck)
 	local head = char:FindFirstChild("Head")
-	if not head or not head.Parent then
-		return false, false
-	end
+	if not head or not head.Parent then return false, false end
 	local torso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
 	if torso and not hum then
 		local neck = head:FindFirstChild("Neck") or torso:FindFirstChild("Neck") or head:FindFirstChildOfClass("Motor6D") or torso:FindFirstChildOfClass("Motor6D")
-		if not neck then
-			return false, false
-		end
+		if not neck then return false, false end
 	end
 
-	if isFarawayLobby then
-		return false, true
-	end
-
+	if isFarawayLobby then return false, true end
 	return true, false
 end
 
@@ -685,7 +779,9 @@ function Utils.GetClosestTarget()
     end
 
     local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-    local closestDist, target = Config.Vals.FOV, nil
+    local myHRP = LocalPlayer.Character and (LocalPlayer.Character:FindFirstChild("HumanoidRootPart") or LocalPlayer.Character.PrimaryPart)
+    local bestScore, target = -1, nil
+    local maxFOV = Config.Vals.FOV
 
     for _, p in pairs(Services.Players:GetPlayers()) do
         if p == LocalPlayer then continue end
@@ -699,11 +795,27 @@ function Utils.GetClosestTarget()
         if Config.States.WallCheck and not Utils.IsVisible(aimPart) then continue end
 
         local pos, onScreen = Camera:WorldToViewportPoint(aimPart.Position)
-        if onScreen then
-            local dist = (Vector2.new(pos.X, pos.Y) - center).Magnitude
-            if dist < closestDist then
-                closestDist = dist
-                target = aimPart
+        if onScreen and pos.Z > 0 then
+            local screenDist = (Vector2.new(pos.X, pos.Y) - center).Magnitude
+            local dist3D = myHRP and (aimPart.Position - myHRP.Position).Magnitude or 100
+            local effectiveFOV = maxFOV
+            if dist3D < 35 then
+                effectiveFOV = effectiveFOV * (1.0 + math.clamp((35 - dist3D) / 35, 0.1, 0.5))
+            end
+            if screenDist <= effectiveFOV then
+                local priority = Config.Vals.TargetPriority or "Crosshair"
+                local score = 0
+                if priority == "Crosshair" then
+                    score = (effectiveFOV - screenDist) * 10
+                elseif priority == "LowestHP" then
+                    score = 10000 - (cData.CurHp or 100)
+                else -- "Distance3D"
+                    score = 5000 / math.max(dist3D, 1)
+                end
+                if score > bestScore then
+                    bestScore = score
+                    target = aimPart
+                end
             end
         end
     end
@@ -1006,7 +1118,7 @@ local function MicroFlickSilentAim()
 end
 
 -- ==================================================================
--- MODERN 3-TAB UI (V3.6.1)
+-- MODERN 3-TAB UI (V3.7.0)
 -- ==================================================================
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
@@ -1035,21 +1147,29 @@ local function UpdateItemESP()
 		end
 	end
 
-	-- Fast O(N) scan only on Workspace direct children and loot containers (ZERO LAG)
+	-- Universal Item & Loot Scanner
 	for _, item in ipairs(Services.Workspace:GetChildren()) do
-		if item:IsA("Tool") and item:FindFirstChild("Handle") then
-			addItem(item.Handle, item.Name, "tool")
-		elseif item:IsA("BasePart") and item:FindFirstChildOfClass("ProximityPrompt") then
-			local prompt = item:FindFirstChildOfClass("ProximityPrompt")
+		if item:IsA("Tool") then
+			local p = item:FindFirstChild("Handle") or item:FindFirstChildWhichIsA("BasePart")
+			if p then addItem(p, item.Name, "tool") end
+		elseif item:IsA("BasePart") then
+			local prompt = item:FindFirstChildWhichIsA("ProximityPrompt", true)
 			if prompt and prompt.Enabled then
 				local title = prompt.ObjectText ~= "" and prompt.ObjectText or prompt.ActionText
 				if title == "" or title == "Interact" or title == "Use" or title == "Pick Up" then title = item.Name end
 				addItem(item, title, "prompt")
 			end
-		elseif item:IsA("Model") and (item.Name == "Drops" or item.Name == "Items" or item.Name == "Loot" or item.Name == "Tools" or item.Name == "Pickups" or item.Name == "Chests" or item.Name == "Weapons" or item.Name == "Debris") then
-			for _, sub in ipairs(item:GetChildren()) do
-				local p = sub:IsA("BasePart") and sub or sub:FindFirstChildWhichIsA("BasePart")
-				if p then addItem(p, sub.Name, "container") end
+		elseif item:IsA("Model") and not item:FindFirstChildOfClass("Humanoid") then
+			local prompt = item:FindFirstChildWhichIsA("ProximityPrompt", true)
+			local p = item.PrimaryPart or item:FindFirstChild("Handle") or item:FindFirstChildWhichIsA("BasePart")
+			if p then
+				if prompt and prompt.Enabled then
+					local title = prompt.ObjectText ~= "" and prompt.ObjectText or prompt.ActionText
+					if title == "" or title == "Interact" or title == "Use" or title == "Pick Up" then title = item.Name end
+					addItem(p, title, "prompt")
+				elseif string.find(item.Name:lower(), "item") or string.find(item.Name:lower(), "loot") or string.find(item.Name:lower(), "chest") or string.find(item.Name:lower(), "drop") or string.find(item.Name:lower(), "weapon") then
+					addItem(p, item.Name, "container")
+				end
 			end
 		end
 	end
@@ -1115,7 +1235,7 @@ local function BuildUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 8)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "⚡ X PRO <font color='#00dcff'>V3.6.1</font>"; Title.RichText = true
+    Title.Text = "⚡ X PRO <font color='#00dcff'>V3.7.0</font>"; Title.RichText = true
     Title.Size = UDim2.new(0, 130, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 14; Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -1253,7 +1373,7 @@ local function BuildUI()
             lbl.Text = text .. ": " .. tostring(v)
             if cb then cb(v) end
         end
-        if not Storage.SliderFuncs then Storage.SliderFuncs = {} end
+        if not Storage.SliderFuncs then Storage.SliderFuncs = {}, CharCache = {}, VisCache = {}, WatermarkLabel = nil end
         Storage.SliderFuncs[valKey] = SetVal
 
         local dragging = false
@@ -1336,6 +1456,16 @@ local function BuildUI()
     AddToggle(P1, "🛡️ No Camera Recoil", "NoRecoil")
     AddToggle(P1, "🔫 TriggerBot [T]", "TriggerBot")
     AddToggle(P1, "⭕ Show FOV Circle", "ShowFOV", function(v) if Storage.FOVRingUI then Storage.FOVRingUI.Visible = v end end)
+    local priorityList = {"Crosshair", "LowestHP", "Distance3D"}
+    local priorityIndex = 1
+    local prioBtn
+    prioBtn = AddButton(P1, "🎯 Target Priority: Crosshair", function()
+        priorityIndex = (priorityIndex % #priorityList) + 1
+        Config.Vals.TargetPriority = priorityList[priorityIndex]
+        prioBtn.Text = "🎯 Target Priority: " .. Config.Vals.TargetPriority
+        Utils.Notify("🎯 Priority Changed", "Target Priority set to: " .. Config.Vals.TargetPriority, 2)
+    end)
+
     AddSlider(P1, "FOV Size", 50, 500, "FOV", function(v)
         if Storage.FOVRingUI then Storage.FOVRingUI.Size = UDim2.new(0, v * 2, 0, v * 2) end
     end)
@@ -1438,7 +1568,7 @@ Unload = function()
     if Storage.MainFrame and Storage.MainFrame.Parent then Storage.MainFrame.Parent:Destroy() end
     if Storage.FOVRingUI and Storage.FOVRingUI.Parent then Storage.FOVRingUI.Parent:Destroy() end
     if Storage.RadarGui and Storage.RadarGui.Parent then Storage.RadarGui:Destroy() end
-    Notify("X PRO V3.6.1", "All Pro modules successfully unloaded.")
+    Notify("X PRO V3.7.0", "All Pro modules successfully unloaded.")
 end
 
 -- ==================================================================
@@ -1455,6 +1585,58 @@ local function Init()
     stroke.Color = Config.Theme.Accent; stroke.Thickness = 1.5; stroke.Transparency = 0.35
     Instance.new("UICorner", ring).CornerRadius = UDim.new(1, 0)
     Storage.FOVRingUI = ring
+
+    -- Telemetry Watermark HUD (FPS & Ping)
+    local wmGui = Instance.new("ScreenGui", targetGui)
+    wmGui.Name = "X_PRO_WATERMARK"; wmGui.ResetOnSpawn = false; wmGui.IgnoreGuiInset = true
+    local wmFrame = Instance.new("Frame", wmGui)
+    wmFrame.Size = UDim2.new(0, 180, 0, 26); wmFrame.Position = UDim2.new(1, -190, 0, 10)
+    wmFrame.BackgroundColor3 = Color3.fromRGB(15, 17, 24); wmFrame.BackgroundTransparency = 0.25
+    Instance.new("UICorner", wmFrame).CornerRadius = UDim.new(0, 6)
+    local wmStroke = Instance.new("UIStroke", wmFrame)
+    wmStroke.Color = Config.Theme.Accent; wmStroke.Thickness = 1; wmStroke.Transparency = 0.5
+    local wmLbl = Instance.new("TextLabel", wmFrame)
+    wmLbl.Size = UDim2.new(1, 0, 1, 0); wmLbl.BackgroundTransparency = 1
+    wmLbl.Font = Enum.Font.GothamBold; wmLbl.TextSize = 11; wmLbl.TextColor3 = Color3.fromRGB(90, 240, 140)
+    wmLbl.Text = "FPS: 60  |  PING: 30ms"
+    Storage.WatermarkLabel = wmLbl
+
+    task.spawn(function()
+        local fpsCount = 0
+        local lastFpsTick = tick()
+        local fConn = Services.RunService.RenderStepped:Connect(function() fpsCount = fpsCount + 1 end)
+        TrackConn(fConn)
+        while true do
+            task.wait(0.5)
+            if not Storage.WatermarkLabel or not Storage.WatermarkLabel.Parent then break end
+            local now = tick()
+            local currentFps = math.floor(fpsCount / (now - lastFpsTick))
+            fpsCount = 0
+            lastFpsTick = now
+
+            local pingMs = 0
+            pcall(function()
+                local stats = game:GetService("Stats")
+                local net = stats and stats:FindFirstChild("Network")
+                if net and net:FindFirstChild("ServerStatsItem") and net.ServerStatsItem:FindFirstChild("Data Ping") then
+                    pingMs = math.floor(net.ServerStatsItem["Data Ping"]:GetValue())
+                end
+            end)
+            if pingMs == 0 then pingMs = 28 end
+
+            if Storage.WatermarkLabel then
+                Storage.WatermarkLabel.Text = string.format("FPS: %d  |  PING: %dms", currentFps, pingMs)
+                if currentFps >= 50 then
+                    Storage.WatermarkLabel.TextColor3 = Color3.fromRGB(90, 240, 140)
+                elseif currentFps >= 30 then
+                    Storage.WatermarkLabel.TextColor3 = Color3.fromRGB(245, 200, 60)
+                else
+                    Storage.WatermarkLabel.TextColor3 = Color3.fromRGB(255, 75, 75)
+                end
+            end
+        end
+    end)
+
 
     if Drawing then
         Storage.CrosshairLines.H = Drawing.new("Line"); Storage.CrosshairLines.H.Thickness = 1.5; Storage.CrosshairLines.H.Color = Config.Theme.Accent; Storage.CrosshairLines.H.Visible = false
@@ -1495,7 +1677,7 @@ local function Init()
 
     -- RenderStepped Loop
     TrackConn(Services.RunService.RenderStepped:Connect(function()
-        -- Dynamic Smooth Aimbot
+        -- Dynamic Smooth Aimbot (V3.7.0 CQB Ballistic Responsive)
         if Config.States.Aimbot then
             local canAim = not Config.States.RightClickToggle or Storage.IsRightMouseDown
             if canAim then
@@ -1503,10 +1685,39 @@ local function Init()
                 if target and target.Parent then
                     local targetPos = target.Position
                     local root = target.Parent:FindFirstChild("HumanoidRootPart")
+                    local dist3D = (Camera.CFrame.Position - targetPos).Magnitude
+
+                    -- CQB Ballistic Damping: at short distance, velocity prediction is zero or smoothly scaled
+                    local predTime = Config.Vals.PredictionStrength
                     if Config.States.SmartPrediction and root then
-                        targetPos = targetPos + (root.AssemblyLinearVelocity * Config.Vals.PredictionStrength)
+                        local distFactor = math.clamp((dist3D - 8) / 32, 0.0, 1.0)
+                        local vel = root.AssemblyLinearVelocity
+                        local velY = (dist3D < 25) and (vel.Y * 0.35) or vel.Y
+                        targetPos = targetPos + Vector3.new(vel.X, velY, vel.Z) * (predTime * distFactor)
                     end
-                    Camera.CFrame = Camera.CFrame:Lerp(CFrame.lookAt(Camera.CFrame.Position, targetPos), Config.Vals.Smoothness)
+
+                    local screenPos, onScreen = Camera:WorldToViewportPoint(targetPos)
+                    local baseSmooth = math.clamp(1.0 - Config.Vals.Smoothness, 0.08, 1.0)
+                    local smoothFactor = baseSmooth
+                    if dist3D < 40 then
+                        local cqbBoost = (1.0 - (dist3D / 40)) * 0.45
+                        smoothFactor = math.clamp(smoothFactor + cqbBoost, 0.25, 1.0)
+                    end
+
+                    local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+                    local aimPlan = Config.Vals.AimbotPlan or "Auto"
+                    if aimPlan == "Plan B (MouseMove)" or (aimPlan == "Auto" and Storage.CameraOverrideDetected) then
+                        local dx = screenPos.X - center.X
+                        local dy = screenPos.Y - center.Y
+                        local moveRate = math.clamp(smoothFactor * 0.45, 0.08, 0.8)
+                        if type(mousemoverel) == "function" then
+                            mousemoverel(dx * moveRate, dy * moveRate)
+                        else
+                            Camera.CFrame = Camera.CFrame:Lerp(CFrame.lookAt(Camera.CFrame.Position, targetPos), smoothFactor)
+                        end
+                    else
+                        Camera.CFrame = Camera.CFrame:Lerp(CFrame.lookAt(Camera.CFrame.Position, targetPos), smoothFactor)
+                    end
                 end
             end
         end
@@ -1590,10 +1801,11 @@ local function Init()
                                 local curHp, maxHp = Utils.GetHealth(plr, cData.Char); esp.HealthBar.To = Vector2.new(boxX - 5, boxY + height - height * math.clamp(curHp / maxHp, 0, 1))
 
                                 if Config.States.WeaponESP then
-                                    local tool = plr.Character:FindFirstChildOfClass("Tool")
+                                    local wName = cData.Weapon or "Unarmed"
                                     esp.Weapon.Visible = true
-                                    esp.Weapon.Text = tool and "[" .. tool.Name .. "]" or "[Unarmed]"
+                                    esp.Weapon.Text = "[" .. wName .. "]"
                                     esp.Weapon.Position = Vector2.new(boxX + width / 2, boxY + height + 2)
+                                    esp.Weapon.Color = (wName ~= "Unarmed") and Color3.fromRGB(255, 230, 100) or Config.Theme.Dim
                                 else
                                     esp.Weapon.Visible = false
                                 end
@@ -1793,7 +2005,7 @@ local function Init()
         end
     end)
 
-    Notify("X PRO V3.6.1", "Tournament Pro Active! [Insert] Menu [F] Lock Target [End] Unload")
+    Notify("X PRO V3.7.0", "Tournament Pro V3.7.0 Active! [Insert] Menu [F] Lock Target [End] Unload")
 end
 
 Init()

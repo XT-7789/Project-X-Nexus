@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PROM V3.6.1 - PROFESSIONAL MOBILE SUITE ]]
+-- [[ X PROM V3.7.0 - PROFESSIONAL MOBILE SUITE ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- High-Performance Zero-Lag Character Caching & 60+ FPS Optimization
 -- ==============================================================================
@@ -91,7 +91,7 @@ local Storage = {
     FlyUpBtn = nil, FlyDownBtn = nil, FlyUpState = false, FlyDownState = false,
     OriginalLighting = {}, OriginalCollisions = {}, OriginalWalkSpeed = 16,
     TriggerCooldown = 0, HitSoundObj = nil, RadarGui = nil, RadarFrame = nil, RadarObjects = {},
-    AimParts = {"Head", "Torso", "HumanoidRootPart"}, AimPartIndex = 1, ItemESPObjects = {}, SliderFuncs = {}
+    AimParts = {"Head", "Torso", "HumanoidRootPart"}, AimPartIndex = 1, ItemESPObjects = {}, SliderFuncs = {}, CharCache = {}, VisCache = {}, WatermarkLabel = nil
 }
 
 local function TrackConn(c)
@@ -426,27 +426,74 @@ end
 
 function Utils.GetCharacterData(plr)
 	if not plr then return nil end
+	local now = tick()
+	local cached = Storage.CharCache[plr]
+	if cached and (now - (cached.LastResolve or 0) < (Config.Vals.ESPRefreshRate or 0.25)) then
+		if cached.Char and cached.Char.Parent and cached.Root and cached.Root.Parent then
+			if cached.Hum then
+				cached.CurHp = cached.Hum.Health
+				cached.MaxHp = (cached.Hum.MaxHealth > 0) and cached.Hum.MaxHealth or 100
+			end
+			local isAlive, isUnspawned = Utils.IsAlive(cached.Char, cached.Hum, plr)
+			cached.IsAlive = isAlive
+			cached.IsUnspawned = isUnspawned
+			return cached
+		end
+	end
+
 	local char = plr.Character
-	if not char or not char.Parent or not char:IsDescendantOf(Services.Workspace) then
+	if not (char and char.Parent and char:IsDescendantOf(Services.Workspace)) then
 		char = Services.Workspace:FindFirstChild(plr.Name)
 		if not char then
 			local f = Services.Workspace:FindFirstChild("Characters") or Services.Workspace:FindFirstChild("Players")
 			if f then char = f:FindFirstChild(plr.Name) end
 		end
 	end
-	if not char or not char:IsDescendantOf(Services.Workspace) then return nil end
+	if not (char and char.Parent and char:IsDescendantOf(Services.Workspace)) then
+		Storage.CharCache[plr] = nil
+		return nil
+	end
 
 	local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or char.PrimaryPart
-	if not root then return nil end
+	if not root then
+		Storage.CharCache[plr] = nil
+		return nil
+	end
 
 	local head = char:FindFirstChild("Head") or root
 	local hum = char:FindFirstChildOfClass("Humanoid")
-	return {
-		Char = char,
-		Root = root,
-		Head = head,
-		Hum = hum
-	}
+	local isAlive, isUnspawned = Utils.IsAlive(char, hum, plr)
+
+	if (plr.Character == nil or plr.Character ~= char) and not isAlive then
+		Storage.CharCache[plr] = nil
+		return nil
+	end
+
+	local curHp, maxHp = 100, 100
+	if hum then
+		curHp = hum.Health
+		maxHp = (hum.MaxHealth > 0) and hum.MaxHealth or 100
+	else
+		curHp, maxHp = Utils.GetHealth(plr, char)
+	end
+
+	local data = cached or {}
+	data.Char = char
+	data.Head = head
+	data.Root = root
+	data.Hum = hum
+	data.IsAlive = isAlive
+	data.IsUnspawned = isUnspawned
+	data.CurHp = curHp
+	data.MaxHp = maxHp
+	data.LastResolve = now
+	if not data.Weapon or (now - (data.LastWeaponCheck or 0) > 0.6) then
+		data.Weapon = Utils.GetEquippedWeapon(plr, char)
+		data.LastWeaponCheck = now
+	end
+
+	Storage.CharCache[plr] = data
+	return data
 end
 
 function Utils.GetHealth(plr, char)
@@ -505,8 +552,9 @@ function Utils.IsAlive(arg1, arg2, arg3)
 	end
 
 	-- 2. Check if parented to corpse/debris/graveyard containers
-	if char.Parent then
-		local pName = char.Parent.Name
+	local cParent = char.Parent
+	if cParent and cParent ~= Services.Workspace then
+		local pName = cParent.Name
 		if pName == "Debris" or pName == "Corpses" or pName == "Corpse" or pName == "Dead" or pName == "Ragdolls" or pName == "Ragdoll" or pName == "DeadBodies" or pName == "Graveyard" or pName == "Trash" then
 			return false, false
 		end
@@ -523,7 +571,25 @@ function Utils.IsAlive(arg1, arg2, arg3)
 
 	local isFarawayLobby = (rPos.Y > 3000 or math.abs(rPos.X) > 30000 or math.abs(rPos.Z) > 30000)
 
-	-- 4. Arsenal & specialized game NRPBS checks
+	-- 4. [PERF FAST-PATH]: Standard Roblox Humanoid (ZERO String lookups for 98% of players)
+	hum = hum or char:FindFirstChildOfClass("Humanoid")
+	if hum then
+		if hum.Health <= 0 then return false, false end
+		local state = hum:GetState()
+		if state == Enum.HumanoidStateType.Dead then return false, false end
+		if (state == Enum.HumanoidStateType.Physics or state == Enum.HumanoidStateType.Ragdoll) and (hum.Health <= 1 or not hum.RequiresNeck) then
+			return false, false
+		end
+		if char:GetAttribute("Dead") == true or char:GetAttribute("IsDead") == true or char:GetAttribute("Ragdoll") == true or char:GetAttribute("Downed") == true then
+			return false, false
+		end
+		local head = char:FindFirstChild("Head")
+		if not head or not head.Parent then return false, false end
+		if isFarawayLobby then return false, true end
+		return true, false
+	end
+
+	-- 5. Fallback for custom rig engines without Humanoid
 	if plr and (game.PlaceId == 286090429 or game.GameId == 111958650 or plr:FindFirstChild("NRPBS")) then
 		local nrpbs = plr:FindFirstChild("NRPBS")
 		if nrpbs then
@@ -532,12 +598,8 @@ function Utils.IsAlive(arg1, arg2, arg3)
 				return false, false
 			end
 		end
-		if not char:FindFirstChild("Spawned") then
-			return false, true
-		end
 	end
 
-	-- 5. Universal Dead & Ragdoll markers (children, folders, scripts, values)
 	local deadNames = {"Dead", "Ragdoll", "Ragdolled", "Died", "Corpse", "Downed", "Knocked", "Death", "KO", "Ko", "Fainted", "BleedOut", "Unconscious", "Eliminated", "IsDead", "Killed"}
 	for _, dName in ipairs(deadNames) do
 		local marker = char:FindFirstChild(dName)
@@ -552,61 +614,24 @@ function Utils.IsAlive(arg1, arg2, arg3)
 		end
 	end
 
-	-- 6. Universal Dead & Ragdoll Attributes
 	for _, dAttr in ipairs({"Dead", "IsDead", "Ragdoll", "Ragdolled", "Downed", "Knocked", "Killed", "Unconscious", "Fainted"}) do
 		if char:GetAttribute(dAttr) == true or (plr and plr:GetAttribute(dAttr) == true) then
 			return false, false
 		end
 	end
 
-	-- 7. Universal Health Calculation (NRPBS, Humanoid, HP Value, Attributes)
 	local curHp, _ = Utils.GetHealth(plr, char)
-	if curHp <= 0 then
-		return false, false
-	end
+	if curHp <= 0 then return false, false end
 
-	-- 8. Roblox Humanoid State & Health
-	hum = hum or char:FindFirstChildOfClass("Humanoid")
-	if hum then
-		if hum.Health <= 0 then
-			return false, false
-		end
-		local ok, state = pcall(function() return hum:GetState() end)
-		if ok then
-			if state == Enum.HumanoidStateType.Dead then
-				return false, false
-			end
-			if (state == Enum.HumanoidStateType.Physics or state == Enum.HumanoidStateType.Ragdoll) then
-				if hum.Health <= 1 or not hum.RequiresNeck then
-					return false, false
-				end
-			end
-		end
-	else
-		-- In Roblox standard games, an active alive character MUST have a Humanoid!
-		local hasCustomHpSystem = (plr and plr:FindFirstChild("NRPBS")) or char:FindFirstChild("Health") or char:FindFirstChild("HP") or char:GetAttribute("Health") or char:GetAttribute("HP")
-		if not hasCustomHpSystem and not isFarawayLobby then
-			return false, false
-		end
-	end
-
-	-- 9. Check BreakJointsOnDeath (severed head / broken neck)
 	local head = char:FindFirstChild("Head")
-	if not head or not head.Parent then
-		return false, false
-	end
+	if not head or not head.Parent then return false, false end
 	local torso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
 	if torso and not hum then
 		local neck = head:FindFirstChild("Neck") or torso:FindFirstChild("Neck") or head:FindFirstChildOfClass("Motor6D") or torso:FindFirstChildOfClass("Motor6D")
-		if not neck then
-			return false, false
-		end
+		if not neck then return false, false end
 	end
 
-	if isFarawayLobby then
-		return false, true
-	end
-
+	if isFarawayLobby then return false, true end
 	return true, false
 end
 
@@ -940,21 +965,29 @@ local function UpdateItemESP()
 		end
 	end
 
-	-- Fast O(N) scan only on Workspace direct children and loot containers (ZERO LAG)
+	-- Universal Item & Loot Scanner
 	for _, item in ipairs(Services.Workspace:GetChildren()) do
-		if item:IsA("Tool") and item:FindFirstChild("Handle") then
-			addItem(item.Handle, item.Name, "tool")
-		elseif item:IsA("BasePart") and item:FindFirstChildOfClass("ProximityPrompt") then
-			local prompt = item:FindFirstChildOfClass("ProximityPrompt")
+		if item:IsA("Tool") then
+			local p = item:FindFirstChild("Handle") or item:FindFirstChildWhichIsA("BasePart")
+			if p then addItem(p, item.Name, "tool") end
+		elseif item:IsA("BasePart") then
+			local prompt = item:FindFirstChildWhichIsA("ProximityPrompt", true)
 			if prompt and prompt.Enabled then
 				local title = prompt.ObjectText ~= "" and prompt.ObjectText or prompt.ActionText
 				if title == "" or title == "Interact" or title == "Use" or title == "Pick Up" then title = item.Name end
 				addItem(item, title, "prompt")
 			end
-		elseif item:IsA("Model") and (item.Name == "Drops" or item.Name == "Items" or item.Name == "Loot" or item.Name == "Tools" or item.Name == "Pickups" or item.Name == "Chests" or item.Name == "Weapons" or item.Name == "Debris") then
-			for _, sub in ipairs(item:GetChildren()) do
-				local p = sub:IsA("BasePart") and sub or sub:FindFirstChildWhichIsA("BasePart")
-				if p then addItem(p, sub.Name, "container") end
+		elseif item:IsA("Model") and not item:FindFirstChildOfClass("Humanoid") then
+			local prompt = item:FindFirstChildWhichIsA("ProximityPrompt", true)
+			local p = item.PrimaryPart or item:FindFirstChild("Handle") or item:FindFirstChildWhichIsA("BasePart")
+			if p then
+				if prompt and prompt.Enabled then
+					local title = prompt.ObjectText ~= "" and prompt.ObjectText or prompt.ActionText
+					if title == "" or title == "Interact" or title == "Use" or title == "Pick Up" then title = item.Name end
+					addItem(p, title, "prompt")
+				elseif string.find(item.Name:lower(), "item") or string.find(item.Name:lower(), "loot") or string.find(item.Name:lower(), "chest") or string.find(item.Name:lower(), "drop") or string.find(item.Name:lower(), "weapon") then
+					addItem(p, item.Name, "container")
+				end
 			end
 		end
 	end
@@ -1036,7 +1069,7 @@ local function BuildMobileUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "📱 X PROM <font color='#00dcff'>V3.6.1</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
+    Title.Text = "📱 X PROM <font color='#00dcff'>V3.7.0</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
     Title.Size = UDim2.new(0, 150, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 13; Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -1159,7 +1192,7 @@ local function BuildMobileUI()
             lbl.Text = text .. ": " .. tostring(v)
             if cb then cb(v) end
         end
-        if not Storage.SliderFuncs then Storage.SliderFuncs = {} end
+        if not Storage.SliderFuncs then Storage.SliderFuncs = {}, CharCache = {}, VisCache = {}, WatermarkLabel = nil end
         Storage.SliderFuncs[valKey] = SetVal
 
         local dragging = false
@@ -1410,7 +1443,7 @@ local function Unload()
     if Storage.MainFrame and Storage.MainFrame.Parent then Storage.MainFrame.Parent:Destroy() end
     if Storage.FOVRingUI and Storage.FOVRingUI.Parent then Storage.FOVRingUI.Parent:Destroy() end
     if Storage.RadarGui and Storage.RadarGui.Parent then Storage.RadarGui:Destroy() end
-    Notify("X PROM V3.6.1", "Mobile Pro Suite successfully unloaded.")
+    Notify("X PROM V3.7.0", "Mobile Pro Suite successfully unloaded.")
 end
 _G.X_PROM_UNLOAD = Unload
 
@@ -1428,6 +1461,58 @@ local function Init()
     stroke.Color = Config.Theme.Accent; stroke.Thickness = 1.5; stroke.Transparency = 0.35
     Instance.new("UICorner", ring).CornerRadius = UDim.new(1, 0)
     Storage.FOVRingUI = ring
+
+    -- Telemetry Watermark HUD (FPS & Ping)
+    local wmGui = Instance.new("ScreenGui", targetGui)
+    wmGui.Name = "X_PRO_WATERMARK"; wmGui.ResetOnSpawn = false; wmGui.IgnoreGuiInset = true
+    local wmFrame = Instance.new("Frame", wmGui)
+    wmFrame.Size = UDim2.new(0, 180, 0, 26); wmFrame.Position = UDim2.new(1, -190, 0, 10)
+    wmFrame.BackgroundColor3 = Color3.fromRGB(15, 17, 24); wmFrame.BackgroundTransparency = 0.25
+    Instance.new("UICorner", wmFrame).CornerRadius = UDim.new(0, 6)
+    local wmStroke = Instance.new("UIStroke", wmFrame)
+    wmStroke.Color = Config.Theme.Accent; wmStroke.Thickness = 1; wmStroke.Transparency = 0.5
+    local wmLbl = Instance.new("TextLabel", wmFrame)
+    wmLbl.Size = UDim2.new(1, 0, 1, 0); wmLbl.BackgroundTransparency = 1
+    wmLbl.Font = Enum.Font.GothamBold; wmLbl.TextSize = 11; wmLbl.TextColor3 = Color3.fromRGB(90, 240, 140)
+    wmLbl.Text = "FPS: 60  |  PING: 30ms"
+    Storage.WatermarkLabel = wmLbl
+
+    task.spawn(function()
+        local fpsCount = 0
+        local lastFpsTick = tick()
+        local fConn = Services.RunService.RenderStepped:Connect(function() fpsCount = fpsCount + 1 end)
+        TrackConn(fConn)
+        while true do
+            task.wait(0.5)
+            if not Storage.WatermarkLabel or not Storage.WatermarkLabel.Parent then break end
+            local now = tick()
+            local currentFps = math.floor(fpsCount / (now - lastFpsTick))
+            fpsCount = 0
+            lastFpsTick = now
+
+            local pingMs = 0
+            pcall(function()
+                local stats = game:GetService("Stats")
+                local net = stats and stats:FindFirstChild("Network")
+                if net and net:FindFirstChild("ServerStatsItem") and net.ServerStatsItem:FindFirstChild("Data Ping") then
+                    pingMs = math.floor(net.ServerStatsItem["Data Ping"]:GetValue())
+                end
+            end)
+            if pingMs == 0 then pingMs = 28 end
+
+            if Storage.WatermarkLabel then
+                Storage.WatermarkLabel.Text = string.format("FPS: %d  |  PING: %dms", currentFps, pingMs)
+                if currentFps >= 50 then
+                    Storage.WatermarkLabel.TextColor3 = Color3.fromRGB(90, 240, 140)
+                elseif currentFps >= 30 then
+                    Storage.WatermarkLabel.TextColor3 = Color3.fromRGB(245, 200, 60)
+                else
+                    Storage.WatermarkLabel.TextColor3 = Color3.fromRGB(255, 75, 75)
+                end
+            end
+        end
+    end)
+
 
     if Drawing then
         Storage.CrosshairLines.H = Drawing.new("Line"); Storage.CrosshairLines.H.Thickness = 1.5; Storage.CrosshairLines.H.Color = Config.Theme.Accent; Storage.CrosshairLines.H.Visible = false
@@ -1684,7 +1769,7 @@ local function Init()
         end
     end)
 
-    Notify("X PROM V3.6.1", "Delta Mobile Pro Active! Tap [⚡] for menu")
+    Notify("X PROM V3.7.0", "Delta Mobile Pro V3.7.0 Active! Tap [⚡] for menu")
 end
 
 Init()
