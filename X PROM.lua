@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PROM V3.7.2 - PROFESSIONAL MOBILE SUITE ]]
+-- [[ X PROM V3.7.3 - PROFESSIONAL MOBILE SUITE ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- High-Performance Zero-Lag Character Caching & 60+ FPS Optimization
 -- ==============================================================================
@@ -101,9 +101,9 @@ end
 
 local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or "")
 local upperKey = string.upper(activeKey)
-local isFounder = string.find(upperKey, "XT7789") ~= nil
-local isSeller = string.find(upperKey, "X%-PRO%-X") ~= nil or string.find(upperKey, "X%-TITAN%-X") ~= nil
-local isProPlus = isFounder or isSeller or string.find(upperKey, "X%-PRO%-PLUS") ~= nil or string.find(upperKey, "X%-PRO%-PRO%-X") ~= nil or string.find(upperKey, "X%-TITAN") ~= nil
+local isFounder = (upperKey == "X-PRO-PLUS-XT7789") or (string.find(upperKey, "XT7789") ~= nil)
+local isSeller = (upperKey == "X-PRO-X")
+local isProPlus = isFounder or isSeller
 
 local Utils = {}
 
@@ -1118,7 +1118,7 @@ local function BuildMobileUI()
     elseif isProPlus then
         Title.Text = "📱 X PROM<font color='#00dcff'>+ PLUS</font> <font color='#ffcd32'>[PRO-X]</font>"
     else
-        Title.Text = "📱 X PROM <font color='#00dcff'>V3.7.2</font> <font color='#8c8c9b'>| MOBILE PRO</font>"
+        Title.Text = "📱 X PROM <font color='#00dcff'>V3.7.3</font> <font color='#8c8c9b'>| MOBILE PRO</font>"
     end
     Title.RichText = true
     Title.Size = UDim2.new(0, 150, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
@@ -1503,7 +1503,7 @@ local function Unload()
     if Storage.MainFrame and Storage.MainFrame.Parent then Storage.MainFrame.Parent:Destroy() end
     if Storage.FOVRingUI and Storage.FOVRingUI.Parent then Storage.FOVRingUI.Parent:Destroy() end
     if Storage.RadarGui and Storage.RadarGui.Parent then Storage.RadarGui:Destroy() end
-    Notify("X PROM V3.7.2", "Mobile Pro Suite successfully unloaded.")
+    Notify("X PROM V3.7.3", "Mobile Pro Suite successfully unloaded.")
 end
 _G.X_PROM_UNLOAD = Unload
 
@@ -1836,7 +1836,7 @@ local function Init()
     elseif isProPlus then
         Notify("📱 X PROM+ [PRO-X]", "Master Key Active! Titan Presets & Wallbang Unlocked.", 4)
     else
-        Notify("X PROM V3.7.2", "Delta Mobile Pro V3.7.2 Active! Tap [⚡] for menu", 4.5)
+        Notify("X PROM V3.7.3", "Delta Mobile Pro V3.7.3 Active! Tap [⚡] for menu", 4.5)
     end
 end
 

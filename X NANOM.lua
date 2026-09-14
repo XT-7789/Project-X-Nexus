@@ -259,9 +259,9 @@ end
 -- ==================================================================
 local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or "")
 local upperKey = string.upper(activeKey)
-local isFounder = string.find(upperKey, "XT7789") ~= nil
-local isSeller = string.find(upperKey, "X%-NANO%-X") ~= nil or string.find(upperKey, "X%-MINI%-X") ~= nil or string.find(upperKey, "X%-PRO%-X") ~= nil or string.find(upperKey, "X%-TITAN%-X") ~= nil
-local isNanoPlus = isFounder or isSeller or string.find(upperKey, "X%-NANO%-PLUS") ~= nil or string.find(upperKey, "X%-NANO%-PRO%-X") ~= nil or string.find(upperKey, "X%-PRO") ~= nil or string.find(upperKey, "X%-TITAN") ~= nil
+local isFounder = (upperKey == "X-NANO-PLUS-XT7789") or (string.find(upperKey, "XT7789") ~= nil)
+local isSeller = (upperKey == "X-NANO-X")
+local isNanoPlus = isFounder or isSeller
 
 -- [TIER 1 & 2] NANO+ PRO-X SILENT AIM ENGINE
 local HasNanoHook = false
@@ -374,7 +374,7 @@ local function BuildMobileUI()
 	elseif isNanoPlus then
 		Title.Text = "📱 X NANO<font color='#00e6ff'>+</font> <font color='#ffcd32'>[PRO-X]</font>"; Title.RichText = true
 	else
-		Title.Text = "📱 X NANO <font color='#8c8c96'>V3.3.0</font>"; Title.RichText = true
+		Title.Text = "📱 X NANO <font color='#8c8c96'>V3.3.1</font>"; Title.RichText = true
 	end
 	Title.Size = UDim2.new(1, -44, 1, 0); Title.Position = UDim2.new(0, 12, 0, 0)
 	Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
@@ -719,7 +719,7 @@ local function Init()
 	elseif isNanoPlus then
 		Notify("📱 X NANOM+ [PRO-X]", "PRO-X Privileges Active! Silent Aim Unlocked.", 4)
 	else
-		Notify("📱 X NANOM V3.3.0", "Mobile Edition Ready! Tap [⚡] bubble to open menu!", 4)
+		Notify("📱 X NANOM V3.3.1", "Mobile Edition Ready! Tap [⚡] bubble to open menu!", 4)
 	end
 	print("==========================================")
 	print("📱 X NANO M V3.2.1 MOBILE EDITION LOADED!")

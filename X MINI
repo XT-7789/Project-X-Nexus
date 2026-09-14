@@ -386,9 +386,9 @@ end
 -- ==================================================================
 local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or "")
 local upperKey = string.upper(activeKey)
-local isFounder = string.find(upperKey, "XT7789") ~= nil
-local isSeller = string.find(upperKey, "X%-MINI%-X") ~= nil or string.find(upperKey, "X%-PRO%-X") ~= nil or string.find(upperKey, "X%-TITAN%-X") ~= nil
-local isMiniPlus = isFounder or isSeller or string.find(upperKey, "X%-MINI%-PLUS") ~= nil or string.find(upperKey, "X%-MINI%-PRO%-X") ~= nil or string.find(upperKey, "X%-PRO") ~= nil or string.find(upperKey, "X%-TITAN") ~= nil
+local isFounder = (upperKey == "X-MINI-PLUS-XT7789") or (string.find(upperKey, "XT7789") ~= nil)
+local isSeller = (upperKey == "X-MINI-X")
+local isMiniPlus = isFounder or isSeller
 
 -- ==================================================================
 -- MULTI-LAYER SILENT AIM ENGINE (EXCLUSIVE TO X-MINI-PRO-X)
@@ -534,7 +534,7 @@ local function BuildUI()
     elseif isMiniPlus then
         Title.Text = "📦 X MINI<font color='#00d2ff'>+</font> <font color='#ffcd32'>[PRO-X]</font>"
     else
-        Title.Text = "📦 X MINI <font color='#00d2ff'>V4.2.0</font>"
+        Title.Text = "📦 X MINI <font color='#00d2ff'>V4.2.1</font>"
     end
     Title.RichText = true
     Title.Size = UDim2.new(0, 160, 1, 0); Title.Position = UDim2.new(0, 12, 0, 0)
@@ -1058,7 +1058,7 @@ local function Init()
         Notify("👑 X MINI+ [PRO-X]", "Press [Insert] or [Right-Ctrl] for Menu! Silent Aim unlocked.", 4)
         print("👑 [X MINI+] PRIVILEGE UNLOCKED: Multi-Layer Silent Aim Active!")
     else
-        Notify("X MINI V4.2.0", "Combat Edition Ready! [Insert] or [Right-Ctrl] for Menu [End] Unload", 4)
+        Notify("X MINI V4.2.1", "Combat Edition Ready! [Insert] or [Right-Ctrl] for Menu [End] Unload", 4)
     end
 end
 

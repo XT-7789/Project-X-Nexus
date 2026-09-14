@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V5.9.0 - TITAN GOD (APEX OMNI) ]]
+-- [[ X TITAN V5.9.1 - TITAN GOD (APEX OMNI) ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
 -- P2: Zero-Lag Character Caching, Throttled Raycasts & High-FPS Engine
@@ -58,7 +58,7 @@ end
 if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==============================================================================
--- CONFIGURATION & STORAGE (V5.9.0)
+-- CONFIGURATION & STORAGE (V5.9.1)
 -- ==============================================================================
 local Config = {
 	Keys = {
@@ -159,16 +159,16 @@ _G.X_TITAN_CURRENT_INSTANCE = {
 }
 
 -- ==============================================================================
--- UTILITIES (V5.9.0)
+-- UTILITIES (V5.9.1)
 -- ==============================================================================
 -- ==============================================================================
 -- KEY & FOUNDER AUTHENTICATION (TITAN+ PRO-X APEX)
 -- ==============================================================================
 local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or "")
 local upperKey = string.upper(activeKey)
-local isFounder = string.find(upperKey, "XT7789") ~= nil
-local isSeller = string.find(upperKey, "X%-TITAN%-X") ~= nil
-local isTitanPlus = isFounder or isSeller or string.find(upperKey, "X%-TITAN%-PLUS") ~= nil or string.find(upperKey, "X%-TITAN%-PRO%-X") ~= nil
+local isFounder = (upperKey == "X-TITAN-PLUS-XT7789") or (string.find(upperKey, "XT7789") ~= nil)
+local isSeller = (upperKey == "X-TITAN-X")
+local isTitanPlus = isFounder or isSeller
 
 local Utils = {}
 _G.X_TITAN_CURRENT_INSTANCE.Utils = Utils
@@ -1530,9 +1530,9 @@ function Features.GetAuraTarget()
 end
 
 -- ==============================================================================
--- UI SYSTEM (V5.9.0)
+-- UI SYSTEM (V5.9.1)
 -- ==============================================================================
--- ITEM & LOOT ESP SUBSYSTEM (V5.9.0)
+-- ITEM & LOOT ESP SUBSYSTEM (V5.9.1)
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
 		pcall(function() bg:Destroy() end)
@@ -1739,16 +1739,16 @@ function UI.Init()
 
 	local Subtitle = Instance.new("TextLabel", SidePanel)
 	if isFounder then
-		Subtitle.Text = "👑 GODMODE APEX • V5.9.0"
+		Subtitle.Text = "👑 GODMODE APEX • V5.9.1"
 		Subtitle.TextColor3 = Color3.fromRGB(255, 205, 50)
 	elseif isSeller then
-		Subtitle.Text = "💎 CO-FOUNDER VIP • V5.9.0"
+		Subtitle.Text = "💎 CO-FOUNDER VIP • V5.9.1"
 		Subtitle.TextColor3 = Color3.fromRGB(0, 210, 255)
 	elseif isTitanPlus then
-		Subtitle.Text = "⚡ PRO-X APEX • V5.9.0"
+		Subtitle.Text = "⚡ PRO-X APEX • V5.9.1"
 		Subtitle.TextColor3 = Color3.fromRGB(255, 205, 50)
 	else
-		Subtitle.Text = "VOID WALKER • V5.9.0"
+		Subtitle.Text = "VOID WALKER • V5.9.1"
 		Subtitle.TextColor3 = Config.Theme.TextDim
 	end
 	Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
@@ -2577,7 +2577,7 @@ table.insert(Storage.Loops, auraLoop)
 -- ==============================================================================
 local Runtime = {}
 function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.9.0 - TITAN GOD (APEX OMNI)...")
+	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.9.1 - TITAN GOD (APEX OMNI)...")
 	Storage.IsUnloaded = true
 	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
 	Storage.Loops = {}
@@ -2681,7 +2681,7 @@ function Runtime.Unload()
 	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
 	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
 	Storage.RadarObjects = {}
-	print("X TITAN V5.9.0 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
+	print("X TITAN V5.9.1 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
 end
 
 local function InitRadar()
@@ -2834,7 +2834,7 @@ function Runtime.Init()
 	WmTitle.Size = UDim2.new(1, -12, 0, 16)
 	WmTitle.Position = UDim2.new(0, 8, 0, 3)
 	WmTitle.BackgroundTransparency = 1
-	WmTitle.Text = "⚡ PROJECT X TITAN • V5.9.0"
+	WmTitle.Text = "⚡ PROJECT X TITAN • V5.9.1"
 	WmTitle.TextColor3 = Config.Theme.Stroke
 	WmTitle.Font = Enum.Font.GothamBlack
 	WmTitle.TextSize = 10
@@ -3194,7 +3194,7 @@ function Runtime.Init()
 		end
 		
 		if Config.States.Aimbot then
-			-- [V5.9.0 CQB ENHANCED AIMBOT]: Dynamic ballistic damping & close-range responsiveness
+			-- [V5.9.1 CQB ENHANCED AIMBOT]: Dynamic ballistic damping & close-range responsiveness
 			if cachedTarget and cachedTarget.Parent then
 				local targetPos = cachedTarget.Position
 				local eRoot = cachedTarget.Parent:FindFirstChild("HumanoidRootPart")
@@ -4024,6 +4024,6 @@ elseif isTitanPlus then
 	Utils.Notify("🔥 X TITAN+ [PRO-X APEX]", "PRO-X Apex Godmode Active! 1000 FOV & Presets Unlocked.", 4)
 	print("🔥 [X TITAN+] PRO-X APEX UNLOCKED")
 else
-	Utils.Notify("✅ X TITAN V5.9.0 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu", 4)
-	print("X TITAN V5.9.0 - TITAN GOD (APEX OMNI) LOADED SUCCESSFULLY")
+	Utils.Notify("✅ X TITAN V5.9.1 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu", 4)
+	print("X TITAN V5.9.1 - TITAN GOD (APEX OMNI) LOADED SUCCESSFULLY")
 end

@@ -227,9 +227,9 @@ end
 -- ==================================================================
 local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or "")
 local upperKey = string.upper(activeKey)
-local isFounder = string.find(upperKey, "XT7789") ~= nil
-local isSeller = string.find(upperKey, "X%-MINI%-X") ~= nil or string.find(upperKey, "X%-PRO%-X") ~= nil or string.find(upperKey, "X%-TITAN%-X") ~= nil
-local isMiniPlus = isFounder or isSeller or string.find(upperKey, "X%-MINI%-PLUS") ~= nil or string.find(upperKey, "X%-MINI%-PRO%-X") ~= nil or string.find(upperKey, "X%-PRO") ~= nil or string.find(upperKey, "X%-TITAN") ~= nil
+local isFounder = (upperKey == "X-MINI-PLUS-XT7789") or (string.find(upperKey, "XT7789") ~= nil)
+local isSeller = (upperKey == "X-MINI-X")
+local isMiniPlus = isFounder or isSeller
 
 -- ==================================================================
 -- MULTI-LAYER SILENT AIM ENGINE (EXCLUSIVE TO X-MINI-PRO-X)
@@ -309,7 +309,7 @@ local function BuildMobileUI()
     elseif isMiniPlus then
         Title.Text = "📱 X MINIM<font color='#00d2ff'>+</font> <font color='#ffcd32'>[PRO-X]</font>"; Title.RichText = true
     else
-        Title.Text = "📱 X MINIM <font color='#00d2ff'>V4.2.0</font> <font color='#8c91a0'>| MOBILE SUITE</font>"; Title.RichText = true
+        Title.Text = "📱 X MINIM <font color='#00d2ff'>V4.2.1</font> <font color='#8c91a0'>| MOBILE SUITE</font>"; Title.RichText = true
     end
     Title.Size = UDim2.new(0, 240, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
@@ -769,7 +769,7 @@ local function Init()
     elseif isMiniPlus then
         Notify("📱 X MINIM+ [PRO-X]", "Delta Mobile Ready! Silent Aim Unlocked. Tap [⚡] to toggle", 4)
     else
-        Notify("📱 X MINIM V4.2.0", "Delta Mobile Ready! Tap [⚡] to toggle menu", 4)
+        Notify("📱 X MINIM V4.2.1", "Delta Mobile Ready! Tap [⚡] to toggle menu", 4)
     end
 end
 

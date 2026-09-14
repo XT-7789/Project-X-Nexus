@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X NANO V3.3.0 - ULTRA LIGHTWEIGHT EDITION ]]
+-- [[ X NANO V3.3.1 - ULTRA LIGHTWEIGHT EDITION ]]
 -- Features: Smooth Aimbot with FOV | Lightweight ESP (Box+Chams) | 60-75Hz Optimized
 -- Features: Smooth Aimbot with FOV | Lightweight ESP (Box+Chams) | 60-75Hz Optimized
 -- ==================================================================
@@ -216,9 +216,9 @@ end
 -- ==================================================================
 local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or "")
 local upperKey = string.upper(activeKey)
-local isFounder = string.find(upperKey, "XT7789") ~= nil
-local isSeller = string.find(upperKey, "X%-NANO%-X") ~= nil or string.find(upperKey, "X%-MINI%-X") ~= nil or string.find(upperKey, "X%-PRO%-X") ~= nil or string.find(upperKey, "X%-TITAN%-X") ~= nil
-local isNanoPlus = isFounder or isSeller or string.find(upperKey, "X%-NANO%-PLUS") ~= nil or string.find(upperKey, "X%-NANO%-PRO%-X") ~= nil or string.find(upperKey, "X%-PRO") ~= nil or string.find(upperKey, "X%-TITAN") ~= nil
+local isFounder = (upperKey == "X-NANO-PLUS-XT7789") or (string.find(upperKey, "XT7789") ~= nil)
+local isSeller = (upperKey == "X-NANO-X")
+local isNanoPlus = isFounder or isSeller
 
 -- [TIER 1 & 2] NANO+ PRO-X SILENT AIM ENGINE
 local HasNanoHook = false
@@ -300,7 +300,7 @@ local function BuildUI()
 	elseif isNanoPlus then
 		Title.Text = "⚡ X NANO<font color='#00e5ff'>+</font> <font color='#ffcd32'>[PRO-X]</font>"; Title.RichText = true
 	else
-		Title.Text = "⚡ X NANO <font color='#8c8c96'>V3.3.0</font>"; Title.RichText = true
+		Title.Text = "⚡ X NANO <font color='#8c8c96'>V3.3.1</font>"; Title.RichText = true
 	end
 	Title.Size = UDim2.new(1, -40, 1, 0); Title.Position = UDim2.new(0, 12, 0, 0)
 	Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Accent
@@ -611,7 +611,7 @@ local function Init()
 	elseif isNanoPlus then
 		Notify("⚡ X NANO+ [PRO-X]", "PRO-X Privileges Active! Silent Aim Unlocked.", 4)
 	else
-		Notify("⚡ X NANO V3.3.0", "Loaded! [Insert] Menu [End] Unload", 4)
+		Notify("⚡ X NANO V3.3.1", "Loaded! [Insert] Menu [End] Unload", 4)
 	end
 end
 

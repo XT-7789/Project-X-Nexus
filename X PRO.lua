@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PRO V3.7.2 - PROFESSIONAL SUITE ]]
+-- [[ X PRO V3.7.3 - PROFESSIONAL SUITE ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- High-Performance Zero-Lag Character Caching & 60+ FPS Optimization
 -- ==============================================================================
@@ -107,9 +107,9 @@ end
 
 local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or "")
 local upperKey = string.upper(activeKey)
-local isFounder = string.find(upperKey, "XT7789") ~= nil
-local isSeller = string.find(upperKey, "X%-PRO%-X") ~= nil or string.find(upperKey, "X%-TITAN%-X") ~= nil
-local isProPlus = isFounder or isSeller or string.find(upperKey, "X%-PRO%-PLUS") ~= nil or string.find(upperKey, "X%-PRO%-PRO%-X") ~= nil or string.find(upperKey, "X%-TITAN") ~= nil
+local isFounder = (upperKey == "X-PRO-PLUS-XT7789") or (string.find(upperKey, "XT7789") ~= nil)
+local isSeller = (upperKey == "X-PRO-X")
+local isProPlus = isFounder or isSeller
 
 local Utils = {}
 
@@ -1157,7 +1157,7 @@ local function MicroFlickSilentAim()
 end
 
 -- ==================================================================
--- MODERN 3-TAB UI (V3.7.2)
+-- MODERN 3-TAB UI (V3.7.3)
 -- ==================================================================
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
@@ -1281,7 +1281,7 @@ local function BuildUI()
     elseif isProPlus then
         Title.Text = "⚡ X PRO<font color='#00dcff'>+ PLUS</font> <font color='#ffcd32'>[PRO-X]</font>"
     else
-        Title.Text = "⚡ X PRO <font color='#00dcff'>V3.7.2</font>"
+        Title.Text = "⚡ X PRO <font color='#00dcff'>V3.7.3</font>"
     end
     Title.RichText = true
     Title.Size = UDim2.new(0, 130, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
@@ -1625,7 +1625,7 @@ Unload = function()
     if Storage.MainFrame and Storage.MainFrame.Parent then Storage.MainFrame.Parent:Destroy() end
     if Storage.FOVRingUI and Storage.FOVRingUI.Parent then Storage.FOVRingUI.Parent:Destroy() end
     if Storage.RadarGui and Storage.RadarGui.Parent then Storage.RadarGui:Destroy() end
-    Notify("X PRO V3.7.2", "All Pro modules successfully unloaded.")
+    Notify("X PRO V3.7.3", "All Pro modules successfully unloaded.")
 end
 
 -- ==================================================================
@@ -1734,7 +1734,7 @@ local function Init()
 
     -- RenderStepped Loop
     TrackConn(Services.RunService.RenderStepped:Connect(function()
-        -- Dynamic Smooth Aimbot (V3.7.2 CQB Ballistic Responsive)
+        -- Dynamic Smooth Aimbot (V3.7.3 CQB Ballistic Responsive)
         if Config.States.Aimbot then
             local canAim = not Config.States.RightClickToggle or Storage.IsRightMouseDown
             if canAim then
@@ -2069,7 +2069,7 @@ local function Init()
     elseif isProPlus then
         Notify("⚡ X PRO+ [PRO-X]", "Master Key Active! Titan Presets & Wallbang Unlocked.", 4)
     else
-        Notify("X PRO V3.7.2", "Tournament Pro V3.7.2 Active! [Insert] Menu [F] Lock Target [End] Unload", 4.5)
+        Notify("X PRO V3.7.3", "Tournament Pro V3.7.3 Active! [Insert] Menu [F] Lock Target [End] Unload", 4.5)
     end
 end
 
