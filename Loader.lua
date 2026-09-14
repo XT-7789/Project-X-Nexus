@@ -142,48 +142,68 @@ print("🌐 OFFICIAL DISCORD: https://discord.gg/mQ3ASbfP8j")
 print("💬 DISCORD SELLER: vlilayz")
 print("==========================================")
 
+local function ExecuteRemote(scriptUrl)
+	local code = SafeHttpGet(scriptUrl)
+	if not code or code == "" then
+		Notify("❌ DOWNLOAD FAILED", "Could not fetch script from server.", 5)
+		warn("[X SUITE] Network error: Failed to download script: " .. tostring(scriptUrl))
+		return
+	end
+	local fn, compileErr = loadstring(code)
+	if not fn then
+		Notify("❌ COMPILE ERROR", "Script compilation failed: " .. tostring(compileErr), 7)
+		warn("[X SUITE] Compilation Error: " .. tostring(compileErr))
+		return
+	end
+	local ok, runErr = pcall(fn)
+	if not ok then
+		Notify("❌ RUNTIME ERROR", "Script runtime error: " .. tostring(runErr), 7)
+		warn("[X SUITE] Runtime Error: " .. tostring(runErr))
+	end
+end
+
 if isMasterNanoPlus then
 	if isMobile then
-		loadstring(SafeHttpGet(repo .. "X%20NANOM.lua"))()
+		ExecuteRemote(repo .. "X%20NANOM.lua")
 	else
-		loadstring(SafeHttpGet(repo .. "X%20NANO.lua"))()
+		ExecuteRemote(repo .. "X%20NANO.lua")
 	end
 elseif isMasterMiniPlus then
 	if isMobile then
-		loadstring(SafeHttpGet(repo .. "X%20MINIM.lua"))()
+		ExecuteRemote(repo .. "X%20MINIM.lua")
 	else
-		loadstring(SafeHttpGet(repo .. "X%20MINI.lua"))()
+		ExecuteRemote(repo .. "X%20MINI.lua")
 	end
 elseif string.lower(tier) == "litem" then
-	loadstring(SafeHttpGet(repo .. "X%20LITEM.lua"))()
+	ExecuteRemote(repo .. "X%20LITEM.lua")
 elseif string.lower(tier) == "lite" then
 	if isMobile then
-		loadstring(SafeHttpGet(repo .. "X%20LITEM.lua"))()
+		ExecuteRemote(repo .. "X%20LITEM.lua")
 	else
-		loadstring(SafeHttpGet(repo .. "X%20LITE.lua"))()
+		ExecuteRemote(repo .. "X%20LITE.lua")
 	end
 elseif string.lower(tier) == "prom" then
-	loadstring(SafeHttpGet(repo .. "X%20PROM.lua"))()
+	ExecuteRemote(repo .. "X%20PROM.lua")
 elseif string.lower(tier) == "minim" then
-	loadstring(SafeHttpGet(repo .. "X%20MINIM.lua"))()
+	ExecuteRemote(repo .. "X%20MINIM.lua")
 elseif string.lower(tier) == "nanom" then
-	loadstring(SafeHttpGet(repo .. "X%20NANOM.lua"))()
+	ExecuteRemote(repo .. "X%20NANOM.lua")
 elseif string.lower(tier) == "nano" then
 	if isMobile then
-		loadstring(SafeHttpGet(repo .. "X%20NANOM.lua"))()
+		ExecuteRemote(repo .. "X%20NANOM.lua")
 	else
-		loadstring(SafeHttpGet(repo .. "X%20NANO.lua"))()
+		ExecuteRemote(repo .. "X%20NANO.lua")
 	end
 elseif string.lower(tier) == "mini" then
-	loadstring(SafeHttpGet(repo .. "X%20MINI.lua"))()
+	ExecuteRemote(repo .. "X%20MINI.lua")
 elseif string.lower(tier) == "pro" then
 	if isMobile then
-		loadstring(SafeHttpGet(repo .. "X%20PROM.lua"))()
+		ExecuteRemote(repo .. "X%20PROM.lua")
 	else
-		loadstring(SafeHttpGet(repo .. "X%20PRO.lua"))()
+		ExecuteRemote(repo .. "X%20PRO.lua")
 	end
 elseif string.lower(tier) == "titan" then
-	loadstring(SafeHttpGet(repo .. "X%20TITAN.lua"))()
+	ExecuteRemote(repo .. "X%20TITAN.lua")
 else
-	loadstring(SafeHttpGet(repo .. "X%20NANO.lua"))()
+	ExecuteRemote(repo .. "X%20NANO.lua")
 end

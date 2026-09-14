@@ -2169,46 +2169,7 @@ local function UpdateRadar()
 	end
 end
 
-function 
-	-- Top-Right Watermark FPS & Ping updater (Anonymized: No Username)
-	task.spawn(function()
-		local fpsCount = 0
-		local lastFpsTick = tick()
-		Services.RunService.RenderStepped:Connect(function()
-			fpsCount = fpsCount + 1
-		end)
-		while true do
-			task.wait(0.5)
-			if Storage.IsUnloaded then break end
-			local now = tick()
-			local currentFps = math.floor(fpsCount / (now - lastFpsTick))
-			fpsCount = 0
-			lastFpsTick = now
-			
-			local pingMs = 0
-			pcall(function()
-				local stats = game:GetService("Stats")
-				local net = stats and stats:FindFirstChild("Network")
-				if net and net:FindFirstChild("ServerStatsItem") and net.ServerStatsItem:FindFirstChild("Data Ping") then
-					pingMs = math.floor(net.ServerStatsItem["Data Ping"]:GetValue())
-				end
-			end)
-			if pingMs == 0 then pingMs = 28 end
-
-			if Storage.WatermarkLabel then
-				Storage.WatermarkLabel.Text = string.format("FPS: %d  |  PING: %dms", currentFps, pingMs)
-				if currentFps >= 50 then
-					Storage.WatermarkLabel.TextColor3 = Color3.fromRGB(90, 240, 140)
-				elseif currentFps >= 30 then
-					Storage.WatermarkLabel.TextColor3 = Color3.fromRGB(245, 200, 60)
-				else
-					Storage.WatermarkLabel.TextColor3 = Color3.fromRGB(255, 75, 75)
-				end
-			end
-		end
-	end)
-
-	Runtime.Init()
+function Runtime.Init()
 	if _G.X_TITAN_RUNTIME_INITIALIZED then
 		print("X TITAN: Detected existing instance, unloading first...")
 		local oldInstance = _G.X_TITAN_CURRENT_INSTANCE
@@ -3329,7 +3290,7 @@ table.insert(Storage.Loops, itemLoop)
 		end
 	end)
 
-	Runtime.Init()
+Runtime.Init()
 _G.X_TITAN_INSTANCE = { Config = Config, Storage = Storage, Utils = Utils, Features = Features, Runtime = Runtime }
 Utils.Notify("✅ X TITAN V5.7.0 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
 print("X TITAN V5.7.0 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
