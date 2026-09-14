@@ -15,9 +15,9 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
 end
 
 -- [[ X NANO M V3.2.1 - MOBILE TOUCH EDITION ]]
--- 定位: 移动端全触控 / Delta / 手机平板专属 / 零键盘依赖
--- 手机专属: 可拖拽浮窗悬浮球(☰) | 屏幕▲▼飞行按键 | 触控大滑块 | 自动平滑吸附锁头 | 一键触控卸载
--- 卖家: vlilayz | 售价: RM5
+-- Positioning: Mobile Full Touch / Delta / Tablet & Phone Exclusive / Zero Keyboard Dependent
+-- Mobile Exclusive: Draggable Floating Bubble | On-Screen Fly Controls | Large Touch Sliders | Smooth Lock | Safe Unload
+-- Seller: vlilayz | Official Discord: https://discord.gg/mQ3ASbfP8j
 -- ==================================================================
 local Services = {
 	Players = game:GetService("Players"),
@@ -318,7 +318,7 @@ local function BuildMobileUI()
 	ScreenGui.Name = uiName; ScreenGui.ResetOnSpawn = false; ScreenGui.IgnoreGuiInset = true
 	ScreenGui.DisplayOrder = 999999
 
-	-- 1. 📱 屏幕常驻半透明悬浮触控球 (Draggable Bubble)
+	-- 1. Draggable Semi-Transparent Floating Touch Bubble
 	local Bubble = Instance.new("TextButton", ScreenGui)
 	Bubble.Size = UDim2.new(0, 52, 0, 52)
 	Bubble.Position = UDim2.new(0, 20, 0.3, 0)
@@ -337,7 +337,7 @@ local function BuildMobileUI()
 	bStroke.Transparency = 0.3
 	Storage.MenuBubble = Bubble
 
-	-- 2. 📱 触控大屏菜单面板 (适合手指操作)
+	-- 2. Large Touchscreen Menu Panel (Thumb Friendly)
 	local Card = Instance.new("Frame", ScreenGui)
 	Card.Size = UDim2.new(0, 290, 0, 460)
 	Card.Position = UDim2.new(0.5, -145, 0.5, -230)
@@ -352,7 +352,7 @@ local function BuildMobileUI()
 	cStroke.Transparency = 0.4
 	Storage.MainFrame = Card
 
-	-- 点击悬浮球切换菜单显示
+	-- Tap floating bubble to toggle menu visibility
 	Bubble.MouseButton1Click:Connect(function()
 		Card.Visible = not Card.Visible
 		Bubble.Text = Card.Visible and "×" or "⚡"
@@ -383,7 +383,7 @@ local function BuildMobileUI()
 		Bubble.Text = "⚡"
 	end)
 
-	-- Scrollable Items (手指触控优化大尺寸)
+	-- Scrollable Items (Touchscreen Optimized Sizing)
 	local Content = Instance.new("ScrollingFrame", Card)
 	Content.Size = UDim2.new(1, -16, 1, -52); Content.Position = UDim2.new(0, 8, 0, 46)
 	Content.BackgroundTransparency = 1; Content.ScrollBarThickness = 3
@@ -426,7 +426,7 @@ local function BuildMobileUI()
 		end)
 	end
 
-	-- 触控大滑块 (支持触控拖拽与点击)
+	-- Touch Sliders (Supports Drag & Tap)
 	local function AddSlider(text, min, max, valKey, cb)
 		local frame = Instance.new("Frame", Content)
 		frame.Size = UDim2.new(1, -4, 0, 48); frame.BackgroundColor3 = Config.Theme.Sec
@@ -474,7 +474,7 @@ local function BuildMobileUI()
 		end))
 	end
 
-	-- 3. 📱 屏幕右侧飞行虚拟触控按键 (▲ 升空 / ▼ 下降)
+	-- 3. On-Screen Flight Virtual Touch Controls (▲ Up / ▼ Down)
 	local FlyControlGui = Instance.new("Frame", ScreenGui)
 	FlyControlGui.Size = UDim2.new(0, 70, 0, 150); FlyControlGui.Position = UDim2.new(1, -85, 0.5, -75)
 	FlyControlGui.BackgroundTransparency = 1; FlyControlGui.Visible = false
@@ -493,7 +493,7 @@ local function BuildMobileUI()
 	DownBtn.AutoButtonColor = false; Instance.new("UICorner", DownBtn).CornerRadius = UDim.new(1, 0)
 	local dStroke = Instance.new("UIStroke", DownBtn); dStroke.Color = Config.Theme.Accent; dStroke.Thickness = 2
 
-	-- 触控按压监听
+	-- Touch input listeners
 	UpBtn.InputBegan:Connect(function(i)
 		if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then
 			Storage.FlyUpState = true
@@ -570,7 +570,7 @@ local function BuildMobileUI()
 	AddToggle("🦘 Infinite Jump", "InfJump")
 	AddToggle("🪂 No Fall Damage", "NoFall")
 
-	-- 触控一键安全卸载按钮
+	-- One-Touch Safe Unload Button
 	local UnloadBtn = Instance.new("TextButton", Content)
 	UnloadBtn.Size = UDim2.new(1, -4, 0, 42); UnloadBtn.BackgroundColor3 = Color3.fromRGB(45, 20, 25)
 	UnloadBtn.Text = "🛑 UNLOAD SCRIPT"; UnloadBtn.TextColor3 = Config.Theme.Red
@@ -680,16 +680,16 @@ local function Init()
 			local dir = Vector3.zero
 			local cf = Camera.CFrame
 
-			-- 触控 ▲ 升空 与 ▼ 下降
+			-- Touch ▲ Up and ▼ Down handling
 			if Storage.FlyUpState then dir = dir + Vector3.new(0, 1, 0) end
 			if Storage.FlyDownState then dir = dir - Vector3.new(0, 1, 0) end
 
-			-- 虚拟移动摇杆驱动：若人物有移动向量则沿镜头朝向飞行
+			-- Virtual joystick drive: Move along camera perspective
 			if h.MoveDirection.Magnitude > 0 then
 				dir = dir + (cf.LookVector * h.MoveDirection.Z * -1) + (cf.RightVector * h.MoveDirection.X)
 			end
 
-			-- 键盘兜底（若平板连接了外接键盘）
+			-- Physical keyboard fallback (if tablet is connected to keyboard)
 			if Services.UIS:IsKeyDown(Enum.KeyCode.W) then dir = dir + cf.LookVector end
 			if Services.UIS:IsKeyDown(Enum.KeyCode.S) then dir = dir - cf.LookVector end
 			if Services.UIS:IsKeyDown(Enum.KeyCode.A) then dir = dir - cf.RightVector end

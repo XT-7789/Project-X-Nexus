@@ -15,8 +15,8 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
 end
 
 -- [[ X NANO V3.2.1 - ULTRA LIGHTWEIGHT EDITION ]]
--- 定位: 极速启动 / 低配友好 / 核心战斗 / 零卡顿
--- 包含: 平滑自瞄(带FOV) | 极简ESP(Box+Chams) | 极速移动(Fly/Noclip/Speed/Jump) | 干净卸载
+-- Features: Smooth Aimbot with FOV | Lightweight ESP (Box+Chams) | 60-75Hz Optimized
+-- Features: Smooth Aimbot with FOV | Lightweight ESP (Box+Chams) | 60-75Hz Optimized
 -- ==================================================================
 local Services = {
 	Players = game:GetService("Players"),

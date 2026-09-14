@@ -15,8 +15,8 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
 end
 
 -- [[ X MINI V4.1.1 - PURE COMBAT & UTILITY EDITION ]]
--- 定位: 纯粹日常主力 / 双栏紧凑 / 高性价比 / 零多余负担
--- 架构: 双Tab (COMBAT & UTILITY) | 纯净平滑自瞄 | 完整ESP | 移动与辅助 | 零内存泄漏
+-- Features: Dual-Tab (Combat & Utility) | Smooth Aimbot | Full ESP | Clean Memory
+-- Features: Dual-Tab (Combat & Utility) | Smooth Aimbot | Full ESP | Clean Memory
 -- ==================================================================
 local Services = {
     Players = game:GetService("Players"),

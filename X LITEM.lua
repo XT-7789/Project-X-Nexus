@@ -179,7 +179,7 @@ local function BuildMobileUI()
 	ScreenGui.IgnoreGuiInset = true
 	ScreenGui.DisplayOrder = 999999
 
-	-- 1. 📱 常驻拖拽触控球 (Delta Optimized Floating Bubble)
+	-- 1. Draggable Floating Bubble (Delta Optimized)
 	local Bubble = Instance.new("TextButton", ScreenGui)
 	Bubble.Size = UDim2.new(0, 52, 0, 52)
 	Bubble.Position = UDim2.new(0, 20, 0.35, 0)
@@ -199,7 +199,7 @@ local function BuildMobileUI()
 	bStroke.Transparency = 0.25
 	Storage.MenuBubble = Bubble
 
-	-- 2. 📱 触控大屏面板
+	-- 2. Touch Menu Panel (Optimized for Mobile/Delta)
 	local Card = Instance.new("Frame", ScreenGui)
 	Card.Size = UDim2.new(0, 300, 0, 510)
 	Card.Position = UDim2.new(0.5, -150, 0.5, -255)
@@ -215,7 +215,7 @@ local function BuildMobileUI()
 	cStroke.Transparency = 0.35
 	Storage.MainFrame = Card
 
-	-- 点击悬浮球切换菜单
+	-- Tap floating bubble to toggle menu
 	Bubble.MouseButton1Click:Connect(function()
 		Card.Visible = not Card.Visible
 		Bubble.Text = Card.Visible and "×" or "🪶"
@@ -387,7 +387,7 @@ local function BuildMobileUI()
 		end))
 	end
 
-	-- 3. 📱 飞行触控虚拟控件 (▲ 升空 / ▼ 下降)
+	-- 3. Flight Touch Controls (▲ Up / ▼ Down)
 	local FlyControlGui = Instance.new("Frame", ScreenGui)
 	FlyControlGui.Size = UDim2.new(0, 70, 0, 150)
 	FlyControlGui.Position = UDim2.new(1, -85, 0.5, -75)
@@ -485,7 +485,7 @@ local function BuildMobileUI()
 	AddToggle("🪂 No Fall Damage", "NoFall")
 	AddToggle("💡 Fullbright Nightvision", "Fullbright", function(v) ToggleFullbright(v) end)
 
-	-- 4. 🌟 UPGRADE PROMO BANNER (引导付费转化 + 官方 DISCORD 一键复制)
+	-- 4. Upgrade Promo Banner & Official Discord Button
 	local PromoBox = Instance.new("Frame", Content)
 	PromoBox.Size = UDim2.new(1, -4, 0, 110)
 	PromoBox.BackgroundColor3 = Color3.fromRGB(18, 22, 32)
@@ -562,7 +562,7 @@ local function BuildMobileUI()
 		end)
 	end)
 
-	-- 5. 🛑 触控一键安全卸载按钮
+	-- 5. One-Touch Safe Unload Button
 	local UnloadBtn = Instance.new("TextButton", Content)
 	UnloadBtn.Size = UDim2.new(1, -4, 0, 42)
 	UnloadBtn.BackgroundColor3 = Color3.fromRGB(45, 20, 25)
@@ -627,16 +627,16 @@ local function Init()
 			local dir = Vector3.zero
 			local cf = Camera.CFrame
 
-			-- 触控 ▲ 升空 与 ▼ 下降
+			-- Touch ▲ Up and ▼ Down handling
 			if Storage.FlyUpState then dir = dir + Vector3.new(0, 1, 0) end
 			if Storage.FlyDownState then dir = dir - Vector3.new(0, 1, 0) end
 
-			-- 移动端触控虚拟摇杆驱动：沿镜头方向移动
+			-- Mobile Virtual Joystick: Move along camera perspective
 			if h.MoveDirection.Magnitude > 0 then
 				dir = dir + (cf.LookVector * h.MoveDirection.Z * -1) + (cf.RightVector * h.MoveDirection.X)
 			end
 
-			-- 键盘兜底（平板外接键盘）
+			-- Physical keyboard fallback (for tablets with keyboard)
 			if Services.UIS:IsKeyDown(Enum.KeyCode.W) then dir = dir + cf.LookVector end
 			if Services.UIS:IsKeyDown(Enum.KeyCode.S) then dir = dir - cf.LookVector end
 			if Services.UIS:IsKeyDown(Enum.KeyCode.A) then dir = dir - cf.RightVector end
