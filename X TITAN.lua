@@ -81,7 +81,7 @@ local Config = {
 		ESP = false, ESPSkeleton = false, Tracers = false, VisibilityCheck = false, Chams = false,
 		XRay = false, Fullbright = false, Crosshair = false, DynamicCrosshair = true,
 		Fly = false, SpeedHack = false, InfJump = false, Noclip = false, NoFall = false,
-		AntiKillbrick = false, AntiVoid = true, HitSound = true, TouchFling = false, TargetFling = false, AntiFling = true, Wallbang = true, OrbitAura = false, RainbowChams = false,  ClickTP = false, SkyHide = false, MapDestroyer = false,
+		AntiKillbrick = false, AntiVoid = true, HitSound = true, TouchFling = false, TargetFling = false, AntiFling = true, Wallbang = true, OrbitAura = false, ClickTP = false, SkyHide = false, MapDestroyer = false,
 		KillAura = false, TPAura = false, Desync = false, AntiAimSpin = false, AntiAimHeadJitter = false,
 		RightClickToggle = true, ShowFOV = false, TacticalLock = false,
 		ShowLockStatus = true, SmartPrediction = true, AutoAimPart = false,
@@ -922,10 +922,17 @@ function Features.UpdateChams()
 			if Config.States.Chams then
 				if not highlight then
 					highlight = Instance.new("Highlight", p.Character)
-					highlight.Name = "X_Chams"; highlight.FillTransparency = 0.5; highlight.OutlineTransparency = 0
+					highlight.Name = "X_Chams"; highlight.FillTransparency = 0.55; highlight.OutlineTransparency = 0.15
 				end
-				highlight.FillColor = Utils.IsTeammate(p) and Config.Theme.Team or Config.Theme.Stroke
-				highlight.OutlineColor = highlight.FillColor
+				if Utils.IsTeammate(p) then
+					highlight.FillColor = Config.Theme.Team
+					highlight.OutlineColor = Config.Theme.Team
+				else
+					local head = p.Character:FindFirstChild("Head")
+					local isVis = head and Utils.IsVisible(head, p)
+					highlight.FillColor = isVis and Color3.fromRGB(255, 60, 60) or Color3.fromRGB(255, 160, 20)
+					highlight.OutlineColor = isVis and Color3.fromRGB(255, 100, 100) or Color3.fromRGB(255, 200, 60)
+				end
 			else
 				if highlight then highlight:Destroy() end
 			end
@@ -1564,8 +1571,7 @@ function UI.Init()
 	AddToggle(P2, "🧭 Off-screen Target Arrows", "OffscreenArrows", getOrder2)
 	AddToggle(P2, "360° Tracers", "Tracers", getOrder2)
 	AddToggle(P2, "Visibility Check", "VisibilityCheck", getOrder2)
-	AddToggle(P2, "Chams", "Chams", getOrder2)
-	AddToggle(P2, "🌈 Dynamic Rainbow Chams", "RainbowChams", getOrder2)
+	AddToggle(P2, "🛡️ Tactical Chams (Vis/Wall)", "Chams", getOrder2)
 	AddToggle(P2, "X-Ray", "XRay", getOrder2)
 	AddToggle(P2, "Fullbright", "Fullbright", getOrder2)
 	
@@ -2817,10 +2823,6 @@ function Runtime.Init()
 			end)
 		end
 
-		if Config.States.RainbowChams then
-			local rainbow = Color3.fromHSV((tick() * 0.4) % 1, 0.9, 1)
-			Config.Theme.Stroke = rainbow
-		end
 
 		-- [V5.6.0] Touch Fling Logic (PlayerCache Optimized)
 		if Config.States.TouchFling and hrp then
