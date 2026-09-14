@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PROM V3.7.0 - PROFESSIONAL MOBILE SUITE ]]
+-- [[ X PROM V3.7.1 - PROFESSIONAL MOBILE SUITE ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- High-Performance Zero-Lag Character Caching & 60+ FPS Optimization
 -- ==============================================================================
@@ -75,7 +75,7 @@ local Config = {
         Tracers = false, Chams = false, Fullbright = false, Crosshair = false,
         Radar = false, HitSound = true,
         Fly = false, SpeedHack = false, InfJump = false, Noclip = false, NoFall = false,
-        AntiKillbrick = false, ItemESP = false, VehicleBoost = false, DetectUnspawned = true
+        AntiKillbrick = false, ItemESP = false, VehicleBoost = false, DetectUnspawned = true, Wallbang = false
     },
     Vals = {
         FOV = 180, Smoothness = 0.32, PredictionStrength = 0.14,
@@ -98,6 +98,9 @@ local function TrackConn(c)
     if c then table.insert(Storage.Connections, c) end
     return c
 end
+
+local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or "")
+local isProPlus = string.find(string.upper(activeKey), "X%-PRO%-PRO%-X") ~= nil or string.find(string.upper(activeKey), "X%-PRO%-PLUS") ~= nil
 
 local Utils = {}
 
@@ -286,6 +289,9 @@ end
 -- ==================================================================
 -- UTILITIES & PREDICTION
 -- ==================================================================
+local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or "")
+local isProPlus = string.find(string.upper(activeKey), "X%-PRO%-PRO%-X") ~= nil or string.find(string.upper(activeKey), "X%-PRO%-PLUS") ~= nil
+
 local Utils = {}
 
 local ConfigFolder = "ProjectX_Pro_Configs"
@@ -387,7 +393,7 @@ function Utils.ResetAll()
     Config.States.AntiKillbrick = false
     Config.States.ItemESP = false
     Config.States.VehicleBoost = false
-    Config.States.DetectUnspawned = true
+    Config.States.DetectUnspawned = true, Wallbang = false
 
     Config.Vals.FOV = 180
     Config.Vals.Smoothness = 0.28
@@ -419,6 +425,33 @@ function Utils.ApplyPreset(presetName)
         Config.States.Fly = false
         Utils.SyncAllUI()
         Utils.Notify("⚡ Preset Applied", "Legit Esports profile active.")
+    elseif isProPlus and presetName == "Semi-Rage" then
+        Config.States.Aimbot = true
+        Config.Vals.Smoothness = 0.12
+        Config.Vals.FOV = 320
+        Config.States.TeamCheck = true
+        Config.States.WallCheck = false
+        Config.States.Wallbang = true
+        Config.States.SilentAim = true
+        Config.States.ESP = true
+        Config.States.ESPSkeleton = true
+        Config.States.Chams = true
+        Config.States.SpeedHack = true
+        Config.Vals.WalkSpeed = 100
+        Utils.SyncAllUI()
+        Utils.Notify("🔥 Preset Applied", "Founder Semi-Rage profile active.")
+    elseif isProPlus and presetName == "CQB" then
+        Config.States.Aimbot = true
+        Config.Vals.Smoothness = 0.20
+        Config.Vals.FOV = 220
+        Config.States.TeamCheck = true
+        Config.States.WallCheck = true
+        Config.States.TriggerBot = true
+        Config.States.SilentAim = false
+        Config.States.ESP = true
+        Config.States.WeaponESP = true
+        Utils.SyncAllUI()
+        Utils.Notify("🎯 Preset Applied", "Founder CQB profile active.")
     elseif presetName == "Reset" then
         Utils.ResetAll()
     end
@@ -654,6 +687,12 @@ function Utils.IsVisible(targetHead)
     local ok, res = pcall(function() return Services.Workspace:Raycast(origin, dir, params) end)
     if not ok or not res then return true end
     if res.Instance and res.Instance:IsDescendantOf(targetHead.Parent) then return true end
+    if isProPlus and Config.States.Wallbang and res.Instance then
+        local inst = res.Instance
+        if not inst.CanCollide or inst.Transparency > 0.35 or inst.Material == Enum.Material.Glass or inst.Material == Enum.Material.Wood or inst.Size.Magnitude < 4 then
+            return true
+        end
+    end
     return false
 end
 
@@ -1069,7 +1108,12 @@ local function BuildMobileUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "📱 X PROM <font color='#00dcff'>V3.7.0</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
+    if isProPlus then
+        Title.Text = "📱 X PROM<font color='#00dcff'>+ PLUS</font> <font color='#ffcd32'>[PRO-X]</font>"
+    else
+        Title.Text = "📱 X PROM <font color='#00dcff'>V3.7.1</font> <font color='#8c8c9b'>| MOBILE PRO</font>"
+    end
+    Title.RichText = true
     Title.Size = UDim2.new(0, 150, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 13; Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -1287,6 +1331,9 @@ local function BuildMobileUI()
     end)
     AddToggle(P1, "🛡️ Team Check", "TeamCheck")
     AddToggle(P1, "🧱 Wall Check", "WallCheck")
+    if isProPlus then
+        AddToggle(P1, "🛡️ Wallbang Penetration 👑 [Pro+]", "Wallbang")
+    end
 
     -- TAB 2: VISUALS
     AddToggle(P2, "👻 Detect No-Spawn / Lobby", "DetectUnspawned")
@@ -1337,15 +1384,21 @@ local function BuildMobileUI()
     AddSlider(P3, "Vehicle Speed", 50, 300, "VehicleSpeed")
 
 
-    -- TAB 4: CONFIG (Streamlined for PROM Tier)
+    -- TAB 4: CONFIG (PROM & PRO-X Founder Edition)
     AddSection(P4, "📁 CONFIG PRESETS & STORAGE")
     AddDual(P4, "💾 Save Default", function() Utils.SaveConfig("prom_default") end, "📂 Load Default", function() Utils.LoadConfig("prom_default") end)
     AddDual(P4, "⚡ Preset: Legit", function() Utils.ApplyPreset("Legit") end, "🗑️ Reset All", function() Utils.ResetAll() end)
     
-    AddSection(P4, "👑 VIP TIER UPGRADE")
-    AddButton(P4, "🔒 Rage, CQB & Custom: Titan Only", function()
-        Utils.Notify("👑 Titan Exclusive", "Semi-Rage, CQB and unlimited custom presets are exclusive to X Titan!", 3.5)
-    end)
+    if isProPlus then
+        AddSection(P4, "👑 FOUNDER TITAN UNLOCKS (PRO-X)")
+        AddDual(P4, "🔥 Preset: Semi-Rage", function() Utils.ApplyPreset("Semi-Rage") end, "🎯 Preset: CQB", function() Utils.ApplyPreset("CQB") end)
+        AddDual(P4, "💾 Save Custom", function() Utils.SaveConfig("prom_custom") end, "📂 Load Custom", function() Utils.LoadConfig("prom_custom") end)
+    else
+        AddSection(P4, "👑 VIP TIER UPGRADE")
+        AddButton(P4, "🔒 Rage, CQB & Custom: Titan Only", function()
+            Utils.Notify("👑 Titan Exclusive", "Semi-Rage, CQB and unlimited custom presets are exclusive to X Titan!", 3.5)
+        end)
+    end
 
     AddSection(P4, "ℹ️ STORAGE DIRECTORY")
     AddButton(P4, "📂 Folder: /ProjectX_Pro_Configs/", function()
@@ -1443,7 +1496,7 @@ local function Unload()
     if Storage.MainFrame and Storage.MainFrame.Parent then Storage.MainFrame.Parent:Destroy() end
     if Storage.FOVRingUI and Storage.FOVRingUI.Parent then Storage.FOVRingUI.Parent:Destroy() end
     if Storage.RadarGui and Storage.RadarGui.Parent then Storage.RadarGui:Destroy() end
-    Notify("X PROM V3.7.0", "Mobile Pro Suite successfully unloaded.")
+    Notify("X PROM V3.7.1", "Mobile Pro Suite successfully unloaded.")
 end
 _G.X_PROM_UNLOAD = Unload
 
@@ -1769,7 +1822,11 @@ local function Init()
         end
     end)
 
-    Notify("X PROM V3.7.0", "Delta Mobile Pro V3.7.0 Active! Tap [⚡] for menu")
+    if isProPlus then
+        Notify("👑 X PROM+ FOUNDER", "Master Key X-PRO-PRO-X Active! Titan Presets & Wallbang Unlocked.", 4.5)
+    else
+        Notify("X PROM V3.7.1", "Delta Mobile Pro V3.7.1 Active! Tap [⚡] for menu", 4.5)
+    end
 end
 
 Init()

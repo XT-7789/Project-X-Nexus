@@ -75,6 +75,7 @@ if not key or key == "" or key == "PASTE_YOUR_KEY_HERE" or key == "YOUR_KEY_HERE
 	return
 end
 
+local isMasterProPlus = (string.upper(tostring(key)) == "X-PRO-PRO-X") or (string.upper(tostring(key)) == "X-PRO-PLUS")
 local isMasterMiniPlus = (string.upper(tostring(key)) == "X-MINI-PRO-X")
 local isMasterNanoPlus = (string.upper(tostring(key)) == "X-NANO-PRO-X")
 local tier
@@ -112,9 +113,11 @@ if not data.success then
 	return
 end
 
-tier = data.tier or (isMasterNanoPlus and "Nano" or (isMasterMiniPlus and "Mini" or "Nano"))
+tier = data.tier or (isMasterProPlus and "Pro" or (isMasterNanoPlus and "Nano" or (isMasterMiniPlus and "Mini" or "Nano")))
 
-if isMasterNanoPlus then
+if isMasterProPlus then
+	Notify("👑 X PRO+ PRIVILEGED", "Founder Key X-PRO-PRO-X Verified! Titan Features Unlocked.", 3.5)
+elseif isMasterNanoPlus then
 	Notify("👑 X NANO+ PRIVILEGED", "Founder Key X-NANO-PRO-X Verified! Silent Aim Unlocked.", 3)
 elseif isMasterMiniPlus then
 	Notify("👑 X MINI+ PRIVILEGED", "Founder Key X-MINI-PRO-X Verified! Silent Aim Unlocked.", 3)
@@ -128,7 +131,9 @@ local isMobile = Services.UIS.TouchEnabled and not Services.UIS.KeyboardEnabled
 Notify("✅ SUCCESS", "Welcome! Loading X " .. tostring(tier) .. "...", 3)
 print("==========================================")
 print("✅ [PROJECT X NEXUS] ACCESS GRANTED")
-if isMasterNanoPlus then
+if isMasterProPlus then
+	print("👑 X PRO+ V3.7.1 [PRO-X FOUNDER EDITION] LOADED - TITAN PRESETS UNLOCKED")
+elseif isMasterNanoPlus then
 	print("👑 X NANO+ V3.2.1 [PRO-X EDITION] LOADED - SILENT AIM UNLOCKED")
 elseif isMasterMiniPlus then
 	print("👑 X MINI+ V4.1.1 [PRO-X EDITION] LOADED - SILENT AIM UNLOCKED")
@@ -178,7 +183,13 @@ local function ExecuteRemote(scriptUrl)
 	end
 end
 
-if isMasterNanoPlus then
+if isMasterProPlus then
+	if isMobile then
+		ExecuteRemote(repo .. "X%20PROM.lua")
+	else
+		ExecuteRemote(repo .. "X%20PRO.lua")
+	end
+elseif isMasterNanoPlus then
 	if isMobile then
 		ExecuteRemote(repo .. "X%20NANOM.lua")
 	else

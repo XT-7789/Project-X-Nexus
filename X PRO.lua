@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PRO V3.7.0 - PROFESSIONAL SUITE ]]
+-- [[ X PRO V3.7.1 - PROFESSIONAL SUITE ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- High-Performance Zero-Lag Character Caching & 60+ FPS Optimization
 -- ==============================================================================
@@ -81,7 +81,7 @@ local Config = {
         Tracers = false, Chams = false, Fullbright = false, Crosshair = false,
         Radar = false, HitSound = true, NoRecoil = false,
         Fly = false, LegitFly = false, SpeedHack = false, InfJump = false,
-        Noclip = false, NoFall = false, ClickTP = false, AntiKillbrick = false, ItemESP = false, VehicleBoost = false, DetectUnspawned = true
+        Noclip = false, NoFall = false, ClickTP = false, AntiKillbrick = false, ItemESP = false, VehicleBoost = false, DetectUnspawned = true, Wallbang = false
     },
     Vals = {
         FOV = 180, Smoothness = 0.28, PredictionStrength = 0.14,
@@ -104,6 +104,9 @@ local function TrackConn(c)
     if c then table.insert(Storage.Connections, c) end
     return c
 end
+
+local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or "")
+local isProPlus = string.find(string.upper(activeKey), "X%-PRO%-PRO%-X") ~= nil or string.find(string.upper(activeKey), "X%-PRO%-PLUS") ~= nil
 
 local Utils = {}
 
@@ -393,7 +396,7 @@ function Utils.ResetAll()
     Config.States.AntiKillbrick = false
     Config.States.ItemESP = false
     Config.States.VehicleBoost = false
-    Config.States.DetectUnspawned = true
+    Config.States.DetectUnspawned = true, Wallbang = false
 
     Config.Vals.FOV = 180
     Config.Vals.Smoothness = 0.28
@@ -425,6 +428,33 @@ function Utils.ApplyPreset(presetName)
         Config.States.Fly = false
         Utils.SyncAllUI()
         Utils.Notify("⚡ Preset Applied", "Legit Esports profile active.")
+    elseif isProPlus and presetName == "Semi-Rage" then
+        Config.States.Aimbot = true
+        Config.Vals.Smoothness = 0.12
+        Config.Vals.FOV = 320
+        Config.States.TeamCheck = true
+        Config.States.WallCheck = false
+        Config.States.Wallbang = true
+        Config.States.SilentAim = true
+        Config.States.ESP = true
+        Config.States.ESPSkeleton = true
+        Config.States.Chams = true
+        Config.States.SpeedHack = true
+        Config.Vals.WalkSpeed = 100
+        Utils.SyncAllUI()
+        Utils.Notify("🔥 Preset Applied", "Founder Semi-Rage profile active.")
+    elseif isProPlus and presetName == "CQB" then
+        Config.States.Aimbot = true
+        Config.Vals.Smoothness = 0.20
+        Config.Vals.FOV = 220
+        Config.States.TeamCheck = true
+        Config.States.WallCheck = true
+        Config.States.TriggerBot = true
+        Config.States.SilentAim = false
+        Config.States.ESP = true
+        Config.States.WeaponESP = true
+        Utils.SyncAllUI()
+        Utils.Notify("🎯 Preset Applied", "Founder CQB profile active.")
     elseif presetName == "Reset" then
         Utils.ResetAll()
     end
@@ -758,6 +788,12 @@ function Utils.IsVisible(targetHead)
     local ok, res = pcall(function() return Services.Workspace:Raycast(origin, dir, params) end)
     if not ok or not res then return true end
     if res.Instance and res.Instance:IsDescendantOf(targetHead.Parent) then return true end
+    if isProPlus and Config.States.Wallbang and res.Instance then
+        local inst = res.Instance
+        if not inst.CanCollide or inst.Transparency > 0.35 or inst.Material == Enum.Material.Glass or inst.Material == Enum.Material.Wood or inst.Size.Magnitude < 4 then
+            return true
+        end
+    end
     return false
 end
 
@@ -1118,7 +1154,7 @@ local function MicroFlickSilentAim()
 end
 
 -- ==================================================================
--- MODERN 3-TAB UI (V3.7.0)
+-- MODERN 3-TAB UI (V3.7.1)
 -- ==================================================================
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
@@ -1235,7 +1271,12 @@ local function BuildUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 8)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "⚡ X PRO <font color='#00dcff'>V3.7.0</font>"; Title.RichText = true
+    if isProPlus then
+        Title.Text = "⚡ X PRO<font color='#00dcff'>+ PLUS</font> <font color='#ffcd32'>[PRO-X]</font>"
+    else
+        Title.Text = "⚡ X PRO <font color='#00dcff'>V3.7.1</font>"
+    end
+    Title.RichText = true
     Title.Size = UDim2.new(0, 130, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 14; Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -1471,6 +1512,9 @@ local function BuildUI()
     end)
     AddToggle(P1, "🛡️ Team Check", "TeamCheck")
     AddToggle(P1, "🧱 Wall Check", "WallCheck")
+    if isProPlus then
+        AddToggle(P1, "🛡️ Wallbang Penetration 👑 [Pro+]", "Wallbang")
+    end
 
     -- TAB 2: VISUALS
     AddToggle(P2, "👻 Detect No-Spawn / Lobby", "DetectUnspawned")
@@ -1517,15 +1561,21 @@ local function BuildUI()
     AddToggle(P3, "📍 Click TP [Ctrl+Click]", "ClickTP")
     AddToggle(P3, "🚗 Vehicle Speed Boost", "VehicleBoost")
     AddSlider(P3, "Vehicle Speed", 50, 350, "VehicleSpeed")
-    -- TAB 4: CONFIG (Streamlined for PRO Tier)
+    -- TAB 4: CONFIG (PRO & PRO-X Founder Edition)
     AddSection(P4, "📁 CONFIG PRESETS & STORAGE")
     AddDual(P4, "💾 Save Default", function() Utils.SaveConfig("pro_default") end, "📂 Load Default", function() Utils.LoadConfig("pro_default") end)
     AddDual(P4, "⚡ Preset: Legit", function() Utils.ApplyPreset("Legit") end, "🗑️ Reset All", function() Utils.ResetAll() end)
     
-    AddSection(P4, "👑 VIP TIER UPGRADE")
-    AddButton(P4, "🔒 Rage, CQB & Custom Presets: Titan Only", function()
-        Utils.Notify("👑 Titan Exclusive", "Semi-Rage, CQB and unlimited custom presets are exclusive to X Titan!", 3.5)
-    end)
+    if isProPlus then
+        AddSection(P4, "👑 FOUNDER TITAN UNLOCKS (PRO-X)")
+        AddDual(P4, "🔥 Preset: Semi-Rage", function() Utils.ApplyPreset("Semi-Rage") end, "🎯 Preset: CQB", function() Utils.ApplyPreset("CQB") end)
+        AddDual(P4, "💾 Save Custom", function() Utils.SaveConfig("pro_custom") end, "📂 Load Custom", function() Utils.LoadConfig("pro_custom") end)
+    else
+        AddSection(P4, "👑 VIP TIER UPGRADE")
+        AddButton(P4, "🔒 Rage, CQB & Custom Presets: Titan Only", function()
+            Utils.Notify("👑 Titan Exclusive", "Semi-Rage, CQB and unlimited custom presets are exclusive to X Titan!", 3.5)
+        end)
+    end
 
     AddSection(P4, "ℹ️ STORAGE DIRECTORY")
     AddButton(P4, "📂 Folder: /ProjectX_Pro_Configs/", function()
@@ -1568,7 +1618,7 @@ Unload = function()
     if Storage.MainFrame and Storage.MainFrame.Parent then Storage.MainFrame.Parent:Destroy() end
     if Storage.FOVRingUI and Storage.FOVRingUI.Parent then Storage.FOVRingUI.Parent:Destroy() end
     if Storage.RadarGui and Storage.RadarGui.Parent then Storage.RadarGui:Destroy() end
-    Notify("X PRO V3.7.0", "All Pro modules successfully unloaded.")
+    Notify("X PRO V3.7.1", "All Pro modules successfully unloaded.")
 end
 
 -- ==================================================================
@@ -1677,7 +1727,7 @@ local function Init()
 
     -- RenderStepped Loop
     TrackConn(Services.RunService.RenderStepped:Connect(function()
-        -- Dynamic Smooth Aimbot (V3.7.0 CQB Ballistic Responsive)
+        -- Dynamic Smooth Aimbot (V3.7.1 CQB Ballistic Responsive)
         if Config.States.Aimbot then
             local canAim = not Config.States.RightClickToggle or Storage.IsRightMouseDown
             if canAim then
@@ -2005,7 +2055,11 @@ local function Init()
         end
     end)
 
-    Notify("X PRO V3.7.0", "Tournament Pro V3.7.0 Active! [Insert] Menu [F] Lock Target [End] Unload")
+    if isProPlus then
+        Notify("👑 X PRO+ FOUNDER", "Master Key X-PRO-PRO-X Active! Titan Presets & Wallbang Unlocked.", 4.5)
+    else
+        Notify("X PRO V3.7.1", "Tournament Pro V3.7.1 Active! [Insert] Menu [F] Lock Target [End] Unload", 4.5)
+    end
 end
 
 Init()
