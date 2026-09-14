@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PROM V3.7.4 - PROFESSIONAL MOBILE SUITE ]]
+-- [[ X PROM V3.7.5 - PROFESSIONAL MOBILE SUITE ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- High-Performance Zero-Lag Character Caching & 60+ FPS Optimization
 -- ==============================================================================
@@ -71,7 +71,7 @@ local Config = {
     States = {
         Aimbot = false, SilentAim = false, SmartPrediction = true, AutoAimPart = true,
         TeamCheck = true, WallCheck = false, TriggerBot = false, ShowFOV = false,
-        ESP = false, CornerBox = false, StateFlags = true, ESPSkeleton = false, WeaponESP = true, OffscreenArrows = true,
+        ESP = false, CornerBox = false, StateFlags = true, ESP3D = false, ESPLookRay = false, ESPSkeleton = false, WeaponESP = true, OffscreenArrows = true,
         Tracers = false, Chams = false, Fullbright = false, Crosshair = false,
         Radar = false, HitSound = true,
         Fly = false, SpeedHack = false, InfJump = false, Noclip = false, NoFall = false,
@@ -85,7 +85,7 @@ local Config = {
 }
 
 local Storage = {
-    Connections = {}, ESPObjects = {}, CornerESPObjects = {}, StateFlagObjects = {}, SkeletonParts = {}, TracerLines = {},
+    Connections = {}, ESPObjects = {}, CornerESPObjects = {}, StateFlagObjects = {}, Box3DObjects = {}, LookRayLines = {}, SkeletonParts = {}, TracerLines = {},
     CrosshairLines = {}, OffscreenArrows = {}, ToggleFuncs = {},
     FOVRingUI = nil, MainFrame = nil, MenuBubble = nil,
     FlyUpBtn = nil, FlyDownBtn = nil, FlyUpState = false, FlyDownState = false,
@@ -1118,7 +1118,7 @@ local function BuildMobileUI()
     elseif isProPlus then
         Title.Text = "📱 X PROM<font color='#00dcff'>+ PLUS</font> <font color='#ffcd32'>[PRO-X]</font>"
     else
-        Title.Text = "📱 X PROM <font color='#00dcff'>V3.7.4</font> <font color='#8c8c9b'>| MOBILE PRO</font>"
+        Title.Text = "📱 X PROM <font color='#00dcff'>V3.7.5</font> <font color='#8c8c9b'>| MOBILE PRO</font>"
     end
     Title.RichText = true
     Title.Size = UDim2.new(0, 150, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
@@ -1360,6 +1360,10 @@ local function BuildMobileUI()
             end
         end
     end)
+    if isProPlus then
+        AddToggle(P2, "📦 3D Box Wireframe ESP 👑 [Pro+]", "ESP3D")
+        AddToggle(P2, "👀 View Angle Ray (Look Vector) 👑 [Pro+]", "ESPLookRay")
+    end
     AddToggle(P2, "🔲 Corner Box Style", "CornerBox")
     AddToggle(P2, "🏷️ Player State Flags", "StateFlags")
     AddToggle(P2, "📦 Item & Loot ESP", "ItemESP", function(v) if not v then ClearItemESP() else task.spawn(UpdateItemESP) end end)
@@ -1500,6 +1504,14 @@ local function Unload()
             pcall(function() Storage.StateFlagObjects[p]:Remove() end)
             Storage.StateFlagObjects[p] = nil
         end
+        if Storage.Box3DObjects and Storage.Box3DObjects[p] then
+            for _, l in pairs(Storage.Box3DObjects[p]) do pcall(function() l:Remove() end) end
+            Storage.Box3DObjects[p] = nil
+        end
+        if Storage.LookRayLines and Storage.LookRayLines[p] then
+            pcall(function() Storage.LookRayLines[p]:Remove() end)
+            Storage.LookRayLines[p] = nil
+        end
         if Storage.TracerLines[p] then pcall(function() Storage.TracerLines[p]:Remove() end) end
         if Storage.OffscreenArrows[p] then pcall(function() Storage.OffscreenArrows[p]:Remove() end) end
     end
@@ -1519,7 +1531,7 @@ local function Unload()
     if Storage.MainFrame and Storage.MainFrame.Parent then Storage.MainFrame.Parent:Destroy() end
     if Storage.FOVRingUI and Storage.FOVRingUI.Parent then Storage.FOVRingUI.Parent:Destroy() end
     if Storage.RadarGui and Storage.RadarGui.Parent then Storage.RadarGui:Destroy() end
-    Notify("X PROM V3.7.4", "Mobile Pro Suite successfully unloaded.")
+    Notify("X PROM V3.7.5", "Mobile Pro Suite successfully unloaded.")
 end
 _G.X_PROM_UNLOAD = Unload
 
@@ -1790,6 +1802,79 @@ local function Init()
                                 elseif Storage.StateFlagObjects[plr] then
                                     Storage.StateFlagObjects[plr].Visible = false
                                 end
+
+                                -- [PRO+ EXCLUSIVE 3D BOX WIREFRAME]
+                                if isProPlus and Config.States.ESP3D then
+                                    local b3d = Storage.Box3DObjects[plr]
+                                    if not b3d then
+                                        b3d = {}
+                                        for i = 1, 12 do
+                                            local l = Drawing.new("Line"); l.Thickness = thick; l.Visible = false
+                                            table.insert(b3d, l)
+                                        end
+                                        Storage.Box3DObjects[plr] = b3d
+                                    end
+                                    local cf, size = cData.Char:GetBoundingBox()
+                                    local sx, sy, sz = size.X * 0.5, size.Y * 0.5, size.Z * 0.5
+                                    local corners = {
+                                        cf * Vector3.new(-sx, -sy, -sz), cf * Vector3.new( sx, -sy, -sz),
+                                        cf * Vector3.new( sx, -sy,  sz), cf * Vector3.new(-sx, -sy,  sz),
+                                        cf * Vector3.new(-sx,  sy, -sz), cf * Vector3.new( sx,  sy, -sz),
+                                        cf * Vector3.new( sx,  sy,  sz), cf * Vector3.new(-sx,  sy,  sz)
+                                    }
+                                    local sPts = {}
+                                    local anyVis = false
+                                    for idx, pt in ipairs(corners) do
+                                        local sp, onS = Camera:WorldToViewportPoint(pt)
+                                        sPts[idx] = sp
+                                        if onS and sp.Z > 0 then anyVis = true end
+                                    end
+                                    if anyVis then
+                                        local edges = {
+                                            {1,2}, {2,3}, {3,4}, {4,1},
+                                            {5,6}, {6,7}, {7,8}, {8,5},
+                                            {1,5}, {2,6}, {3,7}, {4,8}
+                                        }
+                                        for i, e in ipairs(edges) do
+                                            local l = b3d[i]
+                                            local pA = sPts[e[1]]
+                                            local pB = sPts[e[2]]
+                                            if pA and pB and pA.Z > 0 and pB.Z > 0 then
+                                                l.Visible = true; l.From = Vector2.new(pA.X, pA.Y); l.To = Vector2.new(pB.X, pB.Y); l.Color = color; l.Thickness = thick
+                                            else
+                                                l.Visible = false
+                                            end
+                                        end
+                                    else
+                                        for _, l in pairs(b3d) do l.Visible = false end
+                                    end
+                                elseif Storage.Box3DObjects and Storage.Box3DObjects[plr] then
+                                    for _, l in pairs(Storage.Box3DObjects[plr]) do l.Visible = false end
+                                end
+
+                                -- [PRO+ EXCLUSIVE LOOK VECTOR RAY]
+                                if isProPlus and Config.States.ESPLookRay then
+                                    local lRay = Storage.LookRayLines[plr]
+                                    if not lRay then
+                                        lRay = Drawing.new("Line"); lRay.Thickness = 1.5; lRay.Visible = false
+                                        Storage.LookRayLines[plr] = lRay
+                                    end
+                                    local head = cData.Head
+                                    if head then
+                                        local hPos, hOn = Camera:WorldToViewportPoint(head.Position)
+                                        local rayEnd = head.Position + (head.CFrame.LookVector * 5.0)
+                                        local ePos, eOn = Camera:WorldToViewportPoint(rayEnd)
+                                        if (hOn or eOn) and hPos.Z > 0 and ePos.Z > 0 then
+                                            lRay.Visible = true; lRay.From = Vector2.new(hPos.X, hPos.Y); lRay.To = Vector2.new(ePos.X, ePos.Y); lRay.Color = color
+                                        else
+                                            lRay.Visible = false
+                                        end
+                                    else
+                                        lRay.Visible = false
+                                    end
+                                elseif Storage.LookRayLines and Storage.LookRayLines[plr] then
+                                    Storage.LookRayLines[plr].Visible = false
+                                end
                             else
                                 esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Weapon.Visible = false
                                 if Storage.CornerESPObjects[plr] then for _, l in ipairs(Storage.CornerESPObjects[plr]) do l.Visible = false end end
@@ -1922,7 +2007,7 @@ local function Init()
     elseif isProPlus then
         Notify("📱 X PROM+ [PRO-X]", "Master Key Active! Titan Presets & Wallbang Unlocked.", 4)
     else
-        Notify("X PROM V3.7.4", "Delta Mobile Pro V3.7.4 Active! Tap [⚡] for menu", 4.5)
+        Notify("X PROM V3.7.5", "Delta Mobile Pro V3.7.5 Active! Tap [⚡] for menu", 4.5)
     end
 end
 

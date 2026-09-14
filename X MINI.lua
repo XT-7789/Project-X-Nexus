@@ -62,7 +62,7 @@ local Config = {
     States = {
         Aimbot = false, TeamCheck = true, WallCheck = false, RightClickOnly = true,
         ShowFOV = false, HeadExpander = false, TriggerBot = false,
-        ESP = false, Chams = false, Fullbright = false, Crosshair = false,
+        ESP = false, CornerBox = false, ESPSkeleton = false, WeaponESP = false, Tracers = false, Chams = false, Fullbright = false, Crosshair = false,
         Fly = false, LegitFly = false, Noclip = false, SpeedHack = false,
         InfJump = false, NoFall = false, ClickTP = false, ItemESP = false, SilentAim = false
     },
@@ -291,11 +291,13 @@ local function CreateESP(plr)
     local esp = {
         Box = Drawing.new("Square"),
         Name = Drawing.new("Text"),
-        HealthBar = Drawing.new("Line")
+        HealthBar = Drawing.new("Line"),
+        Weapon = Drawing.new("Text")
     }
     esp.Box.Thickness = 1.5; esp.Box.Filled = false; esp.Box.Visible = false
     esp.Name.Size = 13; esp.Name.Center = true; esp.Name.Outline = true; esp.Name.Color = Color3.new(1,1,1); esp.Name.Visible = false
     esp.HealthBar.Thickness = 1.5; esp.HealthBar.Color = Color3.new(0,1,0); esp.HealthBar.Visible = false
+    esp.Weapon.Size = 11; esp.Weapon.Center = true; esp.Weapon.Outline = true; esp.Weapon.Color = Config.Theme.Dim; esp.Weapon.Visible = false
     Storage.ESPObjects[plr] = esp
 end
 
@@ -303,6 +305,18 @@ local function RemoveESP(plr)
     if Storage.ESPObjects[plr] then
         for _, d in pairs(Storage.ESPObjects[plr]) do pcall(function() d:Remove() end) end
         Storage.ESPObjects[plr] = nil
+    end
+    if Storage.CornerESPObjects and Storage.CornerESPObjects[plr] then
+        for _, l in pairs(Storage.CornerESPObjects[plr]) do pcall(function() l:Remove() end) end
+        Storage.CornerESPObjects[plr] = nil
+    end
+    if Storage.SkeletonParts and Storage.SkeletonParts[plr] then
+        for _, l in pairs(Storage.SkeletonParts[plr]) do pcall(function() l:Remove() end) end
+        Storage.SkeletonParts[plr] = nil
+    end
+    if Storage.TracerLines and Storage.TracerLines[plr] then
+        pcall(function() Storage.TracerLines[plr]:Remove() end)
+        Storage.TracerLines[plr] = nil
     end
 end
 
@@ -534,7 +548,7 @@ local function BuildUI()
     elseif isMiniPlus then
         Title.Text = "📦 X MINI<font color='#00d2ff'>+</font> <font color='#ffcd32'>[PRO-X]</font>"
     else
-        Title.Text = "📦 X MINI <font color='#00d2ff'>V4.2.1</font>"
+        Title.Text = "📦 X MINI <font color='#00d2ff'>V4.2.2</font>"
     end
     Title.RichText = true
     Title.Size = UDim2.new(0, 160, 1, 0); Title.Position = UDim2.new(0, 12, 0, 0)
@@ -683,6 +697,12 @@ local function BuildUI()
     AddSlider(CombatPage, "Head Size", 2, 35, "HeadSize")
 
     -- ================= TAB 2: UTILITY =================
+    if isMiniPlus then
+        AddToggle(UtilityPage, "🔲 Corner Box Style 👑 [Mini+]", "CornerBox")
+        AddToggle(UtilityPage, "🦴 Skeleton ESP 👑 [Mini+]", "ESPSkeleton")
+        AddToggle(UtilityPage, "🔫 Weapon / Tool ESP 👑 [Mini+]", "WeaponESP")
+        AddToggle(UtilityPage, "📏 Snapline Tracers 👑 [Mini+]", "Tracers")
+    end
     AddToggle(UtilityPage, "📦 Box ESP", "ESP", function(v)
         if not v and Drawing then
             for _, esp in pairs(Storage.ESPObjects) do
@@ -888,26 +908,127 @@ local function Init()
                                 local height = math.abs(headPos.Y - Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0)).Y)
                                 local width = math.clamp(height / 1.8, 10, 300)
 
-                                esp.Box.Visible = true; esp.Box.Size = Vector2.new(width, height)
-                                esp.Box.Position = Vector2.new(pos.X - width / 2, pos.Y - height / 2); esp.Box.Color = color
+                                local boxX = pos.X - width / 2
+                                local boxY = pos.Y - height / 2
+
+                                if isMiniPlus and Config.States.CornerBox then
+                                    esp.Box.Visible = false
+                                    local corners = Storage.CornerESPObjects[plr]
+                                    if not corners then
+                                        corners = {}
+                                        for i = 1, 8 do
+                                            local l = Drawing.new("Line"); l.Thickness = 1.5; l.Visible = false
+                                            table.insert(corners, l)
+                                        end
+                                        Storage.CornerESPObjects[plr] = corners
+                                    end
+                                    local cLen = math.clamp(width * 0.25, 4, 16)
+                                    local pts = {
+                                        {Vector2.new(boxX, boxY), Vector2.new(boxX + cLen, boxY)},
+                                        {Vector2.new(boxX, boxY), Vector2.new(boxX, boxY + cLen)},
+                                        {Vector2.new(boxX + width, boxY), Vector2.new(boxX + width - cLen, boxY)},
+                                        {Vector2.new(boxX + width, boxY), Vector2.new(boxX + width, boxY + cLen)},
+                                        {Vector2.new(boxX, boxY + height), Vector2.new(boxX + cLen, boxY + height)},
+                                        {Vector2.new(boxX, boxY + height), Vector2.new(boxX, boxY + height - cLen)},
+                                        {Vector2.new(boxX + width, boxY + height), Vector2.new(boxX + width - cLen, boxY + height)},
+                                        {Vector2.new(boxX + width, boxY + height), Vector2.new(boxX + width, boxY + height - cLen)}
+                                    }
+                                    for idx, cLine in ipairs(corners) do
+                                        cLine.Visible = true; cLine.From = pts[idx][1]; cLine.To = pts[idx][2]; cLine.Color = color; cLine.Thickness = 1.5
+                                    end
+                                else
+                                    if Storage.CornerESPObjects and Storage.CornerESPObjects[plr] then
+                                        for _, l in ipairs(Storage.CornerESPObjects[plr]) do l.Visible = false end
+                                    end
+                                    esp.Box.Visible = true; esp.Box.Size = Vector2.new(width, height)
+                                    esp.Box.Position = Vector2.new(boxX, boxY); esp.Box.Color = color
+                                end
 
                                 local dist = math.floor((Camera.CFrame.Position - root.Position).Magnitude)
                                 esp.Name.Visible = true; esp.Name.Text = plr.DisplayName .. " [" .. tostring(dist) .. "m]"
-                                esp.Name.Position = Vector2.new(pos.X, esp.Box.Position.Y - 16); esp.Name.Color = color
+                                esp.Name.Position = Vector2.new(pos.X, boxY - 16); esp.Name.Color = color
 
                                 esp.HealthBar.Visible = true
                                 local hpPercent = (hum and hum.MaxHealth > 0) and math.clamp(hum.Health / hum.MaxHealth, 0, 1) or 1
                                 esp.HealthBar.Color = Color3.fromRGB(math.floor(255 * (1 - hpPercent)), math.floor(255 * hpPercent), 0)
-                                esp.HealthBar.From = Vector2.new(esp.Box.Position.X - 5, esp.Box.Position.Y + height)
-                                esp.HealthBar.To = Vector2.new(esp.Box.Position.X - 5, esp.Box.Position.Y + height - height * hpPercent)
+                                esp.HealthBar.From = Vector2.new(boxX - 5, boxY + height)
+                                esp.HealthBar.To = Vector2.new(boxX - 5, boxY + height - height * hpPercent)
+
+                                if isMiniPlus and Config.States.WeaponESP and esp.Weapon then
+                                    local tool = data.Char:FindFirstChildOfClass("Tool")
+                                    esp.Weapon.Visible = true
+                                    esp.Weapon.Text = tool and ("[" .. tool.Name .. "]") or "[Unarmed]"
+                                    esp.Weapon.Position = Vector2.new(pos.X, boxY + height + 2)
+                                    esp.Weapon.Color = tool and Color3.fromRGB(255, 220, 100) or Config.Theme.Dim
+                                elseif esp.Weapon then
+                                    esp.Weapon.Visible = false
+                                end
+
+                                if isMiniPlus and Config.States.Tracers then
+                                    local line = Storage.TracerLines[plr]
+                                    if not line then
+                                        line = Drawing.new("Line"); line.Thickness = 1.2; Storage.TracerLines[plr] = line
+                                    end
+                                    line.Visible = true; line.Color = color
+                                    line.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                                    line.To = Vector2.new(pos.X, pos.Y)
+                                elseif Storage.TracerLines and Storage.TracerLines[plr] then
+                                    Storage.TracerLines[plr].Visible = false
+                                end
+
+                                if isMiniPlus and Config.States.ESPSkeleton then
+                                    local skel = Storage.SkeletonParts[plr]
+                                    if not skel then
+                                        skel = {}
+                                        for i = 1, 6 do
+                                            local l = Drawing.new("Line"); l.Thickness = 1.5; l.Visible = false
+                                            table.insert(skel, l)
+                                        end
+                                        Storage.SkeletonParts[plr] = skel
+                                    end
+                                    local pairsList = {
+                                        {"Head", "Torso"}, {"Torso", "Left Arm"}, {"Torso", "Right Arm"},
+                                        {"Torso", "Left Leg"}, {"Torso", "Right Leg"}, {"Head", "HumanoidRootPart"}
+                                    }
+                                    for idx, pr in ipairs(pairsList) do
+                                        local l = skel[idx]
+                                        local pA = data.Char:FindFirstChild(pr[1])
+                                        local pB = data.Char:FindFirstChild(pr[2])
+                                        if pA and pB then
+                                            local spA, onA = Camera:WorldToViewportPoint(pA.Position)
+                                            local spB, onB = Camera:WorldToViewportPoint(pB.Position)
+                                            if (onA or onB) and spA.Z > 0 and spB.Z > 0 then
+                                                l.Visible = true; l.From = Vector2.new(spA.X, spA.Y); l.To = Vector2.new(spB.X, spB.Y); l.Color = color
+                                            else
+                                                l.Visible = false
+                                            end
+                                        else
+                                            l.Visible = false
+                                        end
+                                    end
+                                elseif Storage.SkeletonParts and Storage.SkeletonParts[plr] then
+                                    for _, l in ipairs(Storage.SkeletonParts[plr]) do l.Visible = false end
+                                end
                             else
                                 esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false
+                                if esp.Weapon then esp.Weapon.Visible = false end
+                                if Storage.CornerESPObjects and Storage.CornerESPObjects[plr] then for _, l in ipairs(Storage.CornerESPObjects[plr]) do l.Visible = false end end
+                                if Storage.SkeletonParts and Storage.SkeletonParts[plr] then for _, l in ipairs(Storage.SkeletonParts[plr]) do l.Visible = false end end
+                                if Storage.TracerLines and Storage.TracerLines[plr] then Storage.TracerLines[plr].Visible = false end
                             end
                         else
                             esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false
+                            if esp.Weapon then esp.Weapon.Visible = false end
+                            if Storage.CornerESPObjects and Storage.CornerESPObjects[plr] then for _, l in ipairs(Storage.CornerESPObjects[plr]) do l.Visible = false end end
+                            if Storage.SkeletonParts and Storage.SkeletonParts[plr] then for _, l in ipairs(Storage.SkeletonParts[plr]) do l.Visible = false end end
+                            if Storage.TracerLines and Storage.TracerLines[plr] then Storage.TracerLines[plr].Visible = false end
                         end
                     else
                         esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false
+                        if esp.Weapon then esp.Weapon.Visible = false end
+                        if Storage.CornerESPObjects and Storage.CornerESPObjects[plr] then for _, l in ipairs(Storage.CornerESPObjects[plr]) do l.Visible = false end end
+                        if Storage.SkeletonParts and Storage.SkeletonParts[plr] then for _, l in ipairs(Storage.SkeletonParts[plr]) do l.Visible = false end end
+                        if Storage.TracerLines and Storage.TracerLines[plr] then Storage.TracerLines[plr].Visible = false end
                     end
                 end
             else
@@ -915,7 +1036,11 @@ local function Init()
                     if esp.Box then esp.Box.Visible = false end
                     if esp.Name then esp.Name.Visible = false end
                     if esp.HealthBar then esp.HealthBar.Visible = false end
+                    if esp.Weapon then esp.Weapon.Visible = false end
                 end
+                for _, lines in pairs(Storage.CornerESPObjects or {}) do for _, l in ipairs(lines) do l.Visible = false end end
+                for _, lines in pairs(Storage.SkeletonParts or {}) do for _, l in ipairs(lines) do l.Visible = false end end
+                for _, l in pairs(Storage.TracerLines or {}) do l.Visible = false end
             end
 
             -- Crosshair
@@ -1058,7 +1183,7 @@ local function Init()
         Notify("👑 X MINI+ [PRO-X]", "Press [Insert] or [Right-Ctrl] for Menu! Silent Aim unlocked.", 4)
         print("👑 [X MINI+] PRIVILEGE UNLOCKED: Multi-Layer Silent Aim Active!")
     else
-        Notify("X MINI V4.2.1", "Combat Edition Ready! [Insert] or [Right-Ctrl] for Menu [End] Unload", 4)
+        Notify("X MINI V4.2.2", "Combat Edition Ready! [Insert] or [Right-Ctrl] for Menu [End] Unload", 4)
     end
 end
 

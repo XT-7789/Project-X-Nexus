@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V6.1.0 - GEN-6 TITAN GOD (APEX OMNI) ]]
+-- [[ X TITAN V6.1.1 - GEN-6 TITAN GOD (APEX OMNI) ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
 -- P2: Zero-Lag Character Caching, Throttled Raycasts & High-FPS Engine
@@ -58,7 +58,7 @@ end
 if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==============================================================================
--- CONFIGURATION & STORAGE (V6.1.0)
+-- CONFIGURATION & STORAGE (V6.1.1)
 -- ==============================================================================
 local Config = {
 	Keys = {
@@ -159,7 +159,7 @@ _G.X_TITAN_CURRENT_INSTANCE = {
 }
 
 -- ==============================================================================
--- UTILITIES (V6.1.0)
+-- UTILITIES (V6.1.1)
 -- ==============================================================================
 -- ==============================================================================
 -- KEY & FOUNDER AUTHENTICATION (TITAN+ PRO-X APEX)
@@ -1603,9 +1603,9 @@ function Features.GetAuraTarget()
 end
 
 -- ==============================================================================
--- UI SYSTEM (V6.1.0)
+-- UI SYSTEM (V6.1.1)
 -- ==============================================================================
--- ITEM & LOOT ESP SUBSYSTEM (V6.1.0)
+-- ITEM & LOOT ESP SUBSYSTEM (V6.1.1)
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
 		pcall(function() bg:Destroy() end)
@@ -1812,16 +1812,16 @@ function UI.Init()
 
 	local Subtitle = Instance.new("TextLabel", SidePanel)
 	if isFounder then
-		Subtitle.Text = "👑 GODMODE APEX • V6.1.0"
+		Subtitle.Text = "👑 GODMODE APEX • V6.1.1"
 		Subtitle.TextColor3 = Color3.fromRGB(255, 205, 50)
 	elseif isSeller then
-		Subtitle.Text = "💎 CO-FOUNDER VIP • V6.1.0"
+		Subtitle.Text = "💎 CO-FOUNDER VIP • V6.1.1"
 		Subtitle.TextColor3 = Color3.fromRGB(0, 210, 255)
 	elseif isTitanPlus then
-		Subtitle.Text = "⚡ PRO-X APEX • V6.1.0"
+		Subtitle.Text = "⚡ PRO-X APEX • V6.1.1"
 		Subtitle.TextColor3 = Color3.fromRGB(255, 205, 50)
 	else
-		Subtitle.Text = "VOID WALKER • V6.1.0"
+		Subtitle.Text = "VOID WALKER • V6.1.1"
 		Subtitle.TextColor3 = Config.Theme.TextDim
 	end
 	Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
@@ -2654,7 +2654,7 @@ table.insert(Storage.Loops, auraLoop)
 -- ==============================================================================
 local Runtime = {}
 function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V6.1.0 - GEN-6 TITAN GOD (APEX OMNI)...")
+	Utils.Notify("⚠️ Unload", "Unloading X TITAN V6.1.1 - GEN-6 TITAN GOD (APEX OMNI)...")
 	Storage.IsUnloaded = true
 	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
 	Storage.Loops = {}
@@ -2762,7 +2762,7 @@ function Runtime.Unload()
 	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
 	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
 	Storage.RadarObjects = {}
-	print("X TITAN V6.1.0 - GEN-6 TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
+	print("X TITAN V6.1.1 - GEN-6 TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
 end
 
 local function InitRadar()
@@ -2915,7 +2915,7 @@ function Runtime.Init()
 	WmTitle.Size = UDim2.new(1, -12, 0, 16)
 	WmTitle.Position = UDim2.new(0, 8, 0, 3)
 	WmTitle.BackgroundTransparency = 1
-	WmTitle.Text = "⚡ PROJECT X TITAN • V6.1.0"
+	WmTitle.Text = "⚡ PROJECT X TITAN • V6.1.1"
 	WmTitle.TextColor3 = Config.Theme.Stroke
 	WmTitle.Font = Enum.Font.GothamBlack
 	WmTitle.TextSize = 10
@@ -3275,7 +3275,7 @@ function Runtime.Init()
 		end
 		
 		if Config.States.Aimbot then
-			-- [V6.1.0 CQB ENHANCED AIMBOT]: Dynamic ballistic damping & close-range responsiveness
+			-- [V6.1.1 CQB ENHANCED AIMBOT]: Dynamic ballistic damping & close-range responsiveness
 			if cachedTarget and cachedTarget.Parent then
 				local targetPos = cachedTarget.Position
 				local eRoot = cachedTarget.Parent:FindFirstChild("HumanoidRootPart")
@@ -3441,9 +3441,28 @@ function Runtime.Init()
 					if isUnspawned then
 						drawColor = Color3.fromRGB(190, 130, 255)
 					elseif Storage.LockedTarget == plr then
-						drawColor = Config.Theme.LockColor
+						if isTitanPlus then
+							local pulse = (math.sin(tick() * 10) + 1) * 0.5
+							drawColor = Color3.fromRGB(255, math.floor(40 + 175 * pulse), 0)
+						else
+							drawColor = Config.Theme.LockColor
+						end
 					elseif Config.States.TeamCheck and Utils.IsTeammate(plr) then
 						drawColor = Config.Theme.Team
+					elseif isTitanPlus then
+						local myRoot = LocalPlayer.Character and (LocalPlayer.Character:FindFirstChild("HumanoidRootPart") or LocalPlayer.Character:FindFirstChild("Head"))
+						local d3d = myRoot and (root.Position - myRoot.Position).Magnitude or 100
+						local hPart = pChar:FindFirstChild("Head")
+						local isLookingAtMe = false
+						if hPart and myRoot then
+							local toMe = (myRoot.Position - hPart.Position).Unit
+							if hPart.CFrame.LookVector:Dot(toMe) > 0.8 then isLookingAtMe = true end
+						end
+						if d3d < 30 or isLookingAtMe then
+							drawColor = Color3.fromRGB(255, 45, 45)
+						elseif d3d < 75 then
+							drawColor = Color3.fromRGB(255, 185, 40)
+						end
 					end
 					if Config.States.VisibilityCheck and onScreen and topPos.Z > 0 and not isUnspawned and not Utils.IsVisible(head, plr) then
 						drawColor = Color3.new(0.5, 0.5, 0.5)
@@ -4228,6 +4247,6 @@ elseif isTitanPlus then
 	Utils.Notify("🔥 X TITAN+ [PRO-X APEX]", "PRO-X Apex Godmode Active! 1000 FOV & Presets Unlocked.", 4)
 	print("🔥 [X TITAN+] PRO-X APEX UNLOCKED")
 else
-	Utils.Notify("✅ X TITAN V6.1.0 - GEN-6 TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu", 4)
-	print("X TITAN V6.1.0 - GEN-6 TITAN GOD (APEX OMNI) LOADED SUCCESSFULLY")
+	Utils.Notify("✅ X TITAN V6.1.1 - GEN-6 TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu", 4)
+	print("X TITAN V6.1.1 - GEN-6 TITAN GOD (APEX OMNI) LOADED SUCCESSFULLY")
 end

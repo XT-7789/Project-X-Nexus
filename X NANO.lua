@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X NANO V3.4.0 - ULTRA LIGHTWEIGHT EDITION ]]
+-- [[ X NANO V3.4.1 - ULTRA LIGHTWEIGHT EDITION ]]
 -- Features: Smooth Aimbot with FOV | Lightweight ESP (Box+Chams) | 60-75Hz Optimized
 -- Features: Smooth Aimbot with FOV | Lightweight ESP (Box+Chams) | 60-75Hz Optimized
 -- ==================================================================
@@ -55,7 +55,7 @@ local Config = {
 	},
 	States = {
 		Aimbot = false, TeamCheck = true, ShowFOV = false,
-		ESP = false, Chams = false,
+		ESP = false, Chams = false, Tracers = false,
 		Fly = false, Noclip = false, SpeedHack = false, InfJump = false, NoFall = false
 	},
 	Vals = {
@@ -183,6 +183,23 @@ local function CreateESP(plr)
 	esp.Name.Outline = true
 	esp.Name.Color = Color3.new(1, 1, 1)
 	esp.Name.Visible = false
+
+	if isNanoPlus then
+		esp.HealthBar = Drawing.new("Line")
+		esp.HealthBar.Thickness = 1.5
+		esp.HealthBar.Visible = false
+
+		esp.Distance = Drawing.new("Text")
+		esp.Distance.Size = 11
+		esp.Distance.Center = true
+		esp.Distance.Outline = true
+		esp.Distance.Color = Color3.fromRGB(220, 220, 220)
+		esp.Distance.Visible = false
+
+		esp.Tracer = Drawing.new("Line")
+		esp.Tracer.Thickness = 1.2
+		esp.Tracer.Visible = false
+	end
 	Storage.ESPObjects[plr] = esp
 end
 
@@ -190,6 +207,9 @@ local function RemoveESP(plr)
 	if Storage.ESPObjects[plr] then
 		pcall(function() Storage.ESPObjects[plr].Box:Remove() end)
 		pcall(function() Storage.ESPObjects[plr].Name:Remove() end)
+		if Storage.ESPObjects[plr].HealthBar then pcall(function() Storage.ESPObjects[plr].HealthBar:Remove() end) end
+		if Storage.ESPObjects[plr].Distance then pcall(function() Storage.ESPObjects[plr].Distance:Remove() end) end
+		if Storage.ESPObjects[plr].Tracer then pcall(function() Storage.ESPObjects[plr].Tracer:Remove() end) end
 		Storage.ESPObjects[plr] = nil
 	end
 end
@@ -300,7 +320,7 @@ local function BuildUI()
 	elseif isNanoPlus then
 		Title.Text = "⚡ X NANO<font color='#00e5ff'>+</font> <font color='#ffcd32'>[PRO-X]</font>"; Title.RichText = true
 	else
-		Title.Text = "⚡ X NANO <font color='#8c8c96'>V3.4.0</font>"; Title.RichText = true
+		Title.Text = "⚡ X NANO <font color='#8c8c96'>V3.4.1</font>"; Title.RichText = true
 	end
 	Title.Size = UDim2.new(1, -40, 1, 0); Title.Position = UDim2.new(0, 12, 0, 0)
 	Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Accent
@@ -411,6 +431,9 @@ local function BuildUI()
 		if Storage.FOVRingUI then Storage.FOVRingUI.Size = UDim2.new(0, v * 2, 0, v * 2) end
 	end)
 	AddToggle("🛡️ Team Check", "TeamCheck")
+	if isNanoPlus then
+		AddToggle("📏 Snapline Tracers 👑 [Nano+]", "Tracers")
+	end
 	AddToggle("📦 Box ESP", "ESP", function(v)
         if not v and Drawing then
             for _, esp in pairs(Storage.ESPObjects) do
@@ -542,17 +565,54 @@ local function Init()
 							esp.Name.Text = plr.DisplayName
 							esp.Name.Position = Vector2.new(pos.X, esp.Box.Position.Y - 16)
 							esp.Name.Color = color
+
+							if isNanoPlus and esp.HealthBar then
+								local curHp = hum.Health
+								local maxHp = hum.MaxHealth
+								local hpRatio = math.clamp(curHp / maxHp, 0, 1)
+								esp.HealthBar.Visible = true
+								esp.HealthBar.Color = Color3.fromRGB(math.floor(255 * (1 - hpRatio)), math.floor(255 * hpRatio), 0)
+								esp.HealthBar.From = Vector2.new(esp.Box.Position.X - 5, esp.Box.Position.Y + height)
+								esp.HealthBar.To = Vector2.new(esp.Box.Position.X - 5, esp.Box.Position.Y + height - height * hpRatio)
+							end
+
+							if isNanoPlus and esp.Distance then
+								local myHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+								local dist = myHrp and math.floor((root.Position - myHrp.Position).Magnitude) or 0
+								esp.Distance.Visible = true
+								esp.Distance.Text = string.format("%dm", dist)
+								esp.Distance.Position = Vector2.new(pos.X, esp.Box.Position.Y + height + 2)
+								esp.Distance.Color = color
+							end
+
+							if isNanoPlus and esp.Tracer and Config.States.Tracers then
+								esp.Tracer.Visible = true
+								esp.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+								esp.Tracer.To = Vector2.new(pos.X, pos.Y)
+								esp.Tracer.Color = color
+							elseif esp.Tracer then
+								esp.Tracer.Visible = false
+							end
 						else
 							esp.Box.Visible = false; esp.Name.Visible = false
+							if esp.HealthBar then esp.HealthBar.Visible = false end
+							if esp.Distance then esp.Distance.Visible = false end
+							if esp.Tracer then esp.Tracer.Visible = false end
 						end
 					else
 						esp.Box.Visible = false; esp.Name.Visible = false
+						if esp.HealthBar then esp.HealthBar.Visible = false end
+						if esp.Distance then esp.Distance.Visible = false end
+						if esp.Tracer then esp.Tracer.Visible = false end
 					end
 				end
 			else
 				for _, esp in pairs(Storage.ESPObjects) do
 					if esp.Box then esp.Box.Visible = false end
 					if esp.Name then esp.Name.Visible = false end
+					if esp.HealthBar then esp.HealthBar.Visible = false end
+					if esp.Distance then esp.Distance.Visible = false end
+					if esp.Tracer then esp.Tracer.Visible = false end
 				end
 			end
 		end
@@ -611,7 +671,7 @@ local function Init()
 	elseif isNanoPlus then
 		Notify("⚡ X NANO+ [PRO-X]", "PRO-X Privileges Active! Silent Aim Unlocked.", 4)
 	else
-		Notify("⚡ X NANO V3.4.0", "Loaded! [Insert] Menu [End] Unload", 4)
+		Notify("⚡ X NANO V3.4.1", "Loaded! [Insert] Menu [End] Unload", 4)
 	end
 end
 

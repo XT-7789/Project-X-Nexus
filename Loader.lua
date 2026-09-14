@@ -226,31 +226,31 @@ UpdateSplash("Access Granted! Fetching X " .. tostring(tier) .. "...", 0.85)
 print("==========================================")
 print("✅ [PROJECT X NEXUS] ACCESS GRANTED")
 if isMasterTitanPlus then
-	print(isFounderKey and "👑 X TITAN+ V6.1.0 [XT7789 GODMODE] LOADED" or "💎 X TITAN+ V6.1.0 [PARTNER APEX] LOADED")
+	print(isFounderKey and "👑 X TITAN+ V6.1.1 [XT7789 GODMODE] LOADED" or "💎 X TITAN+ V6.1.1 [PARTNER APEX] LOADED")
 elseif isMasterProPlus then
-	print(isFounderKey and "👑 X PRO+ V3.7.4 [XT7789 FOUNDER] LOADED" or "💎 X PRO+ V3.7.4 [CO-FOUNDER EDITION] LOADED")
+	print(isFounderKey and "👑 X PRO+ V3.7.5 [XT7789 FOUNDER] LOADED" or "💎 X PRO+ V3.7.5 [CO-FOUNDER EDITION] LOADED")
 elseif isMasterMiniPlus then
-	print(isFounderKey and "👑 X MINI+ V4.2.1 [XT7789 FOUNDER] LOADED" or "💎 X MINI+ V4.2.1 [CO-FOUNDER EDITION] LOADED")
+	print(isFounderKey and "👑 X MINI+ V4.2.2 [XT7789 FOUNDER] LOADED" or "💎 X MINI+ V4.2.2 [CO-FOUNDER EDITION] LOADED")
 elseif isMasterNanoPlus then
-	print(isFounderKey and "👑 X NANO+ V3.4.0 [XT7789 FOUNDER] LOADED" or "💎 X NANO+ V3.4.0 [CO-FOUNDER EDITION] LOADED")
+	print(isFounderKey and "👑 X NANO+ V3.4.1 [XT7789 FOUNDER] LOADED" or "💎 X NANO+ V3.4.1 [CO-FOUNDER EDITION] LOADED")
 elseif string.lower(tier) == "litem" then
 	print("📱 X LITEM V2.0.0 [DELTA EDITION] LOADED")
 elseif string.lower(tier) == "lite" then
 	print(isMobile and "📱 X LITEM V2.0.0 [DELTA EDITION] LOADED" or "🎁 X LITE V2.0.0 LOADED")
 elseif string.lower(tier) == "mini" then
-	print("📦 X MINI V4.2.1 LOADED")
+	print("📦 X MINI V4.2.2 LOADED")
 elseif string.lower(tier) == "minim" then
-	print("📱 X MINIM V4.2.1 [DELTA EDITION] LOADED")
+	print("📱 X MINIM V4.2.2 [DELTA EDITION] LOADED")
 elseif string.lower(tier) == "prom" then
-	print("📱 X PROM V3.7.4 [DELTA EDITION] LOADED")
+	print("📱 X PROM V3.7.5 [DELTA EDITION] LOADED")
 elseif string.lower(tier) == "nanom" then
-	print("📱 X NANOM V3.4.0 [DELTA EDITION] LOADED")
+	print("📱 X NANOM V3.4.1 [DELTA EDITION] LOADED")
 elseif string.lower(tier) == "nano" then
-	print(isMobile and "📱 X NANOM V3.4.0 [DELTA EDITION] LOADED" or "🪶 X NANO V3.4.0 LOADED")
+	print(isMobile and "📱 X NANOM V3.4.1 [DELTA EDITION] LOADED" or "🪶 X NANO V3.4.1 LOADED")
 elseif string.lower(tier) == "pro" then
-	print(isMobile and "📱 X PROM V3.7.4 [DELTA EDITION] LOADED" or "⚡ X PRO V3.7.4 LOADED")
+	print(isMobile and "📱 X PROM V3.7.5 [DELTA EDITION] LOADED" or "⚡ X PRO V3.7.5 LOADED")
 elseif string.lower(tier) == "titan" then
-	print("🔥 X TITAN V6.1.0 [APEX OMNI] LOADED")
+	print("🔥 X TITAN V6.1.1 [APEX OMNI] LOADED")
 else
 	print("⚡ X " .. string.upper(tostring(tier)) .. " LOADED")
 end
@@ -280,7 +280,7 @@ local function ExecuteRemote(scriptUrl)
 end
 
 if isMasterTitanPlus then
-	UpdateSplash("Launching X TITAN V6.1.0...", 1.0)
+	UpdateSplash("Launching X TITAN V6.1.1...", 1.0)
 task.delay(0.6, CloseSplash)
 ExecuteRemote(repo .. "X%20TITAN.lua")
 elseif isMasterProPlus then
@@ -330,7 +330,7 @@ elseif string.lower(tier) == "pro" then
 		ExecuteRemote(repo .. "X%20PRO.lua")
 	end
 elseif string.lower(tier) == "titan" then
-	UpdateSplash("Launching X TITAN V6.1.0...", 1.0)
+	UpdateSplash("Launching X TITAN V6.1.1...", 1.0)
 task.delay(0.6, CloseSplash)
 ExecuteRemote(repo .. "X%20TITAN.lua")
 else
