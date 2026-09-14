@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V5.6.0 - TITAN GOD (APEX OMNI) ]]
+-- [[ X TITAN V5.6.1 - TITAN GOD (APEX OMNI) ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
 -- P2: Zero-Lag Character Caching, Throttled Raycasts & High-FPS Engine
@@ -58,7 +58,7 @@ end
 if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==============================================================================
--- CONFIGURATION & STORAGE (V5.6.0)
+-- CONFIGURATION & STORAGE (V5.6.1)
 -- ==============================================================================
 local Config = {
 	Keys = {
@@ -84,7 +84,7 @@ local Config = {
 		AntiKillbrick = false, AntiVoid = true, HitSound = true, TouchFling = false, TargetFling = false, AntiFling = true, Wallbang = true, OrbitAura = false, RainbowChams = false,  ClickTP = false, SkyHide = false, MapDestroyer = false,
 		KillAura = false, TPAura = false, Desync = false, AntiAimSpin = false, AntiAimHeadJitter = false,
 		RightClickToggle = true, ShowFOV = false, TacticalLock = false,
-		ShowLockStatus = true, SmartPrediction = true, AutoAimPart = true,
+		ShowLockStatus = true, SmartPrediction = true, AutoAimPart = false,
 		LegitFly = false, ServerDesync = false, CFrameSpeed = false, Radar = false, ItemESP = false, VehicleBoost = false, VehicleFly = false,
 		WeaponESP = true, OffscreenArrows = false, NoRecoil = false, DetectUnspawned = true,
 		ShowDistance = true, ShowHealth = true, ShowName = true
@@ -150,7 +150,7 @@ _G.X_TITAN_CURRENT_INSTANCE = {
 }
 
 -- ==============================================================================
--- UTILITIES (V5.6.0)
+-- UTILITIES (V5.6.1)
 -- ==============================================================================
 local Utils = {}
 _G.X_TITAN_CURRENT_INSTANCE.Utils = Utils
@@ -1013,9 +1013,9 @@ function Features.GetAuraTarget()
 end
 
 -- ==============================================================================
--- UI SYSTEM (V5.6.0)
+-- UI SYSTEM (V5.6.1)
 -- ==============================================================================
--- ITEM & LOOT ESP SUBSYSTEM (V5.6.0)
+-- ITEM & LOOT ESP SUBSYSTEM (V5.6.1)
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
 		pcall(function() bg:Destroy() end)
@@ -1105,7 +1105,7 @@ end
 
 local UI = {}
 function UI.Init()
-	local guiName = "X_TITAN_V521"
+	local guiName = "X_TITAN_V561"
 	if targetGui:FindFirstChild(guiName) then targetGui[guiName]:Destroy() end
 	
 	local ScreenGui = Instance.new("ScreenGui", targetGui)
@@ -1156,7 +1156,7 @@ function UI.Init()
 	Title.Font = Enum.Font.GothamBlack; Title.TextSize = 16; Title.TextXAlignment = Enum.TextXAlignment.Left
 
 	local Subtitle = Instance.new("TextLabel", SidePanel)
-	Subtitle.Text = "VOID WALKER • V5.6.0"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
+	Subtitle.Text = "VOID WALKER • V5.6.1"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
 	Subtitle.BackgroundTransparency = 1; Subtitle.TextColor3 = Config.Theme.TextDim
 	Subtitle.Font = Enum.Font.GothamBold; Subtitle.TextSize = 9; Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 	
@@ -1345,10 +1345,15 @@ function UI.Init()
 		F.LayoutOrder = getOrder(); F.Size = UDim2.new(1, -4, 0, 32); F.BackgroundTransparency = 1
 		local B1 = Instance.new("TextButton", F); B1.Size = UDim2.new(0.48, 0, 1, 0); B1.BackgroundColor3 = Config.Theme.Sec
 		B1.Text = t1; B1.TextColor3 = Config.Theme.Text; B1.Font = Enum.Font.GothamBold; B1.TextSize = 9
-		Instance.new("UICorner", B1).CornerRadius = UDim.new(0, 6); B1.MouseButton1Click:Connect(function() cb1() end)
+		Instance.new("UICorner", B1).CornerRadius = UDim.new(0, 6)
+		local b1Stroke = Instance.new("UIStroke", B1); b1Stroke.Color = Config.Theme.Stroke; b1Stroke.Transparency = 0.85
+		if cb1 then B1.MouseButton1Click:Connect(function() cb1() end) end
 		local B2 = Instance.new("TextButton", F); B2.Size = UDim2.new(0.48, 0, 1, 0); B2.Position = UDim2.new(0.52, 0, 0, 0)
 		B2.BackgroundColor3 = Config.Theme.Sec; B2.Text = t2; B2.TextColor3 = Config.Theme.Text; B2.Font = Enum.Font.GothamBold; B2.TextSize = 9
-		Instance.new("UICorner", B2).CornerRadius = UDim.new(0, 6); B2.MouseButton1Click:Connect(function() cb2() end)
+		Instance.new("UICorner", B2).CornerRadius = UDim.new(0, 6)
+		local b2Stroke = Instance.new("UIStroke", B2); b2Stroke.Color = Config.Theme.Stroke; b2Stroke.Transparency = 0.85
+		if cb2 then B2.MouseButton1Click:Connect(function() cb2() end) end
+		return B1, B2
 	end
 	
 	local function AddSection(page, text, getOrder)
@@ -1402,11 +1407,21 @@ function UI.Init()
 	AddSlider(P1, "Prediction", 0, 50, 16, function(v) Config.Vals.PredictionStrength = v / 100 end, getOrder1)
 	AddToggle(P1, "Smart Prediction (Ping)", "SmartPrediction", getOrder1)
 	AddToggle(P1, "Auto Aim Part", "AutoAimPart", getOrder1)
-	AddDual(P1, "Cycle Aim Part", function()
+	local bAim1, bAim2
+	local function UpdateAimPartButtonUI()
+		if bAim2 then
+			bAim2.Text = "Target: " .. Config.Vals.AimPart
+			bAim2.TextColor3 = Config.Theme.Stroke
+		end
+	end
+	local function CycleAimPart()
 		Storage.AimPartIndex = Storage.AimPartIndex % #Storage.AimParts + 1
 		Config.Vals.AimPart = Storage.AimParts[Storage.AimPartIndex]
-		Utils.Notify("Aim Part", "Switched to: " .. Config.Vals.AimPart)
-	end, "Current: Head", function() end, getOrder1)
+		UpdateAimPartButtonUI()
+		Utils.Notify("🎯 Aim Part", "Target Part set to: " .. Config.Vals.AimPart)
+	end
+	bAim1, bAim2 = AddDual(P1, "🎯 Cycle Aim Part", CycleAimPart, "Target: " .. Config.Vals.AimPart, CycleAimPart, getOrder1)
+	UpdateAimPartButtonUI()
 	
 	AddSection(P1, "SILENT & TRIGGER", getOrder1)
 	AddToggle(P1, "Silent Aim 🔥", "SilentAim", getOrder1)
@@ -1514,7 +1529,7 @@ function UI.Init()
 	AddSection(P3, "CHECKPOINTS", getOrder3)
 	AddDual(P3, "📍 SET P1", function() Utils.SetPoint("P1") end, "⚡ TP P1", function() Utils.TPPoint("P1") end, getOrder3)
 	AddDual(P3, "📍 SET P2", function() Utils.SetPoint("P2") end, "⚡ TP P2", function() Utils.TPPoint("P2") end, getOrder3)
-	AddDual(P3, "📌 SET P3", function() Utils.SetPoint("P3") end, "⚡ TP P3", function() Utils.TPPoint("P3") end, getOrder3)
+	AddDual(P3, "📍 SET P3", function() Utils.SetPoint("P3") end, "⚡ TP P3", function() Utils.TPPoint("P3") end, getOrder3)
 	
 	AddSection(P3, "MAP", getOrder3)
 	AddDual(P3, "💥 Destroy [P]", function()
@@ -1844,7 +1859,7 @@ table.insert(Storage.Loops, auraLoop)
 -- ==============================================================================
 local Runtime = {}
 function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.6.0 - TITAN GOD (APEX OMNI)...")
+	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.6.1 - TITAN GOD (APEX OMNI)...")
 	Storage.IsUnloaded = true
 	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
 	Storage.Loops = {}
@@ -1947,7 +1962,7 @@ function Runtime.Unload()
 	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
 	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
 	Storage.RadarObjects = {}
-	print("X TITAN V5.6.0 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
+	print("X TITAN V5.6.1 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
 end
 
 local function InitRadar()
@@ -3070,5 +3085,5 @@ table.insert(Storage.Loops, itemLoop)
 
 Runtime.Init()
 _G.X_TITAN_INSTANCE = { Config = Config, Storage = Storage, Utils = Utils, Features = Features, Runtime = Runtime }
-Utils.Notify("✅ X TITAN V5.6.0 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
-print("X TITAN V5.6.0 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
+Utils.Notify("✅ X TITAN V5.6.1 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
+print("X TITAN V5.6.1 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
