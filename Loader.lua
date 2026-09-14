@@ -1,5 +1,6 @@
 -- [[ X SUITE - UNIVERSAL CLOUD LOADER ]]
--- Seller: vlilayz | Supported: Delta (Mobile) / Xeno / Solara (PC)
+-- Official Discord: https://discord.gg/mQ3ASbfP8j | Seller: vlilayz | Dev: XT-7789
+-- Supported: Delta (Mobile iOS & Android Exclusive) / Xeno / Solara (PC)
 -- ==================================================================
 -- USAGE:
 -- getgenv().Key = "YOUR_KEY_HERE"
@@ -53,8 +54,8 @@ end
 local key = getgenv().Key or getgenv().ScriptKey or script_key
 
 if not key or key == "" or key == "PASTE_YOUR_KEY_HERE" or key == "YOUR_KEY_HERE" then
-	Notify("❌ X SUITE", "Key Required! Please set getgenv().Key before executing.", 5)
-	warn("[X SUITE] Error: Key required! Purchase keys from Discord: vlilayz")
+	Notify("❌ X SUITE", "Key Required! Join: https://discord.gg/mQ3ASbfP8j", 5)
+	warn("[X SUITE] Error: Key required! Purchase from Discord: https://discord.gg/mQ3ASbfP8j (Seller: vlilayz)")
 	return
 end
 
@@ -116,27 +117,28 @@ if isMasterNanoPlus then
 elseif isMasterMiniPlus then
 	print("👑 X MINI+ V4.1.1 [PRO-X EDITION] LOADED - SILENT AIM UNLOCKED")
 elseif string.lower(tier) == "litem" then
-	print("📱 X LITEM V1.0.0 LOADED")
+	print("📱 X LITEM V1.1.0 [DELTA EDITION] LOADED")
 elseif string.lower(tier) == "lite" then
-	print(isMobile and "📱 X LITEM V1.0.0 LOADED" or "🎁 X LITE V1.0.0 LOADED")
+	print(isMobile and "📱 X LITEM V1.1.0 [DELTA EDITION] LOADED" or "🎁 X LITE V1.1.0 LOADED")
 elseif string.lower(tier) == "mini" then
 	print("📦 X MINI V4.1.1 LOADED")
 elseif string.lower(tier) == "minim" then
-	print("📱 X MINIM V4.1.1 LOADED")
+	print("📱 X MINIM V4.1.1 [DELTA EDITION] LOADED")
 elseif string.lower(tier) == "prom" then
-	print("📱 X PROM V3.5.0 LOADED")
+	print("📱 X PROM V3.5.0 [DELTA EDITION] LOADED")
 elseif string.lower(tier) == "nanom" then
-	print("📱 X NANOM V3.2.1 LOADED")
+	print("📱 X NANOM V3.2.1 [DELTA EDITION] LOADED")
 elseif string.lower(tier) == "nano" then
-	print(isMobile and "📱 X NANOM V3.2.1 LOADED" or "🪶 X NANO V3.2.1 LOADED")
+	print(isMobile and "📱 X NANOM V3.2.1 [DELTA EDITION] LOADED" or "🪶 X NANO V3.2.1 LOADED")
 elseif string.lower(tier) == "pro" then
-	print(isMobile and "📱 X PROM V3.5.0 LOADED" or "⚡ X PRO V3.5.0 LOADED")
+	print(isMobile and "📱 X PROM V3.5.0 [DELTA EDITION] LOADED" or "⚡ X PRO V3.5.0 LOADED")
 elseif string.lower(tier) == "titan" then
 	print("🔥 X TITAN V5.6.0 [VOID WALKER] LOADED")
 else
 	print("⚡ X " .. string.upper(tostring(tier)) .. " LOADED")
 end
 print("👑 FOUNDER & DEV : XT-7789")
+print("🌐 OFFICIAL DISCORD: https://discord.gg/mQ3ASbfP8j")
 print("💬 DISCORD SELLER: vlilayz")
 print("==========================================")
 

@@ -1,9 +1,7 @@
--- [[ X LITEM V1.0.0 - FREE MOBILE TOUCH EDITION ]]
--- Positioning: Free Lead Magnet / Mobile & Tablet Delta Optimized / Zero Keyboard Needed
--- Features: Floating Bubble [🪶] | Touch Fly [▲/▼ Controls] | Noclip | SpeedHack | InfJump | NoFall | Fullbright
--- Compatibility: Delta (Mobile iOS/Android) | Arceus X | Codex | Fluxus
--- Upgrade: Unlock Aimbot & ESP -> Nano (RM5) / Mini (RM10) / Pro (RM20)
--- Founder & Dev: XT-7789 | Seller Discord: vlilayz
+-- [[ X LITEM V1.1.0 - FREE DELTA MOBILE EDITION ]]
+-- Platform: Exclusively Engineered & Optimized for DELTA EXECUTOR (iOS & Android)
+-- UI & Controls: Draggable Bubble [🪶] | Touch Fly [▲/▼ Controls] | Noclip | SpeedHack | InfJump | NoFall | Fullbright
+-- Official Discord: https://discord.gg/mQ3ASbfP8j | Seller: vlilayz | Dev: XT-7789
 -- ==================================================================
 local Services = {
 	Players = game:GetService("Players"),
@@ -21,28 +19,29 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 
 local targetGui
 if type(gethui) == "function" then
-    pcall(function() targetGui = gethui() end)
+	pcall(function() targetGui = gethui() end)
 end
 if not targetGui then
-    targetGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui", 10)
+	targetGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui", 10)
 end
 if not targetGui then
-    pcall(function() targetGui = LocalPlayer:WaitForChild("PlayerGui") end)
+	pcall(function() targetGui = LocalPlayer:WaitForChild("PlayerGui") end)
 end
-if not targetGui then warn("X SUITE: GUI Target failed!") return end
+if not targetGui then warn("[X LITEM DELTA]: GUI Target failed!") return end
 
 -- ==================================================================
 -- CONFIGURATION & STORAGE
 -- ==================================================================
 local Config = {
 	Theme = {
-		Main = Color3.fromRGB(12, 14, 18),
-		Sec = Color3.fromRGB(22, 24, 32),
+		Main = Color3.fromRGB(12, 14, 20),
+		Sec = Color3.fromRGB(20, 24, 34),
 		Accent = Color3.fromRGB(0, 230, 255),
-		Text = Color3.fromRGB(245, 245, 250),
-		Dim = Color3.fromRGB(140, 145, 160),
+		Text = Color3.fromRGB(245, 245, 252),
+		Dim = Color3.fromRGB(140, 148, 165),
 		Gold = Color3.fromRGB(255, 205, 50),
-		Red = Color3.fromRGB(255, 65, 65)
+		Red = Color3.fromRGB(255, 70, 70),
+		Green = Color3.fromRGB(70, 230, 130)
 	},
 	States = {
 		Fly = false,
@@ -56,10 +55,11 @@ local Config = {
 		FlySpeed = 100,
 		WalkSpeed = 80
 	},
-	Seller = {
-		Discord = "vlilayz",
+	Links = {
+		Discord = "https://discord.gg/mQ3ASbfP8j",
+		Seller = "vlilayz",
 		Founder = "XT-7789",
-		Version = "V1.0.0 Mobile Free"
+		Version = "V1.1.0 Delta Edition"
 	}
 }
 
@@ -86,7 +86,7 @@ local function Notify(title, text, dur)
 		Services.StarterGui:SetCore("SendNotification", {
 			Title = title,
 			Text = text,
-			Duration = dur or 2.5
+			Duration = dur or 3
 		})
 	end)
 end
@@ -167,10 +167,10 @@ local function Unload()
 end
 
 -- ==================================================================
--- MOBILE TOUCH UI & VIRTUAL CONTROLS
+-- MOBILE TOUCH UI FOR DELTA EXECUTOR
 -- ==================================================================
 local function BuildMobileUI()
-	local uiName = "X_LITEM_FREE_V1"
+	local uiName = "X_LITEM_DELTA_V11"
 	if targetGui:FindFirstChild(uiName) then targetGui[uiName]:Destroy() end
 
 	local ScreenGui = Instance.new("ScreenGui", targetGui)
@@ -179,12 +179,12 @@ local function BuildMobileUI()
 	ScreenGui.IgnoreGuiInset = true
 	ScreenGui.DisplayOrder = 999999
 
-	-- 1. 📱 屏幕常驻悬浮触控球 (Draggable Bubble)
+	-- 1. 📱 常驻拖拽触控球 (Delta Optimized Floating Bubble)
 	local Bubble = Instance.new("TextButton", ScreenGui)
 	Bubble.Size = UDim2.new(0, 52, 0, 52)
 	Bubble.Position = UDim2.new(0, 20, 0.35, 0)
 	Bubble.BackgroundColor3 = Config.Theme.Main
-	Bubble.BackgroundTransparency = 0.2
+	Bubble.BackgroundTransparency = 0.15
 	Bubble.Text = "🪶"
 	Bubble.TextColor3 = Config.Theme.Accent
 	Bubble.TextSize = 24
@@ -195,68 +195,80 @@ local function BuildMobileUI()
 
 	local bStroke = Instance.new("UIStroke", Bubble)
 	bStroke.Color = Config.Theme.Accent
-	bStroke.Thickness = 2
-	bStroke.Transparency = 0.3
+	bStroke.Thickness = 2.2
+	bStroke.Transparency = 0.25
 	Storage.MenuBubble = Bubble
 
-	-- 2. 📱 触控大屏菜单面板 (适合手机平板大拇指操作)
+	-- 2. 📱 触控大屏面板
 	local Card = Instance.new("Frame", ScreenGui)
-	Card.Size = UDim2.new(0, 290, 0, 480)
-	Card.Position = UDim2.new(0.5, -145, 0.5, -240)
+	Card.Size = UDim2.new(0, 300, 0, 510)
+	Card.Position = UDim2.new(0.5, -150, 0.5, -255)
 	Card.BackgroundColor3 = Config.Theme.Main
 	Card.Active = true
 	Card.Draggable = true
 	Card.Visible = false
-	Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 10)
+	Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 12)
 
 	local cStroke = Instance.new("UIStroke", Card)
 	cStroke.Color = Config.Theme.Accent
 	cStroke.Thickness = 1.8
-	cStroke.Transparency = 0.4
+	cStroke.Transparency = 0.35
 	Storage.MainFrame = Card
 
-	-- 点击悬浮球切换菜单显示
+	-- 点击悬浮球切换菜单
 	Bubble.MouseButton1Click:Connect(function()
 		Card.Visible = not Card.Visible
 		Bubble.Text = Card.Visible and "×" or "🪶"
+		Bubble.TextColor3 = Card.Visible and Config.Theme.Red or Config.Theme.Accent
 	end)
 
 	-- Header
 	local Header = Instance.new("Frame", Card)
-	Header.Size = UDim2.new(1, 0, 0, 44)
+	Header.Size = UDim2.new(1, 0, 0, 48)
 	Header.BackgroundColor3 = Config.Theme.Sec
-	Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
+	Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 12)
 
 	local Title = Instance.new("TextLabel", Header)
-	Title.Text = "🪶 X LITEM <font color='#00e6ff'>MOBILE</font> <font color='#ffcd32'>FREE</font>"
+	Title.Text = "🪶 X LITEM <font color='#00e6ff'>DELTA</font> <font color='#ffcd32'>FREE</font>"
 	Title.RichText = true
-	Title.Size = UDim2.new(1, -44, 1, 0)
-	Title.Position = UDim2.new(0, 12, 0, 0)
+	Title.Size = UDim2.new(1, -50, 0, 26)
+	Title.Position = UDim2.new(0, 14, 0, 3)
 	Title.BackgroundTransparency = 1
 	Title.TextColor3 = Config.Theme.Text
 	Title.Font = Enum.Font.GothamBold
 	Title.TextSize = 13
 	Title.TextXAlignment = Enum.TextXAlignment.Left
 
+	local Subtitle = Instance.new("TextLabel", Header)
+	Subtitle.Text = "⚡ Delta Mobile Exclusive | V1.1.0"
+	Subtitle.Size = UDim2.new(1, -50, 0, 16)
+	Subtitle.Position = UDim2.new(0, 14, 0, 26)
+	Subtitle.BackgroundTransparency = 1
+	Subtitle.TextColor3 = Config.Theme.Dim
+	Subtitle.Font = Enum.Font.GothamMedium
+	Subtitle.TextSize = 10
+	Subtitle.TextXAlignment = Enum.TextXAlignment.Left
+
 	local CloseBtn = Instance.new("TextButton", Header)
-	CloseBtn.Size = UDim2.new(0, 32, 0, 32)
-	CloseBtn.Position = UDim2.new(1, -36, 0, 6)
-	CloseBtn.BackgroundColor3 = Color3.fromRGB(35, 38, 50)
+	CloseBtn.Size = UDim2.new(0, 34, 0, 34)
+	CloseBtn.Position = UDim2.new(1, -40, 0, 7)
+	CloseBtn.BackgroundColor3 = Color3.fromRGB(36, 40, 52)
 	CloseBtn.Text = "×"
 	CloseBtn.TextColor3 = Config.Theme.Dim
 	CloseBtn.Font = Enum.Font.GothamBold
 	CloseBtn.TextSize = 18
 	CloseBtn.AutoButtonColor = false
-	Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+	Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 8)
 	CloseBtn.MouseButton1Click:Connect(function()
 		Card.Visible = false
 		Bubble.Text = "🪶"
+		Bubble.TextColor3 = Config.Theme.Accent
 	end)
 
-	-- Scrollable Items (手指触控优化)
+	-- Scrollable Items
 	local Content = Instance.new("ScrollingFrame", Card)
-	Content.Size = UDim2.new(1, -16, 1, -54)
-	Content.Position = UDim2.new(0, 8, 0, 48)
+	Content.Size = UDim2.new(1, -16, 1, -60)
+	Content.Position = UDim2.new(0, 8, 0, 54)
 	Content.BackgroundTransparency = 1
 	Content.ScrollBarThickness = 3
 	Content.ScrollBarImageColor3 = Config.Theme.Accent
@@ -265,11 +277,11 @@ local function BuildMobileUI()
 
 	local function AddToggle(text, stateKey, cb)
 		local btn = Instance.new("TextButton", Content)
-		btn.Size = UDim2.new(1, -4, 0, 40)
+		btn.Size = UDim2.new(1, -4, 0, 42)
 		btn.BackgroundColor3 = Config.Theme.Sec
 		btn.Text = ""
 		btn.AutoButtonColor = false
-		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 7)
 		local s = Instance.new("UIStroke", btn)
 		s.Color = Config.Theme.Accent
 		s.Transparency = 0.85
@@ -285,21 +297,21 @@ local function BuildMobileUI()
 		lbl.TextXAlignment = Enum.TextXAlignment.Left
 
 		local ind = Instance.new("Frame", btn)
-		ind.Size = UDim2.new(0, 36, 0, 20)
-		ind.Position = UDim2.new(1, -46, 0.5, -10)
-		ind.BackgroundColor3 = Color3.fromRGB(40, 42, 52)
+		ind.Size = UDim2.new(0, 38, 0, 22)
+		ind.Position = UDim2.new(1, -48, 0.5, -11)
+		ind.BackgroundColor3 = Color3.fromRGB(38, 42, 54)
 		Instance.new("UICorner", ind).CornerRadius = UDim.new(1, 0)
 
 		local dot = Instance.new("Frame", ind)
-		dot.Size = UDim2.new(0, 16, 0, 16)
-		dot.Position = UDim2.new(0, 2, 0.5, -8)
-		dot.BackgroundColor3 = Color3.fromRGB(90, 95, 105)
+		dot.Size = UDim2.new(0, 18, 0, 18)
+		dot.Position = UDim2.new(0, 2, 0.5, -9)
+		dot.BackgroundColor3 = Color3.fromRGB(90, 95, 110)
 		Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
 
 		local function SetUI(v)
 			Services.TweenService:Create(dot, TweenInfo.new(0.2), {
-				Position = v and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8),
-				BackgroundColor3 = v and Config.Theme.Accent or Color3.fromRGB(90, 95, 105)
+				Position = v and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9),
+				BackgroundColor3 = v and Config.Theme.Accent or Color3.fromRGB(90, 95, 110)
 			}):Play()
 			Services.TweenService:Create(s, TweenInfo.new(0.2), {
 				Transparency = v and 0.4 or 0.85
@@ -318,12 +330,11 @@ local function BuildMobileUI()
 		end)
 	end
 
-	-- 触控大滑块 (支持手指拖拽与点击)
 	local function AddSlider(text, min, max, valKey, cb)
 		local frame = Instance.new("Frame", Content)
-		frame.Size = UDim2.new(1, -4, 0, 48)
+		frame.Size = UDim2.new(1, -4, 0, 50)
 		frame.BackgroundColor3 = Config.Theme.Sec
-		Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+		Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 7)
 
 		local lbl = Instance.new("TextLabel", frame)
 		lbl.Text = text .. ": " .. tostring(Config.Vals[valKey])
@@ -337,8 +348,8 @@ local function BuildMobileUI()
 
 		local bar = Instance.new("TextButton", frame)
 		bar.Size = UDim2.new(1, -24, 0, 8)
-		bar.Position = UDim2.new(0, 12, 0, 28)
-		bar.BackgroundColor3 = Color3.fromRGB(40, 42, 52)
+		bar.Position = UDim2.new(0, 12, 0, 30)
+		bar.BackgroundColor3 = Color3.fromRGB(38, 42, 54)
 		bar.Text = ""
 		bar.AutoButtonColor = false
 		Instance.new("UICorner", bar).CornerRadius = UDim.new(1, 0)
@@ -376,7 +387,7 @@ local function BuildMobileUI()
 		end))
 	end
 
-	-- 3. 📱 屏幕右侧飞行虚拟触控按键 (▲ 升空 / ▼ 下降)
+	-- 3. 📱 飞行触控虚拟控件 (▲ 升空 / ▼ 下降)
 	local FlyControlGui = Instance.new("Frame", ScreenGui)
 	FlyControlGui.Size = UDim2.new(0, 70, 0, 150)
 	FlyControlGui.Position = UDim2.new(1, -85, 0.5, -75)
@@ -387,7 +398,7 @@ local function BuildMobileUI()
 	UpBtn.Size = UDim2.new(0, 65, 0, 65)
 	UpBtn.Position = UDim2.new(0, 0, 0, 0)
 	UpBtn.BackgroundColor3 = Config.Theme.Main
-	UpBtn.BackgroundTransparency = 0.25
+	UpBtn.BackgroundTransparency = 0.2
 	UpBtn.Text = "▲"
 	UpBtn.TextColor3 = Config.Theme.Accent
 	UpBtn.Font = Enum.Font.GothamBlack
@@ -402,7 +413,7 @@ local function BuildMobileUI()
 	DownBtn.Size = UDim2.new(0, 65, 0, 65)
 	DownBtn.Position = UDim2.new(0, 0, 0, 80)
 	DownBtn.BackgroundColor3 = Config.Theme.Main
-	DownBtn.BackgroundTransparency = 0.25
+	DownBtn.BackgroundTransparency = 0.2
 	DownBtn.Text = "▼"
 	DownBtn.TextColor3 = Config.Theme.Accent
 	DownBtn.Font = Enum.Font.GothamBlack
@@ -453,7 +464,7 @@ local function BuildMobileUI()
 
 	Storage.FlyControlGui = FlyControlGui
 
-	-- Add Movement Items
+	-- Add Movement Toggles
 	AddToggle("🦅 Touch Fly (▲▼ Controls)", "Fly", function(v)
 		UpdateCollisions()
 		if Storage.FlyControlGui then Storage.FlyControlGui.Visible = v end
@@ -474,53 +485,79 @@ local function BuildMobileUI()
 	AddToggle("🪂 No Fall Damage", "NoFall")
 	AddToggle("💡 Fullbright Nightvision", "Fullbright", function(v) ToggleFullbright(v) end)
 
-	-- 4. 🌟 UPGRADE PROMO BANNER (引导付费转化)
+	-- 4. 🌟 UPGRADE PROMO BANNER (引导付费转化 + 官方 DISCORD 一键复制)
 	local PromoBox = Instance.new("Frame", Content)
-	PromoBox.Size = UDim2.new(1, -4, 0, 78)
-	PromoBox.BackgroundColor3 = Color3.fromRGB(18, 22, 30)
-	Instance.new("UICorner", PromoBox).CornerRadius = UDim.new(0, 6)
+	PromoBox.Size = UDim2.new(1, -4, 0, 110)
+	PromoBox.BackgroundColor3 = Color3.fromRGB(18, 22, 32)
+	Instance.new("UICorner", PromoBox).CornerRadius = UDim.new(0, 8)
 	local pStroke = Instance.new("UIStroke", PromoBox)
 	pStroke.Color = Config.Theme.Gold
-	pStroke.Thickness = 1.2
-	pStroke.Transparency = 0.4
+	pStroke.Thickness = 1.3
+	pStroke.Transparency = 0.35
 
 	local PromoTitle = Instance.new("TextLabel", PromoBox)
 	PromoTitle.Size = UDim2.new(1, -16, 0, 20)
-	PromoTitle.Position = UDim2.new(0, 8, 0, 6)
+	PromoTitle.Position = UDim2.new(0, 10, 0, 6)
 	PromoTitle.BackgroundTransparency = 1
 	PromoTitle.Text = "👑 UNLOCK AIMBOT & FULL ESP"
 	PromoTitle.TextColor3 = Config.Theme.Gold
 	PromoTitle.Font = Enum.Font.GothamBold
-	PromoTitle.TextSize = 11
+	PromoTitle.TextSize = 12
 	PromoTitle.TextXAlignment = Enum.TextXAlignment.Left
 
 	local PromoDesc = Instance.new("TextLabel", PromoBox)
 	PromoDesc.Size = UDim2.new(1, -16, 0, 16)
-	PromoDesc.Position = UDim2.new(0, 8, 0, 26)
+	PromoDesc.Position = UDim2.new(0, 10, 0, 26)
 	PromoDesc.BackgroundTransparency = 1
-	PromoDesc.Text = "Nano (RM5) | Mini (RM10) | Pro (RM20)"
+	PromoDesc.Text = "Nano (RM5) | Mini (RM10) | Pro (RM20) | Titan"
 	PromoDesc.TextColor3 = Config.Theme.Dim
 	PromoDesc.Font = Enum.Font.GothamMedium
 	PromoDesc.TextSize = 11
 	PromoDesc.TextXAlignment = Enum.TextXAlignment.Left
 
 	local CopyDiscordBtn = Instance.new("TextButton", PromoBox)
-	CopyDiscordBtn.Size = UDim2.new(1, -16, 0, 24)
-	CopyDiscordBtn.Position = UDim2.new(0, 8, 0, 46)
-	CopyDiscordBtn.BackgroundColor3 = Color3.fromRGB(30, 36, 50)
-	CopyDiscordBtn.Text = "📋 Copy Seller Discord: vlilayz"
-	CopyDiscordBtn.TextColor3 = Config.Theme.Text
+	CopyDiscordBtn.Size = UDim2.new(1, -20, 0, 28)
+	CopyDiscordBtn.Position = UDim2.new(0, 10, 0, 46)
+	CopyDiscordBtn.BackgroundColor3 = Color3.fromRGB(30, 42, 65)
+	CopyDiscordBtn.Text = "🌐 Copy Official Discord Server"
+	CopyDiscordBtn.TextColor3 = Config.Theme.Accent
 	CopyDiscordBtn.Font = Enum.Font.GothamBold
-	CopyDiscordBtn.TextSize = 10
+	CopyDiscordBtn.TextSize = 11
 	CopyDiscordBtn.AutoButtonColor = false
-	Instance.new("UICorner", CopyDiscordBtn).CornerRadius = UDim.new(0, 4)
+	Instance.new("UICorner", CopyDiscordBtn).CornerRadius = UDim.new(0, 6)
+	local dStroke1 = Instance.new("UIStroke", CopyDiscordBtn)
+	dStroke1.Color = Config.Theme.Accent
+	dStroke1.Transparency = 0.5
+
 	CopyDiscordBtn.MouseButton1Click:Connect(function()
 		pcall(function()
 			if setclipboard then
-				setclipboard("vlilayz")
-				Notify("📋 COPIED", "Seller Discord (vlilayz) copied to clipboard!")
+				setclipboard(Config.Links.Discord)
+				Notify("📋 COPIED", "Official Discord copied! (" .. Config.Links.Discord .. ")")
 			else
-				Notify("💬 DISCORD", "Add Seller on Discord: vlilayz")
+				Notify("💬 DISCORD", Config.Links.Discord)
+			end
+		end)
+	end)
+
+	local CopySellerBtn = Instance.new("TextButton", PromoBox)
+	CopySellerBtn.Size = UDim2.new(1, -20, 0, 24)
+	CopySellerBtn.Position = UDim2.new(0, 10, 0, 78)
+	CopySellerBtn.BackgroundColor3 = Color3.fromRGB(25, 30, 42)
+	CopySellerBtn.Text = "💬 Copy Seller Discord: " .. Config.Links.Seller
+	CopySellerBtn.TextColor3 = Config.Theme.Dim
+	CopySellerBtn.Font = Enum.Font.GothamMedium
+	CopySellerBtn.TextSize = 10
+	CopySellerBtn.AutoButtonColor = false
+	Instance.new("UICorner", CopySellerBtn).CornerRadius = UDim.new(0, 6)
+
+	CopySellerBtn.MouseButton1Click:Connect(function()
+		pcall(function()
+			if setclipboard then
+				setclipboard(Config.Links.Seller)
+				Notify("📋 COPIED", "Seller Discord copied! (" .. Config.Links.Seller .. ")")
+			else
+				Notify("💬 SELLER", Config.Links.Seller)
 			end
 		end)
 	end)
@@ -534,13 +571,13 @@ local function BuildMobileUI()
 	UnloadBtn.Font = Enum.Font.GothamBold
 	UnloadBtn.TextSize = 13
 	UnloadBtn.AutoButtonColor = false
-	Instance.new("UICorner", UnloadBtn).CornerRadius = UDim.new(0, 6)
+	Instance.new("UICorner", UnloadBtn).CornerRadius = UDim.new(0, 7)
 	local uStroke2 = Instance.new("UIStroke", UnloadBtn)
 	uStroke2.Color = Config.Theme.Red
 	uStroke2.Transparency = 0.5
 	UnloadBtn.MouseButton1Click:Connect(function() Unload() end)
 
-	Content.CanvasSize = UDim2.new(0, 0, 0, 520)
+	Content.CanvasSize = UDim2.new(0, 0, 0, 560)
 end
 
 -- ==================================================================
@@ -615,11 +652,12 @@ local function Init()
 		end
 	end))
 
-	Notify("🪶 X LITEM", "Mobile Free Edition Loaded! Tap [🪶] bubble to open menu!")
+	Notify("📱 X LITEM DELTA", "Free Edition Loaded! Tap [🪶] to open menu | Join: " .. Config.Links.Discord)
 	print("==========================================")
-	print("📱 X LITEM V1.0.0 MOBILE FREE EDITION LOADED!")
-	print("👑 FOUNDER & DEV : " .. Config.Seller.Founder)
-	print("💬 DISCORD SELLER: " .. Config.Seller.Discord)
+	print("📱 X LITEM V1.1.0 DELTA MOBILE FREE EDITION LOADED!")
+	print("👑 FOUNDER & DEV : " .. Config.Links.Founder)
+	print("🌐 DISCORD SERVER: " .. Config.Links.Discord)
+	print("💬 SELLER DISCORD: " .. Config.Links.Seller)
 	print("==========================================")
 end
 

@@ -1,9 +1,8 @@
--- [[ X LITE V1.0.0 - FREE STARTER EDITION ]]
--- 定位: 免费引流 / 纯净机动 / 零封禁风险 / 全平台秒注入
--- 包含: Fly 自由飞行 [Z] | Noclip 穿墙 [V] | SpeedHack 加速 | InfJump 无限跳 | NoFall 防跌落
--- 兼容: Delta (Mobile) | Xeno | Solara (PC)
--- 升级: 欲解锁自瞄(Aimbot)与透视(ESP)，请升级 Nano (RM5) / Mini (RM10) / Pro (RM20)
--- 卖家: vlilayz
+-- [[ X LITE V1.1.0 - FREE STARTER EDITION ]]
+-- Positioning: Free Starter / Pure Utility & Movement / Zero Risk / Instant Execution
+-- Controls: [Insert] Menu | [Z] Toggle Fly | [V] Toggle Noclip | [End] Safe Unload
+-- Features: Flight | Noclip | SpeedHack | Infinite Jump | No Fall Damage
+-- Official Discord: https://discord.gg/mQ3ASbfP8j | Seller: vlilayz | Dev: XT-7789
 -- ==================================================================
 local Services = {
 	Players = game:GetService("Players"),
@@ -20,41 +19,54 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 
 local targetGui
 if type(gethui) == "function" then
-    pcall(function() targetGui = gethui() end)
+	pcall(function() targetGui = gethui() end)
 end
 if not targetGui then
-    targetGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui", 10)
+	targetGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui", 10)
 end
 if not targetGui then
-    pcall(function() targetGui = LocalPlayer:WaitForChild("PlayerGui") end)
+	pcall(function() targetGui = LocalPlayer:WaitForChild("PlayerGui") end)
 end
-if not targetGui then warn("X SUITE: GUI Target failed!") return end
+if not targetGui then warn("[X LITE]: GUI Target failed!") return end
 
 -- ==================================================================
--- CONFIG & STORAGE
+-- CONFIG & STATE
 -- ==================================================================
 local Config = {
 	Keys = { Menu = Enum.KeyCode.Insert, Fly = Enum.KeyCode.Z, Noclip = Enum.KeyCode.V, Unload = Enum.KeyCode.End },
 	Theme = {
-		Main = Color3.fromRGB(12, 14, 18), Sec = Color3.fromRGB(20, 22, 28),
-		Accent = Color3.fromRGB(0, 230, 255), Text = Color3.fromRGB(240, 240, 245),
-		Dim = Color3.fromRGB(130, 135, 145), Gold = Color3.fromRGB(255, 205, 50)
+		Main = Color3.fromRGB(12, 14, 20),
+		Sec = Color3.fromRGB(18, 22, 30),
+		Accent = Color3.fromRGB(0, 230, 255),
+		Text = Color3.fromRGB(240, 244, 255),
+		Dim = Color3.fromRGB(135, 145, 165),
+		Gold = Color3.fromRGB(255, 205, 50),
+		Red = Color3.fromRGB(255, 75, 75)
 	},
 	States = {
-		Fly = false, Noclip = false, SpeedHack = false, InfJump = false, NoFall = false
+		Fly = false,
+		Noclip = false,
+		SpeedHack = false,
+		InfJump = false,
+		NoFall = false
 	},
 	Vals = {
-		FlySpeed = 100, WalkSpeed = 80
+		FlySpeed = 100,
+		WalkSpeed = 80
 	},
-	Seller = {
-		Discord = "vlilayz",
-		Version = "V1.0.0 Free"
+	Links = {
+		Discord = "https://discord.gg/mQ3ASbfP8j",
+		Seller = "vlilayz",
+		Version = "V1.1.0 Free"
 	}
 }
 
 local Storage = {
-	Connections = {}, ToggleFuncs = {}, MainFrame = nil,
-	OriginalCollisions = {}, OriginalWalkSpeed = 16
+	Connections = {},
+	ToggleFuncs = {},
+	MainFrame = nil,
+	OriginalCollisions = {},
+	OriginalWalkSpeed = 16
 }
 
 local function TrackConn(c)
@@ -64,7 +76,11 @@ end
 
 local function Notify(title, text, dur)
 	pcall(function()
-		Services.StarterGui:SetCore("SendNotification", { Title = title, Text = text, Duration = dur or 2.5 })
+		Services.StarterGui:SetCore("SendNotification", {
+			Title = title,
+			Text = text,
+			Duration = dur or 3
+		})
 	end)
 end
 
@@ -92,80 +108,119 @@ local function UpdateCollisions()
 end
 
 -- ==================================================================
--- ULTRA-CLEAN FLOATING CARD UI
+-- UI CONSTRUCTION (MODERN GLASSMORPHISM)
 -- ==================================================================
 local function BuildUI()
-	local uiName = "X_LITE_FREE_V1"
+	local uiName = "X_LITE_FREE_V11"
 	if targetGui:FindFirstChild(uiName) then targetGui[uiName]:Destroy() end
 
 	local ScreenGui = Instance.new("ScreenGui", targetGui)
-	ScreenGui.Name = uiName; ScreenGui.ResetOnSpawn = false; ScreenGui.IgnoreGuiInset = true
+	ScreenGui.Name = uiName
+	ScreenGui.ResetOnSpawn = false
+	ScreenGui.IgnoreGuiInset = true
 
 	local Card = Instance.new("Frame", ScreenGui)
-	Card.Size = UDim2.new(0, 250, 0, 390)
-	Card.Position = UDim2.new(0.5, -125, 0.5, -195)
+	Card.Size = UDim2.new(0, 270, 0, 430)
+	Card.Position = UDim2.new(0.5, -135, 0.5, -215)
 	Card.BackgroundColor3 = Config.Theme.Main
-	Card.Active = true; Card.Draggable = true
-	Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 8)
+	Card.Active = true
+	Card.Draggable = true
+	Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 10)
+	
 	local Stroke = Instance.new("UIStroke", Card)
-	Stroke.Color = Config.Theme.Accent; Stroke.Thickness = 1.5; Stroke.Transparency = 0.4
+	Stroke.Color = Config.Theme.Accent
+	Stroke.Thickness = 1.6
+	Stroke.Transparency = 0.35
 	Storage.MainFrame = Card
 
-	-- Title Bar
+	-- Top Bar
 	local Bar = Instance.new("Frame", Card)
-	Bar.Size = UDim2.new(1, 0, 0, 36); Bar.BackgroundColor3 = Config.Theme.Sec
-	Instance.new("UICorner", Bar).CornerRadius = UDim.new(0, 8)
+	Bar.Size = UDim2.new(1, 0, 0, 40)
+	Bar.BackgroundColor3 = Config.Theme.Sec
+	Instance.new("UICorner", Bar).CornerRadius = UDim.new(0, 10)
 
 	local Title = Instance.new("TextLabel", Bar)
-	Title.Text = "🎁 X LITE <font color='#ffcd32'>FREE</font>"; Title.RichText = true
-	Title.Size = UDim2.new(1, -40, 1, 0); Title.Position = UDim2.new(0, 10, 0, 0)
-	Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Accent
-	Title.Font = Enum.Font.GothamBold; Title.TextSize = 13; Title.TextXAlignment = Enum.TextXAlignment.Left
+	Title.Text = "🎁 X LITE <font color='#ffcd32'>FREE</font> <font color='#00e6ff'>V1.1.0</font>"
+	Title.RichText = true
+	Title.Size = UDim2.new(1, -44, 1, 0)
+	Title.Position = UDim2.new(0, 12, 0, 0)
+	Title.BackgroundTransparency = 1
+	Title.TextColor3 = Config.Theme.Text
+	Title.Font = Enum.Font.GothamBold
+	Title.TextSize = 13
+	Title.TextXAlignment = Enum.TextXAlignment.Left
 
 	local Close = Instance.new("TextButton", Bar)
-	Close.Size = UDim2.new(0, 26, 0, 26); Close.Position = UDim2.new(1, -30, 0, 5)
-	Close.BackgroundColor3 = Color3.fromRGB(35, 38, 48); Close.Text = "×"; Close.TextColor3 = Config.Theme.Dim
-	Close.Font = Enum.Font.GothamBold; Close.TextSize = 15; Close.AutoButtonColor = false
-	Instance.new("UICorner", Close).CornerRadius = UDim.new(0, 5)
+	Close.Size = UDim2.new(0, 28, 0, 28)
+	Close.Position = UDim2.new(1, -34, 0, 6)
+	Close.BackgroundColor3 = Color3.fromRGB(32, 36, 48)
+	Close.Text = "×"
+	Close.TextColor3 = Config.Theme.Dim
+	Close.Font = Enum.Font.GothamBold
+	Close.TextSize = 16
+	Close.AutoButtonColor = false
+	Instance.new("UICorner", Close).CornerRadius = UDim.new(0, 6)
 	Close.MouseButton1Click:Connect(function() Card.Visible = false end)
 
 	-- Scrollable Items
 	local Content = Instance.new("ScrollingFrame", Card)
-	Content.Size = UDim2.new(1, -16, 1, -115); Content.Position = UDim2.new(0, 8, 0, 42)
-	Content.BackgroundTransparency = 1; Content.ScrollBarThickness = 2
+	Content.Size = UDim2.new(1, -16, 1, -145)
+	Content.Position = UDim2.new(0, 8, 0, 46)
+	Content.BackgroundTransparency = 1
+	Content.ScrollBarThickness = 2
 	Content.ScrollBarImageColor3 = Config.Theme.Accent
-	local Layout = Instance.new("UIListLayout", Content); Layout.Padding = UDim.new(0, 5)
+	local Layout = Instance.new("UIListLayout", Content)
+	Layout.Padding = UDim.new(0, 5)
 
 	local function AddToggle(text, stateKey, cb)
 		local btn = Instance.new("TextButton", Content)
-		btn.Size = UDim2.new(1, -4, 0, 32); btn.BackgroundColor3 = Config.Theme.Sec
-		btn.Text = ""; btn.AutoButtonColor = false
-		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
-		local s = Instance.new("UIStroke", btn); s.Color = Config.Theme.Accent; s.Transparency = 0.85
+		btn.Size = UDim2.new(1, -4, 0, 34)
+		btn.BackgroundColor3 = Config.Theme.Sec
+		btn.Text = ""
+		btn.AutoButtonColor = false
+		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+		local s = Instance.new("UIStroke", btn)
+		s.Color = Config.Theme.Accent
+		s.Transparency = 0.85
 
 		local lbl = Instance.new("TextLabel", btn)
-		lbl.Text = text; lbl.Size = UDim2.new(0.7, 0, 1, 0); lbl.Position = UDim2.new(0, 10, 0, 0)
-		lbl.BackgroundTransparency = 1; lbl.TextColor3 = Config.Theme.Text
-		lbl.Font = Enum.Font.GothamMedium; lbl.TextSize = 11; lbl.TextXAlignment = Enum.TextXAlignment.Left
+		lbl.Text = text
+		lbl.Size = UDim2.new(0.7, 0, 1, 0)
+		lbl.Position = UDim2.new(0, 10, 0, 0)
+		lbl.BackgroundTransparency = 1
+		lbl.TextColor3 = Config.Theme.Text
+		lbl.Font = Enum.Font.GothamMedium
+		lbl.TextSize = 11
+		lbl.TextXAlignment = Enum.TextXAlignment.Left
 
 		local ind = Instance.new("Frame", btn)
-		ind.Size = UDim2.new(0, 28, 0, 14); ind.Position = UDim2.new(1, -36, 0.5, -7)
-		ind.BackgroundColor3 = Color3.fromRGB(40, 42, 50); Instance.new("UICorner", ind).CornerRadius = UDim.new(1, 0)
+		ind.Size = UDim2.new(0, 30, 0, 16)
+		ind.Position = UDim2.new(1, -40, 0.5, -8)
+		ind.BackgroundColor3 = Color3.fromRGB(36, 40, 50)
+		Instance.new("UICorner", ind).CornerRadius = UDim.new(1, 0)
 
 		local dot = Instance.new("Frame", ind)
-		dot.Size = UDim2.new(0, 10, 0, 10); dot.Position = UDim2.new(0, 2, 0.5, -5)
-		dot.BackgroundColor3 = Color3.fromRGB(90, 95, 105); Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+		dot.Size = UDim2.new(0, 12, 0, 12)
+		dot.Position = UDim2.new(0, 2, 0.5, -6)
+		dot.BackgroundColor3 = Color3.fromRGB(90, 95, 110)
+		Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
 
 		local function SetUI(v)
 			Services.TweenService:Create(dot, TweenInfo.new(0.2), {
-				Position = v and UDim2.new(1, -12, 0.5, -5) or UDim2.new(0, 2, 0.5, -5),
-				BackgroundColor3 = v and Config.Theme.Accent or Color3.fromRGB(90, 95, 105)
+				Position = v and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6),
+				BackgroundColor3 = v and Config.Theme.Accent or Color3.fromRGB(90, 95, 110)
 			}):Play()
-			Services.TweenService:Create(s, TweenInfo.new(0.2), { Transparency = v and 0.4 or 0.85 }):Play()
+			Services.TweenService:Create(s, TweenInfo.new(0.2), {
+				Transparency = v and 0.4 or 0.85
+			}):Play()
 			if cb then cb(v) end
 		end
 
-		Storage.ToggleFuncs[stateKey] = function(v) Config.States[stateKey] = v; SetUI(v) end
+		Storage.ToggleFuncs[stateKey] = function(v)
+			Config.States[stateKey] = v
+			SetUI(v)
+		end
+
 		btn.MouseButton1Click:Connect(function()
 			Config.States[stateKey] = not Config.States[stateKey]
 			SetUI(Config.States[stateKey])
@@ -174,27 +229,38 @@ local function BuildUI()
 
 	local function AddSlider(text, min, max, valKey, cb)
 		local frame = Instance.new("Frame", Content)
-		frame.Size = UDim2.new(1, -4, 0, 38); frame.BackgroundColor3 = Config.Theme.Sec
-		Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 5)
+		frame.Size = UDim2.new(1, -4, 0, 40)
+		frame.BackgroundColor3 = Config.Theme.Sec
+		Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
 
 		local lbl = Instance.new("TextLabel", frame)
 		lbl.Text = text .. ": " .. tostring(Config.Vals[valKey])
-		lbl.Size = UDim2.new(1, -16, 0, 15); lbl.Position = UDim2.new(0, 10, 0, 3)
-		lbl.BackgroundTransparency = 1; lbl.TextColor3 = Config.Theme.Text
-		lbl.Font = Enum.Font.GothamMedium; lbl.TextSize = 10; lbl.TextXAlignment = Enum.TextXAlignment.Left
+		lbl.Size = UDim2.new(1, -16, 0, 16)
+		lbl.Position = UDim2.new(0, 10, 0, 3)
+		lbl.BackgroundTransparency = 1
+		lbl.TextColor3 = Config.Theme.Text
+		lbl.Font = Enum.Font.GothamMedium
+		lbl.TextSize = 10
+		lbl.TextXAlignment = Enum.TextXAlignment.Left
 
 		local bar = Instance.new("TextButton", frame)
-		bar.Size = UDim2.new(1, -20, 0, 4); bar.Position = UDim2.new(0, 10, 0, 24)
-		bar.BackgroundColor3 = Color3.fromRGB(40, 42, 50); bar.Text = ""; bar.AutoButtonColor = false
+		bar.Size = UDim2.new(1, -20, 0, 6)
+		bar.Position = UDim2.new(0, 10, 0, 25)
+		bar.BackgroundColor3 = Color3.fromRGB(36, 40, 50)
+		bar.Text = ""
+		bar.AutoButtonColor = false
 		Instance.new("UICorner", bar).CornerRadius = UDim.new(1, 0)
 
 		local fill = Instance.new("Frame", bar)
 		fill.Size = UDim2.new((Config.Vals[valKey] - min) / (max - min), 0, 1, 0)
-		fill.BackgroundColor3 = Config.Theme.Accent; Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
+		fill.BackgroundColor3 = Config.Theme.Accent
+		Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
 
 		local dragging = false
 		bar.MouseButton1Down:Connect(function() dragging = true end)
-		TrackConn(Services.UIS.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end))
+		TrackConn(Services.UIS.InputEnded:Connect(function(i)
+			if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+		end))
 		TrackConn(Services.UIS.InputChanged:Connect(function(i)
 			if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
 				local p = math.clamp((i.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
@@ -223,22 +289,62 @@ local function BuildUI()
 	AddToggle("🦘 Infinite Jump", "InfJump")
 	AddToggle("🪂 No Fall Damage", "NoFall")
 
-	Content.CanvasSize = UDim2.new(0, 0, 0, 240)
+	Content.CanvasSize = UDim2.new(0, 0, 0, 255)
 
-	-- Promo / Upgrade Box at Bottom
+	-- Promo Card with One-Click Discord Button
 	local Promo = Instance.new("Frame", Card)
-	Promo.Size = UDim2.new(1, -16, 0, 64); Promo.Position = UDim2.new(0, 8, 1, -70)
+	Promo.Size = UDim2.new(1, -16, 0, 90)
+	Promo.Position = UDim2.new(0, 8, 1, -96)
 	Promo.BackgroundColor3 = Config.Theme.Sec
-	Instance.new("UICorner", Promo).CornerRadius = UDim.new(0, 6)
-	local pStroke = Instance.new("UIStroke", Promo); pStroke.Color = Config.Theme.Gold; pStroke.Transparency = 0.6
+	Instance.new("UICorner", Promo).CornerRadius = UDim.new(0, 8)
+	local pStroke = Instance.new("UIStroke", Promo)
+	pStroke.Color = Config.Theme.Gold
+	pStroke.Transparency = 0.5
 
 	local pTitle = Instance.new("TextLabel", Promo)
-	pTitle.Text = "⭐ Want to Unlock Aimbot & ESP?"; pTitle.Size = UDim2.new(1, 0, 0, 18); pTitle.Position = UDim2.new(0, 0, 0, 4)
-	pTitle.BackgroundTransparency = 1; pTitle.TextColor3 = Config.Theme.Gold; pTitle.Font = Enum.Font.GothamBold; pTitle.TextSize = 10
+	pTitle.Text = "👑 UNLOCK AIMBOT & FULL ESP"
+	pTitle.Size = UDim2.new(1, -16, 0, 16)
+	pTitle.Position = UDim2.new(0, 8, 0, 6)
+	pTitle.BackgroundTransparency = 1
+	pTitle.TextColor3 = Config.Theme.Gold
+	pTitle.Font = Enum.Font.GothamBold
+	pTitle.TextSize = 11
+	pTitle.TextXAlignment = Enum.TextXAlignment.Left
 
 	local pDesc = Instance.new("TextLabel", Promo)
-	pDesc.Text = "Nano RM5 | Mini RM10 | Pro RM20\n💬 Contact Discord: " .. Config.Seller.Discord; pDesc.Size = UDim2.new(1, 0, 0, 36); pDesc.Position = UDim2.new(0, 0, 0, 22)
-	pDesc.BackgroundTransparency = 1; pDesc.TextColor3 = Config.Theme.Text; pDesc.Font = Enum.Font.GothamMedium; pDesc.TextSize = 9
+	pDesc.Text = "Nano (RM5) | Mini (RM10) | Pro (RM20) | Titan"
+	pDesc.Size = UDim2.new(1, -16, 0, 15)
+	pDesc.Position = UDim2.new(0, 8, 0, 24)
+	pDesc.BackgroundTransparency = 1
+	pDesc.TextColor3 = Config.Theme.Dim
+	pDesc.Font = Enum.Font.GothamMedium
+	pDesc.TextSize = 10
+	pDesc.TextXAlignment = Enum.TextXAlignment.Left
+
+	local DiscordBtn = Instance.new("TextButton", Promo)
+	DiscordBtn.Size = UDim2.new(1, -16, 0, 32)
+	DiscordBtn.Position = UDim2.new(0, 8, 0, 48)
+	DiscordBtn.BackgroundColor3 = Color3.fromRGB(32, 40, 60)
+	DiscordBtn.Text = "📋 Copy Official Discord Server"
+	DiscordBtn.TextColor3 = Config.Theme.Accent
+	DiscordBtn.Font = Enum.Font.GothamBold
+	DiscordBtn.TextSize = 10
+	DiscordBtn.AutoButtonColor = false
+	Instance.new("UICorner", DiscordBtn).CornerRadius = UDim.new(0, 6)
+	local dStroke = Instance.new("UIStroke", DiscordBtn)
+	dStroke.Color = Config.Theme.Accent
+	dStroke.Transparency = 0.6
+
+	DiscordBtn.MouseButton1Click:Connect(function()
+		pcall(function()
+			if setclipboard then
+				setclipboard(Config.Links.Discord)
+				Notify("📋 COPIED", "Discord Server copied! (" .. Config.Links.Discord .. ")")
+			else
+				Notify("💬 DISCORD", Config.Links.Discord)
+			end
+		end)
+	end)
 end
 
 -- ==================================================================
@@ -247,7 +353,9 @@ end
 local function Unload()
 	for _, c in pairs(Storage.Connections) do pcall(function() c:Disconnect() end) end
 	Storage.Connections = {}
-	Config.States.Fly = false; Config.States.Noclip = false; UpdateCollisions()
+	Config.States.Fly = false
+	Config.States.Noclip = false
+	UpdateCollisions()
 
 	local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 	if hum then
@@ -340,11 +448,11 @@ local function Init()
 		end
 	end))
 
-	Notify("X LITE FREE", "Free Edition Loaded! [Insert] Menu [End] Unload\nUpgrade Discord: " .. Config.Seller.Discord, 4)
+	Notify("🎁 X LITE V1.1.0", "Free Loaded! [Insert] Menu | Join Discord: " .. Config.Links.Discord, 4)
 	print("==========================================")
-	print("🎁 X LITE V1.0.0 FREE EDITION LOADED!")
-	print("🔥 UPGRADE TO NANO (RM5) / MINI (RM10) / PRO (RM20)")
-	print("💬 DISCORD: " .. Config.Seller.Discord)
+	print("🎁 X LITE V1.1.0 FREE EDITION LOADED!")
+	print("🌐 DISCORD SERVER: " .. Config.Links.Discord)
+	print("💬 SELLER: " .. Config.Links.Seller)
 	print("==========================================")
 end
 
