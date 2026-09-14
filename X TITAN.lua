@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V5.8.0 - TITAN GOD (APEX OMNI) ]]
+-- [[ X TITAN V5.8.1 - TITAN GOD (APEX OMNI) ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
 -- P2: Zero-Lag Character Caching, Throttled Raycasts & High-FPS Engine
@@ -58,7 +58,7 @@ end
 if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==============================================================================
--- CONFIGURATION & STORAGE (V5.8.0)
+-- CONFIGURATION & STORAGE (V5.8.1)
 -- ==============================================================================
 local Config = {
 	Keys = {
@@ -159,7 +159,7 @@ _G.X_TITAN_CURRENT_INSTANCE = {
 }
 
 -- ==============================================================================
--- UTILITIES (V5.8.0)
+-- UTILITIES (V5.8.1)
 -- ==============================================================================
 local Utils = {}
 _G.X_TITAN_CURRENT_INSTANCE.Utils = Utils
@@ -344,9 +344,12 @@ function Utils.GetCharacterData(plr)
 	if not plr then return nil end
 	local now = tick()
 	local cached = Storage.CharCache[plr]
-	if cached and (now - cached.LastResolve < (Config.Vals.ESPRefreshRate or 0.3)) then
+	if cached and (now - cached.LastResolve < (Config.Vals.ESPRefreshRate or 0.25)) then
 		if cached.Char and cached.Char.Parent and cached.Root and cached.Root.Parent then
-			-- Real-time alive check so death is registered instantly
+			if cached.Hum then
+				cached.CurHp = cached.Hum.Health
+				cached.MaxHp = (cached.Hum.MaxHealth > 0) and cached.Hum.MaxHealth or 100
+			end
 			local isAlive, isUnspawned = Utils.IsAlive(plr, cached.Char, cached.Hum)
 			cached.IsAlive = isAlive
 			cached.IsUnspawned = isUnspawned
@@ -383,26 +386,29 @@ function Utils.GetCharacterData(plr)
 		return nil
 	end
 
-	if cached then
-		cached.Char = char
-		cached.Root = root
-		cached.Head = head
-		cached.Hum = hum
-		cached.IsAlive = isAlive
-		cached.IsUnspawned = isUnspawned
-		cached.LastResolve = now
-		return cached
+	local curHp, maxHp = 100, 100
+	if hum then
+		curHp = hum.Health
+		maxHp = (hum.MaxHealth > 0) and hum.MaxHealth or 100
+	else
+		curHp, maxHp = Utils.GetHealth(plr, char)
 	end
 
-	local data = {
-		Char = char,
-		Root = root,
-		Head = head,
-		Hum = hum,
-		IsAlive = isAlive,
-		IsUnspawned = isUnspawned,
-		LastResolve = now
-	}
+	local data = cached or {}
+	data.Char = char
+	data.Head = head
+	data.Root = root
+	data.Hum = hum
+	data.IsAlive = isAlive
+	data.IsUnspawned = isUnspawned
+	data.CurHp = curHp
+	data.MaxHp = maxHp
+	data.LastResolve = now
+	if not data.Weapon or (now - (data.LastWeaponCheck or 0) > 0.6) then
+		data.Weapon = Utils.GetEquippedWeapon(plr, char)
+		data.LastWeaponCheck = now
+	end
+
 	Storage.CharCache[plr] = data
 	return data
 end
@@ -463,8 +469,9 @@ function Utils.IsAlive(arg1, arg2, arg3)
 	end
 
 	-- 2. Check if parented to corpse/debris/graveyard containers
-	if char.Parent then
-		local pName = char.Parent.Name
+	local cParent = char.Parent
+	if cParent and cParent ~= Services.Workspace then
+		local pName = cParent.Name
 		if pName == "Debris" or pName == "Corpses" or pName == "Corpse" or pName == "Dead" or pName == "Ragdolls" or pName == "Ragdoll" or pName == "DeadBodies" or pName == "Graveyard" or pName == "Trash" then
 			return false, false
 		end
@@ -481,7 +488,26 @@ function Utils.IsAlive(arg1, arg2, arg3)
 
 	local isFarawayLobby = (rPos.Y > 3000 or math.abs(rPos.X) > 30000 or math.abs(rPos.Z) > 30000)
 
-	-- 4. Arsenal & specialized game NRPBS checks
+	-- 4. [PERF FAST-PATH]: Standard Roblox Humanoid (Covers 98% of standard games with ZERO string lookups)
+	hum = hum or char:FindFirstChildOfClass("Humanoid")
+	if hum then
+		if hum.Health <= 0 then return false, false end
+		local state = hum:GetState()
+		if state == Enum.HumanoidStateType.Dead then return false, false end
+		if (state == Enum.HumanoidStateType.Physics or state == Enum.HumanoidStateType.Ragdoll) and (hum.Health <= 1 or not hum.RequiresNeck) then
+			return false, false
+		end
+		-- Fast direct attribute check (no table iteration)
+		if char:GetAttribute("Dead") == true or char:GetAttribute("IsDead") == true or char:GetAttribute("Ragdoll") == true or char:GetAttribute("Downed") == true then
+			return false, false
+		end
+		local head = char:FindFirstChild("Head")
+		if not head or not head.Parent then return false, false end
+		if isFarawayLobby then return false, true end
+		return true, false
+	end
+
+	-- 5. Fallback for non-Humanoid custom bodies (Arsenal NRPBS, Frontlines, etc.)
 	if plr and (game.PlaceId == 286090429 or game.GameId == 111958650 or plr:FindFirstChild("NRPBS")) then
 		local nrpbs = plr:FindFirstChild("NRPBS")
 		if nrpbs then
@@ -490,12 +516,8 @@ function Utils.IsAlive(arg1, arg2, arg3)
 				return false, false
 			end
 		end
-		if not char:FindFirstChild("Spawned") then
-			return false, true
-		end
 	end
 
-	-- 5. Universal Dead & Ragdoll markers (children, folders, scripts, values)
 	local deadNames = {"Dead", "Ragdoll", "Ragdolled", "Died", "Corpse", "Downed", "Knocked", "Death", "KO", "Ko", "Fainted", "BleedOut", "Unconscious", "Eliminated", "IsDead", "Killed"}
 	for _, dName in ipairs(deadNames) do
 		local marker = char:FindFirstChild(dName)
@@ -510,61 +532,24 @@ function Utils.IsAlive(arg1, arg2, arg3)
 		end
 	end
 
-	-- 6. Universal Dead & Ragdoll Attributes
 	for _, dAttr in ipairs({"Dead", "IsDead", "Ragdoll", "Ragdolled", "Downed", "Knocked", "Killed", "Unconscious", "Fainted"}) do
 		if char:GetAttribute(dAttr) == true or (plr and plr:GetAttribute(dAttr) == true) then
 			return false, false
 		end
 	end
 
-	-- 7. Universal Health Calculation (NRPBS, Humanoid, HP Value, Attributes)
 	local curHp, _ = Utils.GetHealth(plr, char)
-	if curHp <= 0 then
-		return false, false
-	end
+	if curHp <= 0 then return false, false end
 
-	-- 8. Roblox Humanoid State & Health
-	hum = hum or char:FindFirstChildOfClass("Humanoid")
-	if hum then
-		if hum.Health <= 0 then
-			return false, false
-		end
-		local ok, state = pcall(function() return hum:GetState() end)
-		if ok then
-			if state == Enum.HumanoidStateType.Dead then
-				return false, false
-			end
-			if (state == Enum.HumanoidStateType.Physics or state == Enum.HumanoidStateType.Ragdoll) then
-				if hum.Health <= 1 or not hum.RequiresNeck then
-					return false, false
-				end
-			end
-		end
-	else
-		-- In Roblox standard games, an active alive character MUST have a Humanoid!
-		local hasCustomHpSystem = (plr and plr:FindFirstChild("NRPBS")) or char:FindFirstChild("Health") or char:FindFirstChild("HP") or char:GetAttribute("Health") or char:GetAttribute("HP")
-		if not hasCustomHpSystem and not isFarawayLobby then
-			return false, false
-		end
-	end
-
-	-- 9. Check BreakJointsOnDeath (severed head / broken neck)
 	local head = char:FindFirstChild("Head")
-	if not head or not head.Parent then
-		return false, false
-	end
+	if not head or not head.Parent then return false, false end
 	local torso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
 	if torso and not hum then
 		local neck = head:FindFirstChild("Neck") or torso:FindFirstChild("Neck") or head:FindFirstChildOfClass("Motor6D") or torso:FindFirstChildOfClass("Motor6D")
-		if not neck then
-			return false, false
-		end
+		if not neck then return false, false end
 	end
 
-	if isFarawayLobby then
-		return false, true
-	end
-
+	if isFarawayLobby then return false, true end
 	return true, false
 end
 
@@ -576,6 +561,20 @@ function Utils.GetCurrentCamera()
 		end
 	end
 	return cam
+end
+
+local cachedFilterChar = nil
+local cachedFilterCam = nil
+local function UpdateRaycastFilter(cam)
+	local c = LocalPlayer.Character
+	if c ~= cachedFilterChar or cam ~= cachedFilterCam then
+		cachedFilterChar = c
+		cachedFilterCam = cam
+		local filter = {}
+		if cachedFilterChar then table.insert(filter, cachedFilterChar) end
+		if cachedFilterCam then table.insert(filter, cachedFilterCam) end
+		SharedRaycastParams.FilterDescendantsInstances = filter
+	end
 end
 
 function Utils.IsVisible(targetHead, targetPlr)
@@ -593,8 +592,8 @@ function Utils.IsVisible(targetHead, targetPlr)
 	local origin = Camera.CFrame.Position
 	local direction = (targetHead.Position - origin)
 
-	SharedRaycastParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
-	local success, result = pcall(function() return Services.Workspace:Raycast(origin, direction, SharedRaycastParams) end)
+	UpdateRaycastFilter(Camera)
+	local success, result = pcall(Services.Workspace.Raycast, Services.Workspace, origin, direction, SharedRaycastParams)
 	local isVis = false
 	if not success or not result then
 		isVis = true
@@ -1202,15 +1201,24 @@ function Features.UpdateNativeTags()
 			continue
 		end
 		
-		local head = char:FindFirstChild("Head") or char:FindFirstChild("HumanoidRootPart")
+		local cData = Utils.GetCharacterData(p)
+		if not cData or not (cData.IsAlive or (Config.States.DetectUnspawned and cData.IsUnspawned)) then
+			if Storage.NativePlayerTags[p] then
+				pcall(function() Storage.NativePlayerTags[p]:Destroy() end)
+				Storage.NativePlayerTags[p] = nil
+			end
+			continue
+		end
+		local head = cData.Head or cData.Root
 		if not head then continue end
 		
 		local bg = Storage.NativePlayerTags[p]
-		local drawColor = isUnspawned and Color3.fromRGB(190, 130, 255) or ((Storage.LockedTarget == p) and Config.Theme.LockColor or Config.Theme.Stroke)
+		local drawColor = cData.IsUnspawned and Color3.fromRGB(190, 130, 255) or ((Storage.LockedTarget == p) and Config.Theme.LockColor or Config.Theme.Stroke)
 		local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 		local dist = myHRP and math.floor((head.Position - myHRP.Position).Magnitude) or 0
-		local curHp, maxHp = Utils.GetHealth(p, char)
-		local wName = Utils.GetEquippedWeapon(p, char)
+		local curHp = cData.CurHp or 100
+		local maxHp = cData.MaxHp or 100
+		local wName = cData.Weapon or "Unarmed"
 		
 		if not bg or not bg.Parent then
 			bg = Instance.new("BillboardGui")
@@ -1480,9 +1488,9 @@ function Features.GetAuraTarget()
 end
 
 -- ==============================================================================
--- UI SYSTEM (V5.8.0)
+-- UI SYSTEM (V5.8.1)
 -- ==============================================================================
--- ITEM & LOOT ESP SUBSYSTEM (V5.8.0)
+-- ITEM & LOOT ESP SUBSYSTEM (V5.8.1)
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
 		pcall(function() bg:Destroy() end)
@@ -1628,7 +1636,7 @@ end
 
 local UI = {}
 function UI.Init()
-	local guiName = "X_TITAN_V580"
+	local guiName = "X_TITAN_V581"
 	if targetGui:FindFirstChild(guiName) then targetGui[guiName]:Destroy() end
 	
 	local ScreenGui = Instance.new("ScreenGui", targetGui)
@@ -1679,7 +1687,7 @@ function UI.Init()
 	Title.Font = Enum.Font.GothamBlack; Title.TextSize = 16; Title.TextXAlignment = Enum.TextXAlignment.Left
 
 	local Subtitle = Instance.new("TextLabel", SidePanel)
-	Subtitle.Text = "VOID WALKER • V5.8.0"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
+	Subtitle.Text = "VOID WALKER • V5.8.1"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
 	Subtitle.BackgroundTransparency = 1; Subtitle.TextColor3 = Config.Theme.TextDim
 	Subtitle.Font = Enum.Font.GothamBold; Subtitle.TextSize = 9; Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 	
@@ -2501,7 +2509,7 @@ table.insert(Storage.Loops, auraLoop)
 -- ==============================================================================
 local Runtime = {}
 function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.8.0 - TITAN GOD (APEX OMNI)...")
+	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.8.1 - TITAN GOD (APEX OMNI)...")
 	Storage.IsUnloaded = true
 	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
 	Storage.Loops = {}
@@ -2605,7 +2613,7 @@ function Runtime.Unload()
 	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
 	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
 	Storage.RadarObjects = {}
-	print("X TITAN V5.8.0 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
+	print("X TITAN V5.8.1 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
 end
 
 local function InitRadar()
@@ -2699,9 +2707,12 @@ local function UpdateRadar()
 		local scale = 90 / Config.Vals.RadarRange
 		local x = relativePos.X * scale; local z = -relativePos.Z * scale
 		obj.Position = UDim2.new(0.5, x, 0.5, z); obj.Visible = true
-		if Utils.IsTeammate(p) then obj.BackgroundColor3 = Config.Theme.Team
-		elseif Utils.IsVisible(data.Head, p) then obj.BackgroundColor3 = Config.Theme.LockColor
-		else obj.BackgroundColor3 = Config.Theme.TextDim end
+		if Utils.IsTeammate(p) then 
+			obj.BackgroundColor3 = Config.Theme.Team
+		else
+			local vis = Storage.VisCache[p] and Storage.VisCache[p].Visible
+			obj.BackgroundColor3 = vis and Config.Theme.LockColor or Config.Theme.TextDim
+		end
 	end
 end
 
@@ -2755,7 +2766,7 @@ function Runtime.Init()
 	WmTitle.Size = UDim2.new(1, -12, 0, 16)
 	WmTitle.Position = UDim2.new(0, 8, 0, 3)
 	WmTitle.BackgroundTransparency = 1
-	WmTitle.Text = "⚡ PROJECT X TITAN • V5.8.0"
+	WmTitle.Text = "⚡ PROJECT X TITAN • V5.8.1"
 	WmTitle.TextColor3 = Config.Theme.Stroke
 	WmTitle.Font = Enum.Font.GothamBlack
 	WmTitle.TextSize = 10
@@ -2859,9 +2870,25 @@ function Runtime.Init()
 	for _, p in ipairs(Services.Players:GetPlayers()) do
 		if p ~= LocalPlayer then
 			UpdatePlayerCache(p)
-			local cAdded = p.CharacterAdded:Connect(function()
+			local cAdded = p.CharacterAdded:Connect(function(newChar)
 				task.wait(0.3)
 				UpdatePlayerCache(p)
+				if newChar then
+					local chAdd = newChar.ChildAdded:Connect(function(child)
+						if child:IsA("Tool") or child:IsA("Model") then
+							local cd = Storage.CharCache[p]
+							if cd then cd.LastWeaponCheck = 0 end
+						end
+					end)
+					table.insert(Storage.Connections, chAdd)
+					local chRem = newChar.ChildRemoved:Connect(function(child)
+						if child:IsA("Tool") or child:IsA("Model") then
+							local cd = Storage.CharCache[p]
+							if cd then cd.LastWeaponCheck = 0 end
+						end
+					end)
+					table.insert(Storage.Connections, chRem)
+				end
 			end)
 			table.insert(Storage.Connections, cAdded)
 			local cRemoved = p.CharacterRemoving:Connect(function()
@@ -3099,7 +3126,7 @@ function Runtime.Init()
 		end
 		
 		if Config.States.Aimbot then
-			-- [V5.8.0 CQB ENHANCED AIMBOT]: Dynamic ballistic damping & close-range responsiveness
+			-- [V5.8.1 CQB ENHANCED AIMBOT]: Dynamic ballistic damping & close-range responsiveness
 			if cachedTarget and cachedTarget.Parent then
 				local targetPos = cachedTarget.Position
 				local eRoot = cachedTarget.Parent:FindFirstChild("HumanoidRootPart")
@@ -3234,7 +3261,7 @@ function Runtime.Init()
 					local pChar = cData.Char
 					local root = cData.Root
 					local head = cData.Head
-					local isAlive, isUnspawned = Utils.IsAlive(plr, pChar)
+					local isAlive, isUnspawned = cData.IsAlive, cData.IsUnspawned
 					local esp = Storage.ESPObjects[plr]
 
 					if not (isAlive or (Config.States.DetectUnspawned and isUnspawned)) then
@@ -3339,13 +3366,18 @@ function Runtime.Init()
 								end
 								esp.Box.Thickness = boxThick
 								esp.Name.Visible = (Config.States.ShowName ~= false); esp.Name.Size = Config.Vals.ESPTextSize or 13; esp.Name.Text = isUnspawned and (plr.DisplayName .. " [NO-SPAWN]") or plr.DisplayName; esp.Name.Position = Vector2.new(boxX + width / 2, boxY - 16); esp.Name.Color = drawColor
-								esp.HealthBar.Visible = (Config.States.ShowHealth ~= false); local curHp, maxHp = Utils.GetHealth(plr, pChar); local healthRatio = math.clamp(curHp / maxHp, 0, 1)
+								esp.HealthBar.Visible = (Config.States.ShowHealth ~= false); local curHp = cData.CurHp or 100; local maxHp = cData.MaxHp or 100; local healthRatio = math.clamp(curHp / maxHp, 0, 1)
 								esp.HealthBar.Color = Color3.new(1 - healthRatio, healthRatio, 0)
 								esp.HealthBar.From = Vector2.new(boxX - 5, boxY + height); esp.HealthBar.To = Vector2.new(boxX - 5, boxY + height - height * healthRatio)
 								esp.Distance.Visible = (Config.States.ShowDistance ~= false); esp.Distance.Size = (Config.Vals.ESPTextSize or 13) - 1; esp.Distance.Text = string.format("%.0fm", (root.Position - (hrp and hrp.Position or root.Position)).Magnitude)
 								esp.Distance.Position = Vector2.new(boxX + width / 2, boxY + height + 2); esp.Distance.Color = drawColor
 								if Config.States.WeaponESP and esp.Weapon then
-									local wName = Utils.GetEquippedWeapon(plr, pChar)
+									local now = tick()
+									if not cData.Weapon or (now - (cData.LastWeaponCheck or 0) > 0.6) then
+										cData.Weapon = Utils.GetEquippedWeapon(plr, pChar)
+										cData.LastWeaponCheck = now
+									end
+									local wName = cData.Weapon or "Unarmed"
 									esp.Weapon.Visible = true
 									esp.Weapon.Text = "[" .. wName .. "]"
 									local distOffset = (Config.States.ShowDistance ~= false) and 16 or 2
@@ -3414,18 +3446,22 @@ function Runtime.Init()
 		end
 		-- [V5.6.0] Rainbow Chams & HUD Accent
 		if Config.States.NoRecoil and LocalPlayer.Character then
-			pcall(function()
-				local myChar = LocalPlayer.Character
-				for _, item in ipairs(myChar:GetChildren()) do
-					if item:IsA("Tool") or item.Name == "Gun" then
-						for _, v in ipairs(item:GetDescendants()) do
-							if v:IsA("NumberValue") and (string.find(string.lower(v.Name), "recoil") or string.find(string.lower(v.Name), "spread")) then
-								v.Value = 0
+			local now = tick()
+			if now - (Storage.LastNoRecoilCheck or 0) > 0.25 then
+				Storage.LastNoRecoilCheck = now
+				pcall(function()
+					local myChar = LocalPlayer.Character
+					for _, item in ipairs(myChar:GetChildren()) do
+						if item:IsA("Tool") or item.Name == "Gun" then
+							for _, v in ipairs(item:GetDescendants()) do
+								if v:IsA("NumberValue") and (string.find(string.lower(v.Name), "recoil") or string.find(string.lower(v.Name), "spread")) then
+									v.Value = 0
+								end
 							end
 						end
 					end
-				end
-			end)
+				end)
+			end
 		end
 
 
@@ -3478,8 +3514,6 @@ function Runtime.Init()
 			if currentHum then
 				Storage.OriginalWalkSpeed = currentHum.WalkSpeed
 				Storage.WalkSpeedSnapshotPending = false
-			Storage.LastSafeCFrame = nil
-			Storage.HitSoundObj = nil
 			end
 		end
 		
@@ -3847,17 +3881,11 @@ function Runtime.Init()
 	table.insert(Storage.Connections, inputEndedConn)
 end
 
-local itemAddedConn = Services.Workspace.DescendantAdded:Connect(function(child)
-	if not Config.States.ItemESP then return end
-	if child:IsA("Tool") or child:IsA("ProximityPrompt") or child:IsA("ClickDetector") then
-		pcall(UpdateItemESP)
-	end
-end)
-table.insert(Storage.Connections, itemAddedConn)
+-- [ZERO-LAG]: Item updates handled cleanly by periodic itemLoop (prevents DescendantAdded projectile flood stutter)
 
 local nativeTagLoop = task.spawn(function()
 	while true do
-		task.wait(0.1)
+		task.wait(0.25)
 		if Storage.IsUnloaded then break end
 		if Config.States.BillboardTags or (Config.States.ESP and (Storage.DrawingBroken or Config.Vals.ESPEngine == "Plan C (Billboard)" or Config.Vals.ESPEngine == "Auto")) then
 			pcall(Features.UpdateNativeTags)
@@ -3918,5 +3946,5 @@ table.insert(Storage.Loops, itemLoop)
 
 Runtime.Init()
 _G.X_TITAN_INSTANCE = { Config = Config, Storage = Storage, Utils = Utils, Features = Features, Runtime = Runtime }
-Utils.Notify("✅ X TITAN V5.8.0 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
-print("X TITAN V5.8.0 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
+Utils.Notify("✅ X TITAN V5.8.1 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
+print("X TITAN V5.8.1 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
