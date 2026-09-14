@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V5.7.2 - TITAN GOD (APEX OMNI) ]]
+-- [[ X TITAN V5.8.0 - TITAN GOD (APEX OMNI) ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
 -- P2: Zero-Lag Character Caching, Throttled Raycasts & High-FPS Engine
@@ -58,7 +58,7 @@ end
 if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==============================================================================
--- CONFIGURATION & STORAGE (V5.7.2)
+-- CONFIGURATION & STORAGE (V5.8.0)
 -- ==============================================================================
 local Config = {
 	Keys = {
@@ -97,7 +97,8 @@ local Config = {
 		AntiAimSpinSpeed = 10, AntiAimJitterRadius = 5, AimPart = "Head",
 		Deadzone = 5, PingCompensation = 0.05, RadarRange = 100, LegitFlySmooth = 0.1, VehicleSpeed = 180,
 		ESPRefreshRate = 0.3, ESPBoxThickness = 1.5, ESPTextSize = 13, ItemScanInterval = 1.5, TracerOrigin = "Bottom",
-		AimbotPlan = "Auto", ESPEngine = "Auto"
+		AimbotPlan = "Auto", ESPEngine = "Auto",
+		TargetPriority = "Crosshair", HitSoundPreset = "Neverlose"
 	}
 }
 
@@ -145,7 +146,9 @@ local Storage = {
 	NativePlayerTags = {},
 	AimbotCameraOverrideCount = 0, CameraOverrideDetected = false, DrawingBroken = false,
 	AimbotPlans = {"Auto", "Plan A (Camera)", "Plan B (MouseMove)", "Plan C (Silent)"}, AimbotPlanIndex = 1,
-	ESPEngines = {"Auto", "Plan A (Drawing)", "Plan B (3D Chams)", "Plan C (Billboard)"}, ESPEngineIndex = 1
+	ESPEngines = {"Auto", "Plan A (Drawing)", "Plan B (3D Chams)", "Plan C (Billboard)"}, ESPEngineIndex = 1,
+	TargetPriorities = {"Crosshair", "LowestHP", "Distance3D", "Threat"}, TargetPriorityIndex = 1,
+	HitSoundPresets = {"Neverlose", "Skeet", "Rust", "Ding", "Pop"}, HitSoundIndex = 1
 }
 
 _G.X_TITAN_CURRENT_INSTANCE = {
@@ -156,7 +159,7 @@ _G.X_TITAN_CURRENT_INSTANCE = {
 }
 
 -- ==============================================================================
--- UTILITIES (V5.7.2)
+-- UTILITIES (V5.8.0)
 -- ==============================================================================
 local Utils = {}
 _G.X_TITAN_CURRENT_INSTANCE.Utils = Utils
@@ -597,6 +600,12 @@ function Utils.IsVisible(targetHead, targetPlr)
 		isVis = true
 	elseif result.Instance and result.Instance:IsDescendantOf(targetHead.Parent) then
 		isVis = true
+	elseif Config.States.Wallbang and result.Instance then
+		-- [WALLBANG PENETRATION]: Penetrate non-collidable, glass, wood, or thin cover
+		local inst = result.Instance
+		if not inst.CanCollide or inst.Transparency > 0.35 or inst.Material == Enum.Material.Glass or inst.Material == Enum.Material.Wood or inst.Size.Magnitude < 4 then
+			isVis = true
+		end
 	end
 
 	if targetPlr then
@@ -623,18 +632,114 @@ function Utils.GetPing()
 end
 
 
+local HitSoundMap = {
+	Neverlose = "rbxassetid://6534948092",
+	Skeet = "rbxassetid://4817809188",
+	Rust = "rbxassetid://5043539516",
+	Ding = "rbxassetid://2865227271",
+	Pop = "rbxassetid://198598793"
+}
+
 function Utils.PlayHitSound()
 	if not Config.States.HitSound then return end
 	pcall(function()
-		if not Storage.HitSoundObj then
+		local soundId = HitSoundMap[Config.Vals.HitSoundPreset] or "rbxassetid://6534948092"
+		if not Storage.HitSoundObj or Storage.HitSoundObj.SoundId ~= soundId then
+			if Storage.HitSoundObj then Storage.HitSoundObj:Destroy() end
 			local snd = Instance.new("Sound")
-			snd.SoundId = "rbxassetid://6534948092"
-			snd.Volume = 0.85
-			snd.Parent = Services.SoundService
+			snd.SoundId = soundId
+			snd.Volume = 0.95
+			snd.Parent = Services.SoundService or Services.Workspace
 			Storage.HitSoundObj = snd
 		end
 		Storage.HitSoundObj:Play()
 	end)
+end
+
+local ConfigFolder = "ProjectX_Titan_Configs"
+
+function Utils.SaveConfig(name)
+	if type(writefile) ~= "function" then
+		Utils.Notify("⚠️ Storage Notice", "Executor does not support writefile.")
+		return false
+	end
+	local ok = pcall(function()
+		if type(makefolder) == "function" and type(isfolder) == "function" and not isfolder(ConfigFolder) then
+			makefolder(ConfigFolder)
+		end
+		local payload = {
+			States = Config.States,
+			Vals = Config.Vals
+		}
+		writefile(ConfigFolder .. "/" .. name .. ".json", Services.HttpService:JSONEncode(payload))
+		Utils.Notify("💾 Config Saved", "Preset saved as: " .. name)
+	end)
+	return ok
+end
+
+function Utils.LoadConfig(name)
+	if type(readfile) ~= "function" or type(isfile) ~= "function" then
+		Utils.Notify("⚠️ Storage Notice", "Executor does not support readfile.")
+		return false
+	end
+	local path = ConfigFolder .. "/" .. name .. ".json"
+	if not isfile(path) then
+		Utils.Notify("❌ Config Missing", "Preset file not found: " .. name)
+		return false
+	end
+	local ok = pcall(function()
+		local content = readfile(path)
+		local data = Services.HttpService:JSONDecode(content)
+		if data and data.States then
+			for k, v in pairs(data.States) do
+				if Config.States[k] ~= nil then Config.States[k] = v end
+			end
+		end
+		if data and data.Vals then
+			for k, v in pairs(data.Vals) do
+				if Config.Vals[k] ~= nil then Config.Vals[k] = v end
+			end
+		end
+		Utils.Notify("📂 Config Loaded", "Preset active: " .. name)
+	end)
+	return ok
+end
+
+function Utils.ApplyPreset(presetName)
+	if presetName == "Legit" then
+		Config.States.Aimbot = true
+		Config.Vals.AimbotSmoothness = 0.65
+		Config.Vals.FOV = 120
+		Config.Vals.TargetPriority = "Crosshair"
+		Config.States.WallCheck = true
+		Config.States.SilentAim = false
+		Config.States.HeadExpander = false
+		Config.States.Hitbox = false
+		Config.States.ESP = true
+		Config.States.Chams = false
+		Utils.Notify("⚡ Preset Applied", "Legit Esports profile active.")
+	elseif presetName == "Rage" then
+		Config.States.Aimbot = true
+		Config.Vals.AimbotSmoothness = 0.05
+		Config.Vals.FOV = 600
+		Config.Vals.TargetPriority = "Threat"
+		Config.States.WallCheck = false
+		Config.States.Wallbang = true
+		Config.States.SilentAim = true
+		Config.States.HeadExpander = true
+		Config.States.Hitbox = true
+		Config.States.ESP = true
+		Config.States.Chams = true
+		Utils.Notify("🔥 Preset Applied", "God Rage profile active.")
+	elseif presetName == "CQB" then
+		Config.States.Aimbot = true
+		Config.Vals.AimbotSmoothness = 0.2
+		Config.Vals.FOV = 280
+		Config.Vals.TargetPriority = "Distance3D"
+		Config.States.WallCheck = true
+		Config.States.ESP = true
+		Utils.Notify("🎯 Preset Applied", "CQB Close-Quarters profile active.")
+	end
 end
 
 function Utils.GetEquippedWeapon(plr, char)
@@ -843,9 +948,21 @@ function Utils.GetClosestToCenter()
 			end
 			if screenDist <= effectiveFOV then
 				if Config.States.WallCheck and not Utils.IsVisible(aimPart, p) then continue end
-				local threatScore = Utils.CalculateThreatScore(p, myHRP, screenDist)
-				if threatScore > highestThreat then
-					highestThreat = threatScore
+				local score = 0
+				local priority = Config.Vals.TargetPriority or "Crosshair"
+				if priority == "Crosshair" then
+					score = (effectiveFOV - screenDist) * 10
+				elseif priority == "LowestHP" then
+					local curHp, maxHp = Utils.GetHealth(p, cData.Char)
+					score = 10000 - curHp
+				elseif priority == "Distance3D" then
+					score = 5000 / math.max(targetDist3D, 1)
+				else -- "Threat"
+					score = Utils.CalculateThreatScore(p, myHRP, screenDist)
+				end
+				
+				if score > highestThreat then
+					highestThreat = score
 					targetPart = aimPart
 				end
 			end
@@ -1363,9 +1480,9 @@ function Features.GetAuraTarget()
 end
 
 -- ==============================================================================
--- UI SYSTEM (V5.7.2)
+-- UI SYSTEM (V5.8.0)
 -- ==============================================================================
--- ITEM & LOOT ESP SUBSYSTEM (V5.7.2)
+-- ITEM & LOOT ESP SUBSYSTEM (V5.8.0)
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
 		pcall(function() bg:Destroy() end)
@@ -1511,7 +1628,7 @@ end
 
 local UI = {}
 function UI.Init()
-	local guiName = "X_TITAN_V572"
+	local guiName = "X_TITAN_V580"
 	if targetGui:FindFirstChild(guiName) then targetGui[guiName]:Destroy() end
 	
 	local ScreenGui = Instance.new("ScreenGui", targetGui)
@@ -1562,7 +1679,7 @@ function UI.Init()
 	Title.Font = Enum.Font.GothamBlack; Title.TextSize = 16; Title.TextXAlignment = Enum.TextXAlignment.Left
 
 	local Subtitle = Instance.new("TextLabel", SidePanel)
-	Subtitle.Text = "VOID WALKER • V5.7.2"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
+	Subtitle.Text = "VOID WALKER • V5.8.0"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
 	Subtitle.BackgroundTransparency = 1; Subtitle.TextColor3 = Config.Theme.TextDim
 	Subtitle.Font = Enum.Font.GothamBold; Subtitle.TextSize = 9; Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 	
@@ -1787,6 +1904,37 @@ function UI.Init()
 		Label.Font = Enum.Font.GothamBlack; Label.TextSize = 11; Label.TextXAlignment = Enum.TextXAlignment.Left
 	end
 	
+		local function AddKeybindRebind(page, actionName, keyFlag, getOrder)
+		local F = Instance.new("Frame", page)
+		F.LayoutOrder = getOrder(); F.Size = UDim2.new(1, -4, 0, 26); F.BackgroundColor3 = Config.Theme.Sec
+		Instance.new("UICorner", F).CornerRadius = UDim.new(0, 6)
+		local stroke = Instance.new("UIStroke", F); stroke.Color = Config.Theme.Stroke; stroke.Transparency = 0.85
+		
+		local L = Instance.new("TextLabel", F); L.Size = UDim2.new(0.55, 0, 1, 0); L.Position = UDim2.new(0, 10, 0, 0)
+		L.BackgroundTransparency = 1; L.Text = actionName; L.TextColor3 = Config.Theme.Text; L.Font = Enum.Font.GothamBold; L.TextSize = 10
+		L.TextXAlignment = Enum.TextXAlignment.Left
+		
+		local Btn = Instance.new("TextButton", F); Btn.Size = UDim2.new(0.4, 0, 0.8, 0); Btn.Position = UDim2.new(0.58, 0, 0.1, 0)
+		Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45); Btn.TextColor3 = Config.Theme.Stroke; Btn.Font = Enum.Font.GothamBlack; Btn.TextSize = 10
+		Btn.Text = Config.Keys[keyFlag] and Config.Keys[keyFlag].Name or "None"
+		Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 4)
+		
+		Btn.MouseButton1Click:Connect(function()
+			Btn.Text = "[Press Key...]"
+			Btn.TextColor3 = Color3.fromRGB(255, 220, 80)
+			local conn
+			conn = Services.UIS.InputBegan:Connect(function(inp, gpe)
+				if inp.UserInputType == Enum.UserInputType.Keyboard and inp.KeyCode ~= Enum.KeyCode.Unknown then
+					conn:Disconnect()
+					Config.Keys[keyFlag] = inp.KeyCode
+					Btn.Text = inp.KeyCode.Name
+					Btn.TextColor3 = Config.Theme.Stroke
+					Utils.Notify("⌨️ Keybind Set", actionName .. " bound to: " .. inp.KeyCode.Name)
+				end
+			end)
+		end)
+	end
+
 	local function AddKeybindInfo(page, section, binds, getOrder)
 		AddSection(page, section, getOrder)
 		for _, bind in ipairs(binds) do
@@ -1857,6 +2005,39 @@ function UI.Init()
 	end
 	bAim1, bAim2 = AddDual(P1, "🎯 Cycle Aim Part", CycleAimPart, "Target: " .. Config.Vals.AimPart, CycleAimPart, getOrder1)
 	UpdateAimPartButtonUI()
+	
+	local bPrio1, bPrio2
+	local function UpdatePriorityUI()
+		if bPrio2 then
+			bPrio2.Text = "Priority: " .. Config.Vals.TargetPriority
+			bPrio2.TextColor3 = Config.Theme.Stroke
+		end
+	end
+	local function CycleTargetPriority()
+		Storage.TargetPriorityIndex = (Storage.TargetPriorityIndex % #Storage.TargetPriorities) + 1
+		Config.Vals.TargetPriority = Storage.TargetPriorities[Storage.TargetPriorityIndex]
+		UpdatePriorityUI()
+		Utils.Notify("🎯 Target Priority", "Priority set to: " .. Config.Vals.TargetPriority)
+	end
+	bPrio1, bPrio2 = AddDual(P1, "🎯 Cycle Priority", CycleTargetPriority, "Priority: " .. Config.Vals.TargetPriority, CycleTargetPriority, getOrder1)
+	UpdatePriorityUI()
+	
+	local bHit1, bHit2
+	local function UpdateHitSoundUI()
+		if bHit2 then
+			bHit2.Text = "Sound: " .. Config.Vals.HitSoundPreset
+			bHit2.TextColor3 = Config.Theme.Stroke
+		end
+	end
+	local function CycleHitSound()
+		Storage.HitSoundIndex = (Storage.HitSoundIndex % #Storage.HitSoundPresets) + 1
+		Config.Vals.HitSoundPreset = Storage.HitSoundPresets[Storage.HitSoundIndex]
+		UpdateHitSoundUI()
+		Utils.Notify("🔊 Hit Sound", "Audio preset: " .. Config.Vals.HitSoundPreset)
+		Utils.PlayHitSound()
+	end
+	bHit1, bHit2 = AddDual(P1, "🔊 Cycle Hit Sound", CycleHitSound, "Sound: " .. Config.Vals.HitSoundPreset, CycleHitSound, getOrder1)
+	UpdateHitSoundUI()
 	
 	AddSection(P1, "SILENT & TRIGGER", getOrder1)
 	AddToggle(P1, "Silent Aim 🔥", "SilentAim", getOrder1)
@@ -2077,6 +2258,11 @@ function UI.Init()
 	
 	AddDual(P4, "🔄 REFRESH", function() RefreshPlayerList() end, "👁️ UNSPECTATE", function() Features.StopSpectate() end, getOrder4)
 	
+	AddSection(P5, "💾 CONFIG PRESETS & STORAGE", getOrder5)
+	AddDual(P5, "💾 Save Default", function() Utils.SaveConfig("titan_default") end, "📂 Load Default", function() Utils.LoadConfig("titan_default") end, getOrder5)
+	AddDual(P5, "⚡ Preset: Legit", function() Utils.ApplyPreset("Legit") end, "🔥 Preset: Rage", function() Utils.ApplyPreset("Rage") end, getOrder5)
+	AddDual(P5, "🎯 Preset: CQB", function() Utils.ApplyPreset("CQB") end, "💾 Save Custom", function() Utils.SaveConfig("titan_custom") end, getOrder5)
+	
 	AddSection(P5, "DESYNC & ANTI-AIM", getOrder5)
 	AddToggle(P5, "True Desync (Local)", "Desync", getOrder5)
 	AddToggle(P5, "🛡️ Server Desync", "ServerDesync", getOrder5)
@@ -2095,10 +2281,15 @@ function UI.Init()
 	Instance.new("UICorner", UnloadBtn).CornerRadius = UDim.new(0, 6)
 	UnloadBtn.MouseButton1Click:Connect(function() Runtime.Unload() end)
 	
-	AddKeybindInfo(P6, "COMBAT", {{"Aimbot", "Right Click"}, {"TriggerBot", "T"}, {"Lock Target", "F (Press)"}}, getOrder6)
-	AddKeybindInfo(P6, "MOVEMENT", {{"Fly Mode", "Z"}, {"Noclip", "V"}, {"Sky Hide", "X"}, {"Click TP", "Ctrl + Click"}, {"Destroy Map", "P"}, {"Restore Map", "L"}}, getOrder6)
-	AddKeybindInfo(P6, "PLAYER & UI", {{"Open Menu", "Insert"}, {"Tactical TP", "B"}}, getOrder6)
-	AddKeybindInfo(P6, "SYSTEM", {{"Unload Script", "End"}}, getOrder6)
+	AddSection(P6, "⌨️ INTERACTIVE REBINDING", getOrder6)
+	AddKeybindRebind(P6, "Fly Mode Key", "Fly", getOrder6)
+	AddKeybindRebind(P6, "Noclip Key", "Noclip", getOrder6)
+	AddKeybindRebind(P6, "Open Menu Key", "Menu", getOrder6)
+	AddKeybindRebind(P6, "TriggerBot Key", "Trigger", getOrder6)
+	AddKeybindRebind(P6, "Sky Hide Key", "Hide", getOrder6)
+	AddKeybindRebind(P6, "Destroy Map Key", "DestroyMap", getOrder6)
+	
+	AddKeybindInfo(P6, "DEFAULT CONTROLS", {{"Aimbot", "Right Click"}, {"Lock Target", "F (Press)"}, {"Tactical TP", "B"}, {"Click TP", "Ctrl + Click"}, {"Unload Script", "End"}}, getOrder6)
 	
 	-- Ensure all tabs have non-zero canvas size so elements are immediately visible
 	for _, page in ipairs({P1, P2, P3, P4, P5, P6}) do
@@ -2310,7 +2501,7 @@ table.insert(Storage.Loops, auraLoop)
 -- ==============================================================================
 local Runtime = {}
 function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.7.2 - TITAN GOD (APEX OMNI)...")
+	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.8.0 - TITAN GOD (APEX OMNI)...")
 	Storage.IsUnloaded = true
 	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
 	Storage.Loops = {}
@@ -2414,7 +2605,7 @@ function Runtime.Unload()
 	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
 	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
 	Storage.RadarObjects = {}
-	print("X TITAN V5.7.2 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
+	print("X TITAN V5.8.0 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
 end
 
 local function InitRadar()
@@ -2544,7 +2735,7 @@ function Runtime.Init()
 	
 	-- [TOP-RIGHT WATERMARK HUD: ANONYMIZED (NO USERNAME)]
 	local WatermarkGui = Instance.new("ScreenGui", targetGui)
-	WatermarkGui.Name = "X_TITAN_WATERMARK_V572"
+	WatermarkGui.Name = "X_TITAN_WATERMARK_V580"
 	WatermarkGui.ResetOnSpawn = false
 	WatermarkGui.IgnoreGuiInset = true
 	WatermarkGui.DisplayOrder = 9999999
@@ -2564,7 +2755,7 @@ function Runtime.Init()
 	WmTitle.Size = UDim2.new(1, -12, 0, 16)
 	WmTitle.Position = UDim2.new(0, 8, 0, 3)
 	WmTitle.BackgroundTransparency = 1
-	WmTitle.Text = "⚡ PROJECT X TITAN • V5.7.2"
+	WmTitle.Text = "⚡ PROJECT X TITAN • V5.8.0"
 	WmTitle.TextColor3 = Config.Theme.Stroke
 	WmTitle.Font = Enum.Font.GothamBlack
 	WmTitle.TextSize = 10
@@ -2583,7 +2774,7 @@ function Runtime.Init()
 
 	-- [CYBERNETIC ROBOT TACTICAL HUD & LEADER LINE]
 	local TacticalHUDGui = Instance.new("ScreenGui", targetGui)
-	TacticalHUDGui.Name = "X_TacticalHUD_V572"; TacticalHUDGui.IgnoreGuiInset = true; TacticalHUDGui.DisplayOrder = 9999998
+	TacticalHUDGui.Name = "X_TacticalHUD_V580"; TacticalHUDGui.IgnoreGuiInset = true; TacticalHUDGui.DisplayOrder = 9999998
 
 	-- Futuristic Angled Leader Line (Center Reticle to Target Card)
 	local LineH1 = Instance.new("Frame", TacticalHUDGui)
@@ -2908,7 +3099,7 @@ function Runtime.Init()
 		end
 		
 		if Config.States.Aimbot then
-			-- [V5.7.2 CQB ENHANCED AIMBOT]: Dynamic ballistic damping & close-range responsiveness
+			-- [V5.8.0 CQB ENHANCED AIMBOT]: Dynamic ballistic damping & close-range responsiveness
 			if cachedTarget and cachedTarget.Parent then
 				local targetPos = cachedTarget.Position
 				local eRoot = cachedTarget.Parent:FindFirstChild("HumanoidRootPart")
@@ -3141,7 +3332,12 @@ function Runtime.Init()
 						if Config.States.ESP then
 							pcall(function()
 								esp.Box.Visible = true; esp.Box.Size = Vector2.new(width, height); esp.Box.Position = Vector2.new(boxX, boxY); esp.Box.Color = drawColor; esp.Box.Transparency = 1
-								esp.Box.Thickness = Config.Vals.ESPBoxThickness or 1.5
+								local boxThick = Config.Vals.ESPBoxThickness or 1.5
+								if Storage.LockedTarget == plr then
+									local pulse = (math.sin(tick() * 8) + 1) * 0.5
+									boxThick = boxThick + pulse * 1.5
+								end
+								esp.Box.Thickness = boxThick
 								esp.Name.Visible = (Config.States.ShowName ~= false); esp.Name.Size = Config.Vals.ESPTextSize or 13; esp.Name.Text = isUnspawned and (plr.DisplayName .. " [NO-SPAWN]") or plr.DisplayName; esp.Name.Position = Vector2.new(boxX + width / 2, boxY - 16); esp.Name.Color = drawColor
 								esp.HealthBar.Visible = (Config.States.ShowHealth ~= false); local curHp, maxHp = Utils.GetHealth(plr, pChar); local healthRatio = math.clamp(curHp / maxHp, 0, 1)
 								esp.HealthBar.Color = Color3.new(1 - healthRatio, healthRatio, 0)
@@ -3722,5 +3918,5 @@ table.insert(Storage.Loops, itemLoop)
 
 Runtime.Init()
 _G.X_TITAN_INSTANCE = { Config = Config, Storage = Storage, Utils = Utils, Features = Features, Runtime = Runtime }
-Utils.Notify("✅ X TITAN V5.7.2 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
-print("X TITAN V5.7.2 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
+Utils.Notify("✅ X TITAN V5.8.0 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
+print("X TITAN V5.8.0 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
