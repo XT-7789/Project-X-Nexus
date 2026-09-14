@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V6.0.0 - GEN-6 TITAN GOD (APEX OMNI) ]]
+-- [[ X TITAN V6.1.0 - GEN-6 TITAN GOD (APEX OMNI) ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
 -- P2: Zero-Lag Character Caching, Throttled Raycasts & High-FPS Engine
@@ -58,7 +58,7 @@ end
 if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==============================================================================
--- CONFIGURATION & STORAGE (V6.0.0)
+-- CONFIGURATION & STORAGE (V6.1.0)
 -- ==============================================================================
 local Config = {
 	Keys = {
@@ -78,7 +78,7 @@ local Config = {
 	States = {
 		Aimbot = false, SilentAim = false, HeadExpander = false, Hitbox = false,
 		TriggerBot = false, TeamCheck = true, WallCheck = false,
-		ESP = false, ESP3D = false, ESPSkeleton = false, Tracers = false, Resolver = true, VisibilityCheck = false, Chams = false,
+		ESP = false, ESP3D = false, ESPSkeleton = false, ESPLookRay = false, MultiBoneAim = true, Tracers = false, Resolver = true, VisibilityCheck = false, Chams = false,
 		XRay = false, Fullbright = false, Crosshair = false, DynamicCrosshair = true,
 		Fly = false, SpeedHack = false, InfJump = false, Noclip = false, NoFall = false,
 		AntiKillbrick = false, AntiVoid = true, HitSound = true, TouchFling = false, TargetFling = false, AntiFling = true, Wallbang = true, OrbitAura = false, ClickTP = false, SkyHide = false, MapDestroyer = false,
@@ -104,7 +104,7 @@ local Config = {
 
 local Storage = {
 	Checkpoints = {P1=nil, P2=nil, P3=nil},
-	ESPObjects = {}, SkeletonParts = {}, Box3DObjects = {}, TracerLines = {},
+	ESPObjects = {}, SkeletonParts = {}, Box3DObjects = {}, LookRayLines = {}, OffscreenDistTexts = {}, TracerLines = {},
 	ToggleFuncs = {}, FOVRingUI = nil, MainFrame = nil,
 	RealVelocity = Vector3.zero, RealCFrame = nil,
 	OriginalLighting = {}, HitboxLastUpdate = 0,
@@ -159,7 +159,7 @@ _G.X_TITAN_CURRENT_INSTANCE = {
 }
 
 -- ==============================================================================
--- UTILITIES (V6.0.0)
+-- UTILITIES (V6.1.0)
 -- ==============================================================================
 -- ==============================================================================
 -- KEY & FOUNDER AUTHENTICATION (TITAN+ PRO-X APEX)
@@ -901,6 +901,38 @@ function Utils.GetSmartAimPart(character)
 	local torso = character:FindFirstChild("Torso") or upperTorso or lowerTorso
 	local hrp = character:FindFirstChild("HumanoidRootPart")
 
+	-- [GEN-6.1 MULTI-BONE DYNAMIC ADAPTIVE TARGETING]
+	if Config.States.MultiBoneAim and Camera then
+		local center = Vector2.new(Camera.ViewportSize.X * 0.5, Camera.ViewportSize.Y * 0.5)
+		local checkBoneNames = {
+			"Head", "UpperTorso", "LowerTorso", "Torso", "HumanoidRootPart",
+			"RightUpperArm", "LeftUpperArm", "RightLowerArm", "LeftLowerArm",
+			"Right Arm", "Left Arm"
+		}
+		local bestPart, bestDist = nil, 99999
+		for _, bName in ipairs(checkBoneNames) do
+			local bone = character:FindFirstChild(bName)
+			if bone and bone:IsA("BasePart") then
+				local pos, onScreen = Camera:WorldToViewportPoint(bone.Position)
+				if onScreen and pos.Z > 0 then
+					local isVis = true
+					if Config.States.WallCheck then
+						isVis = Utils.IsVisible(bone, nil)
+					end
+					if isVis then
+						local sDist = (Vector2.new(pos.X, pos.Y) - center).Magnitude
+						if bName == "Head" then sDist = sDist * 0.85 end -- Priority bias for headshots
+						if sDist < bestDist then
+							bestDist = sDist
+							bestPart = bone
+						end
+					end
+			end
+		end
+		end
+		if bestPart then return bestPart end
+	end
+
 	-- [PLAN A & SMART ADAPTIVE]: If AutoAimPart is active, pick optimal part by visibility/distance
 	if Config.States.AutoAimPart and head and (torso or hrp) then
 		if Camera then
@@ -1375,6 +1407,22 @@ function Features.CreateESP(plr)
 		table.insert(box3DLines, line)
 	end
 	Storage.Box3DObjects[plr] = box3DLines
+
+	-- 3D Look Vector Ray
+	local lookRay = Drawing.new("Line")
+	lookRay.Thickness = 1.5
+	lookRay.Color = Config.Theme.Accent or Color3.fromRGB(0, 220, 255)
+	lookRay.Visible = false
+	Storage.LookRayLines[plr] = lookRay
+
+	-- Offscreen Distance Tag
+	local offText = Drawing.new("Text")
+	offText.Size = 11
+	offText.Center = true
+	offText.Outline = true
+	offText.Color = Color3.fromRGB(255, 255, 255)
+	offText.Visible = false
+	Storage.OffscreenDistTexts[plr] = offText
 end
 
 function Features.RemoveESP(plr)
@@ -1401,6 +1449,14 @@ function Features.RemoveESP(plr)
 	if Storage.OffscreenArrows[plr] then
 		pcall(function() Storage.OffscreenArrows[plr]:Remove() end)
 		Storage.OffscreenArrows[plr] = nil
+	end
+	if Storage.LookRayLines[plr] then
+		pcall(function() Storage.LookRayLines[plr]:Remove() end)
+		Storage.LookRayLines[plr] = nil
+	end
+	if Storage.OffscreenDistTexts[plr] then
+		pcall(function() Storage.OffscreenDistTexts[plr]:Remove() end)
+		Storage.OffscreenDistTexts[plr] = nil
 	end
 end
 
@@ -1547,9 +1603,9 @@ function Features.GetAuraTarget()
 end
 
 -- ==============================================================================
--- UI SYSTEM (V6.0.0)
+-- UI SYSTEM (V6.1.0)
 -- ==============================================================================
--- ITEM & LOOT ESP SUBSYSTEM (V6.0.0)
+-- ITEM & LOOT ESP SUBSYSTEM (V6.1.0)
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
 		pcall(function() bg:Destroy() end)
@@ -1756,16 +1812,16 @@ function UI.Init()
 
 	local Subtitle = Instance.new("TextLabel", SidePanel)
 	if isFounder then
-		Subtitle.Text = "👑 GODMODE APEX • V6.0.0"
+		Subtitle.Text = "👑 GODMODE APEX • V6.1.0"
 		Subtitle.TextColor3 = Color3.fromRGB(255, 205, 50)
 	elseif isSeller then
-		Subtitle.Text = "💎 CO-FOUNDER VIP • V6.0.0"
+		Subtitle.Text = "💎 CO-FOUNDER VIP • V6.1.0"
 		Subtitle.TextColor3 = Color3.fromRGB(0, 210, 255)
 	elseif isTitanPlus then
-		Subtitle.Text = "⚡ PRO-X APEX • V6.0.0"
+		Subtitle.Text = "⚡ PRO-X APEX • V6.1.0"
 		Subtitle.TextColor3 = Color3.fromRGB(255, 205, 50)
 	else
-		Subtitle.Text = "VOID WALKER • V6.0.0"
+		Subtitle.Text = "VOID WALKER • V6.1.0"
 		Subtitle.TextColor3 = Config.Theme.TextDim
 	end
 	Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
@@ -2147,6 +2203,7 @@ function UI.Init()
 	AddToggle(P1, "Team Check", "TeamCheck", getOrder1)
 	AddToggle(P1, "Wall Check", "WallCheck", getOrder1)
 	AddToggle(P1, "Show FOV", "ShowFOV", getOrder1)
+	AddToggle(P1, "🎯 Multi-Bone Dynamic Aim [Titan+]", "MultiBoneAim", getOrder1)
 	AddToggle(P1, "🛡️ Anti-Desync Resolver", "Resolver", getOrder1)
 	local maxTitanFOV = isTitanPlus and 1000 or 800
 	AddSlider(P1, "FOV Size" .. (isTitanPlus and " (TITAN+ APEX)" or ""), 50, maxTitanFOV, 200, function(v) Config.Vals.FOV = v end, getOrder1)
@@ -2178,6 +2235,7 @@ function UI.Init()
 	AddToggle(P2, "📦 Item & Loot ESP", "ItemESP", getOrder2)
 	AddToggle(P2, "🔫 Weapon / Tool ESP", "WeaponESP", getOrder2)
 	AddToggle(P2, "📦 3D Box Wireframe ESP", "ESP3D", getOrder2)
+	AddToggle(P2, "👀 View Angle Ray (Look Vector)", "ESPLookRay", getOrder2)
 	AddToggle(P2, "🦴 Full Anatomical Skeleton ESP", "ESPSkeleton", getOrder2)
 	AddToggle(P2, "🧭 Off-screen Target Arrows", "OffscreenArrows", getOrder2)
 	AddToggle(P2, "360° Tracers", "Tracers", getOrder2)
@@ -2596,7 +2654,7 @@ table.insert(Storage.Loops, auraLoop)
 -- ==============================================================================
 local Runtime = {}
 function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V6.0.0 - GEN-6 TITAN GOD (APEX OMNI)...")
+	Utils.Notify("⚠️ Unload", "Unloading X TITAN V6.1.0 - GEN-6 TITAN GOD (APEX OMNI)...")
 	Storage.IsUnloaded = true
 	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
 	Storage.Loops = {}
@@ -2662,6 +2720,10 @@ function Runtime.Unload()
 	for _, l in pairs(Storage.TracerLines) do pcall(function() l:Remove() end) end
 	for _, a in pairs(Storage.OffscreenArrows) do pcall(function() a:Remove() end) end
 	Storage.OffscreenArrows = {}
+	for _, l in pairs(Storage.LookRayLines or {}) do pcall(function() l:Remove() end) end
+	Storage.LookRayLines = {}
+	for _, t in pairs(Storage.OffscreenDistTexts or {}) do pcall(function() t:Remove() end) end
+	Storage.OffscreenDistTexts = {}
 	for _, line in pairs(Storage.CrosshairLines) do if line then pcall(function() line:Remove() end) end end
 	for _, line in pairs(Storage.HitmarkerLines) do if line then pcall(function() line:Remove() end) end end
 	
@@ -2700,7 +2762,7 @@ function Runtime.Unload()
 	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
 	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
 	Storage.RadarObjects = {}
-	print("X TITAN V6.0.0 - GEN-6 TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
+	print("X TITAN V6.1.0 - GEN-6 TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
 end
 
 local function InitRadar()
@@ -2853,7 +2915,7 @@ function Runtime.Init()
 	WmTitle.Size = UDim2.new(1, -12, 0, 16)
 	WmTitle.Position = UDim2.new(0, 8, 0, 3)
 	WmTitle.BackgroundTransparency = 1
-	WmTitle.Text = "⚡ PROJECT X TITAN • V6.0.0"
+	WmTitle.Text = "⚡ PROJECT X TITAN • V6.1.0"
 	WmTitle.TextColor3 = Config.Theme.Stroke
 	WmTitle.Font = Enum.Font.GothamBlack
 	WmTitle.TextSize = 10
@@ -3213,7 +3275,7 @@ function Runtime.Init()
 		end
 		
 		if Config.States.Aimbot then
-			-- [V6.0.0 CQB ENHANCED AIMBOT]: Dynamic ballistic damping & close-range responsiveness
+			-- [V6.1.0 CQB ENHANCED AIMBOT]: Dynamic ballistic damping & close-range responsiveness
 			if cachedTarget and cachedTarget.Parent then
 				local targetPos = cachedTarget.Position
 				local eRoot = cachedTarget.Parent:FindFirstChild("HumanoidRootPart")
@@ -3428,13 +3490,28 @@ function Runtime.Init()
 								local rightPt = arrowCenter + Vector2.new(math.sin(angle - 2.5) * 8, -math.cos(angle - 2.5) * 8)
 								arrow.PointA = tip; arrow.PointB = leftPt; arrow.PointC = rightPt
 								arrow.Color = drawColor; arrow.Visible = true
+								local distTxt = Storage.OffscreenDistTexts and Storage.OffscreenDistTexts[plr]
+								if distTxt then
+									distTxt.Position = arrowCenter + Vector2.new(math.sin(angle) * -12, -math.cos(angle) * -12)
+									distTxt.Text = string.format("%.0fm", rel.Magnitude)
+									distTxt.Color = drawColor
+									distTxt.Visible = true
+								end
 							else
 								arrow.Visible = false
+								if Storage.OffscreenDistTexts and Storage.OffscreenDistTexts[plr] then
+									Storage.OffscreenDistTexts[plr].Visible = false
+								end
 							end
 						end)
 						if not arrowOk then Config.States.OffscreenArrows = false end
 					elseif Storage.OffscreenArrows[plr] then
-						pcall(function() Storage.OffscreenArrows[plr].Visible = false end)
+						pcall(function()
+							Storage.OffscreenArrows[plr].Visible = false
+							if Storage.OffscreenDistTexts and Storage.OffscreenDistTexts[plr] then
+								Storage.OffscreenDistTexts[plr].Visible = false
+							end
+						end)
 					end
 
 					if onScreen and topPos.Z > 0 then
@@ -3529,6 +3606,32 @@ function Runtime.Init()
 							pcall(function() for _, l in pairs(Storage.Box3DObjects[plr]) do l.Visible = false end end)
 						end
 
+						-- [GEN-6.1 LOOK VECTOR RAY ESP]
+						if Config.States.ESPLookRay and Storage.LookRayLines[plr] then
+							pcall(function()
+								local head = pChar:FindFirstChild("Head")
+								if head then
+									local hPos, hOn = CurrentCam:WorldToViewportPoint(head.Position)
+									local rayEnd = head.Position + (head.CFrame.LookVector * 5.0)
+									local ePos, eOn = CurrentCam:WorldToViewportPoint(rayEnd)
+									if (hOn or eOn) and hPos.Z > 0 and ePos.Z > 0 then
+										local l = Storage.LookRayLines[plr]
+										l.Visible = true
+										l.From = Vector2.new(hPos.X, hPos.Y)
+										l.To = Vector2.new(ePos.X, ePos.Y)
+										l.Color = (Storage.LockedTarget == plr) and Config.Theme.LockColor or drawColor
+										l.Thickness = 1.5
+									else
+										Storage.LookRayLines[plr].Visible = false
+									end
+								else
+									Storage.LookRayLines[plr].Visible = false
+								end
+							end)
+						elseif Storage.LookRayLines[plr] then
+							pcall(function() Storage.LookRayLines[plr].Visible = false end)
+						end
+
 						-- [GEN-6 FULL ANATOMICAL SKELETON ESP: R15 & R6]
 						if Config.States.ESPSkeleton and Storage.SkeletonParts[plr] then
 							pcall(function()
@@ -3589,6 +3692,7 @@ function Runtime.Init()
 							if esp.Weapon then esp.Weapon.Visible = false end
 							if Storage.SkeletonParts[plr] then for _, part in pairs(Storage.SkeletonParts[plr]) do if part.Visible then part.Visible = false end end end
 							if Storage.Box3DObjects[plr] then for _, l in pairs(Storage.Box3DObjects[plr]) do if l.Visible then l.Visible = false end end end
+							if Storage.LookRayLines[plr] and Storage.LookRayLines[plr].Visible then Storage.LookRayLines[plr].Visible = false end
 						end)
 					end
 				end
@@ -4124,6 +4228,6 @@ elseif isTitanPlus then
 	Utils.Notify("🔥 X TITAN+ [PRO-X APEX]", "PRO-X Apex Godmode Active! 1000 FOV & Presets Unlocked.", 4)
 	print("🔥 [X TITAN+] PRO-X APEX UNLOCKED")
 else
-	Utils.Notify("✅ X TITAN V6.0.0 - GEN-6 TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu", 4)
-	print("X TITAN V6.0.0 - GEN-6 TITAN GOD (APEX OMNI) LOADED SUCCESSFULLY")
+	Utils.Notify("✅ X TITAN V6.1.0 - GEN-6 TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu", 4)
+	print("X TITAN V6.1.0 - GEN-6 TITAN GOD (APEX OMNI) LOADED SUCCESSFULLY")
 end

@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PRO V3.7.3 - PROFESSIONAL SUITE ]]
+-- [[ X PRO V3.7.4 - PROFESSIONAL SUITE ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- High-Performance Zero-Lag Character Caching & 60+ FPS Optimization
 -- ==============================================================================
@@ -77,7 +77,7 @@ local Config = {
         Aimbot = false, SilentAim = false, SmartPrediction = true, AutoAimPart = true,
         RightClickToggle = true, TeamCheck = true, WallCheck = false,
         TriggerBot = false, ShowFOV = false, TacticalLock = false,
-        ESP = false, ESPSkeleton = false, WeaponESP = true, OffscreenArrows = false,
+        ESP = false, CornerBox = false, StateFlags = true, ESPSkeleton = false, WeaponESP = true, OffscreenArrows = false,
         Tracers = false, Chams = false, Fullbright = false, Crosshair = false,
         Radar = false, HitSound = true, NoRecoil = false,
         Fly = false, LegitFly = false, SpeedHack = false, InfJump = false,
@@ -92,7 +92,7 @@ local Config = {
 }
 
 local Storage = {
-    Connections = {}, ESPObjects = {}, SkeletonParts = {}, TracerLines = {},
+    Connections = {}, ESPObjects = {}, CornerESPObjects = {}, StateFlagObjects = {}, SkeletonParts = {}, TracerLines = {},
     CrosshairLines = {}, OffscreenArrows = {}, ToggleFuncs = {}, FOVRingUI = nil, MainFrame = nil,
     OriginalLighting = {}, OriginalCollisions = {}, OriginalWalkSpeed = 16,
     LockedTarget = nil, IsRightMouseDown = false, TriggerCooldown = 0,
@@ -1157,7 +1157,7 @@ local function MicroFlickSilentAim()
 end
 
 -- ==================================================================
--- MODERN 3-TAB UI (V3.7.3)
+-- MODERN 3-TAB UI (V3.7.4)
 -- ==================================================================
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
@@ -1281,7 +1281,7 @@ local function BuildUI()
     elseif isProPlus then
         Title.Text = "⚡ X PRO<font color='#00dcff'>+ PLUS</font> <font color='#ffcd32'>[PRO-X]</font>"
     else
-        Title.Text = "⚡ X PRO <font color='#00dcff'>V3.7.3</font>"
+        Title.Text = "⚡ X PRO <font color='#00dcff'>V3.7.4</font>"
     end
     Title.RichText = true
     Title.Size = UDim2.new(0, 130, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
@@ -1533,8 +1533,16 @@ local function BuildUI()
                 if esp.HealthBar then esp.HealthBar.Visible = false end
                 if esp.Weapon then esp.Weapon.Visible = false end
             end
+            for _, lines in pairs(Storage.CornerESPObjects or {}) do
+                for _, l in pairs(lines) do l.Visible = false end
+            end
+            for _, flag in pairs(Storage.StateFlagObjects or {}) do
+                flag.Visible = false
+            end
         end
     end)
+    AddToggle(P2, "🔲 Corner Box Style", "CornerBox")
+    AddToggle(P2, "🏷️ Player State Flags", "StateFlags")
     AddToggle(P2, "📦 Item & Loot ESP", "ItemESP", function(v) if not v then ClearItemESP() else task.spawn(UpdateItemESP) end end)
     AddToggle(P2, "🔫 Weapon / Tool ESP", "WeaponESP")
     AddToggle(P2, "🦴 Skeleton ESP", "ESPSkeleton")
@@ -1607,6 +1615,14 @@ Unload = function()
         if Storage.ESPObjects[p] then
             for _, d in pairs(Storage.ESPObjects[p]) do pcall(function() d:Remove() end) end
         end
+        if Storage.CornerESPObjects[p] then
+            for _, l in pairs(Storage.CornerESPObjects[p]) do pcall(function() l:Remove() end) end
+            Storage.CornerESPObjects[p] = nil
+        end
+        if Storage.StateFlagObjects[p] then
+            pcall(function() Storage.StateFlagObjects[p]:Remove() end)
+            Storage.StateFlagObjects[p] = nil
+        end
         if Storage.TracerLines[p] then pcall(function() Storage.TracerLines[p]:Remove() end) end
         if Storage.OffscreenArrows[p] then pcall(function() Storage.OffscreenArrows[p]:Remove() end) end
     end
@@ -1625,7 +1641,7 @@ Unload = function()
     if Storage.MainFrame and Storage.MainFrame.Parent then Storage.MainFrame.Parent:Destroy() end
     if Storage.FOVRingUI and Storage.FOVRingUI.Parent then Storage.FOVRingUI.Parent:Destroy() end
     if Storage.RadarGui and Storage.RadarGui.Parent then Storage.RadarGui:Destroy() end
-    Notify("X PRO V3.7.3", "All Pro modules successfully unloaded.")
+    Notify("X PRO V3.7.4", "All Pro modules successfully unloaded.")
 end
 
 -- ==================================================================
@@ -1734,7 +1750,7 @@ local function Init()
 
     -- RenderStepped Loop
     TrackConn(Services.RunService.RenderStepped:Connect(function()
-        -- Dynamic Smooth Aimbot (V3.7.3 CQB Ballistic Responsive)
+        -- Dynamic Smooth Aimbot (V3.7.4 CQB Ballistic Responsive)
         if Config.States.Aimbot then
             local canAim = not Config.States.RightClickToggle or Storage.IsRightMouseDown
             if canAim then
@@ -1847,8 +1863,46 @@ local function Init()
                                 local boxX = topPos.X - width / 2
                                 local boxY = math.min(topPos.Y, bottomPos.Y)
 
-                                esp.Box.Visible = true; esp.Box.Size = Vector2.new(width, height)
-                                esp.Box.Position = Vector2.new(boxX, boxY); esp.Box.Color = color; esp.Box.Transparency = 1
+                                local thick = Config.Vals.ESPBoxThickness or 1.5
+                                if Config.States.CornerBox then
+                                    esp.Box.Visible = false
+                                    local corners = Storage.CornerESPObjects[plr]
+                                    if not corners then
+                                        corners = {}
+                                        for i = 1, 8 do
+                                            local l = Drawing.new("Line")
+                                            l.Thickness = thick
+                                            l.Visible = false
+                                            table.insert(corners, l)
+                                        end
+                                        Storage.CornerESPObjects[plr] = corners
+                                    end
+                                    local cLen = math.clamp(width * 0.25, 4, 16)
+                                    local pts = {
+                                        {Vector2.new(boxX, boxY), Vector2.new(boxX + cLen, boxY)},
+                                        {Vector2.new(boxX, boxY), Vector2.new(boxX + cLen)},
+                                        {Vector2.new(boxX + width, boxY), Vector2.new(boxX + width - cLen, boxY)},
+                                        {Vector2.new(boxX + width, boxY), Vector2.new(boxX + width, boxY + cLen)},
+                                        {Vector2.new(boxX, boxY + height), Vector2.new(boxX + cLen, boxY + height)},
+                                        {Vector2.new(boxX, boxY + height), Vector2.new(boxX - cLen, boxY + height)},
+                                        {Vector2.new(boxX + width, boxY + height), Vector2.new(boxX + width - cLen, boxY + height)},
+                                        {Vector2.new(boxX + width, boxY + height), Vector2.new(boxX + width, boxY + height - cLen)}
+                                    }
+                                    for idx, cLine in ipairs(corners) do
+                                        cLine.Visible = true
+                                        cLine.From = pts[idx][1]
+                                        cLine.To = pts[idx][2]
+                                        cLine.Color = color
+                                        cLine.Thickness = thick
+                                    end
+                                else
+                                    if Storage.CornerESPObjects[plr] then
+                                        for _, l in ipairs(Storage.CornerESPObjects[plr]) do l.Visible = false end
+                                    end
+                                    esp.Box.Visible = true; esp.Box.Size = Vector2.new(width, height)
+                                    esp.Box.Position = Vector2.new(boxX, boxY); esp.Box.Color = color; esp.Box.Transparency = 1
+                                    esp.Box.Thickness = thick
+                                end
 
                                 esp.Name.Visible = (Config.States.ShowName ~= false); esp.Name.Text = isUnspawned and (plr.DisplayName .. " [NO-SPAWN]") or plr.DisplayName
                                 esp.Name.Position = Vector2.new(boxX + width / 2, boxY - 16); esp.Name.Color = color
@@ -1866,12 +1920,41 @@ local function Init()
                                 else
                                     esp.Weapon.Visible = false
                                 end
+
+                                -- Player State Flags
+                                if Config.States.StateFlags then
+                                    local flagObj = Storage.StateFlagObjects[plr]
+                                    if not flagObj then
+                                        flagObj = Drawing.new("Text")
+                                        flagObj.Size = 10
+                                        flagObj.Center = false
+                                        flagObj.Outline = true
+                                        Storage.StateFlagObjects[plr] = flagObj
+                                    end
+                                    local flags = {}
+                                    if curHp < (maxHp * 0.35) then table.insert(flags, "[LOW]") end
+                                    if hum and hum.FloorMaterial == Enum.Material.Air then table.insert(flags, "[AIR]") end
+                                    if #flags > 0 then
+                                        flagObj.Visible = true
+                                        flagObj.Text = table.concat(flags, " ")
+                                        flagObj.Position = Vector2.new(boxX + width + 4, boxY)
+                                        flagObj.Color = (curHp < (maxHp * 0.35)) and Color3.fromRGB(255, 80, 80) or Color3.fromRGB(0, 220, 255)
+                                    else
+                                        flagObj.Visible = false
+                                    end
+                                elseif Storage.StateFlagObjects[plr] then
+                                    Storage.StateFlagObjects[plr].Visible = false
+                                end
                             else
                                 esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Weapon.Visible = false
+                                if Storage.CornerESPObjects[plr] then for _, l in ipairs(Storage.CornerESPObjects[plr]) do l.Visible = false end end
+                                if Storage.StateFlagObjects[plr] then Storage.StateFlagObjects[plr].Visible = false end
                             end
                         elseif Storage.ESPObjects[plr] then
                             Storage.ESPObjects[plr].Box.Visible = false; Storage.ESPObjects[plr].Name.Visible = false
                             Storage.ESPObjects[plr].HealthBar.Visible = false; Storage.ESPObjects[plr].Weapon.Visible = false
+                            if Storage.CornerESPObjects[plr] then for _, l in ipairs(Storage.CornerESPObjects[plr]) do l.Visible = false end end
+                            if Storage.StateFlagObjects[plr] then Storage.StateFlagObjects[plr].Visible = false end
                         end
 
                         -- Tracers
@@ -2069,7 +2152,7 @@ local function Init()
     elseif isProPlus then
         Notify("⚡ X PRO+ [PRO-X]", "Master Key Active! Titan Presets & Wallbang Unlocked.", 4)
     else
-        Notify("X PRO V3.7.3", "Tournament Pro V3.7.3 Active! [Insert] Menu [F] Lock Target [End] Unload", 4.5)
+        Notify("X PRO V3.7.4", "Tournament Pro V3.7.4 Active! [Insert] Menu [F] Lock Target [End] Unload", 4.5)
     end
 end
 
