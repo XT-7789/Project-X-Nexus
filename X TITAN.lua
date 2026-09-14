@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V5.6.1 - TITAN GOD (APEX OMNI) ]]
+-- [[ X TITAN V5.7.0 - TITAN GOD (APEX OMNI) ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
 -- P2: Zero-Lag Character Caching, Throttled Raycasts & High-FPS Engine
@@ -58,7 +58,7 @@ end
 if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==============================================================================
--- CONFIGURATION & STORAGE (V5.6.1)
+-- CONFIGURATION & STORAGE (V5.7.0)
 -- ==============================================================================
 local Config = {
 	Keys = {
@@ -150,7 +150,7 @@ _G.X_TITAN_CURRENT_INSTANCE = {
 }
 
 -- ==============================================================================
--- UTILITIES (V5.6.1)
+-- UTILITIES (V5.7.0)
 -- ==============================================================================
 local Utils = {}
 _G.X_TITAN_CURRENT_INSTANCE.Utils = Utils
@@ -649,19 +649,54 @@ end
 function Utils.GetSmartAimPart(character)
 	if not character then return nil end
 	local Camera = Utils.GetCurrentCamera()
-	if not Camera then return character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Head") end
 	local head = character:FindFirstChild("Head")
-	local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso") or character:FindFirstChild("HumanoidRootPart")
-	if Config.States.AutoAimPart and head and torso then
-		local headPos, onScreen = Camera:WorldToViewportPoint(head.Position)
-		if onScreen then
-			local torsoPos = Camera:WorldToViewportPoint(torso.Position)
-			if math.abs(headPos.Y - torsoPos.Y) * 0.4 < 20 then return torso end
+	local upperTorso = character:FindFirstChild("UpperTorso")
+	local lowerTorso = character:FindFirstChild("LowerTorso")
+	local torso = character:FindFirstChild("Torso") or upperTorso or lowerTorso
+	local hrp = character:FindFirstChild("HumanoidRootPart")
+
+	-- [PLAN A & SMART ADAPTIVE]: If AutoAimPart is active, pick optimal part by visibility/distance
+	if Config.States.AutoAimPart and head and (torso or hrp) then
+		if Camera then
+			local headPos, onScreen = Camera:WorldToViewportPoint(head.Position)
+			if onScreen then
+				local torsoPos = Camera:WorldToViewportPoint((torso or hrp).Position)
+				if math.abs(headPos.Y - torsoPos.Y) * 0.4 < 20 then
+					return torso or hrp
+				end
+			end
+		end
+		return head
+	end
+
+	-- [MANUAL SELECTION]: Strict user choice with automatic Plan C fallbacks
+	if Config.Vals.AimPart == "Head" then
+		if head then return head end
+		-- Plan C fallback if Head is missing/destroyed
+		if upperTorso then return upperTorso end
+		if torso then return torso end
+		if hrp then return hrp end
+	elseif Config.Vals.AimPart == "Torso" then
+		if torso then return torso end
+		if upperTorso then return upperTorso end
+		if hrp then return hrp end
+		if head then return head end
+	elseif Config.Vals.AimPart == "HumanoidRootPart" then
+		if hrp then return hrp end
+		if torso then return torso end
+		if head then return head end
+	end
+
+	-- [PLAN C EMERGENCY FALLBACK]: Return any valid physical BasePart
+	if hrp then return hrp end
+	if head then return head end
+	if torso then return torso end
+	for _, part in pairs(character:GetChildren()) do
+		if part:IsA("BasePart") and part.Transparency < 1 and part.Size.Magnitude > 0.5 then
+			return part
 		end
 	end
-	if Config.Vals.AimPart == "Head" and head then return head end
-	if Config.Vals.AimPart == "Torso" and torso then return torso end
-	return character:FindFirstChild("HumanoidRootPart") or head or torso
+	return nil
 end
 
 function Utils.GetClosestToCenter()
@@ -941,6 +976,77 @@ function Features.RemoveESP(plr)
 	end
 end
 
+function Features.UpdateOffscreenArrows()
+	local Camera = Utils.GetCurrentCamera()
+	if not Camera then return end
+	local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+	local radius = math.min(center.X, center.Y) * 0.65
+	local camCF = Camera.CFrame
+
+	for _, p in pairs(Services.Players:GetPlayers()) do
+		if p == LocalPlayer then continue end
+		local char = p.Character
+		if not char or not char.Parent then
+			if Storage.OffscreenArrows[p] then Storage.OffscreenArrows[p].Visible = false end
+			continue
+		end
+
+		if not Utils.IsAlive(p, char) then
+			if Storage.OffscreenArrows[p] then Storage.OffscreenArrows[p].Visible = false end
+			continue
+		end
+
+		if Config.States.TeamCheck and Utils.IsTeammate(p) then
+			if Storage.OffscreenArrows[p] then Storage.OffscreenArrows[p].Visible = false end
+			continue
+		end
+
+		local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("Head")
+		if not root then
+			if Storage.OffscreenArrows[p] then Storage.OffscreenArrows[p].Visible = false end
+			continue
+		end
+
+		local screenPos, onScreen = Camera:WorldToViewportPoint(root.Position)
+		if onScreen then
+			-- Already visible on screen, hide offscreen arrow
+			if Storage.OffscreenArrows[p] then Storage.OffscreenArrows[p].Visible = false end
+			continue
+		end
+
+		-- Target is OFF-SCREEN: Calculate 360 degree angle from camera orientation
+		local toEnemy = (root.Position - camCF.Position)
+		local dotRight = toEnemy:Dot(camCF.RightVector)
+		local dotUp = toEnemy:Dot(camCF.UpVector)
+		local angle = math.atan2(-dotUp, dotRight)
+
+		local arrowCenter = center + Vector2.new(math.cos(angle), math.sin(angle)) * radius
+		local tip = center + Vector2.new(math.cos(angle), math.sin(angle)) * (radius + 14)
+		local p1 = center + Vector2.new(math.cos(angle + 0.22), math.sin(angle + 0.22)) * (radius - 6)
+		local p2 = center + Vector2.new(math.cos(angle - 0.22), math.sin(angle - 0.22)) * (radius - 6)
+
+		local dist = math.floor(toEnemy.Magnitude)
+		local threatColor = Config.Theme.ThreatLow
+		if dist < 40 then threatColor = Config.Theme.ThreatHigh
+		elseif dist < 90 then threatColor = Config.Theme.ThreatMed end
+
+		if Drawing then
+			if not Storage.OffscreenArrows[p] then
+				local tri = Drawing.new("Triangle")
+				tri.Filled = true
+				tri.Thickness = 1
+				Storage.OffscreenArrows[p] = tri
+			end
+			local tri = Storage.OffscreenArrows[p]
+			tri.PointA = tip
+			tri.PointB = p1
+			tri.PointC = p2
+			tri.Color = threatColor
+			tri.Visible = true
+		end
+	end
+end
+
 function Features.UpdateHitboxes()
 	local now = tick()
 	if now - Storage.HitboxLastUpdate < 0.1 then return end
@@ -1013,9 +1119,9 @@ function Features.GetAuraTarget()
 end
 
 -- ==============================================================================
--- UI SYSTEM (V5.6.1)
+-- UI SYSTEM (V5.7.0)
 -- ==============================================================================
--- ITEM & LOOT ESP SUBSYSTEM (V5.6.1)
+-- ITEM & LOOT ESP SUBSYSTEM (V5.7.0)
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
 		pcall(function() bg:Destroy() end)
@@ -1105,7 +1211,7 @@ end
 
 local UI = {}
 function UI.Init()
-	local guiName = "X_TITAN_V561"
+	local guiName = "X_TITAN_V570"
 	if targetGui:FindFirstChild(guiName) then targetGui[guiName]:Destroy() end
 	
 	local ScreenGui = Instance.new("ScreenGui", targetGui)
@@ -1156,7 +1262,7 @@ function UI.Init()
 	Title.Font = Enum.Font.GothamBlack; Title.TextSize = 16; Title.TextXAlignment = Enum.TextXAlignment.Left
 
 	local Subtitle = Instance.new("TextLabel", SidePanel)
-	Subtitle.Text = "VOID WALKER • V5.6.1"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
+	Subtitle.Text = "VOID WALKER • V5.7.0"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
 	Subtitle.BackgroundTransparency = 1; Subtitle.TextColor3 = Config.Theme.TextDim
 	Subtitle.Font = Enum.Font.GothamBold; Subtitle.TextSize = 9; Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 	
@@ -1500,6 +1606,7 @@ function UI.Init()
 	AddToggle(P2, "Show Player Names", "ShowName", getOrder2)
 	AddToggle(P2, "Show Health Bar", "ShowHealth", getOrder2)
 	AddToggle(P2, "Show Distance", "ShowDistance", getOrder2)
+	AddToggle(P2, "🏹 360 Off-Screen Threat Arrows", "OffscreenArrows", getOrder2)
 
 	AddSection(P2, "RADAR", getOrder2)
 	AddToggle(P2, "📡 Smart Threat Radar", "Radar", getOrder2)
@@ -1859,7 +1966,7 @@ table.insert(Storage.Loops, auraLoop)
 -- ==============================================================================
 local Runtime = {}
 function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.6.1 - TITAN GOD (APEX OMNI)...")
+	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.7.0 - TITAN GOD (APEX OMNI)...")
 	Storage.IsUnloaded = true
 	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
 	Storage.Loops = {}
@@ -1962,7 +2069,7 @@ function Runtime.Unload()
 	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
 	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
 	Storage.RadarObjects = {}
-	print("X TITAN V5.6.1 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
+	print("X TITAN V5.7.0 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
 end
 
 local function InitRadar()
@@ -2062,7 +2169,46 @@ local function UpdateRadar()
 	end
 end
 
-function Runtime.Init()
+function 
+	-- Top-Right Watermark FPS & Ping updater (Anonymized: No Username)
+	task.spawn(function()
+		local fpsCount = 0
+		local lastFpsTick = tick()
+		Services.RunService.RenderStepped:Connect(function()
+			fpsCount = fpsCount + 1
+		end)
+		while true do
+			task.wait(0.5)
+			if Storage.IsUnloaded then break end
+			local now = tick()
+			local currentFps = math.floor(fpsCount / (now - lastFpsTick))
+			fpsCount = 0
+			lastFpsTick = now
+			
+			local pingMs = 0
+			pcall(function()
+				local stats = game:GetService("Stats")
+				local net = stats and stats:FindFirstChild("Network")
+				if net and net:FindFirstChild("ServerStatsItem") and net.ServerStatsItem:FindFirstChild("Data Ping") then
+					pingMs = math.floor(net.ServerStatsItem["Data Ping"]:GetValue())
+				end
+			end)
+			if pingMs == 0 then pingMs = 28 end
+
+			if Storage.WatermarkLabel then
+				Storage.WatermarkLabel.Text = string.format("FPS: %d  |  PING: %dms", currentFps, pingMs)
+				if currentFps >= 50 then
+					Storage.WatermarkLabel.TextColor3 = Color3.fromRGB(90, 240, 140)
+				elseif currentFps >= 30 then
+					Storage.WatermarkLabel.TextColor3 = Color3.fromRGB(245, 200, 60)
+				else
+					Storage.WatermarkLabel.TextColor3 = Color3.fromRGB(255, 75, 75)
+				end
+			end
+		end
+	end)
+
+	Runtime.Init()
 	if _G.X_TITAN_RUNTIME_INITIALIZED then
 		print("X TITAN: Detected existing instance, unloading first...")
 		local oldInstance = _G.X_TITAN_CURRENT_INSTANCE
@@ -2090,28 +2236,89 @@ function Runtime.Init()
 	local FStroke = Instance.new("UIStroke", FOVFrame); FStroke.Color = Config.Theme.Stroke; FStroke.Thickness = 1.5
 	Instance.new("UICorner", FOVFrame).CornerRadius = UDim.new(1, 0); Storage.FOVRingUI = FOVFrame
 	
+	-- [TOP-RIGHT WATERMARK HUD: ANONYMIZED (NO USERNAME)]
+	local WatermarkGui = Instance.new("ScreenGui", targetGui)
+	WatermarkGui.Name = "X_TITAN_WATERMARK_V570"
+	WatermarkGui.ResetOnSpawn = false
+	WatermarkGui.IgnoreGuiInset = true
+	WatermarkGui.DisplayOrder = 9999999
+
+	local WmFrame = Instance.new("Frame", WatermarkGui)
+	WmFrame.Size = UDim2.new(0, 205, 0, 36)
+	WmFrame.Position = UDim2.new(1, -215, 0, 14)
+	WmFrame.BackgroundColor3 = Color3.fromRGB(12, 14, 20)
+	WmFrame.BackgroundTransparency = 0.25
+	Instance.new("UICorner", WmFrame).CornerRadius = UDim.new(0, 6)
+	local wmStroke = Instance.new("UIStroke", WmFrame)
+	wmStroke.Color = Config.Theme.Stroke
+	wmStroke.Thickness = 1.2
+	wmStroke.Transparency = 0.4
+
+	local WmTitle = Instance.new("TextLabel", WmFrame)
+	WmTitle.Size = UDim2.new(1, -12, 0, 16)
+	WmTitle.Position = UDim2.new(0, 8, 0, 3)
+	WmTitle.BackgroundTransparency = 1
+	WmTitle.Text = "⚡ PROJECT X TITAN • V5.7.0"
+	WmTitle.TextColor3 = Config.Theme.Stroke
+	WmTitle.Font = Enum.Font.GothamBlack
+	WmTitle.TextSize = 10
+	WmTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+	local WmStats = Instance.new("TextLabel", WmFrame)
+	WmStats.Size = UDim2.new(1, -12, 0, 14)
+	WmStats.Position = UDim2.new(0, 8, 0, 18)
+	WmStats.BackgroundTransparency = 1
+	WmStats.Text = "FPS: 60 | PING: 25ms"
+	WmStats.TextColor3 = Color3.fromRGB(200, 210, 230)
+	WmStats.Font = Enum.Font.GothamMedium
+	WmStats.TextSize = 9
+	WmStats.TextXAlignment = Enum.TextXAlignment.Left
+	Storage.WatermarkLabel = WmStats
+
+	-- [CYBERNETIC ROBOT TACTICAL HUD & LEADER LINE]
 	local TacticalHUDGui = Instance.new("ScreenGui", targetGui)
-	TacticalHUDGui.Name = "X_TacticalHUD_V521"; TacticalHUDGui.IgnoreGuiInset = true; TacticalHUDGui.DisplayOrder = 9999998
+	TacticalHUDGui.Name = "X_TacticalHUD_V570"; TacticalHUDGui.IgnoreGuiInset = true; TacticalHUDGui.DisplayOrder = 9999998
+
+	-- Futuristic Angled Leader Line (Center Reticle to Target Card)
+	local LineH1 = Instance.new("Frame", TacticalHUDGui)
+	LineH1.Size = UDim2.new(0, 45, 0, 2); LineH1.BackgroundColor3 = Config.Theme.Stroke; LineH1.BorderSizePixel = 0; LineH1.Visible = false
+	local LineDiag = Instance.new("Frame", TacticalHUDGui)
+	LineDiag.Size = UDim2.new(0, 50, 0, 2); LineDiag.BackgroundColor3 = Config.Theme.Stroke; LineDiag.BorderSizePixel = 0; LineDiag.Visible = false
+	local LineH2 = Instance.new("Frame", TacticalHUDGui)
+	LineH2.Size = UDim2.new(0, 60, 0, 2); LineH2.BackgroundColor3 = Config.Theme.Stroke; LineH2.BorderSizePixel = 0; LineH2.Visible = false
+
 	local MainPanel = Instance.new("Frame", TacticalHUDGui)
-	MainPanel.Size = UDim2.new(0, 260, 0, 75); MainPanel.AnchorPoint = Vector2.new(0.5, 0)
-	MainPanel.Position = UDim2.new(0.5, 0, 0.65, 0); MainPanel.BackgroundColor3 = Color3.fromRGB(10, 12, 18)
-	MainPanel.BackgroundTransparency = 0.15; MainPanel.Visible = false
-	Instance.new("UICorner", MainPanel).CornerRadius = UDim.new(0, 6)
-	local PanelStroke = Instance.new("UIStroke", MainPanel); PanelStroke.Color = Config.Theme.Stroke; PanelStroke.Thickness = 1.5
+	MainPanel.Size = UDim2.new(0, 275, 0, 82); MainPanel.AnchorPoint = Vector2.new(0, 0.5)
+	MainPanel.Position = UDim2.new(0.5, 140, 0.5, -40); MainPanel.BackgroundColor3 = Color3.fromRGB(10, 12, 18)
+	MainPanel.BackgroundTransparency = 0.2; MainPanel.Visible = false
+	Instance.new("UICorner", MainPanel).CornerRadius = UDim.new(0, 8)
+	local PanelStroke = Instance.new("UIStroke", MainPanel); PanelStroke.Color = Config.Theme.Stroke; PanelStroke.Thickness = 1.4
+
+	local SubTag = Instance.new("TextLabel", MainPanel)
+	SubTag.Size = UDim2.new(1, -12, 0, 14); SubTag.Position = UDim2.new(0, 8, 0, 4)
+	SubTag.BackgroundTransparency = 1; SubTag.Text = "◈ ROBOT CYBER HUD // TARGET LOCK ◈"
+	SubTag.TextColor3 = Config.Theme.Stroke; SubTag.Font = Enum.Font.GothamBold; SubTag.TextSize = 9; SubTag.TextXAlignment = Enum.TextXAlignment.Left
+
 	local Header = Instance.new("TextLabel", MainPanel)
-	Header.Size = UDim2.new(1, -10, 0, 22); Header.Position = UDim2.new(0, 5, 0, 5)
+	Header.Size = UDim2.new(1, -12, 0, 20); Header.Position = UDim2.new(0, 8, 0, 18)
 	Header.BackgroundTransparency = 1; Header.Font = Enum.Font.GothamBlack; Header.TextSize = 13
 	Header.TextXAlignment = Enum.TextXAlignment.Left; Header.TextColor3 = Config.Theme.Text
+
 	local HPBarBG = Instance.new("Frame", MainPanel)
-	HPBarBG.Size = UDim2.new(1, -10, 0, 8); HPBarBG.Position = UDim2.new(0, 5, 0, 32)
-	HPBarBG.BackgroundColor3 = Color3.fromRGB(40, 40, 45); Instance.new("UICorner", HPBarBG).CornerRadius = UDim.new(1, 0)
+	HPBarBG.Size = UDim2.new(1, -16, 0, 7); HPBarBG.Position = UDim2.new(0, 8, 0, 42)
+	HPBarBG.BackgroundColor3 = Color3.fromRGB(35, 38, 46); Instance.new("UICorner", HPBarBG).CornerRadius = UDim.new(1, 0)
 	local HPBarFill = Instance.new("Frame", HPBarBG)
 	HPBarFill.Size = UDim2.new(1, 0, 1, 0); HPBarFill.BackgroundColor3 = Config.Theme.Stroke; Instance.new("UICorner", HPBarFill).CornerRadius = UDim.new(1, 0)
+
 	local Footer = Instance.new("TextLabel", MainPanel)
-	Footer.Size = UDim2.new(1, -10, 0, 18); Footer.Position = UDim2.new(0, 5, 0, 48)
-	Footer.BackgroundTransparency = 1; Footer.Font = Enum.Font.GothamBold; Footer.TextSize = 11
+	Footer.Size = UDim2.new(1, -12, 0, 18); Footer.Position = UDim2.new(0, 8, 0, 54)
+	Footer.BackgroundTransparency = 1; Footer.Font = Enum.Font.GothamBold; Footer.TextSize = 10
 	Footer.TextXAlignment = Enum.TextXAlignment.Left; Footer.TextColor3 = Config.Theme.TextDim
-	Storage.TacticalHUD = {Main = MainPanel, Stroke = PanelStroke, Header = Header, HPFill = HPBarFill, Footer = Footer}
+
+	Storage.TacticalHUD = {
+		Main = MainPanel, Stroke = PanelStroke, Header = Header, HPFill = HPBarFill, Footer = Footer,
+		Line1 = LineH1, LineDiag = LineDiag, Line2 = LineH2
+	}
 	
 	if Drawing then
 		local function createLine() local l = Drawing.new("Line"); l.Thickness = 1.5; l.Color = Config.Theme.Stroke; l.Visible = false; return l end
@@ -3083,7 +3290,46 @@ local itemLoop = task.spawn(function()
 end)
 table.insert(Storage.Loops, itemLoop)
 
-Runtime.Init()
+
+	-- Top-Right Watermark FPS & Ping updater (Anonymized: No Username)
+	task.spawn(function()
+		local fpsCount = 0
+		local lastFpsTick = tick()
+		Services.RunService.RenderStepped:Connect(function()
+			fpsCount = fpsCount + 1
+		end)
+		while true do
+			task.wait(0.5)
+			if Storage.IsUnloaded then break end
+			local now = tick()
+			local currentFps = math.floor(fpsCount / (now - lastFpsTick))
+			fpsCount = 0
+			lastFpsTick = now
+			
+			local pingMs = 0
+			pcall(function()
+				local stats = game:GetService("Stats")
+				local net = stats and stats:FindFirstChild("Network")
+				if net and net:FindFirstChild("ServerStatsItem") and net.ServerStatsItem:FindFirstChild("Data Ping") then
+					pingMs = math.floor(net.ServerStatsItem["Data Ping"]:GetValue())
+				end
+			end)
+			if pingMs == 0 then pingMs = 28 end
+
+			if Storage.WatermarkLabel then
+				Storage.WatermarkLabel.Text = string.format("FPS: %d  |  PING: %dms", currentFps, pingMs)
+				if currentFps >= 50 then
+					Storage.WatermarkLabel.TextColor3 = Color3.fromRGB(90, 240, 140)
+				elseif currentFps >= 30 then
+					Storage.WatermarkLabel.TextColor3 = Color3.fromRGB(245, 200, 60)
+				else
+					Storage.WatermarkLabel.TextColor3 = Color3.fromRGB(255, 75, 75)
+				end
+			end
+		end
+	end)
+
+	Runtime.Init()
 _G.X_TITAN_INSTANCE = { Config = Config, Storage = Storage, Utils = Utils, Features = Features, Runtime = Runtime }
-Utils.Notify("✅ X TITAN V5.6.1 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
-print("X TITAN V5.6.1 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
+Utils.Notify("✅ X TITAN V5.7.0 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
+print("X TITAN V5.7.0 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
