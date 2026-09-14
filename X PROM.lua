@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PROM V3.6.0 - PROFESSIONAL MOBILE SUITE ]]
+-- [[ X PROM V3.6.1 - PROFESSIONAL MOBILE SUITE ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- High-Performance Zero-Lag Character Caching & 60+ FPS Optimization
 -- ==============================================================================
@@ -355,6 +355,55 @@ function Utils.LoadConfig(name)
     return ok
 end
 
+function Utils.ResetAll()
+    Config.States.Aimbot = false
+    Config.States.SilentAim = false
+    Config.States.SmartPrediction = true
+    Config.States.AutoAimPart = true
+    Config.States.RightClickToggle = true
+    Config.States.TeamCheck = true
+    Config.States.WallCheck = false
+    Config.States.TriggerBot = false
+    Config.States.ShowFOV = false
+    Config.States.TacticalLock = false
+    Config.States.ESP = false
+    Config.States.ESPSkeleton = false
+    Config.States.WeaponESP = true
+    Config.States.OffscreenArrows = false
+    Config.States.Tracers = false
+    Config.States.Chams = false
+    Config.States.Fullbright = false
+    Config.States.Crosshair = false
+    Config.States.Radar = false
+    Config.States.HitSound = true
+    Config.States.NoRecoil = false
+    Config.States.Fly = false
+    Config.States.LegitFly = false
+    Config.States.SpeedHack = false
+    Config.States.InfJump = false
+    Config.States.Noclip = false
+    Config.States.NoFall = false
+    Config.States.ClickTP = false
+    Config.States.AntiKillbrick = false
+    Config.States.ItemESP = false
+    Config.States.VehicleBoost = false
+    Config.States.DetectUnspawned = true
+
+    Config.Vals.FOV = 180
+    Config.Vals.Smoothness = 0.28
+    Config.Vals.PredictionStrength = 0.14
+    Config.Vals.TriggerDelay = 0.15
+    Config.Vals.WalkSpeed = 85
+    Config.Vals.FlySpeed = 120
+    Config.Vals.RadarRange = 120
+    Config.Vals.AimPart = "Head"
+    Config.Vals.OffscreenRadius = 240
+    Config.Vals.VehicleSpeed = 140
+
+    Utils.SyncAllUI()
+    Utils.Notify("🔄 Config Reset", "All settings restored to factory defaults.")
+end
+
 function Utils.ApplyPreset(presetName)
     if presetName == "Legit" then
         Config.States.Aimbot = true
@@ -368,31 +417,11 @@ function Utils.ApplyPreset(presetName)
         Config.States.Chams = false
         Config.States.SpeedHack = false
         Config.States.Fly = false
-    elseif presetName == "Semi-Rage" then
-        Config.States.Aimbot = true
-        Config.Vals.Smoothness = 0.12
-        Config.Vals.FOV = 320
-        Config.States.TeamCheck = true
-        Config.States.WallCheck = false
-        Config.States.SilentAim = true
-        Config.States.ESP = true
-        Config.States.ESPSkeleton = true
-        Config.States.Chams = true
-        Config.States.SpeedHack = true
-        Config.Vals.WalkSpeed = 95
-    elseif presetName == "CQB" then
-        Config.States.Aimbot = true
-        Config.Vals.Smoothness = 0.20
-        Config.Vals.FOV = 220
-        Config.States.TeamCheck = true
-        Config.States.WallCheck = true
-        Config.States.TriggerBot = true
-        Config.States.SilentAim = false
-        Config.States.ESP = true
-        Config.States.WeaponESP = true
+        Utils.SyncAllUI()
+        Utils.Notify("⚡ Preset Applied", "Legit Esports profile active.")
+    elseif presetName == "Reset" then
+        Utils.ResetAll()
     end
-    Utils.SyncAllUI()
-    Utils.Notify("⚡ Preset Applied", presetName .. " profile active.")
 end
 
 function Utils.GetCharacterData(plr)
@@ -1007,7 +1036,7 @@ local function BuildMobileUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "📱 X PROM <font color='#00dcff'>V3.6.0</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
+    Title.Text = "📱 X PROM <font color='#00dcff'>V3.6.1</font> <font color='#8c8c9b'>| MOBILE PRO</font>"; Title.RichText = true
     Title.Size = UDim2.new(0, 150, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 13; Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -1274,6 +1303,22 @@ local function BuildMobileUI()
     AddToggle(P3, "🚗 Vehicle Speed Boost", "VehicleBoost")
     AddSlider(P3, "Vehicle Speed", 50, 300, "VehicleSpeed")
 
+
+    -- TAB 4: CONFIG (Streamlined for PROM Tier)
+    AddSection(P4, "📁 CONFIG PRESETS & STORAGE")
+    AddDual(P4, "💾 Save Default", function() Utils.SaveConfig("prom_default") end, "📂 Load Default", function() Utils.LoadConfig("prom_default") end)
+    AddDual(P4, "⚡ Preset: Legit", function() Utils.ApplyPreset("Legit") end, "🗑️ Reset All", function() Utils.ResetAll() end)
+    
+    AddSection(P4, "👑 VIP TIER UPGRADE")
+    AddButton(P4, "🔒 Rage, CQB & Custom: Titan Only", function()
+        Utils.Notify("👑 Titan Exclusive", "Semi-Rage, CQB and unlimited custom presets are exclusive to X Titan!", 3.5)
+    end)
+
+    AddSection(P4, "ℹ️ STORAGE DIRECTORY")
+    AddButton(P4, "📂 Folder: /ProjectX_Pro_Configs/", function()
+        Utils.Notify("ℹ️ Storage Info", "Configs saved in workspace/ProjectX_Pro_Configs/", 3)
+    end)
+
     -- One-Touch Unload Button
     local UnloadBtn = Instance.new("TextButton", P3)
     UnloadBtn.Size = UDim2.new(1, -6, 0, 38); UnloadBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 40)
@@ -1365,7 +1410,7 @@ local function Unload()
     if Storage.MainFrame and Storage.MainFrame.Parent then Storage.MainFrame.Parent:Destroy() end
     if Storage.FOVRingUI and Storage.FOVRingUI.Parent then Storage.FOVRingUI.Parent:Destroy() end
     if Storage.RadarGui and Storage.RadarGui.Parent then Storage.RadarGui:Destroy() end
-    Notify("X PROM V3.6.0", "Mobile Pro Suite successfully unloaded.")
+    Notify("X PROM V3.6.1", "Mobile Pro Suite successfully unloaded.")
 end
 _G.X_PROM_UNLOAD = Unload
 
@@ -1639,7 +1684,7 @@ local function Init()
         end
     end)
 
-    Notify("X PROM V3.6.0", "Delta Mobile Pro Active! Tap [⚡] for menu")
+    Notify("X PROM V3.6.1", "Delta Mobile Pro Active! Tap [⚡] for menu")
 end
 
 Init()
