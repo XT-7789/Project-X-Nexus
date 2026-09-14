@@ -48,7 +48,23 @@ end
 
 local function SafeHttpGet(url)
 	local sep = string.find(url, "?") and "&" or "?"
-	return game:HttpGet(url .. sep .. "t=" .. tostring(math.floor(tick())))
+	local ok, res = pcall(function()
+		return game:HttpGet(url .. sep .. "t=" .. tostring(math.floor(tick())))
+	end)
+	if ok and res and res ~= "" and not string.find(res, "404: Not Found") then
+		local testFn = loadstring(res)
+		if testFn then return res end
+	end
+	-- Dual-CDN Failover: jsDelivr CDN
+	local jsDelivrUrl = string.gsub(url, "https://raw.githubusercontent.com/XT-7789/Project-X-Nexus/main/", "https://cdn.jsdelivr.net/gh/XT-7789/Project-X-Nexus@main/")
+	local ok2, res2 = pcall(function()
+		return game:HttpGet(jsDelivrUrl .. "?t=" .. tostring(math.floor(tick())))
+	end)
+	if ok2 and res2 and res2 ~= "" and not string.find(res2, "404") then
+		local testFn2 = loadstring(res2)
+		if testFn2 then return res2 end
+	end
+	return (ok and res) or (ok2 and res2) or ""
 end
 
 local key = getgenv().Key or getgenv().ScriptKey or script_key
