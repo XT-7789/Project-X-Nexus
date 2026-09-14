@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PRO V3.7.1 - PROFESSIONAL SUITE ]]
+-- [[ X PRO V3.7.2 - PROFESSIONAL SUITE ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- High-Performance Zero-Lag Character Caching & 60+ FPS Optimization
 -- ==============================================================================
@@ -106,7 +106,10 @@ local function TrackConn(c)
 end
 
 local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or "")
-local isProPlus = string.find(string.upper(activeKey), "X%-PRO%-PRO%-X") ~= nil or string.find(string.upper(activeKey), "X%-PRO%-PLUS") ~= nil
+local upperKey = string.upper(activeKey)
+local isFounder = string.find(upperKey, "XT7789") ~= nil
+local isSeller = string.find(upperKey, "X%-PRO%-X") ~= nil or string.find(upperKey, "X%-TITAN%-X") ~= nil
+local isProPlus = isFounder or isSeller or string.find(upperKey, "X%-PRO%-PLUS") ~= nil or string.find(upperKey, "X%-PRO%-PRO%-X") ~= nil or string.find(upperKey, "X%-TITAN") ~= nil
 
 local Utils = {}
 
@@ -1154,7 +1157,7 @@ local function MicroFlickSilentAim()
 end
 
 -- ==================================================================
--- MODERN 3-TAB UI (V3.7.1)
+-- MODERN 3-TAB UI (V3.7.2)
 -- ==================================================================
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
@@ -1271,10 +1274,14 @@ local function BuildUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 8)
 
     local Title = Instance.new("TextLabel", Header)
-    if isProPlus then
+    if isFounder then
+        Title.Text = "⚡ X PRO<font color='#00dcff'>+</font> <font color='#ffcd32'>[XT7789]</font>"
+    elseif isSeller then
+        Title.Text = "⚡ X PRO<font color='#00dcff'>+</font> <font color='#00d2ff'>[CO-FOUNDER]</font>"
+    elseif isProPlus then
         Title.Text = "⚡ X PRO<font color='#00dcff'>+ PLUS</font> <font color='#ffcd32'>[PRO-X]</font>"
     else
-        Title.Text = "⚡ X PRO <font color='#00dcff'>V3.7.1</font>"
+        Title.Text = "⚡ X PRO <font color='#00dcff'>V3.7.2</font>"
     end
     Title.RichText = true
     Title.Size = UDim2.new(0, 130, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
@@ -1618,7 +1625,7 @@ Unload = function()
     if Storage.MainFrame and Storage.MainFrame.Parent then Storage.MainFrame.Parent:Destroy() end
     if Storage.FOVRingUI and Storage.FOVRingUI.Parent then Storage.FOVRingUI.Parent:Destroy() end
     if Storage.RadarGui and Storage.RadarGui.Parent then Storage.RadarGui:Destroy() end
-    Notify("X PRO V3.7.1", "All Pro modules successfully unloaded.")
+    Notify("X PRO V3.7.2", "All Pro modules successfully unloaded.")
 end
 
 -- ==================================================================
@@ -1727,7 +1734,7 @@ local function Init()
 
     -- RenderStepped Loop
     TrackConn(Services.RunService.RenderStepped:Connect(function()
-        -- Dynamic Smooth Aimbot (V3.7.1 CQB Ballistic Responsive)
+        -- Dynamic Smooth Aimbot (V3.7.2 CQB Ballistic Responsive)
         if Config.States.Aimbot then
             local canAim = not Config.States.RightClickToggle or Storage.IsRightMouseDown
             if canAim then
@@ -2055,10 +2062,14 @@ local function Init()
         end
     end)
 
-    if isProPlus then
-        Notify("👑 X PRO+ FOUNDER", "Master Key X-PRO-PRO-X Active! Titan Presets & Wallbang Unlocked.", 4.5)
+    if isFounder then
+        Notify("👑 X PRO+ FOUNDER", "Master Key XT-7789 Active! 800 FOV, Titan Presets & Wallbang Unlocked.", 4.5)
+    elseif isSeller then
+        Notify("💎 X PRO+ PARTNER", "Co-Founder Key Active! Titan Presets & Wallbang Unlocked.", 4)
+    elseif isProPlus then
+        Notify("⚡ X PRO+ [PRO-X]", "Master Key Active! Titan Presets & Wallbang Unlocked.", 4)
     else
-        Notify("X PRO V3.7.1", "Tournament Pro V3.7.1 Active! [Insert] Menu [F] Lock Target [End] Unload", 4.5)
+        Notify("X PRO V3.7.2", "Tournament Pro V3.7.2 Active! [Insert] Menu [F] Lock Target [End] Unload", 4.5)
     end
 end
 

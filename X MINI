@@ -385,7 +385,10 @@ end
 -- DUAL TAB UI (COMBAT & UTILITY)
 -- ==================================================================
 local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or "")
-local isMiniPlus = string.find(string.upper(activeKey), "X%-MINI%-PRO%-X") ~= nil
+local upperKey = string.upper(activeKey)
+local isFounder = string.find(upperKey, "XT7789") ~= nil
+local isSeller = string.find(upperKey, "X%-MINI%-X") ~= nil or string.find(upperKey, "X%-PRO%-X") ~= nil or string.find(upperKey, "X%-TITAN%-X") ~= nil
+local isMiniPlus = isFounder or isSeller or string.find(upperKey, "X%-MINI%-PLUS") ~= nil or string.find(upperKey, "X%-MINI%-PRO%-X") ~= nil or string.find(upperKey, "X%-PRO") ~= nil or string.find(upperKey, "X%-TITAN") ~= nil
 
 -- ==================================================================
 -- MULTI-LAYER SILENT AIM ENGINE (EXCLUSIVE TO X-MINI-PRO-X)
@@ -524,10 +527,14 @@ local function BuildUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 8)
 
     local Title = Instance.new("TextLabel", Header)
-    if isMiniPlus then
+    if isFounder then
+        Title.Text = "📦 X MINI<font color='#00d2ff'>+</font> <font color='#ffcd32'>[XT7789]</font>"
+    elseif isSeller then
+        Title.Text = "📦 X MINI<font color='#00d2ff'>+</font> <font color='#00d2ff'>[CO-FOUNDER]</font>"
+    elseif isMiniPlus then
         Title.Text = "📦 X MINI<font color='#00d2ff'>+</font> <font color='#ffcd32'>[PRO-X]</font>"
     else
-        Title.Text = "📦 X MINI <font color='#00d2ff'>V4.1</font>"
+        Title.Text = "📦 X MINI <font color='#00d2ff'>V4.2.0</font>"
     end
     Title.RichText = true
     Title.Size = UDim2.new(0, 160, 1, 0); Title.Position = UDim2.new(0, 12, 0, 0)
@@ -658,10 +665,13 @@ local function BuildUI()
     end
 
     -- ================= TAB 1: COMBAT =================
+    if isMiniPlus then
+        AddToggle(CombatPage, "🔥 Silent Aim (PRO-X)", "SilentAim")
+    end
     AddToggle(CombatPage, "🎯 Smooth Aimbot", "Aimbot")
     AddToggle(CombatPage, "🖱️ Right Click to Aim [HOLD]", "RightClickOnly")
     AddToggle(CombatPage, "⭕ Show FOV Circle", "ShowFOV", function(v) if Storage.FOVRingUI then Storage.FOVRingUI.Visible = v end end)
-    local maxMiniFOV = isMiniPlus and 500 or 250
+    local maxMiniFOV = isMiniPlus and 550 or 250
     if not isMiniPlus then Config.Vals.FOV = math.min(Config.Vals.FOV, maxMiniFOV) end
     AddSlider(CombatPage, "FOV Size" .. (isMiniPlus and " (PRO-X)" or " (Max 250)"), 50, maxMiniFOV, "FOV", function(v)
         if Storage.FOVRingUI then Storage.FOVRingUI.Size = UDim2.new(0, v * 2, 0, v * 2) end
@@ -688,7 +698,7 @@ local function BuildUI()
     AddToggle(UtilityPage, "➕ Crosshair", "Crosshair")
     AddToggle(UtilityPage, "🦅 Fly Mode [Z]", "Fly", function() Utils.UpdateCollisions() end)
     AddToggle(UtilityPage, "🪶 Legit Fly (Safe Glide)", "LegitFly")
-    local maxMiniFly = isMiniPlus and 400 or 250
+    local maxMiniFly = isMiniPlus and 450 or 250
     local maxMiniWalk = isMiniPlus and 300 or 250
     if not isMiniPlus then
         Config.Vals.FlySpeed = math.min(Config.Vals.FlySpeed, maxMiniFly)
@@ -1038,11 +1048,17 @@ local function Init()
         end
     end)
 
-    if isMiniPlus then
-        Notify("👑 X MINI+", "Press [Insert] or [Right-Ctrl] for Menu! Silent Aim unlocked.")
-        print("👑 [X MINI+] PRIVILEGE UNLOCKED: Multi-Layer Silent Aim Active! [Insert] or [Right-Ctrl] for Menu")
+    if isFounder then
+        Notify("👑 X MINI+ FOUNDER", "Master Key XT-7789 Verified! 550 FOV & Silent Aim Unlocked.", 4.5)
+        print("👑 [X MINI+] MASTER FOUNDER XT-7789 UNLOCKED")
+    elseif isSeller then
+        Notify("💎 X MINI+ PARTNER", "Co-Founder Key Verified! Silent Aim & Uncapped Limits Active.", 4)
+        print("💎 [X MINI+] PARTNER UNLOCKED")
+    elseif isMiniPlus then
+        Notify("👑 X MINI+ [PRO-X]", "Press [Insert] or [Right-Ctrl] for Menu! Silent Aim unlocked.", 4)
+        print("👑 [X MINI+] PRIVILEGE UNLOCKED: Multi-Layer Silent Aim Active!")
     else
-        Notify("X MINI V4.1", "Combat Edition Ready! [Insert] or [Right-Ctrl] for Menu [End] Unload")
+        Notify("X MINI V4.2.0", "Combat Edition Ready! [Insert] or [Right-Ctrl] for Menu [End] Unload", 4)
     end
 end
 

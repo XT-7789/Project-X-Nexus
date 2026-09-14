@@ -75,9 +75,13 @@ if not key or key == "" or key == "PASTE_YOUR_KEY_HERE" or key == "YOUR_KEY_HERE
 	return
 end
 
-local isMasterProPlus = (string.upper(tostring(key)) == "X-PRO-PRO-X") or (string.upper(tostring(key)) == "X-PRO-PLUS")
-local isMasterMiniPlus = (string.upper(tostring(key)) == "X-MINI-PRO-X")
-local isMasterNanoPlus = (string.upper(tostring(key)) == "X-NANO-PRO-X")
+local cleanKey = string.upper(tostring(key))
+local isFounderKey = string.find(cleanKey, "XT7789") ~= nil
+
+local isMasterTitanPlus = (cleanKey == "X-TITAN-PLUS-XT7789") or (cleanKey == "X-TITAN-X") or (cleanKey == "X-TITAN-PRO-X") or (cleanKey == "X-TITAN-PLUS")
+local isMasterProPlus = (cleanKey == "X-PRO-PLUS-XT7789") or (cleanKey == "X-PRO-X") or (cleanKey == "X-PRO-PRO-X") or (cleanKey == "X-PRO-PLUS")
+local isMasterMiniPlus = (cleanKey == "X-MINI-PLUS-XT7789") or (cleanKey == "X-MINI-X") or (cleanKey == "X-MINI-PRO-X") or (cleanKey == "X-MINI-PLUS")
+local isMasterNanoPlus = (cleanKey == "X-NANO-PLUS-XT7789") or (cleanKey == "X-NANO-X") or (cleanKey == "X-NANO-PRO-X") or (cleanKey == "X-NANO-PLUS")
 local tier
 
 Notify("⚡ X SUITE", "Authenticating Key & Verifying HWID...", 2)
@@ -113,14 +117,16 @@ if not data.success then
 	return
 end
 
-tier = data.tier or (isMasterProPlus and "Pro" or (isMasterNanoPlus and "Nano" or (isMasterMiniPlus and "Mini" or "Nano")))
+tier = data.tier or (isMasterTitanPlus and "Titan" or (isMasterProPlus and "Pro" or (isMasterMiniPlus and "Mini" or (isMasterNanoPlus and "Nano" or "Nano"))))
 
-if isMasterProPlus then
-	Notify("👑 X PRO+ PRIVILEGED", "Founder Key X-PRO-PRO-X Verified! Titan Features Unlocked.", 3.5)
-elseif isMasterNanoPlus then
-	Notify("👑 X NANO+ PRIVILEGED", "Founder Key X-NANO-PRO-X Verified! Silent Aim Unlocked.", 3)
+if isMasterTitanPlus then
+	Notify(isFounderKey and "👑 X TITAN+ FOUNDER" or "💎 X TITAN+ PRIVILEGED", "Titan+ Apex Godmode Unlocked!", 3.5)
+elseif isMasterProPlus then
+	Notify(isFounderKey and "👑 X PRO+ FOUNDER" or "💎 X PRO+ PRIVILEGED", "Pro+ Titan Presets & Wallbang Unlocked.", 3.5)
 elseif isMasterMiniPlus then
-	Notify("👑 X MINI+ PRIVILEGED", "Founder Key X-MINI-PRO-X Verified! Silent Aim Unlocked.", 3)
+	Notify(isFounderKey and "👑 X MINI+ FOUNDER" or "💎 X MINI+ PRIVILEGED", "Mini+ Silent Aim & 550 FOV Unlocked.", 3)
+elseif isMasterNanoPlus then
+	Notify(isFounderKey and "👑 X NANO+ FOUNDER" or "💎 X NANO+ PRIVILEGED", "Nano+ Silent Aim & 400 FOV Unlocked.", 3)
 end
 
 -- Set one-time security authentication token for guarded scripts
@@ -131,30 +137,32 @@ local isMobile = Services.UIS.TouchEnabled and not Services.UIS.KeyboardEnabled
 Notify("✅ SUCCESS", "Welcome! Loading X " .. tostring(tier) .. "...", 3)
 print("==========================================")
 print("✅ [PROJECT X NEXUS] ACCESS GRANTED")
-if isMasterProPlus then
-	print("👑 X PRO+ V3.7.1 [PRO-X FOUNDER EDITION] LOADED - TITAN PRESETS UNLOCKED")
-elseif isMasterNanoPlus then
-	print("👑 X NANO+ V3.2.1 [PRO-X EDITION] LOADED - SILENT AIM UNLOCKED")
+if isMasterTitanPlus then
+	print(isFounderKey and "👑 X TITAN+ V5.9.0 [XT7789 GODMODE] LOADED" or "💎 X TITAN+ V5.9.0 [PARTNER APEX] LOADED")
+elseif isMasterProPlus then
+	print(isFounderKey and "👑 X PRO+ V3.7.2 [XT7789 FOUNDER] LOADED" or "💎 X PRO+ V3.7.2 [PRO-X EDITION] LOADED")
 elseif isMasterMiniPlus then
-	print("👑 X MINI+ V4.1.1 [PRO-X EDITION] LOADED - SILENT AIM UNLOCKED")
+	print(isFounderKey and "👑 X MINI+ V4.2.0 [XT7789 FOUNDER] LOADED" or "💎 X MINI+ V4.2.0 [PRO-X EDITION] LOADED")
+elseif isMasterNanoPlus then
+	print(isFounderKey and "👑 X NANO+ V3.3.0 [XT7789 FOUNDER] LOADED" or "💎 X NANO+ V3.3.0 [PRO-X EDITION] LOADED")
 elseif string.lower(tier) == "litem" then
 	print("📱 X LITEM V1.1.0 [DELTA EDITION] LOADED")
 elseif string.lower(tier) == "lite" then
 	print(isMobile and "📱 X LITEM V1.1.0 [DELTA EDITION] LOADED" or "🎁 X LITE V1.1.0 LOADED")
 elseif string.lower(tier) == "mini" then
-	print("📦 X MINI V4.1.1 LOADED")
+	print("📦 X MINI V4.2.0 LOADED")
 elseif string.lower(tier) == "minim" then
-	print("📱 X MINIM V4.1.1 [DELTA EDITION] LOADED")
+	print("📱 X MINIM V4.2.0 [DELTA EDITION] LOADED")
 elseif string.lower(tier) == "prom" then
-	print("📱 X PROM V3.7.0 [DELTA EDITION] LOADED")
+	print("📱 X PROM V3.7.2 [DELTA EDITION] LOADED")
 elseif string.lower(tier) == "nanom" then
-	print("📱 X NANOM V3.2.1 [DELTA EDITION] LOADED")
+	print("📱 X NANOM V3.3.0 [DELTA EDITION] LOADED")
 elseif string.lower(tier) == "nano" then
-	print(isMobile and "📱 X NANOM V3.2.1 [DELTA EDITION] LOADED" or "🪶 X NANO V3.2.1 LOADED")
+	print(isMobile and "📱 X NANOM V3.3.0 [DELTA EDITION] LOADED" or "🪶 X NANO V3.3.0 LOADED")
 elseif string.lower(tier) == "pro" then
-	print(isMobile and "📱 X PROM V3.7.0 [DELTA EDITION] LOADED" or "⚡ X PRO V3.7.0 LOADED")
+	print(isMobile and "📱 X PROM V3.7.2 [DELTA EDITION] LOADED" or "⚡ X PRO V3.7.2 LOADED")
 elseif string.lower(tier) == "titan" then
-	print("🔥 X TITAN V5.8.1 [APEX OMNI] LOADED")
+	print("🔥 X TITAN V5.9.0 [APEX OMNI] LOADED")
 else
 	print("⚡ X " .. string.upper(tostring(tier)) .. " LOADED")
 end
@@ -183,7 +191,9 @@ local function ExecuteRemote(scriptUrl)
 	end
 end
 
-if isMasterProPlus then
+if isMasterTitanPlus then
+	ExecuteRemote(repo .. "X%20TITAN.lua")
+elseif isMasterProPlus then
 	if isMobile then
 		ExecuteRemote(repo .. "X%20PROM.lua")
 	else

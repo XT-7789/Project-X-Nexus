@@ -226,7 +226,10 @@ end
 -- MOBILE TOUCH UI & FLOATING BUBBLE
 -- ==================================================================
 local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or "")
-local isMiniPlus = string.find(string.upper(activeKey), "X%-MINI%-PRO%-X") ~= nil
+local upperKey = string.upper(activeKey)
+local isFounder = string.find(upperKey, "XT7789") ~= nil
+local isSeller = string.find(upperKey, "X%-MINI%-X") ~= nil or string.find(upperKey, "X%-PRO%-X") ~= nil or string.find(upperKey, "X%-TITAN%-X") ~= nil
+local isMiniPlus = isFounder or isSeller or string.find(upperKey, "X%-MINI%-PLUS") ~= nil or string.find(upperKey, "X%-MINI%-PRO%-X") ~= nil or string.find(upperKey, "X%-PRO") ~= nil or string.find(upperKey, "X%-TITAN") ~= nil
 
 -- ==================================================================
 -- MULTI-LAYER SILENT AIM ENGINE (EXCLUSIVE TO X-MINI-PRO-X)
@@ -299,7 +302,15 @@ local function BuildMobileUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
 
     local Title = Instance.new("TextLabel", Header)
-    Title.Text = "📱 X MINIM <font color='#00d2ff'>V4.1.1</font> <font color='#8c91a0'>| MOBILE SUITE</font>"; Title.RichText = true
+    if isFounder then
+        Title.Text = "📱 X MINIM<font color='#00d2ff'>+</font> <font color='#ffcd32'>[XT7789]</font>"; Title.RichText = true
+    elseif isSeller then
+        Title.Text = "📱 X MINIM<font color='#00d2ff'>+</font> <font color='#00d2ff'>[CO-FOUNDER]</font>"; Title.RichText = true
+    elseif isMiniPlus then
+        Title.Text = "📱 X MINIM<font color='#00d2ff'>+</font> <font color='#ffcd32'>[PRO-X]</font>"; Title.RichText = true
+    else
+        Title.Text = "📱 X MINIM <font color='#00d2ff'>V4.2.0</font> <font color='#8c91a0'>| MOBILE SUITE</font>"; Title.RichText = true
+    end
     Title.Size = UDim2.new(0, 240, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
     Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Text
     Title.Font = Enum.Font.GothamBold; Title.TextSize = 13; Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -438,7 +449,7 @@ local function BuildMobileUI()
     AddSlider(P1, "Head Hitbox Size", 5, 40, "HeadSize", function() Utils.UpdateHeadExpander() end)
     AddToggle(P1, "🔫 TriggerBot (Auto Fire)", "TriggerBot")
     AddToggle(P1, "⭕ Show FOV Circle", "ShowFOV", function(v) if Storage.FOVRingUI then Storage.FOVRingUI.Visible = v end end)
-    local maxMinimFOV = isMiniPlus and 400 or 250
+    local maxMinimFOV = isMiniPlus and 550 or 250
     if not isMiniPlus then Config.Vals.FOV = math.min(Config.Vals.FOV, maxMinimFOV) end
     AddSlider(P1, "FOV Radius" .. (isMiniPlus and " (PRO-X)" or " (Max 250)"), 50, maxMinimFOV, "FOV", function(v)
         if Storage.FOVRingUI then Storage.FOVRingUI.Size = UDim2.new(0, v * 2, 0, v * 2) end
@@ -751,7 +762,15 @@ local function Init()
         end
     end))
 
-    Notify("X MINIM V4.1.1", "Delta Mobile Ready! Tap [⚡] to toggle menu")
+    if isFounder then
+        Notify("👑 X MINIM+ FOUNDER", "Master Key XT-7789 Verified! 550 FOV & Silent Aim Unlocked.", 4.5)
+    elseif isSeller then
+        Notify("💎 X MINIM+ PARTNER", "Co-Founder Key Verified! Silent Aim & Uncapped Limits Active.", 4)
+    elseif isMiniPlus then
+        Notify("📱 X MINIM+ [PRO-X]", "Delta Mobile Ready! Silent Aim Unlocked. Tap [⚡] to toggle", 4)
+    else
+        Notify("📱 X MINIM V4.2.0", "Delta Mobile Ready! Tap [⚡] to toggle menu", 4)
+    end
 end
 
 Init()

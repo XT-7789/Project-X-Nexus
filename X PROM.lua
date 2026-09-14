@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X PROM V3.7.1 - PROFESSIONAL MOBILE SUITE ]]
+-- [[ X PROM V3.7.2 - PROFESSIONAL MOBILE SUITE ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- High-Performance Zero-Lag Character Caching & 60+ FPS Optimization
 -- ==============================================================================
@@ -100,7 +100,10 @@ local function TrackConn(c)
 end
 
 local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or "")
-local isProPlus = string.find(string.upper(activeKey), "X%-PRO%-PRO%-X") ~= nil or string.find(string.upper(activeKey), "X%-PRO%-PLUS") ~= nil
+local upperKey = string.upper(activeKey)
+local isFounder = string.find(upperKey, "XT7789") ~= nil
+local isSeller = string.find(upperKey, "X%-PRO%-X") ~= nil or string.find(upperKey, "X%-TITAN%-X") ~= nil
+local isProPlus = isFounder or isSeller or string.find(upperKey, "X%-PRO%-PLUS") ~= nil or string.find(upperKey, "X%-PRO%-PRO%-X") ~= nil or string.find(upperKey, "X%-TITAN") ~= nil
 
 local Utils = {}
 
@@ -1108,10 +1111,14 @@ local function BuildMobileUI()
     Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
 
     local Title = Instance.new("TextLabel", Header)
-    if isProPlus then
+    if isFounder then
+        Title.Text = "📱 X PROM<font color='#00dcff'>+</font> <font color='#ffcd32'>[XT7789]</font>"
+    elseif isSeller then
+        Title.Text = "📱 X PROM<font color='#00dcff'>+</font> <font color='#00d2ff'>[CO-FOUNDER]</font>"
+    elseif isProPlus then
         Title.Text = "📱 X PROM<font color='#00dcff'>+ PLUS</font> <font color='#ffcd32'>[PRO-X]</font>"
     else
-        Title.Text = "📱 X PROM <font color='#00dcff'>V3.7.1</font> <font color='#8c8c9b'>| MOBILE PRO</font>"
+        Title.Text = "📱 X PROM <font color='#00dcff'>V3.7.2</font> <font color='#8c8c9b'>| MOBILE PRO</font>"
     end
     Title.RichText = true
     Title.Size = UDim2.new(0, 150, 1, 0); Title.Position = UDim2.new(0, 14, 0, 0)
@@ -1496,7 +1503,7 @@ local function Unload()
     if Storage.MainFrame and Storage.MainFrame.Parent then Storage.MainFrame.Parent:Destroy() end
     if Storage.FOVRingUI and Storage.FOVRingUI.Parent then Storage.FOVRingUI.Parent:Destroy() end
     if Storage.RadarGui and Storage.RadarGui.Parent then Storage.RadarGui:Destroy() end
-    Notify("X PROM V3.7.1", "Mobile Pro Suite successfully unloaded.")
+    Notify("X PROM V3.7.2", "Mobile Pro Suite successfully unloaded.")
 end
 _G.X_PROM_UNLOAD = Unload
 
@@ -1822,10 +1829,14 @@ local function Init()
         end
     end)
 
-    if isProPlus then
-        Notify("👑 X PROM+ FOUNDER", "Master Key X-PRO-PRO-X Active! Titan Presets & Wallbang Unlocked.", 4.5)
+    if isFounder then
+        Notify("👑 X PROM+ FOUNDER", "Master Key XT-7789 Active! 800 FOV, Titan Presets & Wallbang Unlocked.", 4.5)
+    elseif isSeller then
+        Notify("💎 X PROM+ PARTNER", "Co-Founder Key Active! Titan Presets & Wallbang Unlocked.", 4)
+    elseif isProPlus then
+        Notify("📱 X PROM+ [PRO-X]", "Master Key Active! Titan Presets & Wallbang Unlocked.", 4)
     else
-        Notify("X PROM V3.7.1", "Delta Mobile Pro V3.7.1 Active! Tap [⚡] for menu", 4.5)
+        Notify("X PROM V3.7.2", "Delta Mobile Pro V3.7.2 Active! Tap [⚡] for menu", 4.5)
     end
 end
 

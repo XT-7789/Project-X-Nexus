@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V5.8.1 - TITAN GOD (APEX OMNI) ]]
+-- [[ X TITAN V5.9.0 - TITAN GOD (APEX OMNI) ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
 -- P2: Zero-Lag Character Caching, Throttled Raycasts & High-FPS Engine
@@ -58,7 +58,7 @@ end
 if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==============================================================================
--- CONFIGURATION & STORAGE (V5.8.1)
+-- CONFIGURATION & STORAGE (V5.9.0)
 -- ==============================================================================
 local Config = {
 	Keys = {
@@ -159,8 +159,17 @@ _G.X_TITAN_CURRENT_INSTANCE = {
 }
 
 -- ==============================================================================
--- UTILITIES (V5.8.1)
+-- UTILITIES (V5.9.0)
 -- ==============================================================================
+-- ==============================================================================
+-- KEY & FOUNDER AUTHENTICATION (TITAN+ PRO-X APEX)
+-- ==============================================================================
+local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or "")
+local upperKey = string.upper(activeKey)
+local isFounder = string.find(upperKey, "XT7789") ~= nil
+local isSeller = string.find(upperKey, "X%-TITAN%-X") ~= nil
+local isTitanPlus = isFounder or isSeller or string.find(upperKey, "X%-TITAN%-PLUS") ~= nil or string.find(upperKey, "X%-TITAN%-PRO%-X") ~= nil
+
 local Utils = {}
 _G.X_TITAN_CURRENT_INSTANCE.Utils = Utils
 
@@ -738,6 +747,39 @@ function Utils.ApplyPreset(presetName)
 		Config.States.WallCheck = true
 		Config.States.ESP = true
 		Utils.Notify("🎯 Preset Applied", "CQB Close-Quarters profile active.")
+	elseif presetName == "HvHGod" then
+		Config.States.Aimbot = true
+		Config.Vals.AimbotSmoothness = 0.0
+		Config.Vals.FOV = 1000
+		Config.Vals.TargetPriority = "Threat"
+		Config.States.WallCheck = false
+		Config.States.Wallbang = true
+		Config.States.SilentAim = true
+		Config.States.HeadExpander = true
+		Config.Vals.HeadSize = 80
+		Config.States.Hitbox = true
+		Config.Vals.HitboxSize = 80
+		Config.States.TriggerBot = true
+		Config.States.ESP = true
+		Config.States.ESPSkeleton = true
+		Config.States.Tracers = true
+		Config.States.Chams = true
+		Config.States.Desync = true
+		Config.States.AntiAimSpin = true
+		Utils.Notify("👑 Preset Applied", "HvH Godmode (Dominator) active!")
+	elseif presetName == "SilentGhost" then
+		Config.States.Aimbot = false
+		Config.States.SilentAim = true
+		Config.Vals.FOV = 350
+		Config.States.ShowFOV = false
+		Config.States.WallCheck = false
+		Config.States.Wallbang = true
+		Config.States.HeadExpander = false
+		Config.States.Hitbox = false
+		Config.States.ESP = true
+		Config.States.Chams = true
+		Config.States.VisibilityCheck = true
+		Utils.Notify("👻 Preset Applied", "Silent Ghost (Stealth Domination) active!")
 	end
 end
 
@@ -1488,9 +1530,9 @@ function Features.GetAuraTarget()
 end
 
 -- ==============================================================================
--- UI SYSTEM (V5.8.1)
+-- UI SYSTEM (V5.9.0)
 -- ==============================================================================
--- ITEM & LOOT ESP SUBSYSTEM (V5.8.1)
+-- ITEM & LOOT ESP SUBSYSTEM (V5.9.0)
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
 		pcall(function() bg:Destroy() end)
@@ -1682,13 +1724,35 @@ function UI.Init()
 	Instance.new("UICorner", SidePanel).CornerRadius = UDim.new(0, 10)
 	
 	local Title = Instance.new("TextLabel", SidePanel)
-	Title.Text = "⚡ X TITAN"; Title.Size = UDim2.new(1, -16, 0, 24); Title.Position = UDim2.new(0, 12, 0, 12)
+	if isFounder then
+		Title.Text = "🔥 X TITAN<font color='#ff0055'>+</font> <font color='#ffcd32'>[XT7789]</font>"; Title.RichText = true
+	elseif isSeller then
+		Title.Text = "🔥 X TITAN<font color='#ff0055'>+</font> <font color='#00d2ff'>[CO-FOUNDER]</font>"; Title.RichText = true
+	elseif isTitanPlus then
+		Title.Text = "🔥 X TITAN<font color='#ff0055'>+</font> <font color='#ffcd32'>[PRO-X APEX]</font>"; Title.RichText = true
+	else
+		Title.Text = "⚡ X TITAN"; Title.RichText = false
+	end
+	Title.Size = UDim2.new(1, -16, 0, 24); Title.Position = UDim2.new(0, 12, 0, 12)
 	Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Stroke
-	Title.Font = Enum.Font.GothamBlack; Title.TextSize = 16; Title.TextXAlignment = Enum.TextXAlignment.Left
+	Title.Font = Enum.Font.GothamBlack; Title.TextSize = 14; Title.TextXAlignment = Enum.TextXAlignment.Left
 
 	local Subtitle = Instance.new("TextLabel", SidePanel)
-	Subtitle.Text = "VOID WALKER • V5.8.1"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
-	Subtitle.BackgroundTransparency = 1; Subtitle.TextColor3 = Config.Theme.TextDim
+	if isFounder then
+		Subtitle.Text = "👑 GODMODE APEX • V5.9.0"
+		Subtitle.TextColor3 = Color3.fromRGB(255, 205, 50)
+	elseif isSeller then
+		Subtitle.Text = "💎 CO-FOUNDER VIP • V5.9.0"
+		Subtitle.TextColor3 = Color3.fromRGB(0, 210, 255)
+	elseif isTitanPlus then
+		Subtitle.Text = "⚡ PRO-X APEX • V5.9.0"
+		Subtitle.TextColor3 = Color3.fromRGB(255, 205, 50)
+	else
+		Subtitle.Text = "VOID WALKER • V5.9.0"
+		Subtitle.TextColor3 = Config.Theme.TextDim
+	end
+	Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
+	Subtitle.BackgroundTransparency = 1
 	Subtitle.Font = Enum.Font.GothamBold; Subtitle.TextSize = 9; Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 	
 	local TabHolder = Instance.new("Frame", SidePanel)
@@ -2066,7 +2130,8 @@ function UI.Init()
 	AddToggle(P1, "Team Check", "TeamCheck", getOrder1)
 	AddToggle(P1, "Wall Check", "WallCheck", getOrder1)
 	AddToggle(P1, "Show FOV", "ShowFOV", getOrder1)
-	AddSlider(P1, "FOV Size", 50, 800, 200, function(v) Config.Vals.FOV = v end, getOrder1)
+	local maxTitanFOV = isTitanPlus and 1000 or 800
+	AddSlider(P1, "FOV Size" .. (isTitanPlus and " (TITAN+ APEX)" or ""), 50, maxTitanFOV, 200, function(v) Config.Vals.FOV = v end, getOrder1)
 	
 	AddSection(P2, "HUD & CROSSHAIR", getOrder2)
 	AddToggle(P2, "Show Lock Status", "ShowLockStatus", getOrder2)
@@ -2270,6 +2335,9 @@ function UI.Init()
 	AddDual(P5, "💾 Save Default", function() Utils.SaveConfig("titan_default") end, "📂 Load Default", function() Utils.LoadConfig("titan_default") end, getOrder5)
 	AddDual(P5, "⚡ Preset: Legit", function() Utils.ApplyPreset("Legit") end, "🔥 Preset: Rage", function() Utils.ApplyPreset("Rage") end, getOrder5)
 	AddDual(P5, "🎯 Preset: CQB", function() Utils.ApplyPreset("CQB") end, "💾 Save Custom", function() Utils.SaveConfig("titan_custom") end, getOrder5)
+	if isTitanPlus then
+		AddDual(P5, "👑 Preset: HvH Godmode", function() Utils.ApplyPreset("HvHGod") end, "👻 Preset: Silent Ghost", function() Utils.ApplyPreset("SilentGhost") end, getOrder5)
+	end
 	
 	AddSection(P5, "DESYNC & ANTI-AIM", getOrder5)
 	AddToggle(P5, "True Desync (Local)", "Desync", getOrder5)
@@ -2509,7 +2577,7 @@ table.insert(Storage.Loops, auraLoop)
 -- ==============================================================================
 local Runtime = {}
 function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.8.1 - TITAN GOD (APEX OMNI)...")
+	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.9.0 - TITAN GOD (APEX OMNI)...")
 	Storage.IsUnloaded = true
 	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
 	Storage.Loops = {}
@@ -2613,7 +2681,7 @@ function Runtime.Unload()
 	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
 	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
 	Storage.RadarObjects = {}
-	print("X TITAN V5.8.1 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
+	print("X TITAN V5.9.0 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
 end
 
 local function InitRadar()
@@ -2766,7 +2834,7 @@ function Runtime.Init()
 	WmTitle.Size = UDim2.new(1, -12, 0, 16)
 	WmTitle.Position = UDim2.new(0, 8, 0, 3)
 	WmTitle.BackgroundTransparency = 1
-	WmTitle.Text = "⚡ PROJECT X TITAN • V5.8.1"
+	WmTitle.Text = "⚡ PROJECT X TITAN • V5.9.0"
 	WmTitle.TextColor3 = Config.Theme.Stroke
 	WmTitle.Font = Enum.Font.GothamBlack
 	WmTitle.TextSize = 10
@@ -3126,7 +3194,7 @@ function Runtime.Init()
 		end
 		
 		if Config.States.Aimbot then
-			-- [V5.8.1 CQB ENHANCED AIMBOT]: Dynamic ballistic damping & close-range responsiveness
+			-- [V5.9.0 CQB ENHANCED AIMBOT]: Dynamic ballistic damping & close-range responsiveness
 			if cachedTarget and cachedTarget.Parent then
 				local targetPos = cachedTarget.Position
 				local eRoot = cachedTarget.Parent:FindFirstChild("HumanoidRootPart")
@@ -3946,5 +4014,16 @@ table.insert(Storage.Loops, itemLoop)
 
 Runtime.Init()
 _G.X_TITAN_INSTANCE = { Config = Config, Storage = Storage, Utils = Utils, Features = Features, Runtime = Runtime }
-Utils.Notify("✅ X TITAN V5.8.1 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
-print("X TITAN V5.8.1 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
+if isFounder then
+	Utils.Notify("👑 X TITAN+ APEX GODMODE", "Master Key XT-7789 Active! 1000 FOV & All God Presets Unlocked.", 4.5)
+	print("👑 [X TITAN+] MASTER FOUNDER XT-7789 UNLOCKED")
+elseif isSeller then
+	Utils.Notify("💎 X TITAN+ PARTNER", "Co-Founder Key Active! Apex Godmode & Presets Unlocked.", 4)
+	print("💎 [X TITAN+] PARTNER UNLOCKED")
+elseif isTitanPlus then
+	Utils.Notify("🔥 X TITAN+ [PRO-X APEX]", "PRO-X Apex Godmode Active! 1000 FOV & Presets Unlocked.", 4)
+	print("🔥 [X TITAN+] PRO-X APEX UNLOCKED")
+else
+	Utils.Notify("✅ X TITAN V5.9.0 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu", 4)
+	print("X TITAN V5.9.0 - TITAN GOD (APEX OMNI) LOADED SUCCESSFULLY")
+end
