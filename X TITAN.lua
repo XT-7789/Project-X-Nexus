@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V5.7.1 - TITAN GOD (APEX OMNI) ]]
+-- [[ X TITAN V5.7.2 - TITAN GOD (APEX OMNI) ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
 -- P2: Zero-Lag Character Caching, Throttled Raycasts & High-FPS Engine
@@ -58,7 +58,7 @@ end
 if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==============================================================================
--- CONFIGURATION & STORAGE (V5.7.1)
+-- CONFIGURATION & STORAGE (V5.7.2)
 -- ==============================================================================
 local Config = {
 	Keys = {
@@ -87,7 +87,8 @@ local Config = {
 		ShowLockStatus = true, SmartPrediction = true, AutoAimPart = false,
 		LegitFly = false, ServerDesync = false, CFrameSpeed = false, Radar = false, ItemESP = false, VehicleBoost = false, VehicleFly = false,
 		WeaponESP = true, OffscreenArrows = false, NoRecoil = false, DetectUnspawned = true,
-		ShowDistance = true, ShowHealth = true, ShowName = true
+		ShowDistance = true, ShowHealth = true, ShowName = true,
+		AimbotFailover = true, BillboardTags = false
 	},
 	Vals = {
 		FOV = 200, OrbitDistance = 8, OrbitSpeed = 8, FlingPower = 100000, WalkSpeed = 150, FlySpeed = 150, HitboxSize = 15, HeadSize = 25,
@@ -95,7 +96,8 @@ local Config = {
 		AuraRange = 25, TPBehindDist = 4, TriggerDelay = 0.15,
 		AntiAimSpinSpeed = 10, AntiAimJitterRadius = 5, AimPart = "Head",
 		Deadzone = 5, PingCompensation = 0.05, RadarRange = 100, LegitFlySmooth = 0.1, VehicleSpeed = 180,
-		ESPRefreshRate = 0.3, ESPBoxThickness = 1.5, ESPTextSize = 13, ItemScanInterval = 1.5, TracerOrigin = "Bottom"
+		ESPRefreshRate = 0.3, ESPBoxThickness = 1.5, ESPTextSize = 13, ItemScanInterval = 1.5, TracerOrigin = "Bottom",
+		AimbotPlan = "Auto", ESPEngine = "Auto"
 	}
 }
 
@@ -139,7 +141,11 @@ local Storage = {
 	CachedIsWall = false,
 	CrosshairVisible = false,
 	CharCache = {},
-	VisCache = {}
+	VisCache = {},
+	NativePlayerTags = {},
+	AimbotCameraOverrideCount = 0, CameraOverrideDetected = false, DrawingBroken = false,
+	AimbotPlans = {"Auto", "Plan A (Camera)", "Plan B (MouseMove)", "Plan C (Silent)"}, AimbotPlanIndex = 1,
+	ESPEngines = {"Auto", "Plan A (Drawing)", "Plan B (3D Chams)", "Plan C (Billboard)"}, ESPEngineIndex = 1
 }
 
 _G.X_TITAN_CURRENT_INSTANCE = {
@@ -150,7 +156,7 @@ _G.X_TITAN_CURRENT_INSTANCE = {
 }
 
 -- ==============================================================================
--- UTILITIES (V5.7.1)
+-- UTILITIES (V5.7.2)
 -- ==============================================================================
 local Utils = {}
 _G.X_TITAN_CURRENT_INSTANCE.Utils = Utils
@@ -1040,6 +1046,133 @@ function Features.UpdateChams()
 	end
 end
 
+function Features.UpdateNativeTags()
+	local wantTags = Config.States.BillboardTags or (Config.States.ESP and (Storage.DrawingBroken or Config.Vals.ESPEngine == "Plan C (Billboard)" or Config.Vals.ESPEngine == "Auto"))
+	if not wantTags then
+		for p, gui in pairs(Storage.NativePlayerTags) do
+			pcall(function() gui:Destroy() end)
+		end
+		table.clear(Storage.NativePlayerTags)
+		return
+	end
+	
+	local itemGuiParent = LocalPlayer:FindFirstChildOfClass("PlayerGui") or targetGui
+	for _, p in pairs(Services.Players:GetPlayers()) do
+		if p == LocalPlayer then continue end
+		local char = p.Character
+		if not char or not char.Parent then
+			if Storage.NativePlayerTags[p] then
+				pcall(function() Storage.NativePlayerTags[p]:Destroy() end)
+				Storage.NativePlayerTags[p] = nil
+			end
+			continue
+		end
+		
+		local isAlive, isUnspawned = Utils.IsAlive(p, char)
+		if not (isAlive or (Config.States.DetectUnspawned and isUnspawned)) then
+			if Storage.NativePlayerTags[p] then
+				pcall(function() Storage.NativePlayerTags[p]:Destroy() end)
+				Storage.NativePlayerTags[p] = nil
+			end
+			continue
+		end
+		
+		if Config.States.TeamCheck and Utils.IsTeammate(p) then
+			if Storage.NativePlayerTags[p] then
+				pcall(function() Storage.NativePlayerTags[p]:Destroy() end)
+				Storage.NativePlayerTags[p] = nil
+			end
+			continue
+		end
+		
+		local head = char:FindFirstChild("Head") or char:FindFirstChild("HumanoidRootPart")
+		if not head then continue end
+		
+		local bg = Storage.NativePlayerTags[p]
+		local drawColor = isUnspawned and Color3.fromRGB(190, 130, 255) or ((Storage.LockedTarget == p) and Config.Theme.LockColor or Config.Theme.Stroke)
+		local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+		local dist = myHRP and math.floor((head.Position - myHRP.Position).Magnitude) or 0
+		local curHp, maxHp = Utils.GetHealth(p, char)
+		local wName = Utils.GetEquippedWeapon(p, char)
+		
+		if not bg or not bg.Parent then
+			bg = Instance.new("BillboardGui")
+			bg.Name = "X_TITAN_TAG_" .. p.Name
+			bg.AlwaysOnTop = true
+			bg.Size = UDim2.new(0, 160, 0, 48)
+			bg.StudsOffset = Vector3.new(0, 2.8, 0)
+			bg.Adornee = head
+			bg.MaxDistance = 1500
+			
+			local tagLabel = Instance.new("TextLabel", bg)
+			tagLabel.Name = "NameTag"
+			tagLabel.Size = UDim2.new(1, 0, 0, 16)
+			tagLabel.Position = UDim2.new(0, 0, 0, 0)
+			tagLabel.BackgroundTransparency = 1
+			tagLabel.Font = Enum.Font.GothamBold
+			tagLabel.TextSize = 12
+			tagLabel.TextColor3 = drawColor
+			tagLabel.TextStrokeTransparency = 0.2
+			tagLabel.Text = p.DisplayName .. " [" .. tostring(dist) .. "m]"
+			
+			local hpBar = Instance.new("Frame", bg)
+			hpBar.Name = "HPBar"
+			hpBar.Size = UDim2.new(0.8, 0, 0, 3)
+			hpBar.Position = UDim2.new(0.1, 0, 0, 18)
+			hpBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+			hpBar.BorderSizePixel = 0
+			
+			local hpFill = Instance.new("Frame", hpBar)
+			hpFill.Name = "Fill"
+			local ratio = math.clamp(curHp / maxHp, 0, 1)
+			hpFill.Size = UDim2.new(ratio, 0, 1, 0)
+			hpFill.BackgroundColor3 = Color3.new(1 - ratio, ratio, 0)
+			hpFill.BorderSizePixel = 0
+			
+			local wLabel = Instance.new("TextLabel", bg)
+			wLabel.Name = "WepTag"
+			wLabel.Size = UDim2.new(1, 0, 0, 14)
+			wLabel.Position = UDim2.new(0, 0, 0, 24)
+			wLabel.BackgroundTransparency = 1
+			wLabel.Font = Enum.Font.GothamMedium
+			wLabel.TextSize = 10
+			wLabel.TextColor3 = Color3.fromRGB(255, 230, 100)
+			wLabel.TextStrokeTransparency = 0.3
+			wLabel.Text = "[" .. wName .. "]"
+			
+			bg.Parent = itemGuiParent
+			Storage.NativePlayerTags[p] = bg
+		else
+			bg.Adornee = head
+			local tagLabel = bg:FindFirstChild("NameTag")
+			if tagLabel then
+				tagLabel.TextColor3 = drawColor
+				tagLabel.Text = p.DisplayName .. " [" .. tostring(dist) .. "m]"
+			end
+			local hpBar = bg:FindFirstChild("HPBar")
+			if hpBar then
+				local hpFill = hpBar:FindFirstChild("Fill")
+				if hpFill then
+					local ratio = math.clamp(curHp / maxHp, 0, 1)
+					hpFill.Size = UDim2.new(ratio, 0, 1, 0)
+					hpFill.BackgroundColor3 = Color3.new(1 - ratio, ratio, 0)
+				end
+			end
+			local wLabel = bg:FindFirstChild("WepTag")
+			if wLabel then
+				wLabel.Text = "[" .. wName .. "]"
+			end
+		end
+	end
+	
+	for p, bg in pairs(Storage.NativePlayerTags) do
+		if not Services.Players:FindFirstChild(p.Name) or not p.Character then
+			pcall(function() bg:Destroy() end)
+			Storage.NativePlayerTags[p] = nil
+		end
+	end
+end
+
 function Features.CreateESP(plr)
 	if plr == LocalPlayer or Storage.ESPObjects[plr] then return end
 	if not Drawing then return end
@@ -1065,6 +1198,10 @@ function Features.CreateESP(plr)
 end
 
 function Features.RemoveESP(plr)
+	if Storage.NativePlayerTags[plr] then
+		pcall(function() Storage.NativePlayerTags[plr]:Destroy() end)
+		Storage.NativePlayerTags[plr] = nil
+	end
 	if Storage.ESPObjects[plr] then
 		for _, d in pairs(Storage.ESPObjects[plr]) do pcall(function() d:Remove() end) end
 		Storage.ESPObjects[plr] = nil
@@ -1226,9 +1363,9 @@ function Features.GetAuraTarget()
 end
 
 -- ==============================================================================
--- UI SYSTEM (V5.7.1)
+-- UI SYSTEM (V5.7.2)
 -- ==============================================================================
--- ITEM & LOOT ESP SUBSYSTEM (V5.7.1)
+-- ITEM & LOOT ESP SUBSYSTEM (V5.7.2)
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
 		pcall(function() bg:Destroy() end)
@@ -1374,7 +1511,7 @@ end
 
 local UI = {}
 function UI.Init()
-	local guiName = "X_TITAN_V571"
+	local guiName = "X_TITAN_V572"
 	if targetGui:FindFirstChild(guiName) then targetGui[guiName]:Destroy() end
 	
 	local ScreenGui = Instance.new("ScreenGui", targetGui)
@@ -1425,7 +1562,7 @@ function UI.Init()
 	Title.Font = Enum.Font.GothamBlack; Title.TextSize = 16; Title.TextXAlignment = Enum.TextXAlignment.Left
 
 	local Subtitle = Instance.new("TextLabel", SidePanel)
-	Subtitle.Text = "VOID WALKER • V5.7.1"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
+	Subtitle.Text = "VOID WALKER • V5.7.2"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
 	Subtitle.BackgroundTransparency = 1; Subtitle.TextColor3 = Config.Theme.TextDim
 	Subtitle.Font = Enum.Font.GothamBold; Subtitle.TextSize = 9; Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 	
@@ -1683,6 +1820,24 @@ function UI.Init()
 	AddSection(P1, "AIMBOT & THREAT", getOrder1)
 	AddToggle(P1, "Hold Right Click Aimbot", "RightClickToggle", getOrder1)
 	AddToggle(P1, "Aimbot (Esports V4.5)", "Aimbot", getOrder1)
+	AddToggle(P1, "⚡ Auto Aimbot Failover (Plan B)", "AimbotFailover", getOrder1)
+	local bPlan1, bPlan2
+	local function UpdateAimbotPlanUI()
+		if bPlan2 then
+			bPlan2.Text = "Mode: " .. Config.Vals.AimbotPlan
+			bPlan2.TextColor3 = Config.Theme.Stroke
+		end
+	end
+	local function CycleAimbotPlan()
+		Storage.AimbotPlanIndex = (Storage.AimbotPlanIndex % #Storage.AimbotPlans) + 1
+		Config.Vals.AimbotPlan = Storage.AimbotPlans[Storage.AimbotPlanIndex]
+		Storage.CameraOverrideDetected = false
+		Storage.AimbotCameraOverrideCount = 0
+		UpdateAimbotPlanUI()
+		Utils.Notify("🎯 Aimbot Plan", "Mode set to: " .. Config.Vals.AimbotPlan)
+	end
+	bPlan1, bPlan2 = AddDual(P1, "🎯 Cycle Aimbot Plan", CycleAimbotPlan, "Mode: " .. Config.Vals.AimbotPlan, CycleAimbotPlan, getOrder1)
+	UpdateAimbotPlanUI()
 	AddSlider(P1, "Base Smoothness", 1, 90, 30, function(v) Config.Vals.AimbotSmoothness = v / 100 end, getOrder1)
 	AddSlider(P1, "Prediction", 0, 50, 16, function(v) Config.Vals.PredictionStrength = v / 100 end, getOrder1)
 	AddToggle(P1, "Smart Prediction (Ping)", "SmartPrediction", getOrder1)
@@ -1732,6 +1887,22 @@ function UI.Init()
 	AddSection(P2, "ESP", getOrder2)
 	AddToggle(P2, "ESP Master", "ESP", getOrder2)
 	AddToggle(P2, "👻 Detect No-Spawn / Lobby", "DetectUnspawned", getOrder2)
+	AddToggle(P2, "🏷️ Native Billboard Tags (Plan C)", "BillboardTags", getOrder2)
+	local bEng1, bEng2
+	local function UpdateESPEngineUI()
+		if bEng2 then
+			bEng2.Text = "Engine: " .. Config.Vals.ESPEngine
+			bEng2.TextColor3 = Config.Theme.Stroke
+		end
+	end
+	local function CycleESPEngine()
+		Storage.ESPEngineIndex = (Storage.ESPEngineIndex % #Storage.ESPEngines) + 1
+		Config.Vals.ESPEngine = Storage.ESPEngines[Storage.ESPEngineIndex]
+		UpdateESPEngineUI()
+		Utils.Notify("👁️ ESP Engine", "Engine set to: " .. Config.Vals.ESPEngine)
+	end
+	bEng1, bEng2 = AddDual(P2, "👁️ Cycle ESP Engine", CycleESPEngine, "Engine: " .. Config.Vals.ESPEngine, CycleESPEngine, getOrder2)
+	UpdateESPEngineUI()
 	AddToggle(P2, "📦 Item & Loot ESP", "ItemESP", getOrder2)
 	AddToggle(P2, "🔫 Weapon / Tool ESP", "WeaponESP", getOrder2)
 	AddToggle(P2, "🦴 Skeleton ESP", "ESPSkeleton", getOrder2)
@@ -2139,7 +2310,7 @@ table.insert(Storage.Loops, auraLoop)
 -- ==============================================================================
 local Runtime = {}
 function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.7.1 - TITAN GOD (APEX OMNI)...")
+	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.7.2 - TITAN GOD (APEX OMNI)...")
 	Storage.IsUnloaded = true
 	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
 	Storage.Loops = {}
@@ -2200,6 +2371,7 @@ function Runtime.Unload()
 	table.clear(Storage.VisCache)
 	Utils.ToggleXRay(false); Utils.ToggleFullbright(false)
 	for plr, esp in pairs(Storage.ESPObjects) do for _, d in pairs(esp) do pcall(function() d:Remove() end) end end
+	for _, t in pairs(Storage.NativePlayerTags) do pcall(function() t:Destroy() end) end
 	for plr, skel in pairs(Storage.SkeletonParts) do for _, d in pairs(skel) do pcall(function() d:Remove() end) end end
 	for _, l in pairs(Storage.TracerLines) do pcall(function() l:Remove() end) end
 	for _, a in pairs(Storage.OffscreenArrows) do pcall(function() a:Remove() end) end
@@ -2242,7 +2414,7 @@ function Runtime.Unload()
 	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
 	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
 	Storage.RadarObjects = {}
-	print("X TITAN V5.7.1 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
+	print("X TITAN V5.7.2 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
 end
 
 local function InitRadar()
@@ -2372,7 +2544,7 @@ function Runtime.Init()
 	
 	-- [TOP-RIGHT WATERMARK HUD: ANONYMIZED (NO USERNAME)]
 	local WatermarkGui = Instance.new("ScreenGui", targetGui)
-	WatermarkGui.Name = "X_TITAN_WATERMARK_V571"
+	WatermarkGui.Name = "X_TITAN_WATERMARK_V572"
 	WatermarkGui.ResetOnSpawn = false
 	WatermarkGui.IgnoreGuiInset = true
 	WatermarkGui.DisplayOrder = 9999999
@@ -2392,7 +2564,7 @@ function Runtime.Init()
 	WmTitle.Size = UDim2.new(1, -12, 0, 16)
 	WmTitle.Position = UDim2.new(0, 8, 0, 3)
 	WmTitle.BackgroundTransparency = 1
-	WmTitle.Text = "⚡ PROJECT X TITAN • V5.7.1"
+	WmTitle.Text = "⚡ PROJECT X TITAN • V5.7.2"
 	WmTitle.TextColor3 = Config.Theme.Stroke
 	WmTitle.Font = Enum.Font.GothamBlack
 	WmTitle.TextSize = 10
@@ -2411,7 +2583,7 @@ function Runtime.Init()
 
 	-- [CYBERNETIC ROBOT TACTICAL HUD & LEADER LINE]
 	local TacticalHUDGui = Instance.new("ScreenGui", targetGui)
-	TacticalHUDGui.Name = "X_TacticalHUD_V571"; TacticalHUDGui.IgnoreGuiInset = true; TacticalHUDGui.DisplayOrder = 9999998
+	TacticalHUDGui.Name = "X_TacticalHUD_V572"; TacticalHUDGui.IgnoreGuiInset = true; TacticalHUDGui.DisplayOrder = 9999998
 
 	-- Futuristic Angled Leader Line (Center Reticle to Target Card)
 	local LineH1 = Instance.new("Frame", TacticalHUDGui)
@@ -2736,7 +2908,7 @@ function Runtime.Init()
 		end
 		
 		if Config.States.Aimbot then
-			-- [V5.7.1 CQB ENHANCED AIMBOT]: Dynamic ballistic damping & close-range responsiveness
+			-- [V5.7.2 CQB ENHANCED AIMBOT]: Dynamic ballistic damping & close-range responsiveness
 			if cachedTarget and cachedTarget.Parent then
 				local targetPos = cachedTarget.Position
 				local eRoot = cachedTarget.Parent:FindFirstChild("HumanoidRootPart")
@@ -2766,22 +2938,66 @@ function Runtime.Init()
 				local screenPos, onScreen = CurrentCam:WorldToViewportPoint(targetPos)
 				local screenDist = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
 				
-				if screenDist < Config.Vals.Deadzone then
-					CurrentCam.CFrame = CFrame.lookAt(CurrentCam.CFrame.Position, targetPos)
+				-- [CQB DYNAMIC RESPONSIVENESS]:
+				local baseSmooth = math.clamp(1.0 - Config.Vals.AimbotSmoothness, 0.08, 1.0)
+				local smoothFactor = baseSmooth
+				if dist3D < 40 then
+					local cqbBoost = (1.0 - (dist3D / 40)) * 0.55
+					smoothFactor = math.clamp(smoothFactor + cqbBoost, 0.3, 1.0)
+				end
+				if screenDist > 120 then
+					smoothFactor = math.clamp(smoothFactor + 0.25, 0.15, 1.0)
+				end
+				
+				-- [MULTI-PLAN AIMBOT EXECUTION & FAILOVER WATCHDOG]
+				local aimPlan = Config.Vals.AimbotPlan or "Auto"
+				local executePlanB = (aimPlan == "Plan B (MouseMove)") or (aimPlan == "Auto" and Storage.CameraOverrideDetected and Config.States.AimbotFailover)
+				
+				if executePlanB then
+					-- Plan B: MouseMoveRel Hardware/Virtual Input Emulation (Bypasses Locked Camera CFrame)
+					local dx = screenPos.X - center.X
+					local dy = screenPos.Y - center.Y
+					local moveRate = math.clamp(smoothFactor * 0.45, 0.08, 0.8)
+					if type(mousemoverel) == "function" then
+						mousemoverel(dx * moveRate, dy * moveRate)
+					elseif Services.VirtualInputManager then
+						pcall(function()
+							Services.VirtualInputManager:SendMouseMoveEvent(screenPos.X, screenPos.Y, game)
+						end)
+					else
+						-- Fallback to camera if mouse input is not supported
+						CurrentCam.CFrame = CurrentCam.CFrame:Lerp(CFrame.lookAt(CurrentCam.CFrame.Position, targetPos), smoothFactor)
+					end
 				else
-					-- [CQB DYNAMIC RESPONSIVENESS]:
-					-- At short distance, enemies sweep large screen angles in split-seconds.
-					-- Proportionally boost smoothFactor so the crosshair tightly sticks to the enemy without lag.
-					local baseSmooth = math.clamp(1.0 - Config.Vals.AimbotSmoothness, 0.08, 1.0)
-					local smoothFactor = baseSmooth
-					if dist3D < 40 then
-						local cqbBoost = (1.0 - (dist3D / 40)) * 0.55
-						smoothFactor = math.clamp(smoothFactor + cqbBoost, 0.3, 1.0)
+					-- Plan A: High-Precision Camera CFrame Interpolation
+					local oldCF = CurrentCam.CFrame
+					local targetCF = CFrame.lookAt(CurrentCam.CFrame.Position, targetPos)
+					if screenDist < Config.Vals.Deadzone then
+						CurrentCam.CFrame = targetCF
+					else
+						CurrentCam.CFrame = CurrentCam.CFrame:Lerp(targetCF, smoothFactor)
 					end
-					if screenDist > 120 then
-						smoothFactor = math.clamp(smoothFactor + 0.25, 0.15, 1.0)
+					
+					-- Failover Watchdog: check if game script immediately overwrites Camera CFrame
+					if (aimPlan == "Auto" and Config.States.AimbotFailover and not Storage.CameraOverrideDetected) then
+						task.defer(function()
+							if Config.States.Aimbot and cachedTarget then
+								local afterVec = CurrentCam.CFrame.LookVector
+								local expectedVec = targetCF.LookVector
+								local deltaExpected = (afterVec - expectedVec).Magnitude
+								local deltaOld = (afterVec - oldCF.LookVector).Magnitude
+								if deltaExpected > 0.85 and deltaOld < 0.05 then
+									Storage.AimbotCameraOverrideCount = (Storage.AimbotCameraOverrideCount or 0) + 1
+									if Storage.AimbotCameraOverrideCount >= 5 then
+										Storage.CameraOverrideDetected = true
+										Utils.Notify("⚡ AIMBOT FAILOVER", "Camera locked by game script! Switched to Plan B (MouseMoveRel)", 4)
+									end
+								else
+									Storage.AimbotCameraOverrideCount = 0
+								end
+							end
+						end)
 					end
-					CurrentCam.CFrame = CurrentCam.CFrame:Lerp(CFrame.lookAt(CurrentCam.CFrame.Position, targetPos), smoothFactor)
 				end
 			end
 		end
@@ -3443,6 +3659,17 @@ local itemAddedConn = Services.Workspace.DescendantAdded:Connect(function(child)
 end)
 table.insert(Storage.Connections, itemAddedConn)
 
+local nativeTagLoop = task.spawn(function()
+	while true do
+		task.wait(0.1)
+		if Storage.IsUnloaded then break end
+		if Config.States.BillboardTags or (Config.States.ESP and (Storage.DrawingBroken or Config.Vals.ESPEngine == "Plan C (Billboard)" or Config.Vals.ESPEngine == "Auto")) then
+			pcall(Features.UpdateNativeTags)
+		end
+	end
+end)
+table.insert(Storage.Loops, nativeTagLoop)
+
 local itemLoop = task.spawn(function()
 	while true do
 		task.wait(Config.Vals.ItemScanInterval or 1.5)
@@ -3495,5 +3722,5 @@ table.insert(Storage.Loops, itemLoop)
 
 Runtime.Init()
 _G.X_TITAN_INSTANCE = { Config = Config, Storage = Storage, Utils = Utils, Features = Features, Runtime = Runtime }
-Utils.Notify("✅ X TITAN V5.7.1 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
-print("X TITAN V5.7.1 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
+Utils.Notify("✅ X TITAN V5.7.2 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
+print("X TITAN V5.7.2 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
