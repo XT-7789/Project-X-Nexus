@@ -14,7 +14,7 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V5.7.0 - TITAN GOD (APEX OMNI) ]]
+-- [[ X TITAN V5.7.1 - TITAN GOD (APEX OMNI) ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
 -- P2: Zero-Lag Character Caching, Throttled Raycasts & High-FPS Engine
@@ -58,7 +58,7 @@ end
 if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==============================================================================
--- CONFIGURATION & STORAGE (V5.7.0)
+-- CONFIGURATION & STORAGE (V5.7.1)
 -- ==============================================================================
 local Config = {
 	Keys = {
@@ -150,7 +150,7 @@ _G.X_TITAN_CURRENT_INSTANCE = {
 }
 
 -- ==============================================================================
--- UTILITIES (V5.7.0)
+-- UTILITIES (V5.7.1)
 -- ==============================================================================
 local Utils = {}
 _G.X_TITAN_CURRENT_INSTANCE.Utils = Utils
@@ -631,18 +631,112 @@ function Utils.PlayHitSound()
 	end)
 end
 
-function Utils.CalculateThreatScore(plr, myHRP)
+function Utils.GetEquippedWeapon(plr, char)
+	if not char then return "Unarmed" end
+	
+	-- Heuristic 1: Standard Roblox Tool directly in Character
+	local tool = char:FindFirstChildOfClass("Tool")
+	if tool and tool.Name and tool.Name ~= "" then
+		return tool.Name
+	end
+	
+	-- Heuristic 2: Character/Player Attributes
+	local attrKeys = {"EquippedWeapon", "CurrentWeapon", "Weapon", "EquippedTool", "ActiveWeapon", "HeldItem", "Gun"}
+	for _, k in ipairs(attrKeys) do
+		local a = char:GetAttribute(k) or (plr and plr:GetAttribute(k))
+		if a and type(a) == "string" and a ~= "" and a ~= "None" then
+			return a
+		end
+	end
+	
+	-- Heuristic 3: ValueObjects inside Character or Player
+	for _, k in ipairs(attrKeys) do
+		local obj = char:FindFirstChild(k) or (plr and plr:FindFirstChild(k))
+		if obj then
+			if obj:IsA("StringValue") and obj.Value ~= "" and obj.Value ~= "None" then
+				return obj.Value
+			elseif obj:IsA("ObjectValue") and obj.Value then
+				return obj.Value.Name
+			end
+		end
+	end
+	
+	-- Heuristic 4: Dedicated Weapon / Equipment Folders
+	local folders = {"Weapons", "Equipped", "Gun", "Guns", "CurrentWeapon", "Armory", "Equipment"}
+	for _, fName in ipairs(folders) do
+		local f = char:FindFirstChild(fName)
+		if f then
+			if f:IsA("Tool") or f:IsA("Model") then
+				return f.Name
+			end
+			for _, c in ipairs(f:GetChildren()) do
+				if (c:IsA("Model") or c:IsA("Tool") or c:IsA("BasePart")) and c.Name ~= "" and c.Name ~= "None" then
+					return c.Name
+				end
+			end
+		end
+	end
+	
+	-- Heuristic 5: Motor6D / Weld Attachment in Hands (Custom Viewmodels/Rigs)
+	local hands = {
+		char:FindFirstChild("RightHand"), char:FindFirstChild("Right Arm"),
+		char:FindFirstChild("LeftHand"), char:FindFirstChild("Left Arm")
+	}
+	for _, hand in ipairs(hands) do
+		if hand then
+			for _, j in ipairs(hand:GetChildren()) do
+				if j:IsA("Motor6D") or j:IsA("Weld") or j:IsA("WeldConstraint") then
+					local part = j.Part1 or j.Part0
+					if part and part ~= hand then
+						local pName = part.Name:lower()
+						if not pName:find("arm") and not pName:find("hand") and not pName:find("torso") and not pName:find("root") then
+							local m = part:FindFirstAncestorWhichIsA("Model")
+							if m and m ~= char and m.Parent == char then
+								return m.Name
+							elseif part.Parent == char and part.Name ~= "Handle" then
+								return part.Name
+							elseif part.Parent and part.Parent ~= char and part.Parent ~= Services.Workspace then
+								return part.Parent.Name
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+	
+	-- Heuristic 6: Direct Child Models with Weapon Indicators
+	for _, child in ipairs(char:GetChildren()) do
+		if child:IsA("Model") and child.Name ~= char.Name and not child:FindFirstChildOfClass("Humanoid") and not child:IsA("Accessory") then
+			local cName = child.Name:lower()
+			if child:FindFirstChild("Handle") or child:FindFirstChild("Muzzle") or child:FindFirstChild("Sight") or child:FindFirstChild("Barrel") or child:FindFirstChild("Mag") or child:FindFirstChild("Magazine") or child:FindFirstChild("Ammo") then
+				return child.Name
+			end
+			if cName:find("gun") or cName:find("rifle") or cName:find("pistol") or cName:find("sword") or cName:find("knife") or cName:find("bow") or cName:find("blade") or cName:find("shotgun") or cName:find("sniper") or cName:find("smg") then
+				return child.Name
+			end
+		end
+	end
+	
+	return "Unarmed"
+end
+
+function Utils.CalculateThreatScore(plr, myHRP, screenDist)
 	if not plr.Character or not myHRP then return 0 end
 	local eHRP = plr.Character:FindFirstChild("HumanoidRootPart")
 	local eHead = plr.Character:FindFirstChild("Head")
 	if not eHRP or not eHead then return 0 end
 	local dist = (eHRP.Position - myHRP.Position).Magnitude
-	local score = 1000 / math.max(dist, 1)
+	-- [CQB PRIORITY]: Close targets pose immediate lethal danger
+	local score = 3000 / math.max(dist, 1)
 	local targetLook = eHead.CFrame.LookVector
 	local toMe = (myHRP.Position - eHead.Position).Unit
 	if targetLook:Dot(toMe) > 0.85 then score = score + 800 end
 	local vel = eHRP.AssemblyLinearVelocity.Magnitude
 	if vel > 20 then score = score + 200 end
+	if screenDist then
+		score = score + math.max(0, 300 - screenDist)
+	end
 	return score
 end
 
@@ -735,9 +829,15 @@ function Utils.GetClosestToCenter()
 		local pos, onScreen = Camera:WorldToViewportPoint(aimPart.Position)
 		if onScreen and pos.Z > 0 then
 			local screenDist = (Vector2.new(pos.X, pos.Y) - center).Magnitude
-			if screenDist <= Config.Vals.FOV then
+			local targetDist3D = myHRP and (aimPart.Position - myHRP.Position).Magnitude or 100
+			-- CQB FOV Retention Buffer: if target is within 35 studs or is already locked, allow expanded FOV tolerance so close fast-moving targets are not dropped abruptly
+			local effectiveFOV = Config.Vals.FOV
+			if targetDist3D < 35 or Storage.LockedTarget == p then
+				effectiveFOV = effectiveFOV * (1.0 + math.clamp((35 - targetDist3D) / 35, 0.1, 0.5))
+			end
+			if screenDist <= effectiveFOV then
 				if Config.States.WallCheck and not Utils.IsVisible(aimPart, p) then continue end
-				local threatScore = Utils.CalculateThreatScore(p, myHRP)
+				local threatScore = Utils.CalculateThreatScore(p, myHRP, screenDist)
 				if threatScore > highestThreat then
 					highestThreat = threatScore
 					targetPart = aimPart
@@ -1126,9 +1226,9 @@ function Features.GetAuraTarget()
 end
 
 -- ==============================================================================
--- UI SYSTEM (V5.7.0)
+-- UI SYSTEM (V5.7.1)
 -- ==============================================================================
--- ITEM & LOOT ESP SUBSYSTEM (V5.7.0)
+-- ITEM & LOOT ESP SUBSYSTEM (V5.7.1)
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
 		pcall(function() bg:Destroy() end)
@@ -1156,28 +1256,84 @@ local function UpdateItemESP()
 		end
 	end
 
-	-- Fast O(N) scan only on Workspace direct children and loot containers (ZERO LAG)
+	-- Universal Item & Loot Scanner
+	local lootKeywords = {
+		"drop", "item", "loot", "tool", "weapon", "pickup", "chest",
+		"crate", "box", "interact", "debris", "ground", "entity",
+		"spawn", "collect", "cash", "money", "prop"
+	}
+
+	local function isLootContainer(name)
+		local lname = name:lower()
+		for _, kw in ipairs(lootKeywords) do
+			if lname:find(kw) then return true end
+		end
+		return false
+	end
+
+	local function scanContainer(container)
+		if not container then return end
+		local children = container:GetChildren()
+		for _, sub in ipairs(children) do
+			if sub:IsA("Tool") then
+				local p = sub:FindFirstChild("Handle") or sub:FindFirstChildWhichIsA("BasePart")
+				if p then addItem(p, sub.Name, "tool") end
+			elseif sub:IsA("BasePart") then
+				local prompt = sub:FindFirstChildWhichIsA("ProximityPrompt", true)
+				if prompt and prompt.Enabled then
+					local title = prompt.ObjectText ~= "" and prompt.ObjectText or prompt.ActionText
+					if title == "" or title == "Interact" or title == "Use" or title == "Pick Up" then title = sub.Name end
+					addItem(sub, title, "prompt")
+				else
+					addItem(sub, sub.Name, "item")
+				end
+			elseif sub:IsA("Model") and not sub:FindFirstChildOfClass("Humanoid") then
+				local prompt = sub:FindFirstChildWhichIsA("ProximityPrompt", true)
+				local p = sub.PrimaryPart or sub:FindFirstChild("Handle") or sub:FindFirstChildWhichIsA("BasePart")
+				if p then
+					if prompt and prompt.Enabled then
+						local title = prompt.ObjectText ~= "" and prompt.ObjectText or prompt.ActionText
+						if title == "" or title == "Interact" or title == "Use" or title == "Pick Up" then title = sub.Name end
+						addItem(p, title, "prompt")
+					else
+						addItem(p, sub.Name, "container")
+					end
+				end
+			end
+		end
+	end
+
 	for _, item in ipairs(Services.Workspace:GetChildren()) do
-		if item:IsA("Tool") and item:FindFirstChild("Handle") then
-			addItem(item.Handle, item.Name, "tool")
-		elseif item:IsA("BasePart") and item:FindFirstChildOfClass("ProximityPrompt") then
-			local prompt = item:FindFirstChildOfClass("ProximityPrompt")
+		if item:IsA("Tool") then
+			local p = item:FindFirstChild("Handle") or item:FindFirstChildWhichIsA("BasePart")
+			if p then addItem(p, item.Name, "tool") end
+		elseif item:IsA("BasePart") then
+			local prompt = item:FindFirstChildWhichIsA("ProximityPrompt", true)
 			if prompt and prompt.Enabled then
 				local title = prompt.ObjectText ~= "" and prompt.ObjectText or prompt.ActionText
 				if title == "" or title == "Interact" or title == "Use" or title == "Pick Up" then title = item.Name end
 				addItem(item, title, "prompt")
 			end
-		elseif item:IsA("Model") and (item.Name == "Drops" or item.Name == "Items" or item.Name == "Loot" or item.Name == "Tools" or item.Name == "Pickups" or item.Name == "Chests" or item.Name == "Weapons" or item.Name == "Debris") then
-			for _, sub in ipairs(item:GetChildren()) do
-				local p = sub:IsA("BasePart") and sub or sub:FindFirstChildWhichIsA("BasePart")
-				if p then addItem(p, sub.Name, "container") end
+			local click = item:FindFirstChildWhichIsA("ClickDetector", true)
+			if click then addItem(item, item.Name, "click") end
+		elseif (item:IsA("Folder") or item:IsA("Model")) and not item:FindFirstChildOfClass("Humanoid") then
+			if isLootContainer(item.Name) then
+				scanContainer(item)
 			end
 		end
 	end
 
+	local debris = Services.Workspace:FindFirstChild("Debris")
+	if debris and (debris:IsA("Folder") or debris:IsA("Model")) then
+		scanContainer(debris)
+	end
+
+	-- Reliable parent for BillboardGuis across all executors (Delta, Arceus X, Solara, Wave)
+	local itemGuiParent = LocalPlayer:FindFirstChildOfClass("PlayerGui") or targetGui
+
 	for part, data in pairs(found) do
 		local bg = Storage.ItemESPObjects[part]
-		local icon = (data.Type == "prompt" and "✨ ") or (data.Type == "tool" and "🔫 ") or "📦 "
+		local icon = (data.Type == "prompt" and "✨ ") or (data.Type == "tool" and "🔫 ") or (data.Type == "click" and "🖱️ ") or "📦 "
 		local color = (data.Type == "tool" and Color3.fromRGB(100, 220, 255)) or (data.Type == "prompt" and Color3.fromRGB(255, 230, 80)) or Color3.fromRGB(255, 200, 60)
 		if not bg or not bg.Parent then
 			bg = Instance.new("BillboardGui")
@@ -1198,7 +1354,7 @@ local function UpdateItemESP()
 			lbl.TextSize = 11
 			lbl.Text = icon .. data.Name .. " [" .. tostring(data.Dist) .. "m]"
 			
-			bg.Parent = targetGui
+			bg.Parent = itemGuiParent
 			Storage.ItemESPObjects[part] = bg
 		else
 			local lbl = bg:FindFirstChild("Tag")
@@ -1218,7 +1374,7 @@ end
 
 local UI = {}
 function UI.Init()
-	local guiName = "X_TITAN_V570"
+	local guiName = "X_TITAN_V571"
 	if targetGui:FindFirstChild(guiName) then targetGui[guiName]:Destroy() end
 	
 	local ScreenGui = Instance.new("ScreenGui", targetGui)
@@ -1269,7 +1425,7 @@ function UI.Init()
 	Title.Font = Enum.Font.GothamBlack; Title.TextSize = 16; Title.TextXAlignment = Enum.TextXAlignment.Left
 
 	local Subtitle = Instance.new("TextLabel", SidePanel)
-	Subtitle.Text = "VOID WALKER • V5.7.0"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
+	Subtitle.Text = "VOID WALKER • V5.7.1"; Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
 	Subtitle.BackgroundTransparency = 1; Subtitle.TextColor3 = Config.Theme.TextDim
 	Subtitle.Font = Enum.Font.GothamBold; Subtitle.TextSize = 9; Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 	
@@ -1369,7 +1525,18 @@ function UI.Init()
 					Services.Workspace.FallenPartsDestroyHeight = Storage.OriginalFallenHeight
 				end
 				if flag == "Chams" and Features.UpdateChams then Features.UpdateChams() end
-				if flag == "ItemESP" and not val and ClearItemESP then ClearItemESP() end
+				if flag == "ItemESP" then
+					if not val then
+						if ClearItemESP then ClearItemESP() end
+					else
+						if UpdateItemESP then task.spawn(UpdateItemESP) end
+					end
+				end
+				if flag == "WeaponESP" and not val and Drawing then
+					for _, esp in pairs(Storage.ESPObjects) do
+						if esp.Weapon then esp.Weapon.Visible = false end
+					end
+				end
 				if flag == "ESP" and not val and Drawing then
 					for _, esp in pairs(Storage.ESPObjects) do
 						pcall(function()
@@ -1972,7 +2139,7 @@ table.insert(Storage.Loops, auraLoop)
 -- ==============================================================================
 local Runtime = {}
 function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.7.0 - TITAN GOD (APEX OMNI)...")
+	Utils.Notify("⚠️ Unload", "Unloading X TITAN V5.7.1 - TITAN GOD (APEX OMNI)...")
 	Storage.IsUnloaded = true
 	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
 	Storage.Loops = {}
@@ -2075,7 +2242,7 @@ function Runtime.Unload()
 	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
 	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
 	Storage.RadarObjects = {}
-	print("X TITAN V5.7.0 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
+	print("X TITAN V5.7.1 - TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
 end
 
 local function InitRadar()
@@ -2205,7 +2372,7 @@ function Runtime.Init()
 	
 	-- [TOP-RIGHT WATERMARK HUD: ANONYMIZED (NO USERNAME)]
 	local WatermarkGui = Instance.new("ScreenGui", targetGui)
-	WatermarkGui.Name = "X_TITAN_WATERMARK_V570"
+	WatermarkGui.Name = "X_TITAN_WATERMARK_V571"
 	WatermarkGui.ResetOnSpawn = false
 	WatermarkGui.IgnoreGuiInset = true
 	WatermarkGui.DisplayOrder = 9999999
@@ -2225,7 +2392,7 @@ function Runtime.Init()
 	WmTitle.Size = UDim2.new(1, -12, 0, 16)
 	WmTitle.Position = UDim2.new(0, 8, 0, 3)
 	WmTitle.BackgroundTransparency = 1
-	WmTitle.Text = "⚡ PROJECT X TITAN • V5.7.0"
+	WmTitle.Text = "⚡ PROJECT X TITAN • V5.7.1"
 	WmTitle.TextColor3 = Config.Theme.Stroke
 	WmTitle.Font = Enum.Font.GothamBlack
 	WmTitle.TextSize = 10
@@ -2244,7 +2411,7 @@ function Runtime.Init()
 
 	-- [CYBERNETIC ROBOT TACTICAL HUD & LEADER LINE]
 	local TacticalHUDGui = Instance.new("ScreenGui", targetGui)
-	TacticalHUDGui.Name = "X_TacticalHUD_V570"; TacticalHUDGui.IgnoreGuiInset = true; TacticalHUDGui.DisplayOrder = 9999998
+	TacticalHUDGui.Name = "X_TacticalHUD_V571"; TacticalHUDGui.IgnoreGuiInset = true; TacticalHUDGui.DisplayOrder = 9999998
 
 	-- Futuristic Angled Leader Line (Center Reticle to Target Card)
 	local LineH1 = Instance.new("Frame", TacticalHUDGui)
@@ -2569,26 +2736,51 @@ function Runtime.Init()
 		end
 		
 		if Config.States.Aimbot then
-			-- Magnetic tracking without acceleration noise
+			-- [V5.7.1 CQB ENHANCED AIMBOT]: Dynamic ballistic damping & close-range responsiveness
 			if cachedTarget and cachedTarget.Parent then
 				local targetPos = cachedTarget.Position
 				local eRoot = cachedTarget.Parent:FindFirstChild("HumanoidRootPart")
+				local dist3D = (CurrentCam.CFrame.Position - targetPos).Magnitude
+				
 				local predTime = Config.Vals.PredictionStrength
 				if Config.States.SmartPrediction then
 					local ping = Utils.GetPing() / 1000
 					predTime = predTime + ping * Config.Vals.PingCompensation
 				end
-				if eRoot then
-					targetPos = targetPos + (eRoot.AssemblyLinearVelocity * predTime)
+				
+				-- [CQB BALLISTIC DAMPING]:
+				-- At short distance (< 40 studs), bullet travel time is nearly zero in hitscan & high-velocity engines.
+				-- Excessive velocity prediction at short distance causes violent overshooting and erratic camera flips.
+				-- At dist <= 8 studs: prediction is zero (direct bone lock).
+				-- From 8 to 40 studs: prediction scales smoothly up to 100%.
+				local distFactor = math.clamp((dist3D - 8) / 32, 0.0, 1.0)
+				predTime = predTime * distFactor
+				
+				if eRoot and predTime > 0.001 then
+					local vel = eRoot.AssemblyLinearVelocity
+					-- Damp sudden vertical jump velocity jerks in close quarters
+					local velY = (dist3D < 25) and (vel.Y * 0.35) or vel.Y
+					targetPos = targetPos + Vector3.new(vel.X, velY, vel.Z) * predTime
 				end
+				
 				local screenPos, onScreen = CurrentCam:WorldToViewportPoint(targetPos)
 				local screenDist = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
+				
 				if screenDist < Config.Vals.Deadzone then
 					CurrentCam.CFrame = CFrame.lookAt(CurrentCam.CFrame.Position, targetPos)
 				else
-					-- Smooth magnetic aim tracking (clamped 0.08 to 1.0)
-					local smoothFactor = math.clamp(1.0 - Config.Vals.AimbotSmoothness, 0.08, 1.0)
-					if screenDist > 120 then smoothFactor = math.clamp(smoothFactor + 0.25, 0.12, 1.0) end
+					-- [CQB DYNAMIC RESPONSIVENESS]:
+					-- At short distance, enemies sweep large screen angles in split-seconds.
+					-- Proportionally boost smoothFactor so the crosshair tightly sticks to the enemy without lag.
+					local baseSmooth = math.clamp(1.0 - Config.Vals.AimbotSmoothness, 0.08, 1.0)
+					local smoothFactor = baseSmooth
+					if dist3D < 40 then
+						local cqbBoost = (1.0 - (dist3D / 40)) * 0.55
+						smoothFactor = math.clamp(smoothFactor + cqbBoost, 0.3, 1.0)
+					end
+					if screenDist > 120 then
+						smoothFactor = math.clamp(smoothFactor + 0.25, 0.15, 1.0)
+					end
 					CurrentCam.CFrame = CurrentCam.CFrame:Lerp(CFrame.lookAt(CurrentCam.CFrame.Position, targetPos), smoothFactor)
 				end
 			end
@@ -2741,12 +2933,12 @@ function Runtime.Init()
 								esp.Distance.Visible = (Config.States.ShowDistance ~= false); esp.Distance.Size = (Config.Vals.ESPTextSize or 13) - 1; esp.Distance.Text = string.format("%.0fm", (root.Position - (hrp and hrp.Position or root.Position)).Magnitude)
 								esp.Distance.Position = Vector2.new(boxX + width / 2, boxY + height + 2); esp.Distance.Color = drawColor
 								if Config.States.WeaponESP and esp.Weapon then
-									local tool = pChar:FindFirstChildOfClass("Tool") or pChar:FindFirstChild("Gun") or pChar:FindFirstChild("EquippedTool")
-									local wName = tool and tool.Name or "Unarmed"
+									local wName = Utils.GetEquippedWeapon(plr, pChar)
 									esp.Weapon.Visible = true
 									esp.Weapon.Text = "[" .. wName .. "]"
-									esp.Weapon.Position = Vector2.new(boxX + width / 2, boxY + height + 16)
-									esp.Weapon.Color = Color3.fromRGB(255, 230, 100)
+									local distOffset = (Config.States.ShowDistance ~= false) and 16 or 2
+									esp.Weapon.Position = Vector2.new(boxX + width / 2, boxY + height + distOffset)
+									esp.Weapon.Color = (wName ~= "Unarmed") and Color3.fromRGB(255, 230, 100) or Color3.fromRGB(180, 180, 180)
 								elseif esp.Weapon then
 									esp.Weapon.Visible = false
 								end
@@ -2783,6 +2975,7 @@ function Runtime.Init()
 					else
 						pcall(function()
 							esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
+							if esp.Weapon then esp.Weapon.Visible = false end
 							if Storage.SkeletonParts[plr] then for _, part in pairs(Storage.SkeletonParts[plr]) do if part.Visible then part.Visible = false end end end
 						end)
 					end
@@ -3242,6 +3435,14 @@ function Runtime.Init()
 	table.insert(Storage.Connections, inputEndedConn)
 end
 
+local itemAddedConn = Services.Workspace.DescendantAdded:Connect(function(child)
+	if not Config.States.ItemESP then return end
+	if child:IsA("Tool") or child:IsA("ProximityPrompt") or child:IsA("ClickDetector") then
+		pcall(UpdateItemESP)
+	end
+end)
+table.insert(Storage.Connections, itemAddedConn)
+
 local itemLoop = task.spawn(function()
 	while true do
 		task.wait(Config.Vals.ItemScanInterval or 1.5)
@@ -3294,5 +3495,5 @@ table.insert(Storage.Loops, itemLoop)
 
 Runtime.Init()
 _G.X_TITAN_INSTANCE = { Config = Config, Storage = Storage, Utils = Utils, Features = Features, Runtime = Runtime }
-Utils.Notify("✅ X TITAN V5.7.0 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
-print("X TITAN V5.7.0 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
+Utils.Notify("✅ X TITAN V5.7.1 - TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu")
+print("X TITAN V5.7.1 - TITAN GOD (APEX OMNI) PATCH LOADED SUCCESSFULLY")
