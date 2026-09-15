@@ -1,4 +1,4 @@
--- [[ X SUITE - UNIVERSAL CLOUD LOADER V2.0.0 ]]
+-- [[ X SUITE - UNIVERSAL CLOUD LOADER V2.0.1 ]]
 -- Official Discord: https://discord.gg/mQ3ASbfP8j | Seller: vlilayz | Dev: XT-7789
 -- Supported: Delta (Mobile iOS & Android Exclusive) / Xeno / Solara (PC)
 -- ==================================================================
@@ -11,7 +11,8 @@ local Services = {
 	Players = game:GetService("Players"),
 	HttpService = game:GetService("HttpService"),
 	StarterGui = game:GetService("StarterGui"),
-	UIS = game:GetService("UserInputService")
+	UIS = game:GetService("UserInputService"),
+	TweenService = game:GetService("TweenService")
 }
 
 local LocalPlayer = Services.Players.LocalPlayer
@@ -56,7 +57,7 @@ if targetGui then
 		title.Size = UDim2.new(1, -20, 0, 20)
 		title.Position = UDim2.new(0, 10, 0, 8)
 		title.BackgroundTransparency = 1
-		title.Text = "⚡ PROJECT X NEXUS | CLOUD LOADER V2.0"
+		title.Text = "⚡ PROJECT X NEXUS | CLOUD LOADER V2.0.1"
 		title.TextColor3 = Color3.fromRGB(0, 230, 255)
 		title.Font = Enum.Font.GothamBold
 		title.TextSize = 12
@@ -91,23 +92,46 @@ local function UpdateSplash(text, progressRatio)
 	pcall(function()
 		if splashStatus then splashStatus.Text = text end
 		if splashBar then
-			Services.TweenService:Create(splashBar, TweenInfo.new(0.25), {
-				Size = UDim2.new(math.clamp(progressRatio, 0.05, 1), 0, 1, 0)
-			}):Play()
+			if Services.TweenService then
+				Services.TweenService:Create(splashBar, TweenInfo.new(0.25), {
+					Size = UDim2.new(math.clamp(progressRatio, 0.05, 1), 0, 1, 0)
+				}):Play()
+			else
+				splashBar.Size = UDim2.new(math.clamp(progressRatio, 0.05, 1), 0, 1, 0)
+			end
 		end
 	end)
 end
 
 local function CloseSplash()
 	pcall(function()
-		if splashFrame then
-			Services.TweenService:Create(splashFrame, TweenInfo.new(0.35), {
-				BackgroundTransparency = 1
-			}):Play()
-			task.delay(0.4, function()
-				if splashFrame and splashFrame.Parent then splashFrame.Parent:Destroy() end
+		if not splashFrame then return end
+		local parentGui = splashFrame.Parent
+		if Services.TweenService then
+			pcall(function()
+				Services.TweenService:Create(splashFrame, TweenInfo.new(0.35), {
+					BackgroundTransparency = 1
+				}):Play()
+				for _, child in ipairs(splashFrame:GetDescendants()) do
+					if child:IsA("TextLabel") then
+						Services.TweenService:Create(child, TweenInfo.new(0.25), { TextTransparency = 1 }):Play()
+					elseif child:IsA("UIStroke") then
+						Services.TweenService:Create(child, TweenInfo.new(0.25), { Transparency = 1 }):Play()
+					elseif child:IsA("Frame") then
+						Services.TweenService:Create(child, TweenInfo.new(0.25), { BackgroundTransparency = 1 }):Play()
+					end
+				end
 			end)
 		end
+		task.delay(0.4, function()
+			pcall(function()
+				if parentGui and parentGui.Parent then
+					parentGui:Destroy()
+				elseif splashFrame and splashFrame.Parent then
+					splashFrame:Destroy()
+				end
+			end)
+		end)
 	end)
 end
 
@@ -156,6 +180,7 @@ end
 local key = getgenv().Key or getgenv().ScriptKey or script_key
 
 if not key or key == "" or key == "PASTE_YOUR_KEY_HERE" or key == "YOUR_KEY_HERE" then
+	CloseSplash()
 	Notify("❌ X SUITE", "Key Required! Join: https://discord.gg/mQ3ASbfP8j", 5)
 	warn("[X SUITE] Error: Key required! Purchase from Discord: https://discord.gg/mQ3ASbfP8j (Seller: vlilayz)")
 	return
@@ -184,6 +209,7 @@ end)
 print("📡 [X SUITE AUTH] Cloud Server Response: " .. tostring(response))
 
 if not success or not response then
+	CloseSplash()
 	Notify("❌ X SUITE", "Connection Error! Could not reach Auth Server.", 4)
 	warn("[X SUITE] Connection Error: " .. tostring(response))
 	return
@@ -194,11 +220,13 @@ local ok, data = pcall(function()
 end)
 
 if not ok or not data then
+	CloseSplash()
 	Notify("❌ X SUITE", "Invalid response from Auth Server.", 4)
 	return
 end
 
 if not data.success then
+	CloseSplash()
 	Notify("❌ AUTH FAILED", data.message or "Authentication failed.", 5)
 	warn("[X SUITE] Auth Error: " .. tostring(data.message))
 	return
@@ -259,15 +287,19 @@ print("🌐 OFFICIAL DISCORD: https://discord.gg/mQ3ASbfP8j")
 print("💬 DISCORD SELLER: vlilayz")
 print("==========================================")
 
-local function ExecuteRemote(scriptUrl)
+local function ExecuteRemote(scriptUrl, tierLabel)
+	UpdateSplash("Launching " .. (tierLabel or "Client") .. "...", 1.0)
+	task.delay(0.5, CloseSplash)
 	local code = SafeHttpGet(scriptUrl)
 	if not code or code == "" then
+		CloseSplash()
 		Notify("❌ DOWNLOAD FAILED", "Could not fetch script from server.", 5)
 		warn("[X SUITE] Network error: Failed to download script: " .. tostring(scriptUrl))
 		return
 	end
 	local fn, compileErr = loadstring(code)
 	if not fn then
+		CloseSplash()
 		Notify("❌ COMPILE ERROR", "Script compilation failed: " .. tostring(compileErr), 7)
 		warn("[X SUITE] Compilation Error: " .. tostring(compileErr))
 		return
@@ -280,59 +312,55 @@ local function ExecuteRemote(scriptUrl)
 end
 
 if isMasterTitanPlus then
-	UpdateSplash("Launching X TITAN V6.1.1...", 1.0)
-task.delay(0.6, CloseSplash)
-ExecuteRemote(repo .. "X%20TITAN.lua")
+	ExecuteRemote(repo .. "X%20TITAN.lua", "X TITAN V6.1.1")
 elseif isMasterProPlus then
 	if isMobile then
-		ExecuteRemote(repo .. "X%20PROM.lua")
+		ExecuteRemote(repo .. "X%20PROM.lua", "X PROM V3.7.5")
 	else
-		ExecuteRemote(repo .. "X%20PRO.lua")
+		ExecuteRemote(repo .. "X%20PRO.lua", "X PRO V3.7.5")
 	end
 elseif isMasterNanoPlus then
 	if isMobile then
-		ExecuteRemote(repo .. "X%20NANOM.lua")
+		ExecuteRemote(repo .. "X%20NANOM.lua", "X NANOM V3.4.1")
 	else
-		ExecuteRemote(repo .. "X%20NANO.lua")
+		ExecuteRemote(repo .. "X%20NANO.lua", "X NANO V3.4.1")
 	end
 elseif isMasterMiniPlus then
 	if isMobile then
-		ExecuteRemote(repo .. "X%20MINIM.lua")
+		ExecuteRemote(repo .. "X%20MINIM.lua", "X MINIM V4.2.2")
 	else
-		ExecuteRemote(repo .. "X%20MINI.lua")
+		ExecuteRemote(repo .. "X%20MINI.lua", "X MINI V4.2.2")
 	end
 elseif string.lower(tier) == "litem" then
-	ExecuteRemote(repo .. "X%20LITEM.lua")
+	ExecuteRemote(repo .. "X%20LITEM.lua", "X LITEM V2.0.0")
 elseif string.lower(tier) == "lite" then
 	if isMobile then
-		ExecuteRemote(repo .. "X%20LITEM.lua")
+		ExecuteRemote(repo .. "X%20LITEM.lua", "X LITEM V2.0.0")
 	else
-		ExecuteRemote(repo .. "X%20LITE.lua")
+		ExecuteRemote(repo .. "X%20LITE.lua", "X LITE V2.0.0")
 	end
 elseif string.lower(tier) == "prom" then
-	ExecuteRemote(repo .. "X%20PROM.lua")
+	ExecuteRemote(repo .. "X%20PROM.lua", "X PROM V3.7.5")
 elseif string.lower(tier) == "minim" then
-	ExecuteRemote(repo .. "X%20MINIM.lua")
+	ExecuteRemote(repo .. "X%20MINIM.lua", "X MINIM V4.2.2")
 elseif string.lower(tier) == "nanom" then
-	ExecuteRemote(repo .. "X%20NANOM.lua")
+	ExecuteRemote(repo .. "X%20NANOM.lua", "X NANOM V3.4.1")
 elseif string.lower(tier) == "nano" then
 	if isMobile then
-		ExecuteRemote(repo .. "X%20NANOM.lua")
+		ExecuteRemote(repo .. "X%20NANOM.lua", "X NANOM V3.4.1")
 	else
-		ExecuteRemote(repo .. "X%20NANO.lua")
+		ExecuteRemote(repo .. "X%20NANO.lua", "X NANO V3.4.1")
 	end
 elseif string.lower(tier) == "mini" then
-	ExecuteRemote(repo .. "X%20MINI.lua")
+	ExecuteRemote(repo .. "X%20MINI.lua", "X MINI V4.2.2")
 elseif string.lower(tier) == "pro" then
 	if isMobile then
-		ExecuteRemote(repo .. "X%20PROM.lua")
+		ExecuteRemote(repo .. "X%20PROM.lua", "X PROM V3.7.5")
 	else
-		ExecuteRemote(repo .. "X%20PRO.lua")
+		ExecuteRemote(repo .. "X%20PRO.lua", "X PRO V3.7.5")
 	end
 elseif string.lower(tier) == "titan" then
-	UpdateSplash("Launching X TITAN V6.1.1...", 1.0)
-task.delay(0.6, CloseSplash)
-ExecuteRemote(repo .. "X%20TITAN.lua")
+	ExecuteRemote(repo .. "X%20TITAN.lua", "X TITAN V6.1.1")
 else
-	ExecuteRemote(repo .. "X%20NANO.lua")
+	ExecuteRemote(repo .. "X%20NANO.lua", "X NANO V3.4.1")
 end
