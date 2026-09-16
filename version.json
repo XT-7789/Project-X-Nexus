@@ -1,6 +1,6 @@
 {
-  "version": "1.6.0",
+  "version": "1.7.0",
   "name": "Project X-Nexus Executor",
   "download_url": "https://raw.githubusercontent.com/XT-7789/Project-X-Nexus/main/X-Nexus%20Executor.exe",
-  "changelog": "V1.6.0: Custom FPS cap input for whole numbers from 30 to 1000, with existing backup and running-game safeguards. New read-only Quick check for Roblox state, saved FPS, restore-point validity and local Xeno/Solara detection. Diagnostics never launch executors or change settings. Home executor controls and standalone FPS mode retained."
+  "changelog": "V1.7.0: Live system CPU and physical-memory panel, sampled every two seconds while visible and paused when hidden. Local activity history retains the latest 200 actions with safe failure explanations, copy and clear controls; keys, script contents and raw exception text are never recorded. Existing FPS and executor workflows retained."
 }
