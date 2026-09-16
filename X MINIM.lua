@@ -229,7 +229,7 @@ local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or
 local upperKey = string.upper(activeKey)
 local isFounder = (upperKey == "X-MINI-PLUS-XT7789") or (string.find(upperKey, "XT7789") ~= nil)
 local isSeller = (upperKey == "X-MINI-X")
-local isMiniPlus = isFounder or isSeller or (upperKey == "X-MINI-PLUS") or (string.find(upperKey, "MINI") ~= nil and string.find(upperKey, "PLUS") ~= nil)
+local isMiniPlus = isFounder or isSeller
 
 -- ==================================================================
 -- MULTI-LAYER SILENT AIM ENGINE (EXCLUSIVE TO X-MINI-PRO-X)

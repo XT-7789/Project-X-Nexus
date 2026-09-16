@@ -103,7 +103,7 @@ local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or
 local upperKey = string.upper(activeKey)
 local isFounder = (upperKey == "X-PRO-PLUS-XT7789") or (string.find(upperKey, "XT7789") ~= nil)
 local isSeller = (upperKey == "X-PRO-X")
-local isProPlus = isFounder or isSeller or (upperKey == "X-PRO-PLUS") or (string.find(upperKey, "PRO") ~= nil and string.find(upperKey, "PLUS") ~= nil)
+local isProPlus = isFounder or isSeller
 
 local Utils = {}
 
