@@ -16,8 +16,11 @@ end
 
 -- [[ X NANO V3.4.1 - ULTRA LIGHTWEIGHT EDITION ]]
 -- Features: Smooth Aimbot with FOV | Lightweight ESP (Box+Chams) | 60-75Hz Optimized
--- Features: Smooth Aimbot with FOV | Lightweight ESP (Box+Chams) | 60-75Hz Optimized
 -- ==================================================================
+if _G.X_NANO_INSTANCE and type(_G.X_NANO_INSTANCE.Unload) == "function" then
+	pcall(_G.X_NANO_INSTANCE.Unload)
+	task.wait(0.05)
+end
 local Services = {
 	Players = game:GetService("Players"),
 	RunService = game:GetService("RunService"),
@@ -480,6 +483,7 @@ local function Unload()
 
 	if Storage.MainFrame and Storage.MainFrame.Parent then Storage.MainFrame.Parent:Destroy() end
 	if Storage.FOVRingUI and Storage.FOVRingUI.Parent then Storage.FOVRingUI.Parent:Destroy() end
+	_G.X_NANO_INSTANCE = nil
 	Notify("X NANO", "Successfully unloaded and cleaned memory.")
 end
 
@@ -673,6 +677,12 @@ local function Init()
 	else
 		Notify("⚡ X NANO V3.4.1", "Loaded! [Insert] Menu [End] Unload", 4)
 	end
+
+	_G.X_NANO_INSTANCE = {
+		Unload = Unload,
+		Storage = Storage,
+		Config = Config
+	}
 end
 
 Init()

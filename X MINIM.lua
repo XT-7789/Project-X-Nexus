@@ -14,12 +14,16 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X MINIM V4.1.1 - MOBILE COMBAT SUITE ]]
+-- [[ X MINIM V4.2.2 - MOBILE COMBAT SUITE ]]
 -- Official Seller: vlilayz | Tier: MINIM (RM 10)
 -- Optimized for Delta Mobile / Android / iOS / Tablet
 -- 100% Zero Keyboard Required | Touch-Friendly UI | Floating Bubble
 -- Features: Touch Auto-Aim | Head Expander | TriggerBot | Box+Health ESP | Chams | Touch Fly with Virtual Buttons | Noclip | SpeedHack
 -- ==================================================================
+if _G.X_MINIM_UNLOAD and type(_G.X_MINIM_UNLOAD) == "function" then
+    pcall(_G.X_MINIM_UNLOAD)
+    task.wait(0.05)
+end
 local Services = {
     Players = game:GetService("Players"),
     RunService = game:GetService("RunService"),
@@ -598,6 +602,7 @@ local function Unload()
 
     if Storage.MainFrame and Storage.MainFrame.Parent then Storage.MainFrame.Parent:Destroy() end
     if Storage.FOVRingUI and Storage.FOVRingUI.Parent then Storage.FOVRingUI.Parent:Destroy() end
+    _G.X_MINIM_UNLOAD = nil
     Notify("X MINIM", "Mobile Suite successfully unloaded.")
 end
 _G.X_MINIM_UNLOAD = Unload

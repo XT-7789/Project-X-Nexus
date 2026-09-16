@@ -14,11 +14,15 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X NANO M V3.2.1 - MOBILE TOUCH EDITION ]]
+-- [[ X NANOM V3.4.1 - MOBILE TOUCH EDITION ]]
 -- Positioning: Mobile Full Touch / Delta / Tablet & Phone Exclusive / Zero Keyboard Dependent
 -- Mobile Exclusive: Draggable Floating Bubble | On-Screen Fly Controls | Large Touch Sliders | Smooth Lock | Safe Unload
 -- Seller: vlilayz | Official Discord: https://discord.gg/mQ3ASbfP8j
 -- ==================================================================
+if _G.X_NANOM_INSTANCE and type(_G.X_NANOM_INSTANCE.Unload) == "function" then
+	pcall(_G.X_NANOM_INSTANCE.Unload)
+	task.wait(0.05)
+end
 local Services = {
 	Players = game:GetService("Players"),
 	RunService = game:GetService("RunService"),
@@ -64,7 +68,7 @@ local Config = {
 	},
 	Seller = {
 		Discord = "vlilayz",
-		Version = "V3.2.1 Mobile"
+		Version = "V3.4.1 Mobile"
 	}
 }
 
@@ -261,7 +265,8 @@ local function Unload()
 	if Storage.MenuBubble and Storage.MenuBubble.Parent then Storage.MenuBubble.Parent:Destroy() end
 	if Storage.FlyUpBtn and Storage.FlyUpBtn.Parent then Storage.FlyUpBtn.Parent:Destroy() end
 
-	Notify("X NANO M", "Successfully unloaded!")
+	_G.X_NANOM_INSTANCE = nil
+	Notify("X NANOM", "Successfully unloaded!")
 end
 
 -- ==================================================================
@@ -767,9 +772,15 @@ local function Init()
 		Notify("📱 X NANOM V3.4.1", "Mobile Edition Ready! Tap [⚡] bubble to open menu!", 4)
 	end
 	print("==========================================")
-	print("📱 X NANO M V3.2.1 MOBILE EDITION LOADED!")
+	print("📱 X NANOM V3.4.1 MOBILE EDITION LOADED!")
 	print("💬 DISCORD: " .. Config.Seller.Discord)
 	print("==========================================")
+
+	_G.X_NANOM_INSTANCE = {
+		Unload = Unload,
+		Storage = Storage,
+		Config = Config
+	}
 end
 
 Init()

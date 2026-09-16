@@ -14,10 +14,13 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X MINI V4.1.1 - PURE COMBAT & UTILITY EDITION ]]
--- Features: Dual-Tab (Combat & Utility) | Smooth Aimbot | Full ESP | Clean Memory
+-- [[ X MINI V4.2.2 - PURE COMBAT & UTILITY EDITION ]]
 -- Features: Dual-Tab (Combat & Utility) | Smooth Aimbot | Full ESP | Clean Memory
 -- ==================================================================
+if _G.X_MINI_INSTANCE and type(_G.X_MINI_INSTANCE.Unload) == "function" then
+    pcall(_G.X_MINI_INSTANCE.Unload)
+    task.wait(0.05)
+end
 local Services = {
     Players = game:GetService("Players"),
     RunService = game:GetService("RunService"),
@@ -790,6 +793,7 @@ Unload = function()
 
     if Storage.MainFrame and Storage.MainFrame.Parent then Storage.MainFrame.Parent:Destroy() end
     if Storage.FOVRingUI and Storage.FOVRingUI.Parent then Storage.FOVRingUI.Parent:Destroy() end
+    _G.X_MINI_INSTANCE = nil
     Notify("X MINI", "All modules successfully unloaded.")
 end
 
@@ -1185,6 +1189,11 @@ local function Init()
     else
         Notify("X MINI V4.2.2", "Combat Edition Ready! [Insert] or [Right-Ctrl] for Menu [End] Unload", 4)
     end
+    _G.X_MINI_INSTANCE = {
+        Unload = Unload,
+        Storage = Storage,
+        Config = Config
+    }
 end
 
 Init()
