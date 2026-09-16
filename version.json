@@ -1,6 +1,6 @@
 {
-  "version": "1.2.0",
+  "version": "1.2.1",
   "name": "Project X-Nexus Executor",
   "download_url": "https://raw.githubusercontent.com/XT-7789/Project-X-Nexus/main/X-Nexus%20Executor.exe",
-  "changelog": "V1.2.0 Multi-Engine Architecture with Xeno, Solara, Wave, and Smart Auto-Detect support + One-Click Auto Updater."
+  "changelog": "V1.2.1: Redesigned dark-blue dashboard, sidebar navigation, separate Roblox and engine status cards, refreshed settings, and improved license input layout."
 }
