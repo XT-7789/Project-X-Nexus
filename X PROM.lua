@@ -76,7 +76,7 @@ local Config = {
         Radar = false, HitSound = true,
         Fly = false, SpeedHack = false, InfJump = false, Noclip = false, NoFall = false,
         AntiKillbrick = false, ItemESP = false, VehicleBoost = false, DetectUnspawned = true, Wallbang = false,
-        HoldToAim = true
+        HoldToAim = true, QuickHUD = false, CompactMenu = false, BatterySaver = true
     },
     Vals = {
         FOV = 180, Smoothness = 0.32, PredictionStrength = 0.14,
@@ -91,6 +91,7 @@ local Storage = {
     FOVRingUI = nil, MainFrame = nil, MenuBubble = nil,
     FlyUpBtn = nil, FlyDownBtn = nil, FlyUpState = false, FlyDownState = false,
     AimVirtualBtn = nil, MobileAimHolding = false,
+    QuickHUDFrame = nil, QuickHUDIndicators = {}, LastMobileThrottleTick = 0,
     OriginalLighting = {}, OriginalCollisions = {}, OriginalWalkSpeed = 16,
     TriggerCooldown = 0, HitSoundObj = nil, RadarGui = nil, RadarFrame = nil, RadarObjects = {},
     AimParts = {"Head", "Torso", "HumanoidRootPart"}, AimPartIndex = 1, ItemESPObjects = {}, SliderFuncs = {}, CharCache = {}, VisCache = {}, WatermarkLabel = nil
@@ -1279,6 +1280,9 @@ local function BuildMobileUI()
                 BackgroundColor3 = v and Config.Theme.Accent or Color3.fromRGB(90, 95, 110)
             }):Play()
             Services.TweenService:Create(s, TweenInfo.new(0.2), { Transparency = v and 0.4 or 0.85 }):Play()
+            if Storage.QuickHUDIndicators and Storage.QuickHUDIndicators[stateKey] then
+                pcall(function() Storage.QuickHUDIndicators[stateKey](v) end)
+            end
             if cb then cb(v) end
         end
 
@@ -1510,6 +1514,22 @@ local function BuildMobileUI()
         end)
     end
 
+    AddSection(P4, "📱 MOBILE ERGONOMICS & THERMAL")
+    AddToggle(P4, "📱 Quick Action HUD Bar", "QuickHUD", function(v)
+        if Storage.QuickHUDFrame then Storage.QuickHUDFrame.Visible = v end
+    end)
+    AddToggle(P4, "📐 Compact Mobile Menu", "CompactMenu", function(v)
+        if Storage.MainFrame then
+            local targetSize = v and UDim2.new(0, 390, 0, 305) or UDim2.new(0, 490, 0, 360)
+            local targetPos = v and UDim2.new(0.5, -195, 0.5, -152) or UDim2.new(0.5, -245, 0.5, -180)
+            Services.TweenService:Create(Storage.MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                Size = targetSize,
+                Position = targetPos
+            }):Play()
+        end
+    end)
+    AddToggle(P4, "🔋 Mobile Battery Saver (Anti-Heat)", "BatterySaver")
+
     AddSection(P4, "ℹ️ STORAGE DIRECTORY")
     AddButton(P4, "📂 Folder: /ProjectX_Pro_Configs/", function()
         Utils.Notify("ℹ️ Storage Info", "Configs saved in workspace/ProjectX_Pro_Configs/", 3)
@@ -1531,7 +1551,7 @@ local function BuildMobileUI()
     P3.CanvasSize = UDim2.new(0, 0, 0, 0)
     P4.CanvasSize = UDim2.new(0, 0, 0, 0)
 
-    -- Floating Virtual Hold-to-Aim Thumb Button [🎯 AIM]
+    -- Floating Virtual Hold-to-Aim Thumb Button [🎯 AIM] (Touch Hold + Ergonomic Drag)
     local aimBtn = Instance.new("TextButton", ScreenGui)
     aimBtn.Name = "VirtualAimBtn"
     aimBtn.Size = UDim2.new(0, 62, 0, 62)
@@ -1551,18 +1571,47 @@ local function BuildMobileUI()
     aimStroke.Thickness = 2
     aimStroke.Transparency = 0.2
 
+    local aimDragging = false
+    local aimDragStart, aimStartPos
+    local aimDragThreshold = 10
+
     aimBtn.InputBegan:Connect(function(i)
         if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then
+            aimDragging = true
+            aimDragStart = i.Position
+            aimStartPos = aimBtn.Position
             Storage.MobileAimHolding = true
             Services.TweenService:Create(aimBtn, TweenInfo.new(0.12), {
                 BackgroundColor3 = Config.Theme.Accent
             }):Play()
             aimBtn.TextColor3 = Color3.fromRGB(10, 15, 25)
             aimStroke.Color = Color3.fromRGB(255, 255, 255)
+
+            i.Changed:Connect(function()
+                if i.UserInputState == Enum.UserInputState.End then
+                    aimDragging = false
+                end
+            end)
         end
     end)
+
+    Services.UIS.InputChanged:Connect(function(i)
+        if aimDragging and (i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseMovement) then
+            local delta = i.Position - aimDragStart
+            if delta.Magnitude > aimDragThreshold then
+                local screenSize = Camera.ViewportSize
+                local curX = aimStartPos.X.Offset + delta.X + (screenSize.X * aimStartPos.X.Scale)
+                local curY = aimStartPos.Y.Offset + delta.Y + (screenSize.Y * aimStartPos.Y.Scale)
+                curX = math.clamp(curX, 10, screenSize.X - 72)
+                curY = math.clamp(curY, 30, screenSize.Y - 80)
+                aimBtn.Position = UDim2.new(0, curX, 0, curY)
+            end
+        end
+    end)
+
     aimBtn.InputEnded:Connect(function(i)
         if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then
+            aimDragging = false
             Storage.MobileAimHolding = false
             Services.TweenService:Create(aimBtn, TweenInfo.new(0.15), {
                 BackgroundColor3 = Color3.fromRGB(15, 20, 30)
@@ -1572,6 +1621,94 @@ local function BuildMobileUI()
         end
     end)
     Storage.AimVirtualBtn = aimBtn
+
+    -- Floating Quick Action HUD Capsule Bar [🎯 AIM | 📦 ESP | 🦅 FLY | 👻 CLIP]
+    local hudFrame = Instance.new("Frame", ScreenGui)
+    hudFrame.Name = "QuickHUD"
+    hudFrame.Size = UDim2.new(0, 260, 0, 36)
+    hudFrame.Position = UDim2.new(0.5, -130, 0, 16)
+    hudFrame.BackgroundColor3 = Color3.fromRGB(16, 20, 30)
+    hudFrame.BackgroundTransparency = 0.2
+    hudFrame.Active = true
+    hudFrame.Visible = Config.States.QuickHUD
+    Instance.new("UICorner", hudFrame).CornerRadius = UDim.new(1, 0)
+    local hudStroke = Instance.new("UIStroke", hudFrame)
+    hudStroke.Color = Config.Theme.Accent
+    hudStroke.Thickness = 1.5
+    hudStroke.Transparency = 0.4
+
+    local hudLayout = Instance.new("UIListLayout", hudFrame)
+    hudLayout.FillDirection = Enum.FillDirection.Horizontal
+    hudLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    hudLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    hudLayout.Padding = UDim.new(0, 6)
+
+    local function CreateHUDPill(label, stateKey)
+        local btn = Instance.new("TextButton", hudFrame)
+        btn.Size = UDim2.new(0, 56, 0, 26)
+        btn.BackgroundColor3 = Color3.fromRGB(24, 28, 42)
+        btn.Text = label
+        btn.TextColor3 = Config.States[stateKey] and Config.Theme.Accent or Config.Theme.Dim
+        btn.Font = Enum.Font.GothamBold
+        btn.TextSize = 11
+        btn.AutoButtonColor = false
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
+        local pillStroke = Instance.new("UIStroke", btn)
+        pillStroke.Color = Config.States[stateKey] and Config.Theme.Accent or Color3.fromRGB(45, 50, 70)
+        pillStroke.Thickness = 1
+
+        local function UpdateBtnState(active)
+            Services.TweenService:Create(btn, TweenInfo.new(0.18), {
+                TextColor3 = active and Config.Theme.Accent or Config.Theme.Dim,
+                BackgroundColor3 = active and Color3.fromRGB(20, 35, 55) or Color3.fromRGB(24, 28, 42)
+            }):Play()
+            pillStroke.Color = active and Config.Theme.Accent or Color3.fromRGB(45, 50, 70)
+        end
+
+        btn.MouseButton1Click:Connect(function()
+            if Storage.ToggleFuncs[stateKey] then
+                Storage.ToggleFuncs[stateKey](not Config.States[stateKey])
+            else
+                Config.States[stateKey] = not Config.States[stateKey]
+            end
+            UpdateBtnState(Config.States[stateKey])
+        end)
+
+        Storage.QuickHUDIndicators[stateKey] = UpdateBtnState
+        return btn
+    end
+
+    CreateHUDPill("🎯 AIM", "Aimbot")
+    CreateHUDPill("📦 ESP", "ESP")
+    CreateHUDPill("🦅 FLY", "Fly")
+    CreateHUDPill("👻 CLIP", "Noclip")
+
+    -- Draggable QuickHUD
+    local hudDragging = false
+    local hudDragStart, hudStartPos
+    hudFrame.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then
+            hudDragging = true
+            hudDragStart = i.Position
+            hudStartPos = hudFrame.Position
+            i.Changed:Connect(function()
+                if i.UserInputState == Enum.UserInputState.End then hudDragging = false end
+            end)
+        end
+    end)
+    Services.UIS.InputChanged:Connect(function(i)
+        if hudDragging and (i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseMovement) then
+            local delta = i.Position - hudDragStart
+            local screenSize = Camera.ViewportSize
+            local curX = hudStartPos.X.Offset + delta.X + (screenSize.X * hudStartPos.X.Scale)
+            local curY = hudStartPos.Y.Offset + delta.Y + (screenSize.Y * hudStartPos.Y.Scale)
+            curX = math.clamp(curX, 10, screenSize.X - 270)
+            curY = math.clamp(curY, 10, screenSize.Y - 50)
+            hudFrame.Position = UDim2.new(0, curX, 0, curY)
+        end
+    end)
+
+    Storage.QuickHUDFrame = hudFrame
 
     -- Virtual Touch Fly Controls (▲ / ▼)
     local flyControls = Instance.new("Frame", ScreenGui)
@@ -1650,6 +1787,7 @@ local function Unload()
     end
     if Storage.CrosshairLines.H then pcall(function() Storage.CrosshairLines.H:Remove(); Storage.CrosshairLines.V:Remove() end) end
     if Storage.AimVirtualBtn and Storage.AimVirtualBtn.Parent then pcall(function() Storage.AimVirtualBtn:Destroy() end) end
+    if Storage.QuickHUDFrame and Storage.QuickHUDFrame.Parent then pcall(function() Storage.QuickHUDFrame:Destroy() end) end
     for _, lines in pairs(Storage.SkeletonParts) do
         for _, l in pairs(lines) do pcall(function() l:Remove() end) end
     end
@@ -1822,13 +1960,20 @@ local function Init()
             end
         end
 
-        -- ESP, Tracers, Offscreen Arrows
-        if Drawing then
-            UpdateSkeletonESP()
+        -- ESP, Tracers, Offscreen Arrows (Mobile Battery Saver & Frustum Culled)
+        local anyESP = Config.States.ESP or Config.States.Tracers or Config.States.OffscreenArrows or Config.States.ESPSkeleton
+        if Drawing and anyESP then
+            local nowTick = tick()
+            local isCombatActive = Config.States.Aimbot and (not Config.States.HoldToAim or Storage.MobileAimHolding)
+            local shouldThrottle = Config.States.BatterySaver and not isCombatActive and ((nowTick - Storage.LastMobileThrottleTick) < 0.033)
 
-            local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+            if not shouldThrottle then
+                Storage.LastMobileThrottleTick = nowTick
+                UpdateSkeletonESP()
 
-            for _, plr in pairs(Services.Players:GetPlayers()) do
+                local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+
+                for _, plr in pairs(Services.Players:GetPlayers()) do
                 local cData = (plr ~= LocalPlayer) and Utils.GetCharacterData(plr)
                 if cData then
                     local root = cData.Root
@@ -1839,6 +1984,18 @@ local function Init()
                     if isAlive or (Config.States.DetectUnspawned and isUnspawned) then
                         local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
                         local color = isUnspawned and Color3.fromRGB(190, 130, 255) or ((Config.States.TeamCheck and Utils.IsTeammate(plr)) and Config.Theme.Team or Config.Theme.Accent)
+
+                        -- [MOBILE FRUSTUM CULLING]: Skip offscreen box calculation when OffscreenArrows is disabled
+                        if (not onScreen or pos.Z <= 0) and not Config.States.OffscreenArrows then
+                            local esp = Storage.ESPObjects[plr]
+                            if esp and esp.Box and esp.Box.Visible then
+                                pcall(function()
+                                    esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false
+                                    if esp.Weapon then esp.Weapon.Visible = false end
+                                end)
+                            end
+                            continue
+                        end
 
                         if Config.States.ESP then
                             local esp = Storage.ESPObjects[plr]
@@ -2078,6 +2235,7 @@ local function Init()
                         end
                     end
                 end
+            end
             end
 
             if Config.States.Crosshair and Storage.CrosshairLines.H then
