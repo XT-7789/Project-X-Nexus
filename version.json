@@ -1,6 +1,6 @@
 {
-  "version": "1.3.0",
+  "version": "1.4.0",
   "name": "Project X-Nexus Executor",
   "download_url": "https://raw.githubusercontent.com/XT-7789/Project-X-Nexus/main/X-Nexus%20Executor.exe",
-  "changelog": "V1.3.0: Free standalone FPS workspace with no license or executor required; engines start only on explicit actions; saved frame-rate controls with backup and restore; Standard, X LITE and X LITEM script selection; corrected Founder, Co-founder/Seller, Tier+ and Standard key-format labels."
+  "changelog": "V1.4.0: Desktop-only Standard and X LITE scripts; previous LITEM selection migrates to LITE. Custom executor selection with saved executable and optional existing autoexec folder, clipboard-only support, explicit launch, and accurate attachment status guidance. Standalone FPS mode remains available."
 }
