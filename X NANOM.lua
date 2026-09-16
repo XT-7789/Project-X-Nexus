@@ -336,17 +336,16 @@ local function BuildMobileUI()
 	ScreenGui.Name = uiName; ScreenGui.ResetOnSpawn = false; ScreenGui.IgnoreGuiInset = true
 	ScreenGui.DisplayOrder = 999999
 
-	-- 1. Draggable Semi-Transparent Floating Touch Bubble
+	-- 1. Smooth Touch Draggable Floating Bubble with Magnet Edge Snapping [⚡]
 	local Bubble = Instance.new("TextButton", ScreenGui)
-	Bubble.Size = UDim2.new(0, 52, 0, 52)
-	Bubble.Position = UDim2.new(0, 20, 0.3, 0)
+	Bubble.Size = UDim2.new(0, 50, 0, 50)
+	Bubble.Position = UDim2.new(0, 16, 0.35, 0)
 	Bubble.BackgroundColor3 = Config.Theme.Main
 	Bubble.BackgroundTransparency = 0.2
 	Bubble.Text = "⚡"
 	Bubble.TextColor3 = Config.Theme.Accent
-	Bubble.TextSize = 24
+	Bubble.TextSize = 22
 	Bubble.Active = true
-	Bubble.Draggable = true
 	Bubble.AutoButtonColor = false
 	Instance.new("UICorner", Bubble).CornerRadius = UDim.new(1, 0)
 	local bStroke = Instance.new("UIStroke", Bubble)
@@ -354,6 +353,16 @@ local function BuildMobileUI()
 	bStroke.Thickness = 2
 	bStroke.Transparency = 0.3
 	Storage.MenuBubble = Bubble
+
+	-- Status Glow Indicator Dot (Active = Green / Standby = Slate)
+	local StatusDot = Instance.new("Frame", Bubble)
+	StatusDot.Size = UDim2.new(0, 10, 0, 10)
+	StatusDot.Position = UDim2.new(1, -11, 0, 1)
+	StatusDot.BackgroundColor3 = Color3.fromRGB(0, 255, 140)
+	Instance.new("UICorner", StatusDot).CornerRadius = UDim.new(1, 0)
+	local dotStroke = Instance.new("UIStroke", StatusDot)
+	dotStroke.Color = Color3.fromRGB(15, 20, 28)
+	dotStroke.Thickness = 1.5
 
 	-- 2. Large Touchscreen Menu Panel (Thumb Friendly)
 	local Card = Instance.new("Frame", ScreenGui)
@@ -370,10 +379,74 @@ local function BuildMobileUI()
 	cStroke.Transparency = 0.4
 	Storage.MainFrame = Card
 
-	-- Tap floating bubble to toggle menu visibility
+	-- Drag & Magnetic Snap Logic
+	local dragging = false
+	local dragInput, dragStart, startPos
+	local dragThreshold = 8
+	local wasDragged = false
+
+	Bubble.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			wasDragged = false
+			dragStart = input.Position
+			startPos = Bubble.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	Bubble.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+
+	Services.UIS.InputChanged:Connect(function(input)
+		if input == dragInput and dragging and dragStart and startPos then
+			local delta = input.Position - dragStart
+			if delta.Magnitude > dragThreshold then
+				wasDragged = true
+			end
+			Bubble.Position = UDim2.new(
+				startPos.X.Scale,
+				startPos.X.Offset + delta.X,
+				startPos.Y.Scale,
+				startPos.Y.Offset + delta.Y
+			)
+		end
+	end)
+
+	Services.UIS.InputEnded:Connect(function(input)
+		if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and dragging then
+			dragging = false
+			if wasDragged then
+				local screenSize = Camera.ViewportSize
+				local currentX = Bubble.AbsolutePosition.X
+				local currentY = Bubble.AbsolutePosition.Y
+				local targetX = (currentX + 25 < screenSize.X / 2) and 16 or (screenSize.X - 66)
+				local targetY = math.clamp(currentY, 40, screenSize.Y - 90)
+
+				Services.TweenService:Create(Bubble, TweenInfo.new(0.28, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+					Position = UDim2.new(0, targetX, 0, targetY)
+				}):Play()
+			end
+		end
+	end)
+
+	-- Tap floating bubble to toggle menu visibility (only when not dragged)
 	Bubble.MouseButton1Click:Connect(function()
-		Card.Visible = not Card.Visible
-		Bubble.Text = Card.Visible and "×" or "⚡"
+		if not wasDragged then
+			Card.Visible = not Card.Visible
+			Bubble.Text = Card.Visible and "×" or "⚡"
+			if Card.Visible then
+				Card.Position = UDim2.new(0.5, -145, 0.5, -230)
+			end
+		end
 	end)
 
 	-- Header

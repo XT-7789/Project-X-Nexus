@@ -75,7 +75,8 @@ local Config = {
         Tracers = false, Chams = false, Fullbright = false, Crosshair = false,
         Radar = false, HitSound = true,
         Fly = false, SpeedHack = false, InfJump = false, Noclip = false, NoFall = false,
-        AntiKillbrick = false, ItemESP = false, VehicleBoost = false, DetectUnspawned = true, Wallbang = false
+        AntiKillbrick = false, ItemESP = false, VehicleBoost = false, DetectUnspawned = true, Wallbang = false,
+        HoldToAim = true
     },
     Vals = {
         FOV = 180, Smoothness = 0.32, PredictionStrength = 0.14,
@@ -89,6 +90,7 @@ local Storage = {
     CrosshairLines = {}, OffscreenArrows = {}, ToggleFuncs = {},
     FOVRingUI = nil, MainFrame = nil, MenuBubble = nil,
     FlyUpBtn = nil, FlyDownBtn = nil, FlyUpState = false, FlyDownState = false,
+    AimVirtualBtn = nil, MobileAimHolding = false,
     OriginalLighting = {}, OriginalCollisions = {}, OriginalWalkSpeed = 16,
     TriggerCooldown = 0, HitSoundObj = nil, RadarGui = nil, RadarFrame = nil, RadarObjects = {},
     AimParts = {"Head", "Torso", "HumanoidRootPart"}, AimPartIndex = 1, ItemESPObjects = {}, SliderFuncs = {}, CharCache = {}, VisCache = {}, WatermarkLabel = nil
@@ -1281,6 +1283,11 @@ local function BuildMobileUI()
         end
 
         Storage.ToggleFuncs[stateKey] = function(v) Config.States[stateKey] = v; SetUI(v) end
+        if Config.States[stateKey] then
+            dot.Position = UDim2.new(1, -16, 0.5, -7)
+            dot.BackgroundColor3 = Config.Theme.Accent
+            s.Transparency = 0.4
+        end
         btn.MouseButton1Click:Connect(function()
             Config.States[stateKey] = not Config.States[stateKey]
             SetUI(Config.States[stateKey])
@@ -1398,7 +1405,19 @@ local function BuildMobileUI()
     end
 
     -- TAB 1: COMBAT
-    AddToggle(P1, "🎯 Dynamic Smooth Aimbot", "Aimbot")
+    AddToggle(P1, "🎯 Dynamic Smooth Aimbot", "Aimbot", function(v)
+        if Storage.AimVirtualBtn then
+            Storage.AimVirtualBtn.Visible = v and Config.States.HoldToAim
+        end
+    end)
+    AddToggle(P1, "📱 Virtual Hold-to-Aim Button", "HoldToAim", function(v)
+        if Storage.AimVirtualBtn then
+            Storage.AimVirtualBtn.Visible = v and Config.States.Aimbot
+        end
+        if not v then
+            Storage.MobileAimHolding = false
+        end
+    end)
     AddToggle(P1, "👻 Silent Aim (Mobile Hook)", "SilentAim")
     AddToggle(P1, "🔮 Smart Prediction", "SmartPrediction")
     AddToggle(P1, "🦴 Auto Aim Part (Head/Torso)", "AutoAimPart")
@@ -1512,6 +1531,48 @@ local function BuildMobileUI()
     P3.CanvasSize = UDim2.new(0, 0, 0, 0)
     P4.CanvasSize = UDim2.new(0, 0, 0, 0)
 
+    -- Floating Virtual Hold-to-Aim Thumb Button [🎯 AIM]
+    local aimBtn = Instance.new("TextButton", ScreenGui)
+    aimBtn.Name = "VirtualAimBtn"
+    aimBtn.Size = UDim2.new(0, 62, 0, 62)
+    aimBtn.Position = UDim2.new(1, -80, 1, -165)
+    aimBtn.BackgroundColor3 = Color3.fromRGB(15, 20, 30)
+    aimBtn.BackgroundTransparency = 0.25
+    aimBtn.Text = "🎯\nAIM"
+    aimBtn.TextColor3 = Config.Theme.Accent
+    aimBtn.Font = Enum.Font.GothamBold
+    aimBtn.TextSize = 13
+    aimBtn.Visible = Config.States.Aimbot and Config.States.HoldToAim
+    aimBtn.Active = true
+    aimBtn.AutoButtonColor = false
+    Instance.new("UICorner", aimBtn).CornerRadius = UDim.new(1, 0)
+    local aimStroke = Instance.new("UIStroke", aimBtn)
+    aimStroke.Color = Config.Theme.Accent
+    aimStroke.Thickness = 2
+    aimStroke.Transparency = 0.2
+
+    aimBtn.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then
+            Storage.MobileAimHolding = true
+            Services.TweenService:Create(aimBtn, TweenInfo.new(0.12), {
+                BackgroundColor3 = Config.Theme.Accent
+            }):Play()
+            aimBtn.TextColor3 = Color3.fromRGB(10, 15, 25)
+            aimStroke.Color = Color3.fromRGB(255, 255, 255)
+        end
+    end)
+    aimBtn.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then
+            Storage.MobileAimHolding = false
+            Services.TweenService:Create(aimBtn, TweenInfo.new(0.15), {
+                BackgroundColor3 = Color3.fromRGB(15, 20, 30)
+            }):Play()
+            aimBtn.TextColor3 = Config.Theme.Accent
+            aimStroke.Color = Config.Theme.Accent
+        end
+    end)
+    Storage.AimVirtualBtn = aimBtn
+
     -- Virtual Touch Fly Controls (▲ / ▼)
     local flyControls = Instance.new("Frame", ScreenGui)
     flyControls.Name = "FlyControls"; flyControls.Size = UDim2.new(0, 64, 0, 130)
@@ -1588,6 +1649,7 @@ local function Unload()
         if Storage.OffscreenArrows[p] then pcall(function() Storage.OffscreenArrows[p]:Remove() end) end
     end
     if Storage.CrosshairLines.H then pcall(function() Storage.CrosshairLines.H:Remove(); Storage.CrosshairLines.V:Remove() end) end
+    if Storage.AimVirtualBtn and Storage.AimVirtualBtn.Parent then pcall(function() Storage.AimVirtualBtn:Destroy() end) end
     for _, lines in pairs(Storage.SkeletonParts) do
         for _, l in pairs(lines) do pcall(function() l:Remove() end) end
     end
@@ -1713,8 +1775,9 @@ local function Init()
 
     -- RenderStepped Loop
     TrackConn(Services.RunService.RenderStepped:Connect(function()
-        -- Mobile Auto-Aim
-        if Config.States.Aimbot then
+        -- Mobile Auto-Aim (Hold-to-Aim & Proximity CQB Boost)
+        local shouldAim = Config.States.Aimbot and (not Config.States.HoldToAim or Storage.MobileAimHolding)
+        if shouldAim then
             local target = Utils.GetClosestTarget()
             if target and target.Parent then
                 local targetPos = target.Position
@@ -1722,7 +1785,15 @@ local function Init()
                 if Config.States.SmartPrediction and root then
                     targetPos = targetPos + (root.AssemblyLinearVelocity * Config.Vals.PredictionStrength)
                 end
-                Camera.CFrame = Camera.CFrame:Lerp(CFrame.lookAt(Camera.CFrame.Position, targetPos), Config.Vals.Smoothness)
+
+                -- CQB Touch Boost: Accelerated tracking when target is within close proximity (< 25 studs)
+                local smooth = Config.Vals.Smoothness
+                local dist = (Camera.CFrame.Position - targetPos).Magnitude
+                if dist < 25 then
+                    smooth = math.clamp(smooth * 1.5, 0.05, 0.95)
+                end
+
+                Camera.CFrame = Camera.CFrame:Lerp(CFrame.lookAt(Camera.CFrame.Position, targetPos), smooth)
             end
         end
 
