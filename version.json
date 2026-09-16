@@ -1,6 +1,6 @@
 {
-  "version": "1.5.0",
+  "version": "1.6.0",
   "name": "Project X-Nexus Executor",
   "download_url": "https://raw.githubusercontent.com/XT-7789/Project-X-Nexus/main/X-Nexus%20Executor.exe",
-  "changelog": "V1.5.0: Select executors directly on the home page with synchronized settings. Clear Not set, Not found, Found and Running statuses; Roblox attachment remains explicitly unverified. Separate Launch executor, Copy script, Open autoexec folder and Save script actions. Launch no longer requires a license key or changes scripts/clipboard. Standalone FPS mode retained."
+  "changelog": "V1.6.0: Custom FPS cap input for whole numbers from 30 to 1000, with existing backup and running-game safeguards. New read-only Quick check for Roblox state, saved FPS, restore-point validity and local Xeno/Solara detection. Diagnostics never launch executors or change settings. Home executor controls and standalone FPS mode retained."
 }
