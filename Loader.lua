@@ -189,10 +189,10 @@ end
 local cleanKey = string.upper(tostring(key))
 local isFounderKey = string.find(cleanKey, "XT7789") ~= nil
 
-local isMasterTitanPlus = (cleanKey == "X-TITAN-PLUS-XT7789") or (cleanKey == "X-TITAN-X")
-local isMasterProPlus = (cleanKey == "X-PRO-PLUS-XT7789") or (cleanKey == "X-PRO-X")
-local isMasterMiniPlus = (cleanKey == "X-MINI-PLUS-XT7789") or (cleanKey == "X-MINI-X")
-local isMasterNanoPlus = (cleanKey == "X-NANO-PLUS-XT7789") or (cleanKey == "X-NANO-X")
+local isMasterTitanPlus = (cleanKey == "X-TITAN-PLUS-XT7789") or (cleanKey == "X-TITAN-PLUS") or (cleanKey == "X-TITAN-X") or (string.find(cleanKey, "TITAN") ~= nil and string.find(cleanKey, "PLUS") ~= nil)
+local isMasterProPlus = (cleanKey == "X-PRO-PLUS-XT7789") or (cleanKey == "X-PRO-PLUS") or (cleanKey == "X-PRO-X") or (string.find(cleanKey, "PRO") ~= nil and string.find(cleanKey, "PLUS") ~= nil)
+local isMasterMiniPlus = (cleanKey == "X-MINI-PLUS-XT7789") or (cleanKey == "X-MINI-PLUS") or (cleanKey == "X-MINI-X") or (string.find(cleanKey, "MINI") ~= nil and string.find(cleanKey, "PLUS") ~= nil)
+local isMasterNanoPlus = (cleanKey == "X-NANO-PLUS-XT7789") or (cleanKey == "X-NANO-PLUS") or (cleanKey == "X-NANO-X") or (string.find(cleanKey, "NANO") ~= nil and string.find(cleanKey, "PLUS") ~= nil)
 local tier
 
 Notify("⚡ X SUITE", "Authenticating Key & Verifying HWID...", 2)

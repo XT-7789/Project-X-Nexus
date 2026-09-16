@@ -168,7 +168,7 @@ local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or
 local upperKey = string.upper(activeKey)
 local isFounder = (upperKey == "X-TITAN-PLUS-XT7789") or (string.find(upperKey, "XT7789") ~= nil)
 local isSeller = (upperKey == "X-TITAN-X")
-local isTitanPlus = isFounder or isSeller
+local isTitanPlus = isFounder or isSeller or (upperKey == "X-TITAN-PLUS") or (string.find(upperKey, "TITAN") ~= nil and string.find(upperKey, "PLUS") ~= nil)
 
 local Utils = {}
 _G.X_TITAN_CURRENT_INSTANCE.Utils = Utils

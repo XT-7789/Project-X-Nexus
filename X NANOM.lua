@@ -271,7 +271,7 @@ local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or
 local upperKey = string.upper(activeKey)
 local isFounder = (upperKey == "X-NANO-PLUS-XT7789") or (string.find(upperKey, "XT7789") ~= nil)
 local isSeller = (upperKey == "X-NANO-X")
-local isNanoPlus = isFounder or isSeller
+local isNanoPlus = isFounder or isSeller or (upperKey == "X-NANO-PLUS") or (string.find(upperKey, "NANO") ~= nil and string.find(upperKey, "PLUS") ~= nil)
 
 -- [TIER 1 & 2] NANO+ PRO-X SILENT AIM ENGINE
 local HasNanoHook = false
