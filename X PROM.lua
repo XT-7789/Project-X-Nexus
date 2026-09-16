@@ -1082,15 +1082,23 @@ local function BuildMobileUI()
     local ScreenGui = Instance.new("ScreenGui", targetGui)
     ScreenGui.Name = uiName; ScreenGui.ResetOnSpawn = false; ScreenGui.IgnoreGuiInset = true
 
-    -- Draggable Floating Bubble [⚡]
+    -- Smooth Touch Draggable Floating Bubble with Magnet Edge Snapping [⚡]
     local Bubble = Instance.new("TextButton", ScreenGui)
-    Bubble.Size = UDim2.new(0, 48, 0, 48); Bubble.Position = UDim2.new(0, 18, 0.4, 0)
+    Bubble.Size = UDim2.new(0, 50, 0, 50); Bubble.Position = UDim2.new(0, 16, 0.45, 0)
     Bubble.BackgroundColor3 = Config.Theme.Main; Bubble.Text = "⚡"; Bubble.TextColor3 = Config.Theme.Accent
-    Bubble.Font = Enum.Font.GothamBold; Bubble.TextSize = 22; Bubble.Active = true; Bubble.Draggable = true
+    Bubble.Font = Enum.Font.GothamBold; Bubble.TextSize = 22; Bubble.Active = true; Bubble.AutoButtonColor = false
     Instance.new("UICorner", Bubble).CornerRadius = UDim.new(1, 0)
     local bubbleStroke = Instance.new("UIStroke", Bubble)
     bubbleStroke.Color = Config.Theme.Accent; bubbleStroke.Thickness = 2
     Storage.MenuBubble = Bubble
+
+    -- Status Glow Indicator Dot (Green = Combat active / Grey = Standby)
+    local StatusDot = Instance.new("Frame", Bubble)
+    StatusDot.Size = UDim2.new(0, 10, 0, 10); StatusDot.Position = UDim2.new(1, -11, 0, 1)
+    StatusDot.BackgroundColor3 = Color3.fromRGB(0, 255, 140)
+    Instance.new("UICorner", StatusDot).CornerRadius = UDim.new(1, 0)
+    local dotStroke = Instance.new("UIStroke", StatusDot)
+    dotStroke.Color = Color3.fromRGB(15, 20, 28); dotStroke.Thickness = 1.5
 
     -- Main Frame
     local Main = Instance.new("Frame", ScreenGui)
@@ -1101,8 +1109,72 @@ local function BuildMobileUI()
     MainStroke.Color = Config.Theme.Accent; MainStroke.Thickness = 1.5; MainStroke.Transparency = 0.3
     Storage.MainFrame = Main
 
+    -- Drag & Magnetic Snap Logic
+    local dragging = false
+    local dragInput, dragStart, startPos
+    local dragThreshold = 8
+    local wasDragged = false
+
+    Bubble.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            wasDragged = false
+            dragStart = input.Position
+            startPos = Bubble.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    Bubble.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    Services.UIS.InputChanged:Connect(function(input)
+        if input == dragInput and dragging and dragStart and startPos then
+            local delta = input.Position - dragStart
+            if delta.Magnitude > dragThreshold then
+                wasDragged = true
+            end
+            Bubble.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+
+    Services.UIS.InputEnded:Connect(function(input)
+        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and dragging then
+            dragging = false
+            if wasDragged then
+                local screenSize = Camera.ViewportSize
+                local currentX = Bubble.AbsolutePosition.X
+                local currentY = Bubble.AbsolutePosition.Y
+                local targetX = (currentX + 25 < screenSize.X / 2) and 16 or (screenSize.X - 66)
+                local targetY = math.clamp(currentY, 40, screenSize.Y - 90)
+
+                Services.TweenService:Create(Bubble, TweenInfo.new(0.28, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                    Position = UDim2.new(0, targetX, 0, targetY)
+                }):Play()
+            end
+        end
+    end)
+
     Bubble.MouseButton1Click:Connect(function()
-        Main.Visible = not Main.Visible
+        if not wasDragged then
+            Main.Visible = not Main.Visible
+            if Main.Visible then
+                Main.Position = UDim2.new(0.5, -245, 0.5, -180)
+            end
+        end
     end)
 
     -- Header

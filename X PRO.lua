@@ -81,7 +81,8 @@ local Config = {
         Tracers = false, Chams = false, Fullbright = false, Crosshair = false,
         Radar = false, HitSound = true, NoRecoil = false,
         Fly = false, LegitFly = false, SpeedHack = false, InfJump = false,
-        Noclip = false, NoFall = false, ClickTP = false, AntiKillbrick = false, ItemESP = false, VehicleBoost = false, DetectUnspawned = true, Wallbang = false
+        Noclip = false, NoFall = false, ClickTP = false, AntiKillbrick = false, ItemESP = false, VehicleBoost = false, DetectUnspawned = true, Wallbang = false,
+        AdaptiveFPS = true
     },
     Vals = {
         FOV = 180, Smoothness = 0.28, PredictionStrength = 0.14,
@@ -97,7 +98,8 @@ local Storage = {
     OriginalLighting = {}, OriginalCollisions = {}, OriginalWalkSpeed = 16,
     LockedTarget = nil, IsRightMouseDown = false, TriggerCooldown = 0,
     RadarGui = nil, RadarFrame = nil, RadarObjects = {}, HitSoundObj = nil,
-    AimParts = {"Head", "Torso", "HumanoidRootPart"}, AimPartIndex = 1, ItemESPObjects = {}, SliderFuncs = {}, CharCache = {}, VisCache = {}, WatermarkLabel = nil
+    AimParts = {"Head", "Torso", "HumanoidRootPart"}, AimPartIndex = 1, ItemESPObjects = {}, SliderFuncs = {}, CharCache = {}, VisCache = {}, WatermarkLabel = nil,
+    LastAdaptiveEspTick = 0
 }
 
 local function TrackConn(c)
@@ -1828,14 +1830,20 @@ local function Init()
             end
         end
 
-        -- ESP, Visuals, Offscreen Arrows (ZERO-LAG GUARDED)
+        -- ESP, Visuals, Offscreen Arrows (ZERO-LAG ADAPTIVE GUARDED)
         local anyESP = Config.States.ESP or Config.States.Tracers or Config.States.OffscreenArrows or Config.States.ESPSkeleton
         if Drawing and anyESP then
-            UpdateSkeletonESP()
+            local nowTick = tick()
+            local isCombatActive = Config.States.Aimbot and (not Config.States.RightClickToggle or Storage.IsRightMouseDown)
+            local shouldThrottle = Config.States.AdaptiveFPS and not isCombatActive and ((nowTick - Storage.LastAdaptiveEspTick) < 0.016)
 
-            local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+            if not shouldThrottle then
+                Storage.LastAdaptiveEspTick = nowTick
+                UpdateSkeletonESP()
 
-            for _, plr in pairs(Services.Players:GetPlayers()) do
+                local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+
+                for _, plr in pairs(Services.Players:GetPlayers()) do
                 local cData = (plr ~= LocalPlayer) and Utils.GetCharacterData(plr)
                 if cData then
                     local root = cData.Root
@@ -1868,6 +1876,17 @@ local function Init()
                             local topPos, topOn = Camera:WorldToViewportPoint((rootCFrame * CFrame.new(0, 2.4, 0)).Position)
                             local bottomPos, bottomOn = Camera:WorldToViewportPoint((rootCFrame * CFrame.new(0, -3.2, 0)).Position)
                             local isVisOnScreen = topOn or bottomOn
+
+                            -- [ADAPTIVE FRUSTUM CULLING]: Instant skip for offscreen players when OffscreenArrows is disabled
+                            if (not isVisOnScreen or topPos.Z <= 0) and not Config.States.OffscreenArrows then
+                                if esp.Box.Visible then
+                                    pcall(function()
+                                        esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false
+                                        if esp.Weapon then esp.Weapon.Visible = false end
+                                    end)
+                                end
+                                continue
+                            end
 
                             if isVisOnScreen and topPos.Z > 0 then
                                 local height = math.abs(topPos.Y - bottomPos.Y)
@@ -2095,6 +2114,7 @@ local function Init()
                         end
                     end
                 end
+            end
             end
 
             -- Crosshair

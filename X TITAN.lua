@@ -88,7 +88,8 @@ local Config = {
 		LegitFly = false, ServerDesync = false, CFrameSpeed = false, Radar = false, ItemESP = false, VehicleBoost = false, VehicleFly = false,
 		WeaponESP = true, OffscreenArrows = false, NoRecoil = false, DetectUnspawned = true,
 		ShowDistance = true, ShowHealth = true, ShowName = true,
-		AimbotFailover = true, BillboardTags = false
+		AimbotFailover = true, BillboardTags = false,
+		AdaptiveFPS = true
 	},
 	Vals = {
 		FOV = 200, OrbitDistance = 8, OrbitSpeed = 8, FlingPower = 100000, WalkSpeed = 150, FlySpeed = 150, HitboxSize = 15, HeadSize = 25,
@@ -138,6 +139,7 @@ local Storage = {
 	LastRadarUpdate = 0,
 	LastHUDUpdate = 0,
 	LastTargetScan = 0,
+	LastAdaptiveEspTick = 0,
 	CachedTargetPart = nil,
 	CachedIsWall = false,
 	CrosshairVisible = false,
@@ -3379,7 +3381,7 @@ function Runtime.Init()
 			end
 		end
 		
-		-- [ZERO-LAG ESP ENGINE] Skip entire loop if visual features are disabled
+		-- [ADAPTIVE ZERO-LAG ESP ENGINE] Skip entire loop if visual features are disabled
 		local anyESP = Config.States.ESP or Config.States.ESPSkeleton or Config.States.Tracers or Config.States.OffscreenArrows
 		if Drawing then
 			if not anyESP then
@@ -3403,7 +3405,13 @@ function Runtime.Init()
 				end
 			else
 				Storage.ESPHidden = false
-				for _, plr in pairs(Services.Players:GetPlayers()) do
+				local nowTick = tick()
+				local isCombatActive = Config.States.Aimbot or Storage.LockedTarget ~= nil or cachedTarget ~= nil
+				local shouldThrottle = Config.States.AdaptiveFPS and not isCombatActive and ((nowTick - Storage.LastAdaptiveEspTick) < 0.016)
+
+				if not shouldThrottle then
+					Storage.LastAdaptiveEspTick = nowTick
+					for _, plr in pairs(Services.Players:GetPlayers()) do
 					if plr == LocalPlayer then continue end
 					local cData = Utils.GetCharacterData(plr)
 					if not cData then continue end
@@ -3436,6 +3444,21 @@ function Runtime.Init()
 					local topPos, topOn = CurrentCam:WorldToViewportPoint((rootCFrame * CFrame.new(0, 2.4, 0)).Position)
 					local bottomPos, bottomOn = CurrentCam:WorldToViewportPoint((rootCFrame * CFrame.new(0, -3.2, 0)).Position)
 					local onScreen = topOn or bottomOn
+
+					-- [ADAPTIVE FRUSTUM CULLING]: Instant skip for offscreen players when OffscreenArrows is disabled
+					if (not onScreen or topPos.Z <= 0) and not Config.States.OffscreenArrows then
+						if esp.Box.Visible then
+							pcall(function()
+								esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
+								if esp.Weapon then esp.Weapon.Visible = false end
+								if Storage.SkeletonParts[plr] then for _, part in pairs(Storage.SkeletonParts[plr]) do if part.Visible then part.Visible = false end end end
+								if Storage.Box3DObjects[plr] then for _, l in pairs(Storage.Box3DObjects[plr]) do if l.Visible then l.Visible = false end end end
+								if Storage.LookRayLines[plr] and Storage.LookRayLines[plr].Visible then Storage.LookRayLines[plr].Visible = false end
+								if Storage.TracerLines[plr] and Storage.TracerLines[plr].Visible then Storage.TracerLines[plr].Visible = false end
+							end)
+						end
+						continue
+					end
 
 					local drawColor = Config.Theme.Stroke
 					if isUnspawned then
@@ -3714,6 +3737,7 @@ function Runtime.Init()
 							if Storage.LookRayLines[plr] and Storage.LookRayLines[plr].Visible then Storage.LookRayLines[plr].Visible = false end
 						end)
 					end
+				end
 				end
 			end
 		end
