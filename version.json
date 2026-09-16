@@ -1,6 +1,6 @@
 {
-  "version": "1.4.0",
+  "version": "1.5.0",
   "name": "Project X-Nexus Executor",
   "download_url": "https://raw.githubusercontent.com/XT-7789/Project-X-Nexus/main/X-Nexus%20Executor.exe",
-  "changelog": "V1.4.0: Desktop-only Standard and X LITE scripts; previous LITEM selection migrates to LITE. Custom executor selection with saved executable and optional existing autoexec folder, clipboard-only support, explicit launch, and accurate attachment status guidance. Standalone FPS mode remains available."
+  "changelog": "V1.5.0: Select executors directly on the home page with synchronized settings. Clear Not set, Not found, Found and Running statuses; Roblox attachment remains explicitly unverified. Separate Launch executor, Copy script, Open autoexec folder and Save script actions. Launch no longer requires a license key or changes scripts/clipboard. Standalone FPS mode retained."
 }
