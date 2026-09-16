@@ -1,11 +1,24 @@
--- [[ X SUITE - UNIVERSAL CLOUD LOADER V2.0.1 ]]
+-- [[ X SUITE - UNIVERSAL CLOUD LOADER V2.0.2 ]]
 -- Official Discord: https://discord.gg/mQ3ASbfP8j | Seller: vlilayz | Dev: XT-7789
--- Supported: Delta (Mobile iOS & Android Exclusive) / Xeno / Solara (PC)
+-- Multi-Executor Support: Delta (iOS / Android), Codex, Arceus X, Wave, Solara, Celery
 -- ==================================================================
 -- USAGE:
 -- getgenv().Key = "YOUR_KEY_HERE"
 -- loadstring(game:HttpGet("https://raw.githubusercontent.com/XT-7789/Project-X-Nexus/main/Loader.lua"))()
 -- ==================================================================
+
+-- Anti-Duplication Execution Guard
+if getgenv()._X_LOADER_INITIALIZING then
+	pcall(function()
+		game:GetService("StarterGui"):SetCore("SendNotification", {
+			Title = "⚡ X SUITE",
+			Text = "Loader is already initializing. Please wait...",
+			Duration = 3
+		})
+	end)
+	return
+end
+getgenv()._X_LOADER_INITIALIZING = true
 
 local Services = {
 	Players = game:GetService("Players"),
@@ -26,6 +39,32 @@ local function Notify(title, text, dur)
 		})
 	end)
 end
+
+-- ==================================================================
+-- EXECUTOR ENVIRONMENT & CAPABILITY DIAGNOSTICS
+-- ==================================================================
+local function DetectExecutor()
+	local name = "Standard Executor"
+	local ver = ""
+	if type(identifyexecutor) == "function" then
+		local s, n, v = pcall(identifyexecutor)
+		if s and n then
+			name = tostring(n)
+			if v then ver = tostring(v) end
+		end
+	elseif type(getexecutorname) == "function" then
+		local s, n = pcall(getexecutorname)
+		if s and n then name = tostring(n) end
+	end
+	return name, ver
+end
+
+local execName, execVer = DetectExecutor()
+local execLabel = execName .. (execVer ~= "" and (" " .. execVer) or "")
+local hasDrawing = (type(Drawing) == "table" and type(Drawing.new) == "function")
+local hasHook = (type(hookmetamethod) == "function" and type(getnamecallmethod) == "function")
+local isMobile = Services.UIS.TouchEnabled and not Services.UIS.KeyboardEnabled
+
 local targetGui
 if type(gethui) == "function" then pcall(function() targetGui = gethui() end) end
 if not targetGui then targetGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui", 5) end
@@ -44,8 +83,8 @@ if targetGui then
 		sg.Parent = targetGui
 
 		local card = Instance.new("Frame", sg)
-		card.Size = UDim2.new(0, 320, 0, 72)
-		card.Position = UDim2.new(0.5, -160, 0.15, 0)
+		card.Size = UDim2.new(0, 340, 0, 74)
+		card.Position = UDim2.new(0.5, -170, 0.15, 0)
 		card.BackgroundColor3 = Color3.fromRGB(14, 15, 22)
 		Instance.new("UICorner", card).CornerRadius = UDim.new(0, 8)
 		local st = Instance.new("UIStroke", card)
@@ -57,7 +96,7 @@ if targetGui then
 		title.Size = UDim2.new(1, -20, 0, 20)
 		title.Position = UDim2.new(0, 10, 0, 8)
 		title.BackgroundTransparency = 1
-		title.Text = "⚡ PROJECT X NEXUS | CLOUD LOADER V2.0.1"
+		title.Text = "⚡ PROJECT X NEXUS | CLOUD LOADER V2.0.2"
 		title.TextColor3 = Color3.fromRGB(0, 230, 255)
 		title.Font = Enum.Font.GothamBold
 		title.TextSize = 12
@@ -67,7 +106,7 @@ if targetGui then
 		splashStatus.Size = UDim2.new(1, -20, 0, 16)
 		splashStatus.Position = UDim2.new(0, 10, 0, 30)
 		splashStatus.BackgroundTransparency = 1
-		splashStatus.Text = "Connecting to Cloud Auth..."
+		splashStatus.Text = "Detected: " .. tostring(execName) .. " | Connecting..."
 		splashStatus.TextColor3 = Color3.fromRGB(180, 190, 210)
 		splashStatus.Font = Enum.Font.GothamMedium
 		splashStatus.TextSize = 11
@@ -75,7 +114,7 @@ if targetGui then
 
 		local barBg = Instance.new("Frame", card)
 		barBg.Size = UDim2.new(1, -20, 0, 4)
-		barBg.Position = UDim2.new(0, 10, 0, 52)
+		barBg.Position = UDim2.new(0, 10, 0, 54)
 		barBg.BackgroundColor3 = Color3.fromRGB(28, 30, 42)
 		Instance.new("UICorner", barBg).CornerRadius = UDim.new(1, 0)
 
@@ -135,6 +174,12 @@ local function CloseSplash()
 	end)
 end
 
+local function SafeAbort(title, msg, dur)
+	getgenv()._X_LOADER_INITIALIZING = false
+	CloseSplash()
+	Notify(title, msg, dur or 5)
+	warn("[X SUITE] " .. title .. ": " .. msg)
+end
 
 local function GetHWID()
 	if type(gethwid) == "function" then
@@ -180,9 +225,7 @@ end
 local key = getgenv().Key or getgenv().ScriptKey or script_key
 
 if not key or key == "" or key == "PASTE_YOUR_KEY_HERE" or key == "YOUR_KEY_HERE" then
-	CloseSplash()
-	Notify("❌ X SUITE", "Key Required! Join: https://discord.gg/mQ3ASbfP8j", 5)
-	warn("[X SUITE] Error: Key required! Purchase from Discord: https://discord.gg/mQ3ASbfP8j (Seller: vlilayz)")
+	SafeAbort("❌ KEY REQUIRED", "Key Required! Join: https://discord.gg/mQ3ASbfP8j", 5)
 	return
 end
 
@@ -209,9 +252,7 @@ end)
 print("📡 [X SUITE AUTH] Cloud Server Response: " .. tostring(response))
 
 if not success or not response then
-	CloseSplash()
-	Notify("❌ X SUITE", "Connection Error! Could not reach Auth Server.", 4)
-	warn("[X SUITE] Connection Error: " .. tostring(response))
+	SafeAbort("❌ CONNECTION ERROR", "Could not reach Auth Server.", 4)
 	return
 end
 
@@ -220,15 +261,12 @@ local ok, data = pcall(function()
 end)
 
 if not ok or not data then
-	CloseSplash()
-	Notify("❌ X SUITE", "Invalid response from Auth Server.", 4)
+	SafeAbort("❌ AUTH ERROR", "Invalid response from Auth Server.", 4)
 	return
 end
 
 if not data.success then
-	CloseSplash()
-	Notify("❌ AUTH FAILED", data.message or "Authentication failed.", 5)
-	warn("[X SUITE] Auth Error: " .. tostring(data.message))
+	SafeAbort("❌ AUTH FAILED", data.message or "Authentication failed.", 5)
 	return
 end
 
@@ -248,9 +286,15 @@ end
 getgenv()._X_AUTH_TOKEN = "X_NEXUS_VERIFIED_7789"
 
 local repo = "https://raw.githubusercontent.com/XT-7789/Project-X-Nexus/main/"
-local isMobile = Services.UIS.TouchEnabled and not Services.UIS.KeyboardEnabled
 Notify("✅ SUCCESS", "Welcome! Loading X " .. tostring(tier) .. "...", 3)
 UpdateSplash("Access Granted! Fetching X " .. tostring(tier) .. "...", 0.85)
+
+print("==========================================")
+print("⚡ [PROJECT X NEXUS] ENVIRONMENT REPORT")
+print("💻 Executor: " .. tostring(execLabel))
+print("🎨 Drawing Engine: " .. (hasDrawing and "Available [OK]" or "Unavailable [Basic Mode]"))
+print("🪝 Hook Engine: " .. (hasHook and "Available [OK]" or "Basic Mode [OK]"))
+print("📱 Device: " .. (isMobile and "Mobile Touch Device" or "Desktop / PC"))
 print("==========================================")
 print("✅ [PROJECT X NEXUS] ACCESS GRANTED")
 if isMasterTitanPlus then
@@ -292,6 +336,7 @@ local function ExecuteRemote(scriptUrl, tierLabel)
 	task.delay(0.5, CloseSplash)
 	local code = SafeHttpGet(scriptUrl)
 	if not code or code == "" then
+		getgenv()._X_LOADER_INITIALIZING = false
 		CloseSplash()
 		Notify("❌ DOWNLOAD FAILED", "Could not fetch script from server.", 5)
 		warn("[X SUITE] Network error: Failed to download script: " .. tostring(scriptUrl))
@@ -299,11 +344,13 @@ local function ExecuteRemote(scriptUrl, tierLabel)
 	end
 	local fn, compileErr = loadstring(code)
 	if not fn then
+		getgenv()._X_LOADER_INITIALIZING = false
 		CloseSplash()
 		Notify("❌ COMPILE ERROR", "Script compilation failed: " .. tostring(compileErr), 7)
 		warn("[X SUITE] Compilation Error: " .. tostring(compileErr))
 		return
 	end
+	getgenv()._X_LOADER_INITIALIZING = false
 	local ok, runErr = pcall(fn)
 	if not ok then
 		Notify("❌ RUNTIME ERROR", "Script runtime error: " .. tostring(runErr), 7)
