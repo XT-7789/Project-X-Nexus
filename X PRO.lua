@@ -1,16 +1,49 @@
 -- [[ PROJECT X NEXUS - PROTECTED DISTRIBUTION ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
-local _0xAUTH = getgenv()._X_AUTH_TOKEN
-local _0xKEY = getgenv().Key or getgenv().ScriptKey or script_key
-if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
+-- Security Protocol: Ephemeral Dynamic Session Handshake (V2.0.3)
+local _rawSession = getgenv()._X_AUTH_SESSION
+getgenv()._X_AUTH_SESSION = nil
+getgenv()._X_AUTH_TOKEN = nil
+
+local function _deny(reason)
     pcall(function()
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "❌ ACCESS DENIED",
-            Text = "Direct execution blocked! Please use Loader.lua with a valid key. Contact Discord: vlilayz",
+            Text = "Direct execution blocked! (" .. tostring(reason) .. ") Please execute via Loader.lua",
             Duration = 6
         })
     end)
-    warn("[X SUITE] Security Alert: Direct loadstring blocked! You must purchase a key and use Loader.lua")
+    warn("[X SUITE] Security Alert: " .. tostring(reason) .. " - Direct loadstring blocked!")
+end
+
+if type(_rawSession) ~= "table" then
+    _deny("Missing Auth Session")
+    return
+end
+
+local _ts = tonumber(_rawSession.Timestamp)
+local _k = tostring(_rawSession.Key or "")
+local _h = tostring(_rawSession.HWID or "")
+local _n = tostring(_rawSession.Nonce or "")
+local _sig = tostring(_rawSession.Signature or "")
+
+local _now = math.floor(tick())
+if not _ts or math.abs(_now - _ts) > 30 then
+    _deny("Session Expired")
+    return
+end
+
+local function _hash(s)
+    local h = 5381
+    for i = 1, #s do
+        h = ((h * 33) + string.byte(s, i)) % 2147483647
+    end
+    return string.format("%08x", h)
+end
+
+local _expectedSig = _hash(tostring(_ts) .. ":" .. _k .. ":" .. _h .. ":" .. _n .. ":XT7789_NEXUS_SECURITY_SALT_2026")
+if _sig ~= _expectedSig then
+    _deny("Invalid Signature")
     return
 end
 

@@ -1,6 +1,7 @@
--- [[ X SUITE - UNIVERSAL CLOUD LOADER V2.0.2 ]]
+-- [[ X SUITE - UNIVERSAL CLOUD LOADER V2.0.3 ]]
 -- Official Discord: https://discord.gg/mQ3ASbfP8j | Seller: vlilayz | Dev: XT-7789
 -- Multi-Executor Support: Delta (iOS / Android), Codex, Arceus X, Wave, Solara, Celery
+-- Dynamic Ephemeral Session Handshake & safeCloneRef Metamethod Defense
 -- ==================================================================
 -- USAGE:
 -- getgenv().Key = "YOUR_KEY_HERE"
@@ -20,12 +21,13 @@ if getgenv()._X_LOADER_INITIALIZING then
 end
 getgenv()._X_LOADER_INITIALIZING = true
 
+local safeCloneRef = (type(cloneref) == "function" and cloneref) or function(o) return o end
 local Services = {
-	Players = game:GetService("Players"),
-	HttpService = game:GetService("HttpService"),
-	StarterGui = game:GetService("StarterGui"),
-	UIS = game:GetService("UserInputService"),
-	TweenService = game:GetService("TweenService")
+	Players = safeCloneRef(game:GetService("Players")),
+	HttpService = safeCloneRef(game:GetService("HttpService")),
+	StarterGui = safeCloneRef(game:GetService("StarterGui")),
+	UIS = safeCloneRef(game:GetService("UserInputService")),
+	TweenService = safeCloneRef(game:GetService("TweenService"))
 }
 
 local LocalPlayer = Services.Players.LocalPlayer
@@ -96,7 +98,7 @@ if targetGui then
 		title.Size = UDim2.new(1, -20, 0, 20)
 		title.Position = UDim2.new(0, 10, 0, 8)
 		title.BackgroundTransparency = 1
-		title.Text = "⚡ PROJECT X NEXUS | CLOUD LOADER V2.0.2"
+		title.Text = "⚡ PROJECT X NEXUS | CLOUD LOADER V2.0.3"
 		title.TextColor3 = Color3.fromRGB(0, 230, 255)
 		title.Font = Enum.Font.GothamBold
 		title.TextSize = 12
@@ -243,7 +245,8 @@ UpdateSplash("Verifying HWID & Cloud Key...", 0.45)
 
 local hwid = GetHWID()
 print("🔑 [X SUITE AUTH] Verifying Key: " .. tostring(key) .. " | Device HWID: " .. tostring(hwid))
-local verifyUrl = "https://x-auth.alex-x-7789-x.workers.dev/verify?key=" .. tostring(key) .. "&hwid=" .. tostring(hwid)
+local reqNonce = string.format("%d_%d", math.floor(tick()), math.random(100000, 999999))
+local verifyUrl = "https://x-auth.alex-x-7789-x.workers.dev/verify?key=" .. tostring(key) .. "&hwid=" .. tostring(hwid) .. "&nonce=" .. reqNonce .. "&_t=" .. tostring(math.floor(tick()))
 
 local success, response = pcall(function()
 	return game:HttpGet(verifyUrl)
@@ -282,8 +285,30 @@ elseif isMasterNanoPlus then
 	Notify(isFounderKey and "👑 X NANO+ FOUNDER" or "💎 X NANO+ PRIVILEGED", "Nano+ Silent Aim & 400 FOV Unlocked.", 3)
 end
 
--- Set one-time security authentication token for guarded scripts
-getgenv()._X_AUTH_TOKEN = "X_NEXUS_VERIFIED_7789"
+-- ==================================================================
+-- EPHEMERAL DYNAMIC SESSION HANDSHAKE (ANTI-REPLAY & SELF-DESTRUCT)
+-- ==================================================================
+local function ComputeHandshakeSig(ts, k, h, n)
+	local combined = tostring(ts) .. ":" .. tostring(k) .. ":" .. tostring(h) .. ":" .. tostring(n) .. ":XT7789_NEXUS_SECURITY_SALT_2026"
+	local hash = 5381
+	for i = 1, #combined do
+		hash = ((hash * 33) + string.byte(combined, i)) % 2147483647
+	end
+	return string.format("%08x", hash)
+end
+
+local sessionTimestamp = math.floor(tick())
+local sessionNonce = tostring(math.random(100000, 999999))
+local sessionSig = ComputeHandshakeSig(sessionTimestamp, key, hwid, sessionNonce)
+
+getgenv()._X_AUTH_SESSION = {
+	Timestamp = sessionTimestamp,
+	Key = tostring(key),
+	HWID = tostring(hwid),
+	Nonce = sessionNonce,
+	Signature = sessionSig
+}
+getgenv()._X_AUTH_TOKEN = sessionSig
 
 local repo = "https://raw.githubusercontent.com/XT-7789/Project-X-Nexus/main/"
 Notify("✅ SUCCESS", "Welcome! Loading X " .. tostring(tier) .. "...", 3)
