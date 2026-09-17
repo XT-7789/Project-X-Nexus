@@ -1,7 +1,7 @@
 {
-  "version": "1.10.1",
+  "version": "1.11.0",
   "name": "Project X-Nexus Executor",
   "download_url": "https://raw.githubusercontent.com/XT-7789/Project-X-Nexus/main/X-Nexus%20Executor.exe",
-  "zip_url": "https://raw.githubusercontent.com/XT-7789/Project-X-Nexus/main/X-Nexus-Executor-1.10.1.zip",
-  "changelog": "V1.10.1: Portable ZIP package added with the application, quick-start guide and executable SHA-256 checksum. The automatic updater continues to use the standalone executable. Includes the display-aware FPS shortcuts, 60-second CPU and memory charts, and optional five-minute PC usage recording from V1.10.0. Actual game FPS is not measured."
+  "zip_url": "https://raw.githubusercontent.com/XT-7789/Project-X-Nexus/main/X-Nexus-Executor-1.11.0.zip",
+  "changelog": "V1.11.0: New Capture tab. Record Roblox video through Windows Game Bar and open the Windows Captures folder from X-Nexus. Capture up to five minutes of actual displayed-frame data with the verified Intel PresentMon 2.5.1 helper; see average FPS, sampled 1% low and peak FPS, while retaining the raw local CSV. The portable ZIP includes PresentMon, its MIT License, setup notes and SHA-256 checksums. Nothing is uploaded by X-Nexus."
 }
