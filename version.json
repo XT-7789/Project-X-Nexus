@@ -1,6 +1,6 @@
 {
-  "version": "1.7.0",
+  "version": "1.8.0",
   "name": "Project X-Nexus Executor",
   "download_url": "https://raw.githubusercontent.com/XT-7789/Project-X-Nexus/main/X-Nexus%20Executor.exe",
-  "changelog": "V1.7.0: Live system CPU and physical-memory panel, sampled every two seconds while visible and paused when hidden. Local activity history retains the latest 200 actions with safe failure explanations, copy and clear controls; keys, script contents and raw exception text are never recorded. Existing FPS and executor workflows retained."
+  "changelog": "V1.8.0: Hardware details on the Performance page: processor name, Windows display-adapter names, and connected-screen resolutions and current refresh rates. Read-only Refresh control, multiple-display support and explicit unavailable values. Display refresh rate remains separate from game FPS; live usage and private activity history are retained."
 }
