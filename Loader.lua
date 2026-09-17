@@ -357,11 +357,11 @@ print("📱 Device: " .. (isMobile and "Mobile Touch Device" or "Desktop / PC"))
 print("==========================================")
 print("✅ [PROJECT X NEXUS] ACCESS GRANTED")
 if cleanTier == "titan" then
-	print("👑 X TITAN V6.3.0 [APEX OMNI] LOADED")
+	print("👑 X TITAN V6.4.0 [APEX OMNI] LOADED")
 elseif cleanTier == "prom" then
-	print("📱 X PROM V3.7.5 [DELTA EDITION] LOADED")
+	print("📱 X PROM V4.0.0 [DELTA EDITION] LOADED")
 elseif cleanTier == "pro" then
-	print(isMobile and "📱 X PROM V3.7.5 [DELTA EDITION] LOADED" or "⚡ X PRO V3.7.5 LOADED")
+	print(isMobile and "📱 X PROM V4.0.0 [DELTA EDITION] LOADED" or "⚡ X PRO V4.0.0 LOADED")
 elseif cleanTier == "minim" then
 	print("📱 X MINIM V4.2.2 [DELTA EDITION] LOADED")
 elseif cleanTier == "mini" then
@@ -412,11 +412,11 @@ end
 
 local targetDisplayName = "X " .. string.upper(tostring(data.tier))
 if cleanTier == "titan" then
-	targetDisplayName = "X TITAN V6.3.0"
+	targetDisplayName = "X TITAN V6.4.0"
 elseif cleanTier == "prom" or (cleanTier == "pro" and isMobile) then
-	targetDisplayName = "X PROM V3.7.5"
+	targetDisplayName = "X PROM V4.0.0"
 elseif cleanTier == "pro" then
-	targetDisplayName = "X PRO V3.7.5"
+	targetDisplayName = "X PRO V4.0.0"
 elseif cleanTier == "minim" or (cleanTier == "mini" and isMobile) then
 	targetDisplayName = "X MINIM V4.2.2"
 elseif cleanTier == "mini" then
