@@ -1,6 +1,9 @@
--- [[ PROJECT X NEXUS - PROTECTED DISTRIBUTION ]]
+-- [[ PROJECT X NEXUS - X TITAN V6.3.0 ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
 -- Security Protocol: Ephemeral Dynamic Session Handshake (V2.0.3)
+-- Protected Distribution: Dynamic Bytecode Stream (Anti-Tamper & Anti-Leak)
+-- Multi-Executor Support: Delta (iOS/Android), Codex, Arceus X, Wave, Solara, Celery
+
 local _rawSession = getgenv()._X_AUTH_SESSION
 getgenv()._X_AUTH_SESSION = nil
 getgenv()._X_AUTH_TOKEN = nil
@@ -47,4390 +50,3265 @@ if _sig ~= _expectedSig then
     return
 end
 
--- [[ X TITAN V6.3.0 - GEN-6 TITAN GOD (APEX OMNI) ]]
--- Founder & Developer: XT-7789 | Official Seller: vlilayz
--- P1: Sticky Track & Hysteresis Lock (Target Switching Anti-Jitter)
--- P2: Frame-Rate Independent DeltaTime Exponential Damped Smoothing
--- P3: Target Visibility Status HUD Indicator ([LOCKED] / [OCCLUDED])
--- P4: cloneref Anti-Detection Metamethod & Synchronized Hitmarkers
--- ==============================================================================
-if _G.X_TITAN_INSTANCE then
-	pcall(function()
-		if _G.X_TITAN_INSTANCE.Runtime and _G.X_TITAN_INSTANCE.Runtime.Unload then
-			_G.X_TITAN_INSTANCE.Runtime.Unload()
-		elseif _G.X_TITAN_INSTANCE.Storage then
-			local s = _G.X_TITAN_INSTANCE.Storage
-			s.IsUnloaded = true
-			for _, l in pairs(s.Loops or {}) do pcall(function() task.cancel(l) end) end
-			for _, c in pairs(s.Connections or {}) do pcall(function() c:Disconnect() end) end
-		end
-	end)
-	task.wait(0.05)
-end
-local safeCloneRef = (type(cloneref) == "function" and cloneref) or function(o) return o end
-local Services = {
-	Players = safeCloneRef(game:GetService("Players")),
-	RunService = safeCloneRef(game:GetService("RunService")),
-	UIS = safeCloneRef(game:GetService("UserInputService")),
-	Lighting = safeCloneRef(game:GetService("Lighting")),
-	TweenService = safeCloneRef(game:GetService("TweenService")),
-	Workspace = safeCloneRef(game:GetService("Workspace")),
-	StarterGui = safeCloneRef(game:GetService("StarterGui")),
-	SoundService = safeCloneRef(game:GetService("SoundService")),
-	Stats = safeCloneRef(game:GetService("Stats")),
-	HttpService = safeCloneRef(game:GetService("HttpService"))
-}
-local LocalPlayer = Services.Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
-if not game:IsLoaded() then game.Loaded:Wait() end
-
-local targetGui
-if type(gethui) == "function" then
-    pcall(function() targetGui = gethui() end)
-end
-if not targetGui then
-    targetGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui", 10)
-end
-if not targetGui then
-    pcall(function() targetGui = LocalPlayer:WaitForChild("PlayerGui") end)
-end
-if not targetGui then warn("X SUITE: GUI Target failed!") return end
-
--- ==============================================================================
--- CONFIGURATION & STORAGE (V6.3.0)
--- ==============================================================================
-local Config = {
-	Keys = {
-		Menu = Enum.KeyCode.Insert, Fly = Enum.KeyCode.Z, Noclip = Enum.KeyCode.V,
-		Trigger = Enum.KeyCode.T, DestroyMap = Enum.KeyCode.P, Hide = Enum.KeyCode.X,
-		RestoreMap = Enum.KeyCode.L, TacticalTP = Enum.KeyCode.B,
-		ToggleLockMenu = Enum.KeyCode.LeftAlt, Unload = Enum.KeyCode.End,
-		LockTarget = Enum.KeyCode.F
-	},
-	Theme = {
-		Main = Color3.fromRGB(10, 10, 15), Sec = Color3.fromRGB(20, 20, 25),
-		Stroke = Color3.fromRGB(0, 255, 255), Team = Color3.fromRGB(0, 255, 100),
-		Text = Color3.fromRGB(255, 255, 255), TextDim = Color3.fromRGB(150, 150, 150),
-		LockColor = Color3.fromRGB(255, 50, 50), WallColor = Color3.fromRGB(255, 200, 0),
-		ThreatHigh = Color3.fromRGB(255, 40, 40), ThreatMed = Color3.fromRGB(255, 180, 0), ThreatLow = Color3.fromRGB(40, 255, 100)
-	},
-	States = {
-		Aimbot = false, SilentAim = false, HeadExpander = false, Hitbox = false,
-		TriggerBot = false, TeamCheck = true, WallCheck = false,
-		ESP = false, ESP3D = false, ESPSkeleton = false, ESPLookRay = false, MultiBoneAim = true, Tracers = false, Resolver = true, VisibilityCheck = false, Chams = false,
-		XRay = false, Fullbright = false, Crosshair = false, DynamicCrosshair = true,
-		Fly = false, SpeedHack = false, InfJump = false, Noclip = false, NoFall = false,
-		AntiKillbrick = false, AntiVoid = true, HitSound = true, TouchFling = false, TargetFling = false, AntiFling = true, Wallbang = true, OrbitAura = false, ClickTP = false, SkyHide = false, MapDestroyer = false,
-		KillAura = false, TPAura = false, Desync = false, AntiAimSpin = false, AntiAimHeadJitter = false,
-		RightClickToggle = true, ShowFOV = false, TacticalLock = false,
-		ShowLockStatus = true, SmartPrediction = true, AutoAimPart = false,
-		LegitFly = false, ServerDesync = false, CFrameSpeed = false, Radar = false, ItemESP = false, VehicleBoost = false, VehicleFly = false,
-		WeaponESP = true, OffscreenArrows = false, NoRecoil = false, DetectUnspawned = true,
-		ShowDistance = true, ShowHealth = true, ShowName = true,
-		AimbotFailover = true, BillboardTags = false,
-		AdaptiveFPS = true, Hitmarker = true, StickyAim = true, TargetStatus = true
-	},
-	Vals = {
-		FOV = 200, OrbitDistance = 8, OrbitSpeed = 8, FlingPower = 100000, WalkSpeed = 150, FlySpeed = 150, HitboxSize = 15, HeadSize = 25,
-		AimbotSmoothness = 0.3, PredictionStrength = 0.16, DesyncPower = 5,
-		AuraRange = 25, TPBehindDist = 4, TriggerDelay = 0.15,
-		AntiAimSpinSpeed = 10, AntiAimJitterRadius = 5, AimPart = "Head",
-		Deadzone = 5, PingCompensation = 0.05, RadarRange = 100, LegitFlySmooth = 0.1, VehicleSpeed = 180,
-		ESPRefreshRate = 0.3, ESPBoxThickness = 1.5, ESPTextSize = 13, ItemScanInterval = 1.5, TracerOrigin = "Bottom",
-		AimbotPlan = "Auto", ESPEngine = "Auto",
-		TargetPriority = "Crosshair", HitSoundPreset = "Neverlose", StickyFOVMult = 1.35, StickyGrace = 0.25, StickyHysteresis = 2500
-	}
-}
-
-local Storage = {
-	Checkpoints = {P1=nil, P2=nil, P3=nil},
-	ESPObjects = {}, SkeletonParts = {}, Box3DObjects = {}, LookRayLines = {}, OffscreenDistTexts = {}, TracerLines = {},
-	ToggleFuncs = {}, FOVRingUI = nil, MainFrame = nil,
-	RealVelocity = Vector3.zero, RealCFrame = nil,
-	OriginalLighting = {}, HitboxLastUpdate = 0,
-	AuraTarget = nil, CurrentSpectate = nil, SnapPlayer = nil,
-	LockedTarget = nil, IsHiding = false, HideCFrame = nil,
-	DestroyedParts = {}, MapStorageFolder = nil, ItemESPObjects = {},
-	AimParts = {"Head", "Torso", "HumanoidRootPart"}, AimPartIndex = 1,
-	PlayerListFrame = nil, Connections = {}, Loops = {},
-	TriggerBotCooldown = 0,
-	LastTargetVel = {}, LastTargetTick = {},
-	OffscreenArrows = {},
-	RadarObjects = {}, RadarGui = nil, RadarFrame = nil,
-	TacticalHUD = nil, CurrentHPRatio = 0,
-	CrosshairLines = {Top=nil, Bottom=nil, Left=nil, Right=nil},
-	HitmarkerLines = {TL=nil, TR=nil, BL=nil, BR=nil},
-	HitmarkerAlpha = 0,
-	StickyTarget = nil,
-	StickyTargetPart = nil,
-	StickyLostTick = 0,
-	TargetStatusDrawing = nil,
-	MenuDebounce = false, ActiveSlider = nil, SliderDrag = false,
-	OriginalWalkSpeed = 16,
-	OriginalFallenHeight = -500,
-	HookActive = false,
-	HookOldNamecall = nil,
-	IsUnloaded = false,
-	RootAttachmentOwned = false,
-	WalkSpeedSnapshotPending = false,
-	LastSafeCFrame = nil,
-	HitSoundObj = nil,
-	PlayerCache = {},
-	ESPHidden = false,
-	NoCollideActive = false,
-	NoTouchActive = false,
-	LastRadarUpdate = 0,
-	LastHUDUpdate = 0,
-	LastTargetScan = 0,
-	LastAdaptiveEspTick = 0,
-	CachedTargetPart = nil,
-	CachedIsWall = false,
-	CrosshairVisible = false,
-	CharCache = {},
-	VisCache = {},
-	NativePlayerTags = {},
-	AimbotCameraOverrideCount = 0, CameraOverrideDetected = false, DrawingBroken = false,
-	AimbotPlans = {"Auto", "Plan A (Camera)", "Plan B (MouseMove)", "Plan C (Silent)"}, AimbotPlanIndex = 1,
-	ESPEngines = {"Auto", "Plan A (Drawing)", "Plan B (3D Chams)", "Plan C (Billboard)"}, ESPEngineIndex = 1,
-	TargetPriorities = {"Crosshair", "LowestHP", "Distance3D", "Threat"}, TargetPriorityIndex = 1,
-	HitSoundPresets = {"Neverlose", "Skeet", "Rust", "Ding", "Pop"}, HitSoundIndex = 1
-}
-
-_G.X_TITAN_CURRENT_INSTANCE = {
-	Config = Config,
-	Storage = Storage,
-	Utils = nil,
-	Features = nil
-}
-
--- ==============================================================================
--- UTILITIES (V6.3.0)
--- ==============================================================================
--- ==============================================================================
--- KEY & FOUNDER AUTHENTICATION (TITAN+ PRO-X APEX)
--- ==============================================================================
-local activeKey = tostring(getgenv().Key or getgenv().ScriptKey or script_key or "")
-local upperKey = string.upper(activeKey)
-local isFounder = (upperKey == "X-TITAN-PLUS-XT7789") or (string.find(upperKey, "XT7789") ~= nil)
-local isSeller = (upperKey == "X-TITAN-X")
-local isTitanPlus = isFounder or isSeller
-
-local Utils = {}
-_G.X_TITAN_CURRENT_INSTANCE.Utils = Utils
-
-local NotifyStorage = {
-	Container = nil,
-	ActiveCards = {}
-}
-
-local function InitNotifyContainer()
-	if NotifyStorage.Container and NotifyStorage.Container.Parent then return NotifyStorage.Container end
-	local gui = targetGui:FindFirstChild("X_NOTIFICATIONS")
-	if not gui then
-		gui = Instance.new("ScreenGui")
-		gui.Name = "X_NOTIFICATIONS"
-		gui.ResetOnSpawn = false
-		gui.IgnoreGuiInset = true
-		gui.DisplayOrder = 999999
-		gui.Parent = targetGui
-	end
-	
-	local frame = gui:FindFirstChild("NotifyList")
-	if not frame then
-		frame = Instance.new("Frame")
-		frame.Name = "NotifyList"
-		frame.Size = UDim2.new(0, 260, 1, -20)
-		frame.Position = UDim2.new(1, -270, 0, 10)
-		frame.BackgroundTransparency = 1
-		local list = Instance.new("UIListLayout", frame)
-		list.FillDirection = Enum.FillDirection.Vertical
-		list.VerticalAlignment = Enum.VerticalAlignment.Bottom
-		list.HorizontalAlignment = Enum.HorizontalAlignment.Right
-		list.Padding = UDim.new(0, 8)
-		frame.Parent = gui
-	end
-	NotifyStorage.Container = frame
-	return frame
-end
-
-function Utils.Notify(title, text, dur)
-	dur = dur or 2.5
-	local ok, container = pcall(InitNotifyContainer)
-	if not ok or not container then
-		pcall(function() print("[" .. tostring(title) .. "] " .. tostring(text)) end)
-		return
-	end
-
-	-- De-duplicate / update existing notification with same title smoothly
-	if NotifyStorage.ActiveCards[title] then
-		local cardData = NotifyStorage.ActiveCards[title]
-		if cardData.Card and cardData.Card.Parent then
-			cardData.Desc.Text = tostring(text)
-			cardData.Expiry = tick() + dur
-			if cardData.ProgressBar then
-				cardData.ProgressBar.Size = UDim2.new(1, 0, 0, 2)
-				Services.TweenService:Create(cardData.ProgressBar, TweenInfo.new(dur, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 0, 2)}):Play()
-			end
-			local flashColor = (string.find(text, "CLOSED") or string.find(text, "DISABLED")) and Color3.fromRGB(255, 80, 80) or Color3.fromRGB(0, 220, 255)
-			Services.TweenService:Create(cardData.Stroke, TweenInfo.new(0.12), {Color = flashColor}):Play()
-			Services.TweenService:Create(cardData.Bar, TweenInfo.new(0.12), {BackgroundColor3 = flashColor}):Play()
-			return
-		end
-	end
-
-	-- Color palette based on context
-	local accent = (Config.Theme and (Config.Theme.Stroke or Config.Theme.Accent)) or Color3.fromRGB(0, 220, 255)
-	if string.find(title, "❌") or string.find(text, "CLOSED") or string.find(title, "Unload") or string.find(text, "DISABLED") or string.find(text, "Descent") then
-		accent = Color3.fromRGB(255, 75, 85)
-	elseif string.find(title, "✅") or string.find(text, "OPENED") or string.find(text, "ENABLED") or string.find(text, "SUCCESS") then
-		accent = Color3.fromRGB(50, 225, 135)
-	elseif string.find(title, "🎯") or string.find(title, "⚡") or string.find(title, "👑") then
-		accent = Color3.fromRGB(0, 220, 255)
-	elseif string.find(title, "⚠️") or string.find(title, "📦") or string.find(title, "💥") then
-		accent = Color3.fromRGB(255, 200, 60)
-	end
-
-	local card = Instance.new("Frame")
-	card.Name = "ToastCard"
-	card.Size = UDim2.new(0, 250, 0, 52)
-	card.BackgroundColor3 = Color3.fromRGB(16, 18, 26)
-	card.BackgroundTransparency = 1
-	card.ClipsDescendants = true
-	Instance.new("UICorner", card).CornerRadius = UDim.new(0, 8)
-
-	local stroke = Instance.new("UIStroke", card)
-	stroke.Color = accent
-	stroke.Thickness = 1.2
-	stroke.Transparency = 1
-
-	local bar = Instance.new("Frame", card)
-	bar.Name = "AccentBar"
-	bar.Size = UDim2.new(0, 4, 1, 0)
-	bar.BackgroundColor3 = accent
-	bar.BorderSizePixel = 0
-
-	local tLbl = Instance.new("TextLabel", card)
-	tLbl.Name = "Title"
-	tLbl.Size = UDim2.new(1, -16, 0, 18)
-	tLbl.Position = UDim2.new(0, 12, 0, 8)
-	tLbl.BackgroundTransparency = 1
-	tLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-	tLbl.Font = Enum.Font.GothamBold
-	tLbl.TextSize = 12
-	tLbl.TextXAlignment = Enum.TextXAlignment.Left
-	tLbl.Text = tostring(title)
-	tLbl.TextTransparency = 1
-
-	local dLbl = Instance.new("TextLabel", card)
-	dLbl.Name = "Text"
-	dLbl.Size = UDim2.new(1, -16, 0, 16)
-	dLbl.Position = UDim2.new(0, 12, 0, 27)
-	dLbl.BackgroundTransparency = 1
-	dLbl.TextColor3 = Color3.fromRGB(185, 190, 205)
-	dLbl.Font = Enum.Font.GothamMedium
-	dLbl.TextSize = 11
-	dLbl.TextXAlignment = Enum.TextXAlignment.Left
-	dLbl.Text = tostring(text)
-	dLbl.TextTransparency = 1
-
-	local pBar = Instance.new("Frame", card)
-	pBar.Name = "Progress"
-	pBar.Size = UDim2.new(1, 0, 0, 2)
-	pBar.Position = UDim2.new(0, 0, 1, -2)
-	pBar.BackgroundColor3 = accent
-	pBar.BorderSizePixel = 0
-	pBar.BackgroundTransparency = 0.2
-
-	card.Parent = container
-
-	local cardInfo = {
-		Card = card,
-		Stroke = stroke,
-		Bar = bar,
-		Desc = dLbl,
-		ProgressBar = pBar,
-		AccentColor = accent,
-		Expiry = tick() + dur
-	}
-	NotifyStorage.ActiveCards[title] = cardInfo
-
-	-- Slide & Fade in
-	Services.TweenService:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0.08}):Play()
-	Services.TweenService:Create(stroke, TweenInfo.new(0.25), {Transparency = 0.25}):Play()
-	Services.TweenService:Create(tLbl, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
-	Services.TweenService:Create(dLbl, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
-	Services.TweenService:Create(pBar, TweenInfo.new(dur, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 0, 2)}):Play()
-
-	task.spawn(function()
-		while tick() < cardInfo.Expiry do
-			task.wait(0.1)
-			if not card.Parent then return end
-		end
-		if card and card.Parent then
-			Services.TweenService:Create(card, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
-			Services.TweenService:Create(stroke, TweenInfo.new(0.22), {Transparency = 1}):Play()
-			Services.TweenService:Create(tLbl, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
-			Services.TweenService:Create(dLbl, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
-			task.wait(0.22)
-			if card and card.Parent then card:Destroy() end
-			if NotifyStorage.ActiveCards[title] == cardInfo then
-				NotifyStorage.ActiveCards[title] = nil
-			end
-		end
-	end)
-end
-
-
-function Utils.IsTeammate(plr)
-	if not plr or not LocalPlayer or plr == LocalPlayer then return true end
-	-- Arsenal & Universal FFA check: In FFA mode, everyone is an opponent even if assigned to FFA team
-	if plr.Team and plr.Team.Name == "FFA" then return false end
-	if plr.Team and LocalPlayer.Team and plr.Team == LocalPlayer.Team then return true end
-	if plr.TeamColor and LocalPlayer.TeamColor and plr.TeamColor == LocalPlayer.TeamColor then return true end
-	return false
-end
-
-local SharedRaycastParams = RaycastParams.new()
-SharedRaycastParams.FilterType = Enum.RaycastFilterType.Exclude
-SharedRaycastParams.IgnoreWater = true
-
-function Utils.GetCharacterData(plr)
-	if not plr then return nil end
-	local now = tick()
-	local cached = Storage.CharCache[plr]
-	if cached and (now - cached.LastResolve < (Config.Vals.ESPRefreshRate or 0.25)) then
-		if cached.Char and cached.Char.Parent and cached.Root and cached.Root.Parent then
-			if cached.Hum then
-				cached.CurHp = cached.Hum.Health
-				cached.MaxHp = (cached.Hum.MaxHealth > 0) and cached.Hum.MaxHealth or 100
-			end
-			local isAlive, isUnspawned = Utils.IsAlive(plr, cached.Char, cached.Hum)
-			cached.IsAlive = isAlive
-			cached.IsUnspawned = isUnspawned
-			return cached
-		end
-	end
-
-	local char = plr.Character
-	if not (char and char.Parent and char:IsDescendantOf(Services.Workspace)) then
-		char = Services.Workspace:FindFirstChild(plr.Name)
-		if not char then
-			local f = Services.Workspace:FindFirstChild("Characters") or Services.Workspace:FindFirstChild("Players")
-			if f then char = f:FindFirstChild(plr.Name) end
-		end
-	end
-	if not (char and char.Parent and char:IsDescendantOf(Services.Workspace)) then
-		Storage.CharCache[plr] = nil
-		return nil
-	end
-
-	local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or char.PrimaryPart
-	if not root then
-		Storage.CharCache[plr] = nil
-		return nil
-	end
-
-	local head = char:FindFirstChild("Head") or root
-	local hum = char:FindFirstChildOfClass("Humanoid")
-	local isAlive, isUnspawned = Utils.IsAlive(plr, char, hum)
-
-	-- If found via Workspace search and it is not alive, do NOT adopt as player character (reject dead corpses)
-	if (plr.Character == nil or plr.Character ~= char) and not isAlive then
-		Storage.CharCache[plr] = nil
-		return nil
-	end
-
-	local curHp, maxHp = 100, 100
-	if hum then
-		curHp = hum.Health
-		maxHp = (hum.MaxHealth > 0) and hum.MaxHealth or 100
-	else
-		curHp, maxHp = Utils.GetHealth(plr, char)
-	end
-
-	local data = cached or {}
-	data.Char = char
-	data.Head = head
-	data.Root = root
-	data.Hum = hum
-	data.IsAlive = isAlive
-	data.IsUnspawned = isUnspawned
-	data.CurHp = curHp
-	data.MaxHp = maxHp
-	data.LastResolve = now
-	if not data.Weapon or (now - (data.LastWeaponCheck or 0) > 0.6) then
-		data.Weapon = Utils.GetEquippedWeapon(plr, char)
-		data.LastWeaponCheck = now
-	end
-
-	Storage.CharCache[plr] = data
-	return data
-end
-
-function Utils.GetHealth(plr, char)
-	if not plr then return 0, 100 end
-	char = char or plr.Character
-
-	-- Arsenal NRPBS Health System
-	local nrpbs = plr:FindFirstChild("NRPBS")
-	if nrpbs then
-		local hpVal = nrpbs:FindFirstChild("Health")
-		local maxHpVal = nrpbs:FindFirstChild("MaxHealth")
-		if hpVal and hpVal:IsA("ValueBase") then
-			local cur = tonumber(hpVal.Value) or 0
-			local max = (maxHpVal and maxHpVal:IsA("ValueBase") and tonumber(maxHpVal.Value)) or 100
-			return cur, (max > 0 and max or 100)
-		end
-	end
-
-	-- Standard Roblox Humanoid Health
-	if char then
-		local hum = char:FindFirstChildOfClass("Humanoid")
-		if hum then
-			local cur = hum.Health
-			local max = hum.MaxHealth > 0 and hum.MaxHealth or 100
-			return cur, max
-		end
-		-- Custom Body Games (Phantom Forces, Frontlines, Doors, Custom Rigs)
-		local hpVal = char:FindFirstChild("Health") or char:FindFirstChild("HP") or char:FindFirstChild("hp") or (plr and plr:FindFirstChild("Status") and plr.Status:FindFirstChild("Health"))
-		if hpVal and hpVal:IsA("ValueBase") and tonumber(hpVal.Value) then
-			return math.max(0, tonumber(hpVal.Value)), 100
-		end
-		local hpAttr = char:GetAttribute("Health") or char:GetAttribute("HP")
-		if hpAttr and tonumber(hpAttr) then
-			local maxAttr = char:GetAttribute("MaxHealth") or char:GetAttribute("MaxHP") or 100
-			return math.max(0, tonumber(hpAttr)), math.max(1, tonumber(maxAttr))
-		end
-	end
-	return 100, 100
-end
-
-function Utils.IsAlive(arg1, arg2, arg3)
-	local plr, char, hum
-	if type(arg1) == "userdata" and arg1:IsA("Player") then
-		plr = arg1
-		char = arg2 or plr.Character
-	else
-		char = arg1
-		hum = arg2
-		plr = arg3 or (char and Services.Players:GetPlayerFromCharacter(char))
-	end
-	if not char or not char.Parent then return false, false end
-
-	-- 1. If player has an active character assigned that differs from char, this char is an obsolete dead corpse
-	if plr and plr.Character and plr.Character ~= char then
-		return false, false
-	end
-
-	-- 2. Check if parented to corpse/debris/graveyard containers
-	local cParent = char.Parent
-	if cParent and cParent ~= Services.Workspace then
-		local pName = cParent.Name
-		if pName == "Debris" or pName == "Corpses" or pName == "Corpse" or pName == "Dead" or pName == "Ragdolls" or pName == "Ragdoll" or pName == "DeadBodies" or pName == "Graveyard" or pName == "Trash" then
-			return false, false
-		end
-	end
-
-	-- 3. Vital root part & boundary check
-	local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or char.PrimaryPart
-	if not root or not root.Parent then return false, false end
-
-	local rPos = root.Position
-	if rPos.Y < -3000 or math.abs(rPos.X) > 200000 or math.abs(rPos.Z) > 200000 then
-		return false, false
-	end
-
-	local isFarawayLobby = (rPos.Y > 3000 or math.abs(rPos.X) > 30000 or math.abs(rPos.Z) > 30000)
-
-	-- 4. [PERF FAST-PATH]: Standard Roblox Humanoid (Covers 98% of standard games with ZERO string lookups)
-	hum = hum or char:FindFirstChildOfClass("Humanoid")
-	if hum then
-		if hum.Health <= 0 then return false, false end
-		local state = hum:GetState()
-		if state == Enum.HumanoidStateType.Dead then return false, false end
-		if (state == Enum.HumanoidStateType.Physics or state == Enum.HumanoidStateType.Ragdoll) and (hum.Health <= 1 or not hum.RequiresNeck) then
-			return false, false
-		end
-		-- Fast direct attribute check (no table iteration)
-		if char:GetAttribute("Dead") == true or char:GetAttribute("IsDead") == true or char:GetAttribute("Ragdoll") == true or char:GetAttribute("Downed") == true then
-			return false, false
-		end
-		local head = char:FindFirstChild("Head")
-		if not head or not head.Parent then return false, false end
-		if isFarawayLobby then return false, true end
-		return true, false
-	end
-
-	-- 5. Fallback for non-Humanoid custom bodies (Arsenal NRPBS, Frontlines, etc.)
-	if plr and (game.PlaceId == 286090429 or game.GameId == 111958650 or plr:FindFirstChild("NRPBS")) then
-		local nrpbs = plr:FindFirstChild("NRPBS")
-		if nrpbs then
-			local hpVal = nrpbs:FindFirstChild("Health")
-			if hpVal and hpVal:IsA("ValueBase") and (tonumber(hpVal.Value) or 0) <= 0 then
-				return false, false
-			end
-		end
-	end
-
-	local deadNames = {"Dead", "Ragdoll", "Ragdolled", "Died", "Corpse", "Downed", "Knocked", "Death", "KO", "Ko", "Fainted", "BleedOut", "Unconscious", "Eliminated", "IsDead", "Killed"}
-	for _, dName in ipairs(deadNames) do
-		local marker = char:FindFirstChild(dName)
-		if marker then
-			if marker:IsA("BoolValue") then
-				if marker.Value == true then return false, false end
-			elseif marker:IsA("IntValue") or marker:IsA("NumberValue") then
-				if marker.Value == 1 or marker.Value == true then return false, false end
-			else
-				return false, false
-			end
-		end
-	end
-
-	for _, dAttr in ipairs({"Dead", "IsDead", "Ragdoll", "Ragdolled", "Downed", "Knocked", "Killed", "Unconscious", "Fainted"}) do
-		if char:GetAttribute(dAttr) == true or (plr and plr:GetAttribute(dAttr) == true) then
-			return false, false
-		end
-	end
-
-	local curHp, _ = Utils.GetHealth(plr, char)
-	if curHp <= 0 then return false, false end
-
-	local head = char:FindFirstChild("Head")
-	if not head or not head.Parent then return false, false end
-	local torso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
-	if torso and not hum then
-		local neck = head:FindFirstChild("Neck") or torso:FindFirstChild("Neck") or head:FindFirstChildOfClass("Motor6D") or torso:FindFirstChildOfClass("Motor6D")
-		if not neck then return false, false end
-	end
-
-	if isFarawayLobby then return false, true end
-	return true, false
-end
-
-function Utils.GetCurrentCamera()
-	local cam = Services.Workspace.CurrentCamera
-	if not cam then
-		for _, v in pairs(Services.Workspace:GetChildren()) do
-			if v:IsA("Camera") then return v end
-		end
-	end
-	return cam
-end
-
-local cachedFilterChar = nil
-local cachedFilterCam = nil
-local function UpdateRaycastFilter(cam)
-	local c = LocalPlayer.Character
-	if c ~= cachedFilterChar or cam ~= cachedFilterCam then
-		cachedFilterChar = c
-		cachedFilterCam = cam
-		local filter = {}
-		if cachedFilterChar then table.insert(filter, cachedFilterChar) end
-		if cachedFilterCam then table.insert(filter, cachedFilterCam) end
-		SharedRaycastParams.FilterDescendantsInstances = filter
-	end
-end
-
-function Utils.IsVisible(targetHead, targetPlr)
-	if not targetHead or not targetHead.Parent then return false end
-	local now = tick()
-	if targetPlr then
-		local c = Storage.VisCache[targetPlr]
-		if c and (now - c.LastCheck < 0.25) then
-			return c.Visible
-		end
-	end
-
-	local Camera = Utils.GetCurrentCamera()
-	if not Camera then return false end
-	local origin = Camera.CFrame.Position
-	local direction = (targetHead.Position - origin)
-
-	UpdateRaycastFilter(Camera)
-	local success, result = pcall(Services.Workspace.Raycast, Services.Workspace, origin, direction, SharedRaycastParams)
-	local isVis = false
-	if not success or not result then
-		isVis = true
-	elseif result.Instance and result.Instance:IsDescendantOf(targetHead.Parent) then
-		isVis = true
-	elseif Config.States.Wallbang and result.Instance then
-		-- [WALLBANG PENETRATION]: Penetrate non-collidable, glass, wood, or thin cover
-		local inst = result.Instance
-		if not inst.CanCollide or inst.Transparency > 0.35 or inst.Material == Enum.Material.Glass or inst.Material == Enum.Material.Wood or inst.Size.Magnitude < 4 then
-			isVis = true
-		end
-	end
-
-	if targetPlr then
-		local c = Storage.VisCache[targetPlr]
-		if c then
-			c.LastCheck = now
-			c.Visible = isVis
-		else
-			Storage.VisCache[targetPlr] = { LastCheck = now, Visible = isVis }
-		end
-	end
-	return isVis
-end
-
-function Utils.GetPing()
-	local ping = 0
-	pcall(function()
-		local stats = Services.Stats or safeCloneRef(game:GetService("Stats"))
-		if stats and stats.Network and stats.Network.ServerStatsItem then
-			ping = stats.Network.ServerStatsItem["Data Ping"]:GetValue()
-		end
-	end)
-	return ping
-end
-
-
-local HitSoundMap = {
-	Neverlose = "rbxassetid://6534948092",
-	Skeet = "rbxassetid://4817809188",
-	Rust = "rbxassetid://5043539516",
-	Ding = "rbxassetid://2865227271",
-	Pop = "rbxassetid://198598793"
-}
-
-function Utils.PlayHitSound()
-	if Config.States.Hitmarker then
-		Storage.HitmarkerAlpha = 1.0
-	end
-	if not Config.States.HitSound then return end
-	pcall(function()
-		local soundId = HitSoundMap[Config.Vals.HitSoundPreset] or "rbxassetid://6534948092"
-		if not Storage.HitSoundObj or Storage.HitSoundObj.SoundId ~= soundId then
-			if Storage.HitSoundObj then Storage.HitSoundObj:Destroy() end
-			local snd = Instance.new("Sound")
-			snd.SoundId = soundId
-			snd.Volume = 0.95
-			snd.Parent = Services.SoundService or Services.Workspace
-			Storage.HitSoundObj = snd
-		end
-		Storage.HitSoundObj:Play()
-	end)
-end
-
-local ConfigFolder = "ProjectX_Titan_Configs"
-
-function Utils.SaveConfig(name)
-	if type(writefile) ~= "function" then
-		Utils.Notify("⚠️ Storage Notice", "Executor does not support writefile.")
-		return false
-	end
-	local ok = pcall(function()
-		if type(makefolder) == "function" and type(isfolder) == "function" and not isfolder(ConfigFolder) then
-			makefolder(ConfigFolder)
-		end
-		local payload = {
-			States = Config.States,
-			Vals = Config.Vals
-		}
-		writefile(ConfigFolder .. "/" .. name .. ".json", Services.HttpService:JSONEncode(payload))
-		Utils.Notify("💾 Config Saved", "Preset saved as: " .. name)
-	end)
-	return ok
-end
-
-function Utils.LoadConfig(name)
-	if type(readfile) ~= "function" or type(isfile) ~= "function" then
-		Utils.Notify("⚠️ Storage Notice", "Executor does not support readfile.")
-		return false
-	end
-	local path = ConfigFolder .. "/" .. name .. ".json"
-	if not isfile(path) then
-		Utils.Notify("❌ Config Missing", "Preset file not found: " .. name)
-		return false
-	end
-	local ok = pcall(function()
-		local content = readfile(path)
-		local data = Services.HttpService:JSONDecode(content)
-		if data and data.States then
-			for k, v in pairs(data.States) do
-				if Config.States[k] ~= nil then Config.States[k] = v end
-			end
-		end
-		if data and data.Vals then
-			for k, v in pairs(data.Vals) do
-				if Config.Vals[k] ~= nil then Config.Vals[k] = v end
-			end
-		end
-		Utils.Notify("📂 Config Loaded", "Preset active: " .. name)
-	end)
-	return ok
-end
-
-function Utils.ApplyPreset(presetName)
-	if presetName == "Legit" then
-		Config.States.Aimbot = true
-		Config.Vals.AimbotSmoothness = 0.65
-		Config.Vals.FOV = 120
-		Config.Vals.TargetPriority = "Crosshair"
-		Config.States.WallCheck = true
-		Config.States.SilentAim = false
-		Config.States.HeadExpander = false
-		Config.States.Hitbox = false
-		Config.States.ESP = true
-		Config.States.Chams = false
-		Utils.Notify("⚡ Preset Applied", "Legit Esports profile active.")
-	elseif presetName == "Rage" then
-		Config.States.Aimbot = true
-		Config.Vals.AimbotSmoothness = 0.05
-		Config.Vals.FOV = 600
-		Config.Vals.TargetPriority = "Threat"
-		Config.States.WallCheck = false
-		Config.States.Wallbang = true
-		Config.States.SilentAim = true
-		Config.States.HeadExpander = true
-		Config.States.Hitbox = true
-		Config.States.ESP = true
-		Config.States.Chams = true
-		Utils.Notify("🔥 Preset Applied", "God Rage profile active.")
-	elseif presetName == "CQB" then
-		Config.States.Aimbot = true
-		Config.Vals.AimbotSmoothness = 0.2
-		Config.Vals.FOV = 280
-		Config.Vals.TargetPriority = "Distance3D"
-		Config.States.WallCheck = true
-		Config.States.ESP = true
-		Utils.Notify("🎯 Preset Applied", "CQB Close-Quarters profile active.")
-	elseif presetName == "HvHGod" then
-		Config.States.Aimbot = true
-		Config.Vals.AimbotSmoothness = 0.0
-		Config.Vals.FOV = 1000
-		Config.Vals.TargetPriority = "Threat"
-		Config.States.WallCheck = false
-		Config.States.Wallbang = true
-		Config.States.SilentAim = true
-		Config.States.HeadExpander = true
-		Config.Vals.HeadSize = 80
-		Config.States.Hitbox = true
-		Config.Vals.HitboxSize = 80
-		Config.States.TriggerBot = true
-		Config.States.ESP = true
-		Config.States.ESPSkeleton = true
-		Config.States.Tracers = true
-		Config.States.Chams = true
-		Config.States.Desync = true
-		Config.States.AntiAimSpin = true
-		Utils.Notify("👑 Preset Applied", "HvH Godmode (Dominator) active!")
-	elseif presetName == "SilentGhost" then
-		Config.States.Aimbot = false
-		Config.States.SilentAim = true
-		Config.Vals.FOV = 350
-		Config.States.ShowFOV = false
-		Config.States.WallCheck = false
-		Config.States.Wallbang = true
-		Config.States.HeadExpander = false
-		Config.States.Hitbox = false
-		Config.States.ESP = true
-		Config.States.Chams = true
-		Config.States.VisibilityCheck = true
-		Utils.Notify("👻 Preset Applied", "Silent Ghost (Stealth Domination) active!")
-	end
-end
-
-function Utils.GetEquippedWeapon(plr, char)
-	if not char then return "Unarmed" end
-	
-	-- Heuristic 1: Standard Roblox Tool directly in Character
-	local tool = char:FindFirstChildOfClass("Tool")
-	if tool and tool.Name and tool.Name ~= "" then
-		return tool.Name
-	end
-	
-	-- Heuristic 2: Character/Player Attributes
-	local attrKeys = {"EquippedWeapon", "CurrentWeapon", "Weapon", "EquippedTool", "ActiveWeapon", "HeldItem", "Gun"}
-	for _, k in ipairs(attrKeys) do
-		local a = char:GetAttribute(k) or (plr and plr:GetAttribute(k))
-		if a and type(a) == "string" and a ~= "" and a ~= "None" then
-			return a
-		end
-	end
-	
-	-- Heuristic 3: ValueObjects inside Character or Player
-	for _, k in ipairs(attrKeys) do
-		local obj = char:FindFirstChild(k) or (plr and plr:FindFirstChild(k))
-		if obj then
-			if obj:IsA("StringValue") and obj.Value ~= "" and obj.Value ~= "None" then
-				return obj.Value
-			elseif obj:IsA("ObjectValue") and obj.Value then
-				return obj.Value.Name
-			end
-		end
-	end
-	
-	-- Heuristic 4: Dedicated Weapon / Equipment Folders
-	local folders = {"Weapons", "Equipped", "Gun", "Guns", "CurrentWeapon", "Armory", "Equipment"}
-	for _, fName in ipairs(folders) do
-		local f = char:FindFirstChild(fName)
-		if f then
-			if f:IsA("Tool") or f:IsA("Model") then
-				return f.Name
-			end
-			for _, c in ipairs(f:GetChildren()) do
-				if (c:IsA("Model") or c:IsA("Tool") or c:IsA("BasePart")) and c.Name ~= "" and c.Name ~= "None" then
-					return c.Name
-				end
-			end
-		end
-	end
-	
-	-- Heuristic 5: Motor6D / Weld Attachment in Hands (Custom Viewmodels/Rigs)
-	local hands = {
-		char:FindFirstChild("RightHand"), char:FindFirstChild("Right Arm"),
-		char:FindFirstChild("LeftHand"), char:FindFirstChild("Left Arm")
-	}
-	for _, hand in ipairs(hands) do
-		if hand then
-			for _, j in ipairs(hand:GetChildren()) do
-				if j:IsA("Motor6D") or j:IsA("Weld") or j:IsA("WeldConstraint") then
-					local part = j.Part1 or j.Part0
-					if part and part ~= hand then
-						local pName = part.Name:lower()
-						if not pName:find("arm") and not pName:find("hand") and not pName:find("torso") and not pName:find("root") then
-							local m = part:FindFirstAncestorWhichIsA("Model")
-							if m and m ~= char and m.Parent == char then
-								return m.Name
-							elseif part.Parent == char and part.Name ~= "Handle" then
-								return part.Name
-							elseif part.Parent and part.Parent ~= char and part.Parent ~= Services.Workspace then
-								return part.Parent.Name
-							end
-						end
-					end
-				end
-			end
-		end
-	end
-	
-	-- Heuristic 6: Direct Child Models with Weapon Indicators
-	for _, child in ipairs(char:GetChildren()) do
-		if child:IsA("Model") and child.Name ~= char.Name and not child:FindFirstChildOfClass("Humanoid") and not child:IsA("Accessory") then
-			local cName = child.Name:lower()
-			if child:FindFirstChild("Handle") or child:FindFirstChild("Muzzle") or child:FindFirstChild("Sight") or child:FindFirstChild("Barrel") or child:FindFirstChild("Mag") or child:FindFirstChild("Magazine") or child:FindFirstChild("Ammo") then
-				return child.Name
-			end
-			if cName:find("gun") or cName:find("rifle") or cName:find("pistol") or cName:find("sword") or cName:find("knife") or cName:find("bow") or cName:find("blade") or cName:find("shotgun") or cName:find("sniper") or cName:find("smg") then
-				return child.Name
-			end
-		end
-	end
-	
-	return "Unarmed"
-end
-
-function Utils.CalculateThreatScore(plr, myHRP, screenDist)
-	if not plr.Character or not myHRP then return 0 end
-	local eHRP = plr.Character:FindFirstChild("HumanoidRootPart")
-	local eHead = plr.Character:FindFirstChild("Head")
-	if not eHRP or not eHead then return 0 end
-	local dist = (eHRP.Position - myHRP.Position).Magnitude
-	-- [CQB PRIORITY]: Close targets pose immediate lethal danger
-	local score = 3000 / math.max(dist, 1)
-	local targetLook = eHead.CFrame.LookVector
-	local toMe = (myHRP.Position - eHead.Position).Unit
-	if targetLook:Dot(toMe) > 0.85 then score = score + 800 end
-	local vel = eHRP.AssemblyLinearVelocity.Magnitude
-	if vel > 20 then score = score + 200 end
-	if screenDist then
-		score = score + math.max(0, 300 - screenDist)
-	end
-	return score
-end
-
-function Utils.GetSmartAimPart(character)
-	if not character then return nil end
-	local Camera = Utils.GetCurrentCamera()
-	local head = character:FindFirstChild("Head")
-	local upperTorso = character:FindFirstChild("UpperTorso")
-	local lowerTorso = character:FindFirstChild("LowerTorso")
-	local torso = character:FindFirstChild("Torso") or upperTorso or lowerTorso
-	local hrp = character:FindFirstChild("HumanoidRootPart")
-
-	-- [GEN-6.1 MULTI-BONE DYNAMIC ADAPTIVE TARGETING]
-	if Config.States.MultiBoneAim and Camera then
-		local center = Vector2.new(Camera.ViewportSize.X * 0.5, Camera.ViewportSize.Y * 0.5)
-		local checkBoneNames = {
-			"Head", "UpperTorso", "LowerTorso", "Torso", "HumanoidRootPart",
-			"RightUpperArm", "LeftUpperArm", "RightLowerArm", "LeftLowerArm",
-			"Right Arm", "Left Arm"
-		}
-		local bestPart, bestDist = nil, 99999
-		for _, bName in ipairs(checkBoneNames) do
-			local bone = character:FindFirstChild(bName)
-			if bone and bone:IsA("BasePart") then
-				local pos, onScreen = Camera:WorldToViewportPoint(bone.Position)
-				if onScreen and pos.Z > 0 then
-					local isVis = true
-					if Config.States.WallCheck then
-						isVis = Utils.IsVisible(bone, nil)
-					end
-					if isVis then
-						local sDist = (Vector2.new(pos.X, pos.Y) - center).Magnitude
-						if bName == "Head" then sDist = sDist * 0.85 end -- Priority bias for headshots
-						if sDist < bestDist then
-							bestDist = sDist
-							bestPart = bone
-						end
-					end
-			end
-		end
-		end
-		if bestPart then return bestPart end
-	end
-
-	-- [PLAN A & SMART ADAPTIVE]: If AutoAimPart is active, pick optimal part by visibility/distance
-	if Config.States.AutoAimPart and head and (torso or hrp) then
-		if Camera then
-			local headPos, onScreen = Camera:WorldToViewportPoint(head.Position)
-			if onScreen then
-				local torsoPos = Camera:WorldToViewportPoint((torso or hrp).Position)
-				if math.abs(headPos.Y - torsoPos.Y) * 0.4 < 20 then
-					return torso or hrp
-				end
-			end
-		end
-		return head
-	end
-
-	-- [MANUAL SELECTION]: Strict user choice with automatic Plan C fallbacks
-	if Config.Vals.AimPart == "Head" then
-		if head then return head end
-		-- Plan C fallback if Head is missing/destroyed
-		if upperTorso then return upperTorso end
-		if torso then return torso end
-		if hrp then return hrp end
-	elseif Config.Vals.AimPart == "Torso" then
-		if torso then return torso end
-		if upperTorso then return upperTorso end
-		if hrp then return hrp end
-		if head then return head end
-	elseif Config.Vals.AimPart == "HumanoidRootPart" then
-		if hrp then return hrp end
-		if torso then return torso end
-		if head then return head end
-	end
-
-	-- [PLAN C EMERGENCY FALLBACK]: Return any valid physical BasePart
-	if hrp then return hrp end
-	if head then return head end
-	if torso then return torso end
-	for _, part in pairs(character:GetChildren()) do
-		if part:IsA("BasePart") and part.Transparency < 1 and part.Size.Magnitude > 0.5 then
-			return part
-		end
-	end
-	return nil
-end
-
-function Utils.GetClosestToCenter()
-	local Camera = Utils.GetCurrentCamera()
-	if not Camera then return nil, false end
-	local center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
-	local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-	
-	-- Manual Target Lock has absolute priority
-	if Storage.LockedTarget and Storage.LockedTarget.Character then
-		local tChar = Storage.LockedTarget.Character
-		if Utils.IsAlive(Storage.LockedTarget, tChar) then
-			local aimPart = Utils.GetSmartAimPart(tChar)
-			if aimPart then
-				local pos, onScreen = Camera:WorldToViewportPoint(aimPart.Position)
-				if onScreen and pos.Z > 0 then
-					if Config.States.WallCheck and not Utils.IsVisible(aimPart, Storage.LockedTarget) then return aimPart, true end
-					return aimPart, false
-				end
-			end
-		else
-			Utils.Notify("🔓 Target Eliminated", "Target lock released: " .. Storage.LockedTarget.Name)
-			Storage.LockedTarget = nil
-			Storage.CurrentHPRatio = 0
-			if Storage.TacticalHUD then Storage.TacticalHUD.Main.Visible = false end
-		end
-	end
-	
-	-- [STICKY TRACK & HYSTERESIS RETENTION ENGINE]
-	-- While sticky aim is engaged, maintain lock on current sticky target inside expanded boundary
-	if Config.States.StickyAim and Storage.StickyTarget and Storage.StickyTarget.Parent then
-		local sPlr = Storage.StickyTarget
-		local sChar = sPlr.Character
-		local isAlive = sChar and Utils.IsAlive(sPlr, sChar)
-		local isTeam = Config.States.TeamCheck and Utils.IsTeammate(sPlr)
-		if isAlive and not isTeam then
-			local sPart = Utils.GetSmartAimPart(sChar)
-			if sPart then
-				local sPos, sOnScreen = Camera:WorldToViewportPoint(sPart.Position)
-				if sOnScreen and sPos.Z > 0 then
-					local sDist = (Vector2.new(sPos.X, sPos.Y) - center).Magnitude
-					local retFOV = Config.Vals.FOV * (Config.Vals.StickyFOVMult or 1.35)
-					local isVis = Utils.IsVisible(sPart, sPlr)
-					if sDist <= retFOV then
-						if not Config.States.WallCheck or isVis then
-							Storage.StickyLostTick = tick()
-							Storage.StickyTargetPart = sPart
-							return sPart, false
-						else
-							-- Occluded: verify grace period
-							if (tick() - Storage.StickyLostTick) <= (Config.Vals.StickyGrace or 0.25) then
-								return sPart, true
-							else
-								Storage.StickyTarget = nil
-							end
-						end
-					else
-						-- Outside expanded retention FOV: verify grace period
-						if (tick() - Storage.StickyLostTick) <= (Config.Vals.StickyGrace or 0.25) then
-							return sPart, not isVis
-						else
-							Storage.StickyTarget = nil
-						end
-					end
-				else
-					-- Temporarily offscreen: grace buffer
-					if (tick() - Storage.StickyLostTick) > (Config.Vals.StickyGrace or 0.25) then
-						Storage.StickyTarget = nil
-					end
-				end
-			else
-				Storage.StickyTarget = nil
-			end
-		else
-			Storage.StickyTarget = nil
-		end
-	end
-	
-	local highestThreat, targetPart, bestPlayer, bestIsWall = -1, nil, nil, false
-	for _, p in ipairs(Services.Players:GetPlayers()) do
-		if p == LocalPlayer then continue end
-		if Config.States.TeamCheck and Utils.IsTeammate(p) then continue end
-		local cData = Utils.GetCharacterData(p)
-		if not cData or not cData.IsAlive then continue end
-		local aimPart = Utils.GetSmartAimPart(cData.Char)
-		if not aimPart then continue end
-		local pos, onScreen = Camera:WorldToViewportPoint(aimPart.Position)
-		if onScreen and pos.Z > 0 then
-			local screenDist = (Vector2.new(pos.X, pos.Y) - center).Magnitude
-			local targetDist3D = myHRP and (aimPart.Position - myHRP.Position).Magnitude or 100
-			-- CQB FOV Retention Buffer: close targets receive expanded FOV buffer
-			local effectiveFOV = Config.Vals.FOV
-			if targetDist3D < 35 or Storage.LockedTarget == p or Storage.StickyTarget == p then
-				effectiveFOV = effectiveFOV * (1.0 + math.clamp((35 - targetDist3D) / 35, 0.1, 0.5))
-			end
-			if screenDist <= effectiveFOV then
-				local isVis = Utils.IsVisible(aimPart, p)
-				if Config.States.WallCheck and not isVis then continue end
-				local score = 0
-				local priority = Config.Vals.TargetPriority or "Crosshair"
-				if priority == "Crosshair" then
-					score = (effectiveFOV - screenDist) * 10
-				elseif priority == "LowestHP" then
-					local curHp, maxHp = Utils.GetHealth(p, cData.Char)
-					score = 10000 - curHp
-				elseif priority == "Distance3D" then
-					score = 5000 / math.max(targetDist3D, 1)
-				else -- "Threat"
-					score = Utils.CalculateThreatScore(p, myHRP, screenDist)
-				end
-				
-				-- [HYSTERESIS ANTI-JITTER LOCK]:
-				-- Strongly bias toward the currently locked sticky target to eliminate camera jitter
-				if Config.States.StickyAim and Storage.StickyTarget == p then
-					score = score + (Config.Vals.StickyHysteresis or 2500)
-				end
-				
-				if score > highestThreat then
-					highestThreat = score
-					targetPart = aimPart
-					bestPlayer = p
-					bestIsWall = not isVis
-				end
-			end
-		end
-	end
-	
-	if bestPlayer and targetPart then
-		if Config.States.StickyAim then
-			Storage.StickyTarget = bestPlayer
-			Storage.StickyTargetPart = targetPart
-			Storage.StickyLostTick = tick()
-		end
-		return targetPart, bestIsWall
-	end
-	
-	if Config.States.StickyAim and (tick() - Storage.StickyLostTick) > (Config.Vals.StickyGrace or 0.25) then
-		Storage.StickyTarget = nil
-		Storage.StickyTargetPart = nil
-	end
-	return nil, false
-end
-
-function Utils.SaveCollision(char, mode)
-	if not char then return end
-	local attrName = (mode == "touch") and "X_OrigCanTouch" or "X_OrigCanCollide"
-	local propName = (mode == "touch") and "CanTouch" or "CanCollide"
-	for _, v in pairs(char:GetDescendants()) do
-		if v:IsA("BasePart") then
-			if v:GetAttribute(attrName) == nil then
-				v:SetAttribute(attrName, v[propName])
-			end
-		end
-	end
-end
-
-function Utils.RestoreCollision(char, mode)
-	if not char then return end
-	local attrName = (mode == "touch") and "X_OrigCanTouch" or "X_OrigCanCollide"
-	local propName = (mode == "touch") and "CanTouch" or "CanCollide"
-	for _, v in pairs(char:GetDescendants()) do
-		if v:IsA("BasePart") then
-			local orig = v:GetAttribute(attrName)
-			if orig ~= nil then
-				v[propName] = orig
-				v:SetAttribute(attrName, nil)
-			end
-		end
-	end
-end
-
-function Utils.ResetCollision()
-	local char = LocalPlayer.Character
-	if char then
-		Utils.RestoreCollision(char, "collide")
-		Utils.RestoreCollision(char, "touch")
-	end
-end
-
-function Utils.SetPoint(n)
-	if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-		Storage.Checkpoints[n] = LocalPlayer.Character.HumanoidRootPart.CFrame
-		Utils.Notify("📍 Checkpoint Saved", "Location saved to slot: " .. n)
-	end
-end
-
-function Utils.TPPoint(n)
-	if Storage.Checkpoints[n] and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-		LocalPlayer.Character.HumanoidRootPart.CFrame = Storage.Checkpoints[n]
-		Utils.Notify("⚡ Teleported", "Teleported to slot: " .. n)
-	end
-end
-
-function Utils.ToggleXRay(state)
-	for _, v in pairs(Services.Workspace:GetDescendants()) do
-		if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") then
-			if state then
-				if v.Transparency < 0.9 then
-					if v:GetAttribute("XR_Orig") == nil then v:SetAttribute("XR_Orig", v.Transparency) end
-					v.Transparency = 0.6
-				end
-			else
-				local orig = v:GetAttribute("XR_Orig")
-				if orig ~= nil then v.Transparency = orig; v:SetAttribute("XR_Orig", nil) end
-			end
-		end
-	end
-end
-
-function Utils.ToggleFullbright(state)
-	if state then
-		if not Storage.OriginalLighting.Ambient then
-			Storage.OriginalLighting = {
-				Ambient = Services.Lighting.Ambient, Brightness = Services.Lighting.Brightness,
-				OutdoorAmbient = Services.Lighting.OutdoorAmbient, ClockTime = Services.Lighting.ClockTime,
-				FogEnd = Services.Lighting.FogEnd, FogStart = Services.Lighting.FogStart
-			}
-		end
-		Services.Lighting.Ambient = Color3.new(1, 1, 1); Services.Lighting.Brightness = 2
-		Services.Lighting.OutdoorAmbient = Color3.new(1, 1, 1); Services.Lighting.ClockTime = 14
-		Services.Lighting.FogEnd = 100000; Services.Lighting.FogStart = 0
-	else
-		if Storage.OriginalLighting.Ambient then
-			Services.Lighting.Ambient = Storage.OriginalLighting.Ambient
-			Services.Lighting.Brightness = Storage.OriginalLighting.Brightness
-			Services.Lighting.OutdoorAmbient = Storage.OriginalLighting.OutdoorAmbient
-			Services.Lighting.ClockTime = Storage.OriginalLighting.ClockTime
-			Services.Lighting.FogEnd = Storage.OriginalLighting.FogEnd
-			Services.Lighting.FogStart = Storage.OriginalLighting.FogStart
-			Storage.OriginalLighting = {}
-		end
-	end
-end
-
--- ==============================================================================
--- FEATURES & ESP
--- ==============================================================================
-local Features = {}
-_G.X_TITAN_CURRENT_INSTANCE.Features = Features
-
-
-function Features.FlingPlayer(targetPlr)
-	if not targetPlr or not targetPlr.Character then return end
-	local myChar = LocalPlayer.Character
-	local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
-	local tHRP = targetPlr.Character:FindFirstChild("HumanoidRootPart")
-	if not myHRP or not tHRP then return end
-	local origCF = myHRP.CFrame
-	local start = tick()
-	Utils.Notify("🌪️ Target Yeet", "Flinging: " .. targetPlr.Name)
-	while tick() - start < 0.4 do
-		Services.RunService.Heartbeat:Wait()
-		if not myHRP or not tHRP or not tHRP.Parent then break end
-		myHRP.CFrame = tHRP.CFrame * CFrame.Angles(math.random()*6, math.random()*6, math.random()*6)
-		myHRP.AssemblyLinearVelocity = Vector3.new(90000, 90000, 90000)
-		myHRP.AssemblyAngularVelocity = Vector3.new(90000, 90000, 90000)
-	end
-	myHRP.AssemblyLinearVelocity = Vector3.zero
-	myHRP.AssemblyAngularVelocity = Vector3.zero
-	myHRP.CFrame = origCF
-	Utils.Notify("✅ Yeet Complete", targetPlr.Name .. " launched into orbit!")
-end
-
-function Features.VoidDropTarget(targetPlr)
-	if not targetPlr or not targetPlr.Character then return end
-	local myChar = LocalPlayer.Character
-	local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
-	local tHRP = targetPlr.Character:FindFirstChild("HumanoidRootPart")
-	if not myHRP or not tHRP then return end
-	local origCF = myHRP.CFrame
-	local fallenH = -500
-	pcall(function() fallenH = Services.Workspace.FallenPartsDestroyHeight end)
-	Utils.Notify("🕳️ Void Drop", "Dragging " .. targetPlr.Name .. " to void...")
-	tHRP.AssemblyLinearVelocity = Vector3.new(0, -80000, 0)
-	myHRP.CFrame = CFrame.new(tHRP.Position.X, fallenH + 25, tHRP.Position.Z)
-	task.wait(0.2)
-	myHRP.CFrame = origCF
-	myHRP.AssemblyLinearVelocity = Vector3.zero
-	Utils.Notify("✅ Void Executed", targetPlr.Name .. " dropped to void!")
-end
-
-function Features.SpectatePlayer(name)
-	local target = nil
-	for _, p in pairs(Services.Players:GetPlayers()) do
-		if string.sub(string.lower(p.Name), 1, string.len(name)) == string.lower(name)
-		or string.sub(string.lower(p.DisplayName), 1, string.len(name)) == string.lower(name) then
-			target = p; break
-		end
-	end
-	if target then
-		Storage.CurrentSpectate = target
-		local cam = Utils.GetCurrentCamera()
-		if cam and target.Character and target.Character:FindFirstChild("Humanoid") then
-			cam.CameraSubject = target.Character.Humanoid
-		end
-		Utils.Notify("👁️ Spectate", "Spectating: " .. target.DisplayName, 3)
-	else
-		Utils.Notify("❌ Error", "Player not found!")
-	end
-end
-
-function Features.StopSpectate()
-	Storage.CurrentSpectate = nil
-	local cam = Utils.GetCurrentCamera()
-	if cam and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-		cam.CameraSubject = LocalPlayer.Character.Humanoid
-		Utils.Notify("👁️ Spectate", "Spectate stopped")
-	end
-end
-
-function Features.UpdateChams()
-	for _, p in pairs(Services.Players:GetPlayers()) do
-		if p ~= LocalPlayer and p.Character then
-			local highlight = p.Character:FindFirstChild("X_Chams")
-			if Config.States.Chams then
-				if not highlight then
-					highlight = Instance.new("Highlight", p.Character)
-					highlight.Name = "X_Chams"; highlight.FillTransparency = 0.55; highlight.OutlineTransparency = 0.15
-				end
-				if Utils.IsTeammate(p) then
-					highlight.FillColor = Config.Theme.Team
-					highlight.OutlineColor = Config.Theme.Team
-				else
-					local head = p.Character:FindFirstChild("Head")
-					local isVis = head and Utils.IsVisible(head, p)
-					highlight.FillColor = isVis and Color3.fromRGB(255, 60, 60) or Color3.fromRGB(255, 160, 20)
-					highlight.OutlineColor = isVis and Color3.fromRGB(255, 100, 100) or Color3.fromRGB(255, 200, 60)
-				end
-			else
-				if highlight then highlight:Destroy() end
-			end
-		end
-	end
-end
-
-function Features.UpdateNativeTags()
-	local wantTags = Config.States.BillboardTags or (Config.States.ESP and (Storage.DrawingBroken or Config.Vals.ESPEngine == "Plan C (Billboard)" or Config.Vals.ESPEngine == "Auto"))
-	if not wantTags then
-		for p, gui in pairs(Storage.NativePlayerTags) do
-			pcall(function() gui:Destroy() end)
-		end
-		table.clear(Storage.NativePlayerTags)
-		return
-	end
-	
-	local itemGuiParent = LocalPlayer:FindFirstChildOfClass("PlayerGui") or targetGui
-	for _, p in pairs(Services.Players:GetPlayers()) do
-		if p == LocalPlayer then continue end
-		local char = p.Character
-		if not char or not char.Parent then
-			if Storage.NativePlayerTags[p] then
-				pcall(function() Storage.NativePlayerTags[p]:Destroy() end)
-				Storage.NativePlayerTags[p] = nil
-			end
-			continue
-		end
-		
-		local isAlive, isUnspawned = Utils.IsAlive(p, char)
-		if not (isAlive or (Config.States.DetectUnspawned and isUnspawned)) then
-			if Storage.NativePlayerTags[p] then
-				pcall(function() Storage.NativePlayerTags[p]:Destroy() end)
-				Storage.NativePlayerTags[p] = nil
-			end
-			continue
-		end
-		
-		if Config.States.TeamCheck and Utils.IsTeammate(p) then
-			if Storage.NativePlayerTags[p] then
-				pcall(function() Storage.NativePlayerTags[p]:Destroy() end)
-				Storage.NativePlayerTags[p] = nil
-			end
-			continue
-		end
-		
-		local cData = Utils.GetCharacterData(p)
-		if not cData or not (cData.IsAlive or (Config.States.DetectUnspawned and cData.IsUnspawned)) then
-			if Storage.NativePlayerTags[p] then
-				pcall(function() Storage.NativePlayerTags[p]:Destroy() end)
-				Storage.NativePlayerTags[p] = nil
-			end
-			continue
-		end
-		local head = cData.Head or cData.Root
-		if not head then continue end
-		
-		local bg = Storage.NativePlayerTags[p]
-		local drawColor = cData.IsUnspawned and Color3.fromRGB(190, 130, 255) or ((Storage.LockedTarget == p) and Config.Theme.LockColor or Config.Theme.Stroke)
-		local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-		local dist = myHRP and math.floor((head.Position - myHRP.Position).Magnitude) or 0
-		local curHp = cData.CurHp or 100
-		local maxHp = cData.MaxHp or 100
-		local wName = cData.Weapon or "Unarmed"
-		
-		if not bg or not bg.Parent then
-			bg = Instance.new("BillboardGui")
-			bg.Name = "X_TITAN_TAG_" .. p.Name
-			bg.AlwaysOnTop = true
-			bg.Size = UDim2.new(0, 160, 0, 48)
-			bg.StudsOffset = Vector3.new(0, 2.8, 0)
-			bg.Adornee = head
-			bg.MaxDistance = 1500
-			
-			local tagLabel = Instance.new("TextLabel", bg)
-			tagLabel.Name = "NameTag"
-			tagLabel.Size = UDim2.new(1, 0, 0, 16)
-			tagLabel.Position = UDim2.new(0, 0, 0, 0)
-			tagLabel.BackgroundTransparency = 1
-			tagLabel.Font = Enum.Font.GothamBold
-			tagLabel.TextSize = 12
-			tagLabel.TextColor3 = drawColor
-			tagLabel.TextStrokeTransparency = 0.2
-			tagLabel.Text = p.DisplayName .. " [" .. tostring(dist) .. "m]"
-			
-			local hpBar = Instance.new("Frame", bg)
-			hpBar.Name = "HPBar"
-			hpBar.Size = UDim2.new(0.8, 0, 0, 3)
-			hpBar.Position = UDim2.new(0.1, 0, 0, 18)
-			hpBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-			hpBar.BorderSizePixel = 0
-			
-			local hpFill = Instance.new("Frame", hpBar)
-			hpFill.Name = "Fill"
-			local ratio = math.clamp(curHp / maxHp, 0, 1)
-			hpFill.Size = UDim2.new(ratio, 0, 1, 0)
-			hpFill.BackgroundColor3 = Color3.new(1 - ratio, ratio, 0)
-			hpFill.BorderSizePixel = 0
-			
-			local wLabel = Instance.new("TextLabel", bg)
-			wLabel.Name = "WepTag"
-			wLabel.Size = UDim2.new(1, 0, 0, 14)
-			wLabel.Position = UDim2.new(0, 0, 0, 24)
-			wLabel.BackgroundTransparency = 1
-			wLabel.Font = Enum.Font.GothamMedium
-			wLabel.TextSize = 10
-			wLabel.TextColor3 = Color3.fromRGB(255, 230, 100)
-			wLabel.TextStrokeTransparency = 0.3
-			wLabel.Text = "[" .. wName .. "]"
-			
-			bg.Parent = itemGuiParent
-			Storage.NativePlayerTags[p] = bg
-		else
-			bg.Adornee = head
-			local tagLabel = bg:FindFirstChild("NameTag")
-			if tagLabel then
-				tagLabel.TextColor3 = drawColor
-				tagLabel.Text = p.DisplayName .. " [" .. tostring(dist) .. "m]"
-			end
-			local hpBar = bg:FindFirstChild("HPBar")
-			if hpBar then
-				local hpFill = hpBar:FindFirstChild("Fill")
-				if hpFill then
-					local ratio = math.clamp(curHp / maxHp, 0, 1)
-					hpFill.Size = UDim2.new(ratio, 0, 1, 0)
-					hpFill.BackgroundColor3 = Color3.new(1 - ratio, ratio, 0)
-				end
-			end
-			local wLabel = bg:FindFirstChild("WepTag")
-			if wLabel then
-				wLabel.Text = "[" .. wName .. "]"
-			end
-		end
-	end
-	
-	for p, bg in pairs(Storage.NativePlayerTags) do
-		if not Services.Players:FindFirstChild(p.Name) or not p.Character then
-			pcall(function() bg:Destroy() end)
-			Storage.NativePlayerTags[p] = nil
-		end
-	end
-end
-
-function Features.CreateESP(plr)
-	if plr == LocalPlayer or Storage.ESPObjects[plr] then return end
-	if not Drawing then return end
-	local esp = {
-		Box = Drawing.new("Square"), Name = Drawing.new("Text"),
-		HealthBar = Drawing.new("Line"), Distance = Drawing.new("Text"),
-		Weapon = Drawing.new("Text")
-	}
-	esp.Box.Thickness = 1.5; esp.Box.Color = Config.Theme.Stroke; esp.Box.Filled = false; esp.Box.Transparency = 1; esp.Box.Visible = false
-	esp.Name.Size = 13; esp.Name.Center = true; esp.Name.Outline = true; esp.Name.Color = Color3.new(1,1,1); esp.Name.Visible = false
-	esp.HealthBar.Thickness = 1.5; esp.HealthBar.Color = Color3.new(0,1,0); esp.HealthBar.Visible = false
-	esp.Distance.Size = 12; esp.Distance.Center = true; esp.Distance.Outline = true; esp.Distance.Color = Color3.new(1,1,1); esp.Distance.Visible = false
-	esp.Weapon.Size = 11; esp.Weapon.Center = true; esp.Weapon.Outline = true; esp.Weapon.Color = Color3.fromRGB(255, 230, 100); esp.Weapon.Visible = false
-	Storage.ESPObjects[plr] = esp
-	-- 14-Bone Anatomical Skeleton
-	local skelLines = {}
-	for i = 1, 14 do
-		local line = Drawing.new("Line")
-		line.Thickness = 1.5
-		line.Color = Config.Theme.Stroke
-		line.Visible = false
-		table.insert(skelLines, line)
-	end
-	Storage.SkeletonParts[plr] = skelLines
-
-	-- 12-Line 3D Oriented Bounding Box Wireframe
-	local box3DLines = {}
-	for i = 1, 12 do
-		local line = Drawing.new("Line")
-		line.Thickness = 1.5
-		line.Color = Config.Theme.Stroke
-		line.Visible = false
-		table.insert(box3DLines, line)
-	end
-	Storage.Box3DObjects[plr] = box3DLines
-
-	-- 3D Look Vector Ray
-	local lookRay = Drawing.new("Line")
-	lookRay.Thickness = 1.5
-	lookRay.Color = Config.Theme.Accent or Color3.fromRGB(0, 220, 255)
-	lookRay.Visible = false
-	Storage.LookRayLines[plr] = lookRay
-
-	-- Offscreen Distance Tag
-	local offText = Drawing.new("Text")
-	offText.Size = 11
-	offText.Center = true
-	offText.Outline = true
-	offText.Color = Color3.fromRGB(255, 255, 255)
-	offText.Visible = false
-	Storage.OffscreenDistTexts[plr] = offText
-end
-
-function Features.RemoveESP(plr)
-	if Storage.NativePlayerTags[plr] then
-		pcall(function() Storage.NativePlayerTags[plr]:Destroy() end)
-		Storage.NativePlayerTags[plr] = nil
-	end
-	if Storage.ESPObjects[plr] then
-		for _, d in pairs(Storage.ESPObjects[plr]) do pcall(function() d:Remove() end) end
-		Storage.ESPObjects[plr] = nil
-	end
-	if Storage.SkeletonParts[plr] then
-		for _, part in pairs(Storage.SkeletonParts[plr]) do pcall(function() part:Remove() end) end
-		Storage.SkeletonParts[plr] = nil
-	end
-	if Storage.Box3DObjects[plr] then
-		for _, line in pairs(Storage.Box3DObjects[plr]) do pcall(function() line:Remove() end) end
-		Storage.Box3DObjects[plr] = nil
-	end
-	if Storage.TracerLines[plr] then
-		pcall(function() Storage.TracerLines[plr]:Remove() end)
-		Storage.TracerLines[plr] = nil
-	end
-	if Storage.OffscreenArrows[plr] then
-		pcall(function() Storage.OffscreenArrows[plr]:Remove() end)
-		Storage.OffscreenArrows[plr] = nil
-	end
-	if Storage.LookRayLines[plr] then
-		pcall(function() Storage.LookRayLines[plr]:Remove() end)
-		Storage.LookRayLines[plr] = nil
-	end
-	if Storage.OffscreenDistTexts[plr] then
-		pcall(function() Storage.OffscreenDistTexts[plr]:Remove() end)
-		Storage.OffscreenDistTexts[plr] = nil
-	end
-end
-
-function Features.UpdateOffscreenArrows()
-	local Camera = Utils.GetCurrentCamera()
-	if not Camera then return end
-	local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-	local radius = math.min(center.X, center.Y) * 0.65
-	local camCF = Camera.CFrame
-
-	for _, p in pairs(Services.Players:GetPlayers()) do
-		if p == LocalPlayer then continue end
-		local char = p.Character
-		if not char or not char.Parent then
-			if Storage.OffscreenArrows[p] then Storage.OffscreenArrows[p].Visible = false end
-			continue
-		end
-
-		if not Utils.IsAlive(p, char) then
-			if Storage.OffscreenArrows[p] then Storage.OffscreenArrows[p].Visible = false end
-			continue
-		end
-
-		if Config.States.TeamCheck and Utils.IsTeammate(p) then
-			if Storage.OffscreenArrows[p] then Storage.OffscreenArrows[p].Visible = false end
-			continue
-		end
-
-		local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("Head")
-		if not root then
-			if Storage.OffscreenArrows[p] then Storage.OffscreenArrows[p].Visible = false end
-			continue
-		end
-
-		local screenPos, onScreen = Camera:WorldToViewportPoint(root.Position)
-		if onScreen then
-			-- Already visible on screen, hide offscreen arrow
-			if Storage.OffscreenArrows[p] then Storage.OffscreenArrows[p].Visible = false end
-			continue
-		end
-
-		-- Target is OFF-SCREEN: Calculate 360 degree angle from camera orientation
-		local toEnemy = (root.Position - camCF.Position)
-		local dotRight = toEnemy:Dot(camCF.RightVector)
-		local dotUp = toEnemy:Dot(camCF.UpVector)
-		local angle = math.atan2(-dotUp, dotRight)
-
-		local arrowCenter = center + Vector2.new(math.cos(angle), math.sin(angle)) * radius
-		local tip = center + Vector2.new(math.cos(angle), math.sin(angle)) * (radius + 14)
-		local p1 = center + Vector2.new(math.cos(angle + 0.22), math.sin(angle + 0.22)) * (radius - 6)
-		local p2 = center + Vector2.new(math.cos(angle - 0.22), math.sin(angle - 0.22)) * (radius - 6)
-
-		local dist = math.floor(toEnemy.Magnitude)
-		local threatColor = Config.Theme.ThreatLow
-		if dist < 40 then threatColor = Config.Theme.ThreatHigh
-		elseif dist < 90 then threatColor = Config.Theme.ThreatMed end
-
-		if Drawing then
-			if not Storage.OffscreenArrows[p] then
-				local tri = Drawing.new("Triangle")
-				tri.Filled = true
-				tri.Thickness = 1
-				Storage.OffscreenArrows[p] = tri
-			end
-			local tri = Storage.OffscreenArrows[p]
-			tri.PointA = tip
-			tri.PointB = p1
-			tri.PointC = p2
-			tri.Color = threatColor
-			tri.Visible = true
-		end
-	end
-end
-
-function Features.UpdateHitboxes()
-	local now = tick()
-	if now - Storage.HitboxLastUpdate < 0.1 then return end
-	Storage.HitboxLastUpdate = now
-	for _, p in pairs(Services.Players:GetPlayers()) do
-		if p ~= LocalPlayer and p.Character then
-			if not Utils.IsAlive(p, p.Character) then continue end
-			if Config.States.TeamCheck and Utils.IsTeammate(p) then continue end
-			local eHead = p.Character:FindFirstChild("Head")
-			local eBody = p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("HumanoidRootPart")
-			
-			if Config.States.HeadExpander and eHead then
-				if eHead:GetAttribute("OrigSize") == nil then
-					eHead:SetAttribute("OrigSize", eHead.Size)
-					eHead:SetAttribute("OrigTransparency", eHead.Transparency)
-					eHead:SetAttribute("OrigCanCollide", eHead.CanCollide)
-					eHead:SetAttribute("OrigMassless", eHead.Massless)
-				end
-				eHead.Size = Vector3.new(Config.Vals.HeadSize, Config.Vals.HeadSize, Config.Vals.HeadSize)
-				eHead.Transparency = 0.7; eHead.CanCollide = false; eHead.Massless = true
-			elseif eHead and eHead:GetAttribute("OrigSize") ~= nil then
-				eHead.Size = eHead:GetAttribute("OrigSize")
-				local ot = eHead:GetAttribute("OrigTransparency")
-				eHead.Transparency = (ot ~= nil) and ot or 0
-				local origCollide = eHead:GetAttribute("OrigCanCollide")
-				if origCollide ~= nil then eHead.CanCollide = origCollide end
-				local origMassless = eHead:GetAttribute("OrigMassless")
-				if origMassless ~= nil then eHead.Massless = origMassless end
-				eHead:SetAttribute("OrigSize", nil); eHead:SetAttribute("OrigTransparency", nil)
-				eHead:SetAttribute("OrigCanCollide", nil); eHead:SetAttribute("OrigMassless", nil)
-			end
-			
-			if Config.States.Hitbox and eBody then
-				if eBody:GetAttribute("OrigSize") == nil then
-					eBody:SetAttribute("OrigSize", eBody.Size)
-					eBody:SetAttribute("OrigTransparency", eBody.Transparency)
-					eBody:SetAttribute("OrigCanCollide", eBody.CanCollide)
-					eBody:SetAttribute("OrigMassless", eBody.Massless)
-				end
-				eBody.Size = Vector3.new(Config.Vals.HitboxSize, Config.Vals.HitboxSize, Config.Vals.HitboxSize)
-				eBody.Transparency = 0.7; eBody.CanCollide = false; eBody.Massless = true
-			elseif eBody and eBody:GetAttribute("OrigSize") ~= nil then
-				eBody.Size = eBody:GetAttribute("OrigSize")
-				local ot = eBody:GetAttribute("OrigTransparency")
-				eBody.Transparency = (ot ~= nil) and ot or 0
-				local origCollide = eBody:GetAttribute("OrigCanCollide")
-				if origCollide ~= nil then eBody.CanCollide = origCollide end
-				local origMassless = eBody:GetAttribute("OrigMassless")
-				if origMassless ~= nil then eBody.Massless = origMassless end
-				eBody:SetAttribute("OrigSize", nil); eBody:SetAttribute("OrigTransparency", nil)
-				eBody:SetAttribute("OrigCanCollide", nil); eBody:SetAttribute("OrigMassless", nil)
-			end
-		end
-	end
-end
-
-function Features.GetAuraTarget()
-	local target, dist = nil, Config.Vals.AuraRange
-	local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-	if not myHRP then return nil end
-	for _, p in pairs(Services.Players:GetPlayers()) do
-		if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-			if not Utils.IsAlive(p, p.Character) then continue end
-			if Config.States.TeamCheck and Utils.IsTeammate(p) then continue end
-			local d = (p.Character.HumanoidRootPart.Position - myHRP.Position).Magnitude
-			if d < dist then dist = d; target = p.Character end
-		end
-	end
-	return target
-end
-
--- ==============================================================================
--- UI SYSTEM (V6.3.0)
--- ==============================================================================
--- ITEM & LOOT ESP SUBSYSTEM (V6.3.0)
-local function ClearItemESP()
-	for _, bg in pairs(Storage.ItemESPObjects) do
-		pcall(function() bg:Destroy() end)
-	end
-	table.clear(Storage.ItemESPObjects)
-end
-
-local function UpdateItemESP()
-	if not Config.States.ItemESP then
-		ClearItemESP()
-		return
-	end
-	local myChar = LocalPlayer.Character
-	local myHrp = myChar and (myChar:FindFirstChild("HumanoidRootPart") or myChar:FindFirstChild("Torso") or myChar.PrimaryPart)
-	if not myHrp then return end
-
-	local myPos = myHrp.Position
-	local found = {}
-
-	local function addItem(part, name, itemType)
-		if not part or not part:IsA("BasePart") or not part:IsDescendantOf(Services.Workspace) then return end
-		local dist = (part.Position - myPos).Magnitude
-		if dist <= 1000 then
-			found[part] = { Name = name, Dist = math.floor(dist), Type = itemType or "item" }
-		end
-	end
-
-	-- Universal Item & Loot Scanner
-	local lootKeywords = {
-		"drop", "item", "loot", "tool", "weapon", "pickup", "chest",
-		"crate", "box", "interact", "debris", "ground", "entity",
-		"spawn", "collect", "cash", "money", "prop"
-	}
-
-	local function isLootContainer(name)
-		local lname = name:lower()
-		for _, kw in ipairs(lootKeywords) do
-			if lname:find(kw) then return true end
-		end
-		return false
-	end
-
-	local function scanContainer(container)
-		if not container then return end
-		local children = container:GetChildren()
-		for _, sub in ipairs(children) do
-			if sub:IsA("Tool") then
-				local p = sub:FindFirstChild("Handle") or sub:FindFirstChildWhichIsA("BasePart")
-				if p then addItem(p, sub.Name, "tool") end
-			elseif sub:IsA("BasePart") then
-				local prompt = sub:FindFirstChildWhichIsA("ProximityPrompt", true)
-				if prompt and prompt.Enabled then
-					local title = prompt.ObjectText ~= "" and prompt.ObjectText or prompt.ActionText
-					if title == "" or title == "Interact" or title == "Use" or title == "Pick Up" then title = sub.Name end
-					addItem(sub, title, "prompt")
-				else
-					addItem(sub, sub.Name, "item")
-				end
-			elseif sub:IsA("Model") and not sub:FindFirstChildOfClass("Humanoid") then
-				local prompt = sub:FindFirstChildWhichIsA("ProximityPrompt", true)
-				local p = sub.PrimaryPart or sub:FindFirstChild("Handle") or sub:FindFirstChildWhichIsA("BasePart")
-				if p then
-					if prompt and prompt.Enabled then
-						local title = prompt.ObjectText ~= "" and prompt.ObjectText or prompt.ActionText
-						if title == "" or title == "Interact" or title == "Use" or title == "Pick Up" then title = sub.Name end
-						addItem(p, title, "prompt")
-					else
-						addItem(p, sub.Name, "container")
-					end
-				end
-			end
-		end
-	end
-
-	for _, item in ipairs(Services.Workspace:GetChildren()) do
-		if item:IsA("Tool") then
-			local p = item:FindFirstChild("Handle") or item:FindFirstChildWhichIsA("BasePart")
-			if p then addItem(p, item.Name, "tool") end
-		elseif item:IsA("BasePart") then
-			local prompt = item:FindFirstChildWhichIsA("ProximityPrompt", true)
-			if prompt and prompt.Enabled then
-				local title = prompt.ObjectText ~= "" and prompt.ObjectText or prompt.ActionText
-				if title == "" or title == "Interact" or title == "Use" or title == "Pick Up" then title = item.Name end
-				addItem(item, title, "prompt")
-			end
-			local click = item:FindFirstChildWhichIsA("ClickDetector", true)
-			if click then addItem(item, item.Name, "click") end
-		elseif (item:IsA("Folder") or item:IsA("Model")) and not item:FindFirstChildOfClass("Humanoid") then
-			if isLootContainer(item.Name) then
-				scanContainer(item)
-			end
-		end
-	end
-
-	local debris = Services.Workspace:FindFirstChild("Debris")
-	if debris and (debris:IsA("Folder") or debris:IsA("Model")) then
-		scanContainer(debris)
-	end
-
-	-- Reliable parent for BillboardGuis across all executors (Delta, Arceus X, Solara, Wave)
-	local itemGuiParent = LocalPlayer:FindFirstChildOfClass("PlayerGui") or targetGui
-
-	for part, data in pairs(found) do
-		local bg = Storage.ItemESPObjects[part]
-		local icon = (data.Type == "prompt" and "✨ ") or (data.Type == "tool" and "🔫 ") or (data.Type == "click" and "🖱️ ") or "📦 "
-		local color = (data.Type == "tool" and Color3.fromRGB(100, 220, 255)) or (data.Type == "prompt" and Color3.fromRGB(255, 230, 80)) or Color3.fromRGB(255, 200, 60)
-		if not bg or not bg.Parent then
-			bg = Instance.new("BillboardGui")
-			bg.Name = "X_ITEM_ESP"
-			bg.AlwaysOnTop = true
-			bg.Size = UDim2.new(0, 160, 0, 24)
-			bg.Adornee = part
-			bg.MaxDistance = 1000
-			
-			local lbl = Instance.new("TextLabel", bg)
-			lbl.Name = "Tag"
-			lbl.Size = UDim2.new(1, 0, 1, 0)
-			lbl.BackgroundTransparency = 1
-			lbl.TextColor3 = color
-			lbl.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-			lbl.TextStrokeTransparency = 0.2
-			lbl.Font = Enum.Font.GothamBold
-			lbl.TextSize = 11
-			lbl.Text = icon .. data.Name .. " [" .. tostring(data.Dist) .. "m]"
-			
-			bg.Parent = itemGuiParent
-			Storage.ItemESPObjects[part] = bg
-		else
-			local lbl = bg:FindFirstChild("Tag")
-			if lbl then
-				lbl.Text = icon .. data.Name .. " [" .. tostring(data.Dist) .. "m]"
-			end
-		end
-	end
-
-	for part, bg in pairs(Storage.ItemESPObjects) do
-		if not found[part] or not part.Parent then
-			pcall(function() bg:Destroy() end)
-			Storage.ItemESPObjects[part] = nil
-		end
-	end
-end
-
-local UI = {}
-function UI.Init()
-	local guiName = "X_TITAN_V581"
-	if targetGui:FindFirstChild(guiName) then targetGui[guiName]:Destroy() end
-	
-	local ScreenGui = Instance.new("ScreenGui", targetGui)
-	ScreenGui.Name = guiName; ScreenGui.ResetOnSpawn = false; ScreenGui.IgnoreGuiInset = true; ScreenGui.DisplayOrder = 999999999
-	
-	local Main = Instance.new("Frame", ScreenGui)
-	Main.Size = UDim2.new(0, 640, 0, 480); Main.Position = UDim2.new(0.5, -320, 0.5, -240)
-	Main.BackgroundColor3 = Config.Theme.Main; Main.Active = true; Main.Draggable = true
-	Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
-	local UIStroke = Instance.new("UIStroke", Main); UIStroke.Color = Config.Theme.Stroke; UIStroke.Thickness = 1.5; UIStroke.Transparency = 0.35
-	Storage.MainFrame = Main
-
-	-- Floating Open/Close Button (Always visible on screen, click to toggle menu)
-	local ToggleBtn = Instance.new("TextButton", ScreenGui)
-	ToggleBtn.Name = "X_Titan_Floating_Toggle"
-	ToggleBtn.Size = UDim2.new(0, 42, 0, 42)
-	ToggleBtn.Position = UDim2.new(0, 16, 0.45, 0)
-	ToggleBtn.BackgroundColor3 = Config.Theme.Sec
-	ToggleBtn.Text = "X"
-	ToggleBtn.TextColor3 = Config.Theme.Stroke
-	ToggleBtn.Font = Enum.Font.GothamBold
-	ToggleBtn.TextSize = 18
-	ToggleBtn.Active = true
-	ToggleBtn.Draggable = true
-	Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 10)
-	local tbStroke = Instance.new("UIStroke", ToggleBtn)
-	tbStroke.Color = Config.Theme.Stroke
-	tbStroke.Thickness = 1.5
-	tbStroke.Transparency = 0.3
-
-	ToggleBtn.MouseButton1Click:Connect(function()
-		if Storage.MainFrame then
-			Storage.MainFrame.Visible = not Storage.MainFrame.Visible
-			ToggleBtn.Text = Storage.MainFrame.Visible and "✕" or "X"
-			ToggleBtn.TextColor3 = Storage.MainFrame.Visible and Color3.fromRGB(255, 80, 80) or Config.Theme.Stroke
-			tbStroke.Color = Storage.MainFrame.Visible and Color3.fromRGB(255, 80, 80) or Config.Theme.Stroke
-			Utils.Notify("📱 Menu", Storage.MainFrame.Visible and "OPENED" or "CLOSED", 1)
-		end
-	end)
-	
-	local SidePanel = Instance.new("Frame", Main)
-	SidePanel.Size = UDim2.new(0, 155, 1, 0); SidePanel.BackgroundColor3 = Config.Theme.Sec
-	Instance.new("UICorner", SidePanel).CornerRadius = UDim.new(0, 10)
-	
-	local Title = Instance.new("TextLabel", SidePanel)
-	if isFounder then
-		Title.Text = "🔥 X TITAN<font color='#ff0055'>+</font> <font color='#ffcd32'>[XT7789]</font>"; Title.RichText = true
-	elseif isSeller then
-		Title.Text = "🔥 X TITAN<font color='#ff0055'>+</font> <font color='#00d2ff'>[CO-FOUNDER]</font>"; Title.RichText = true
-	elseif isTitanPlus then
-		Title.Text = "🔥 X TITAN<font color='#ff0055'>+</font> <font color='#ffcd32'>[PRO-X APEX]</font>"; Title.RichText = true
-	else
-		Title.Text = "⚡ X TITAN"; Title.RichText = false
-	end
-	Title.Size = UDim2.new(1, -16, 0, 24); Title.Position = UDim2.new(0, 12, 0, 12)
-	Title.BackgroundTransparency = 1; Title.TextColor3 = Config.Theme.Stroke
-	Title.Font = Enum.Font.GothamBlack; Title.TextSize = 14; Title.TextXAlignment = Enum.TextXAlignment.Left
-
-	local Subtitle = Instance.new("TextLabel", SidePanel)
-	if isFounder then
-		Subtitle.Text = "👑 GODMODE APEX • V6.1.1"
-		Subtitle.TextColor3 = Color3.fromRGB(255, 205, 50)
-	elseif isSeller then
-		Subtitle.Text = "💎 CO-FOUNDER VIP • V6.1.1"
-		Subtitle.TextColor3 = Color3.fromRGB(0, 210, 255)
-	elseif isTitanPlus then
-		Subtitle.Text = "⚡ PRO-X APEX • V6.1.1"
-		Subtitle.TextColor3 = Color3.fromRGB(255, 205, 50)
-	else
-		Subtitle.Text = "VOID WALKER • V6.1.1"
-		Subtitle.TextColor3 = Config.Theme.TextDim
-	end
-	Subtitle.Size = UDim2.new(1, -16, 0, 14); Subtitle.Position = UDim2.new(0, 12, 0, 34)
-	Subtitle.BackgroundTransparency = 1
-	Subtitle.Font = Enum.Font.GothamBold; Subtitle.TextSize = 9; Subtitle.TextXAlignment = Enum.TextXAlignment.Left
-	
-	local TabHolder = Instance.new("Frame", SidePanel)
-	TabHolder.Size = UDim2.new(1, -16, 1, -100); TabHolder.Position = UDim2.new(0, 8, 0, 56); TabHolder.BackgroundTransparency = 1
-	local TabLayout = Instance.new("UIListLayout", TabHolder); TabLayout.Padding = UDim.new(0, 4)
-
-	local SideUnloadBtn = Instance.new("TextButton", SidePanel)
-	SideUnloadBtn.Name = "SideUnload"
-	SideUnloadBtn.Size = UDim2.new(1, -16, 0, 30); SideUnloadBtn.Position = UDim2.new(0, 8, 1, -38)
-	SideUnloadBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
-	SideUnloadBtn.Text = "❌ UNLOAD [End]"; SideUnloadBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	SideUnloadBtn.Font = Enum.Font.GothamBold; SideUnloadBtn.TextSize = 11
-	Instance.new("UICorner", SideUnloadBtn).CornerRadius = UDim.new(0, 6)
-	SideUnloadBtn.MouseButton1Click:Connect(function()
-		Runtime.Unload()
-	end)
-	
-	local PageHolder = Instance.new("Frame", Main)
-	PageHolder.Size = UDim2.new(1, -170, 1, -14); PageHolder.Position = UDim2.new(0, 162, 0, 7); PageHolder.BackgroundTransparency = 1
-	
-	local uiOrderCounter = 0
-	local function getNextOrder() uiOrderCounter = uiOrderCounter + 1; return uiOrderCounter end
-	
-	local function CreatePage(name)
-		local Page = Instance.new("ScrollingFrame", PageHolder)
-		Page.Size = UDim2.new(1, 0, 1, 0); Page.BackgroundTransparency = 1; Page.Visible = false
-		Page.ScrollBarThickness = 4; Page.ScrollBarImageColor3 = Config.Theme.Stroke
-		Page.BorderSizePixel = 0
-		Page.CanvasSize = UDim2.new(0, 0, 0, 0)
-		pcall(function() Page.AutomaticCanvasSize = Enum.AutomaticSize.Y end)
-		
-		local List = Instance.new("UIListLayout", Page); List.Padding = UDim.new(0, 5); List.SortOrder = Enum.SortOrder.LayoutOrder
-		local Pad = Instance.new("UIPadding", Page)
-		Pad.PaddingBottom = UDim.new(0, 24)
-		Pad.PaddingRight = UDim.new(0, 6)
-		Pad.PaddingTop = UDim.new(0, 2)
-		
-		local function refreshCanvas()
-			local y = List.AbsoluteContentSize.Y
-			if y > 50 then
-				Page.CanvasSize = UDim2.new(0, 0, 0, y + 30)
-			else
-				Page.CanvasSize = UDim2.new(0, 0, 0, 0)
-			end
-		end
-		List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(refreshCanvas)
-		Page:GetPropertyChangedSignal("Visible"):Connect(function()
-			if Page.Visible then
-				Page.CanvasPosition = Vector2.new(0, 0)
-				task.defer(refreshCanvas)
-			end
-		end)
-		
-		local TabBtn = Instance.new("TextButton", TabHolder)
-		TabBtn.Size = UDim2.new(1, 0, 0, 32); TabBtn.BackgroundColor3 = Color3.fromRGB(30,30,35)
-		TabBtn.Text = name; TabBtn.TextColor3 = Config.Theme.TextDim; TabBtn.Font = Enum.Font.GothamBold; TabBtn.TextSize = 11; TabBtn.AutoButtonColor = false
-		Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 6)
-		TabBtn.MouseButton1Click:Connect(function()
-			for _,v in pairs(PageHolder:GetChildren()) do if v:IsA("ScrollingFrame") then v.Visible = false end end
-			for _,v in pairs(TabHolder:GetChildren()) do if v:IsA("TextButton") then v.BackgroundColor3 = Color3.fromRGB(30,30,35); v.TextColor3 = Config.Theme.TextDim end end
-			Page.Visible = true; TabBtn.BackgroundColor3 = Config.Theme.Stroke; TabBtn.TextColor3 = Config.Theme.Main
-			Page.CanvasPosition = Vector2.new(0, 0)
-			task.defer(refreshCanvas)
-		end)
-		return Page, TabBtn, getNextOrder
-	end
-	
-	local function AddToggle(page, text, flag, getOrder)
-		local Btn = Instance.new("TextButton", page)
-		Btn.LayoutOrder = getOrder(); Btn.Size = UDim2.new(1, -4, 0, 36); Btn.BackgroundColor3 = Config.Theme.Sec; Btn.Text = "  "; Btn.AutoButtonColor = false
-		Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
-		local Stroke = Instance.new("UIStroke", Btn); Stroke.Color = Config.Theme.Stroke; Stroke.Transparency = 0.85
-		local Label = Instance.new("TextLabel", Btn)
-		Label.Text = text; Label.Size = UDim2.new(0.74, 0, 1, 0); Label.Position = UDim2.new(0, 12, 0, 0)
-		Label.BackgroundTransparency = 1; Label.TextColor3 = Config.Theme.Text; Label.Font = Enum.Font.GothamSemibold; Label.TextSize = 11; Label.TextXAlignment = Enum.TextXAlignment.Left
-		local Indicator = Instance.new("Frame", Btn)
-		Indicator.Size = UDim2.new(0, 34, 0, 18); Indicator.Position = UDim2.new(1, -46, 0.5, -9); Indicator.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-		Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
-		local indStroke = Instance.new("UIStroke", Indicator); indStroke.Color = Config.Theme.Stroke; indStroke.Transparency = 0.75; indStroke.Thickness = 1
-		local Dot = Instance.new("Frame", Indicator)
-		Dot.Size = UDim2.new(0, 14, 0, 14); Dot.Position = UDim2.new(0, 2, 0.5, -7); Dot.BackgroundColor3 = Color3.fromRGB(150, 150, 160)
-		Instance.new("UICorner", Dot).CornerRadius = UDim.new(1, 0)
-		
-		local function Update(val, skipNotify)
-			local c = val and Config.Theme.Stroke or Color3.fromRGB(150, 150, 160)
-			local bgC = val and Color3.fromRGB(0, 60, 75) or Color3.fromRGB(45, 45, 55)
-			local p = val and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
-			Services.TweenService:Create(Dot, TweenInfo.new(0.2), {Position = p, BackgroundColor3 = c}):Play()
-			Services.TweenService:Create(Indicator, TweenInfo.new(0.2), {BackgroundColor3 = bgC}):Play()
-			Services.TweenService:Create(Stroke, TweenInfo.new(0.2), {Transparency = val and 0.4 or 0.85}):Play()
-			Config.States[flag] = val
-			pcall(function()
-				if flag == "XRay" and Utils.ToggleXRay then Utils.ToggleXRay(val) end
-				if flag == "Fullbright" and Utils.ToggleFullbright then Utils.ToggleFullbright(val) end
-				if flag == "AntiKillbrick" and not val and Storage.OriginalFallenHeight then
-					Services.Workspace.FallenPartsDestroyHeight = Storage.OriginalFallenHeight
-				end
-				if flag == "Chams" and Features.UpdateChams then Features.UpdateChams() end
-				if flag == "ItemESP" then
-					if not val then
-						if ClearItemESP then ClearItemESP() end
-					else
-						if UpdateItemESP then task.spawn(UpdateItemESP) end
-					end
-				end
-				if flag == "WeaponESP" and not val and Drawing then
-					for _, esp in pairs(Storage.ESPObjects) do
-						if esp.Weapon then esp.Weapon.Visible = false end
-					end
-				end
-				if flag == "ESP" and not val and Drawing then
-					for _, esp in pairs(Storage.ESPObjects) do
-						pcall(function()
-							esp.Box.Visible = false; esp.Name.Visible = false
-							esp.HealthBar.Visible = false; esp.Distance.Visible = false
-							if esp.Weapon then esp.Weapon.Visible = false end
-						end)
-					end
-				end
-				if flag == "Radar" and Storage.RadarFrame then
-					Storage.RadarFrame.Visible = val
-					if not val then
-						for _, obj in pairs(Storage.RadarObjects) do if obj.Visible then obj.Visible = false end end
-					end
-				end
-				if flag == "ShowFOV" and Storage.FOVRingUI then
-					Storage.FOVRingUI.Visible = val
-				end
-				if flag == "ShowLockStatus" and Storage.TacticalHUD then
-					Storage.TacticalHUD.Main.Visible = val and (Storage.LockedTarget ~= nil)
-				end
-			end)
-			if not skipNotify and Utils and Utils.Notify then
-				pcall(function()
-					Utils.Notify(text, val and "ENABLED" or "DISABLED", 1.5)
-				end)
-			end
-		end
-		Storage.ToggleFuncs[flag] = Update; Update(Config.States[flag], true)
-		Btn.MouseButton1Click:Connect(function() Update(not Config.States[flag]) end)
-	end
-	
-	local function AddSlider(page, text, min, max, def, cb, getOrder)
-		local Frame = Instance.new("Frame", page)
-		Frame.LayoutOrder = getOrder(); Frame.Size = UDim2.new(1, -4, 0, 46); Frame.BackgroundColor3 = Config.Theme.Sec
-		Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6)
-		local fStroke = Instance.new("UIStroke", Frame); fStroke.Color = Config.Theme.Stroke; fStroke.Transparency = 0.85
-		
-		local Label = Instance.new("TextLabel", Frame)
-		Label.Text = text; Label.Size = UDim2.new(0.72, 0, 0, 18); Label.Position = UDim2.new(0, 10, 0, 4)
-		Label.BackgroundTransparency = 1; Label.TextColor3 = Config.Theme.Text; Label.Font = Enum.Font.GothamSemibold; Label.TextSize = 11
-		Label.TextXAlignment = Enum.TextXAlignment.Left
-
-		local ValLabel = Instance.new("TextLabel", Frame)
-		ValLabel.Text = tostring(def); ValLabel.Size = UDim2.new(0.24, 0, 0, 18); ValLabel.Position = UDim2.new(0.74, -10, 0, 4)
-		ValLabel.BackgroundTransparency = 1; ValLabel.TextColor3 = Config.Theme.Stroke; ValLabel.Font = Enum.Font.GothamBold; ValLabel.TextSize = 11
-		ValLabel.TextXAlignment = Enum.TextXAlignment.Right
-
-		local SlideBar = Instance.new("TextButton", Frame)
-		SlideBar.Size = UDim2.new(1, -20, 0, 6); SlideBar.Position = UDim2.new(0, 10, 0, 28); SlideBar.BackgroundColor3 = Color3.fromRGB(45,45,55); SlideBar.Text = "  "
-		Instance.new("UICorner", SlideBar).CornerRadius = UDim.new(1, 0)
-		local barStroke = Instance.new("UIStroke", SlideBar); barStroke.Color = Config.Theme.Stroke; barStroke.Transparency = 0.85
-
-		local Fill = Instance.new("Frame", SlideBar)
-		Fill.Size = UDim2.new((def-min)/(max-min), 0, 1, 0); Fill.BackgroundColor3 = Config.Theme.Stroke
-		Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
-		
-		local SliderData = {Bar = SlideBar, Fill = Fill, Label = Label, ValLabel = ValLabel, Min = min, Max = max, Callback = cb, Text = text}
-		function SliderData:SetValue(val)
-			val = math.clamp(val, min, max); local pct = (val - min) / (max - min)
-			Fill.Size = UDim2.new(pct, 0, 1, 0); ValLabel.Text = tostring(math.floor(val))
-			if cb then cb(math.floor(val)) end
-		end
-		SlideBar.MouseButton1Down:Connect(function() Storage.ActiveSlider = SliderData; Storage.SliderDrag = true end)
-		SliderData:SetValue(def)
-	end
-	
-	local sliderChangedConn = Services.UIS.InputChanged:Connect(function(i)
-		if Storage.SliderDrag and Storage.ActiveSlider and i.UserInputType == Enum.UserInputType.MouseMovement then
-			local s = Storage.ActiveSlider
-			local pct = math.clamp((i.Position.X - s.Bar.AbsolutePosition.X) / s.Bar.AbsoluteSize.X, 0, 1)
-			s:SetValue(math.floor(s.Min + (s.Max - s.Min) * pct))
-		end
-	end)
-	table.insert(Storage.Connections, sliderChangedConn)
-	
-	local sliderEndedConn = Services.UIS.InputEnded:Connect(function(i)
-		if i.UserInputType == Enum.UserInputType.MouseButton1 and Storage.SliderDrag then
-			Storage.SliderDrag = false; Storage.ActiveSlider = nil
-		end
-	end)
-	table.insert(Storage.Connections, sliderEndedConn)
-	
-	local function AddDual(page, t1, cb1, t2, cb2, getOrder)
-		local F = Instance.new("Frame", page)
-		F.LayoutOrder = getOrder(); F.Size = UDim2.new(1, -4, 0, 32); F.BackgroundTransparency = 1
-		local B1 = Instance.new("TextButton", F); B1.Size = UDim2.new(0.48, 0, 1, 0); B1.BackgroundColor3 = Config.Theme.Sec
-		B1.Text = t1; B1.TextColor3 = Config.Theme.Text; B1.Font = Enum.Font.GothamBold; B1.TextSize = 9
-		Instance.new("UICorner", B1).CornerRadius = UDim.new(0, 6)
-		local b1Stroke = Instance.new("UIStroke", B1); b1Stroke.Color = Config.Theme.Stroke; b1Stroke.Transparency = 0.85
-		if cb1 then B1.MouseButton1Click:Connect(function() cb1() end) end
-		local B2 = Instance.new("TextButton", F); B2.Size = UDim2.new(0.48, 0, 1, 0); B2.Position = UDim2.new(0.52, 0, 0, 0)
-		B2.BackgroundColor3 = Config.Theme.Sec; B2.Text = t2; B2.TextColor3 = Config.Theme.Text; B2.Font = Enum.Font.GothamBold; B2.TextSize = 9
-		Instance.new("UICorner", B2).CornerRadius = UDim.new(0, 6)
-		local b2Stroke = Instance.new("UIStroke", B2); b2Stroke.Color = Config.Theme.Stroke; b2Stroke.Transparency = 0.85
-		if cb2 then B2.MouseButton1Click:Connect(function() cb2() end) end
-		return B1, B2
-	end
-	
-	local function AddSection(page, text, getOrder)
-		local SecFrame = Instance.new("Frame", page); SecFrame.LayoutOrder = getOrder()
-		SecFrame.Size = UDim2.new(1, -4, 0, 26); SecFrame.BackgroundTransparency = 1
-		
-		local Bar = Instance.new("Frame", SecFrame)
-		Bar.Size = UDim2.new(0, 3, 0, 14); Bar.Position = UDim2.new(0, 2, 0.5, -7)
-		Bar.BackgroundColor3 = Config.Theme.Stroke; Instance.new("UICorner", Bar).CornerRadius = UDim.new(1, 0)
-
-		local Label = Instance.new("TextLabel", SecFrame)
-		Label.Size = UDim2.new(1, -16, 1, 0); Label.Position = UDim2.new(0, 10, 0, 0)
-		Label.BackgroundTransparency = 1; Label.Text = string.upper(text); Label.TextColor3 = Config.Theme.Stroke
-		Label.Font = Enum.Font.GothamBlack; Label.TextSize = 11; Label.TextXAlignment = Enum.TextXAlignment.Left
-	end
-	
-		local function AddKeybindRebind(page, actionName, keyFlag, getOrder)
-		local F = Instance.new("Frame", page)
-		F.LayoutOrder = getOrder(); F.Size = UDim2.new(1, -4, 0, 26); F.BackgroundColor3 = Config.Theme.Sec
-		Instance.new("UICorner", F).CornerRadius = UDim.new(0, 6)
-		local stroke = Instance.new("UIStroke", F); stroke.Color = Config.Theme.Stroke; stroke.Transparency = 0.85
-		
-		local L = Instance.new("TextLabel", F); L.Size = UDim2.new(0.55, 0, 1, 0); L.Position = UDim2.new(0, 10, 0, 0)
-		L.BackgroundTransparency = 1; L.Text = actionName; L.TextColor3 = Config.Theme.Text; L.Font = Enum.Font.GothamBold; L.TextSize = 10
-		L.TextXAlignment = Enum.TextXAlignment.Left
-		
-		local Btn = Instance.new("TextButton", F); Btn.Size = UDim2.new(0.4, 0, 0.8, 0); Btn.Position = UDim2.new(0.58, 0, 0.1, 0)
-		Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45); Btn.TextColor3 = Config.Theme.Stroke; Btn.Font = Enum.Font.GothamBlack; Btn.TextSize = 10
-		Btn.Text = Config.Keys[keyFlag] and Config.Keys[keyFlag].Name or "None"
-		Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 4)
-		
-		Btn.MouseButton1Click:Connect(function()
-			Btn.Text = "[Press Key...]"
-			Btn.TextColor3 = Color3.fromRGB(255, 220, 80)
-			local conn
-			conn = Services.UIS.InputBegan:Connect(function(inp, gpe)
-				if inp.UserInputType == Enum.UserInputType.Keyboard and inp.KeyCode ~= Enum.KeyCode.Unknown then
-					conn:Disconnect()
-					Config.Keys[keyFlag] = inp.KeyCode
-					Btn.Text = inp.KeyCode.Name
-					Btn.TextColor3 = Config.Theme.Stroke
-					Utils.Notify("⌨️ Keybind Set", actionName .. " bound to: " .. inp.KeyCode.Name)
-				end
-			end)
-		end)
-	end
-
-	local function AddKeybindInfo(page, section, binds, getOrder)
-		AddSection(page, section, getOrder)
-		for _, bind in ipairs(binds) do
-			local F = Instance.new("Frame", page)
-			F.LayoutOrder = getOrder(); F.Size = UDim2.new(1, -4, 0, 22); F.BackgroundTransparency = 1
-			local L = Instance.new("TextLabel", F); L.Size = UDim2.new(0.55, 0, 1, 0); L.Position = UDim2.new(0, 10, 0, 0)
-			L.BackgroundTransparency = 1; L.Text = bind[1]; L.TextColor3 = Config.Theme.Text; L.Font = Enum.Font.GothamBold; L.TextSize = 10
-			L.TextXAlignment = Enum.TextXAlignment.Left
-			local K = Instance.new("TextLabel", F); K.Size = UDim2.new(0.4, 0, 1, 0); K.Position = UDim2.new(0.6, -20, 0, 0)
-			K.BackgroundTransparency = 1; K.Text = bind[2]; K.TextColor3 = Config.Theme.Stroke; K.Font = Enum.Font.GothamBlack; K.TextSize = 10
-			K.TextXAlignment = Enum.TextXAlignment.Right
-		end
-	end
-	
-	local P1, T1, getOrder1 = CreatePage("🎯 COMBAT"); P1.Visible = true; T1.BackgroundColor3 = Config.Theme.Stroke; T1.TextColor3 = Config.Theme.Main
-	local P2, T2, getOrder2 = CreatePage("👁️ VISUAL")
-	local P3, T3, getOrder3 = CreatePage("🏃 MOVEMENT")
-	local P4, T4, getOrder4 = CreatePage("👥 PLAYER")
-	local P5, T5, getOrder5 = CreatePage("⚙️ OTHER")
-	local P6, T6, getOrder6 = CreatePage("⌨️ KEYBINDS")
-	
-	
-	AddSection(P1, "GOD TIER FLING & RAGE [V5.0]", getOrder1)
-	AddToggle(P1, "🌪️ Touch Fling (God Yeet)", "TouchFling", getOrder1)
-	AddToggle(P1, "🛡️ Anti-Fling Immortality", "AntiFling", getOrder1)
-	AddToggle(P1, "🎯 100% Wallbang (Penetrate All)", "Wallbang", getOrder1)
-	AddToggle(P1, "🌀 Orbit Stalker Aura", "OrbitAura", getOrder1)
-	AddSlider(P1, "Orbit Distance", 3, 30, 8, function(v) Config.Vals.OrbitDistance = v end, getOrder1)
-	AddSlider(P1, "Orbit Speed", 1, 25, 8, function(v) Config.Vals.OrbitSpeed = v end, getOrder1)
-
-	AddSection(P1, "AIMBOT & THREAT", getOrder1)
-	AddToggle(P1, "Hold Right Click Aimbot", "RightClickToggle", getOrder1)
-	AddToggle(P1, "Aimbot (Esports V4.5)", "Aimbot", getOrder1)
-	AddToggle(P1, "⚡ Auto Aimbot Failover (Plan B)", "AimbotFailover", getOrder1)
-	local bPlan1, bPlan2
-	local function UpdateAimbotPlanUI()
-		if bPlan2 then
-			bPlan2.Text = "Mode: " .. Config.Vals.AimbotPlan
-			bPlan2.TextColor3 = Config.Theme.Stroke
-		end
-	end
-	local function CycleAimbotPlan()
-		Storage.AimbotPlanIndex = (Storage.AimbotPlanIndex % #Storage.AimbotPlans) + 1
-		Config.Vals.AimbotPlan = Storage.AimbotPlans[Storage.AimbotPlanIndex]
-		Storage.CameraOverrideDetected = false
-		Storage.AimbotCameraOverrideCount = 0
-		UpdateAimbotPlanUI()
-		Utils.Notify("🎯 Aimbot Plan", "Mode set to: " .. Config.Vals.AimbotPlan)
-	end
-	bPlan1, bPlan2 = AddDual(P1, "🎯 Cycle Aimbot Plan", CycleAimbotPlan, "Mode: " .. Config.Vals.AimbotPlan, CycleAimbotPlan, getOrder1)
-	UpdateAimbotPlanUI()
-	AddSlider(P1, "Base Smoothness", 1, 90, 30, function(v) Config.Vals.AimbotSmoothness = v / 100 end, getOrder1)
-	AddSlider(P1, "Prediction", 0, 50, 16, function(v) Config.Vals.PredictionStrength = v / 100 end, getOrder1)
-	AddToggle(P1, "Smart Prediction (Ping)", "SmartPrediction", getOrder1)
-	AddToggle(P1, "Auto Aim Part", "AutoAimPart", getOrder1)
-	local bAim1, bAim2
-	local function UpdateAimPartButtonUI()
-		if bAim2 then
-			bAim2.Text = "Target: " .. Config.Vals.AimPart
-			bAim2.TextColor3 = Config.Theme.Stroke
-		end
-	end
-	local function CycleAimPart()
-		Storage.AimPartIndex = Storage.AimPartIndex % #Storage.AimParts + 1
-		Config.Vals.AimPart = Storage.AimParts[Storage.AimPartIndex]
-		UpdateAimPartButtonUI()
-		Utils.Notify("🎯 Aim Part", "Target Part set to: " .. Config.Vals.AimPart)
-	end
-	bAim1, bAim2 = AddDual(P1, "🎯 Cycle Aim Part", CycleAimPart, "Target: " .. Config.Vals.AimPart, CycleAimPart, getOrder1)
-	UpdateAimPartButtonUI()
-	
-	local bPrio1, bPrio2
-	local function UpdatePriorityUI()
-		if bPrio2 then
-			bPrio2.Text = "Priority: " .. Config.Vals.TargetPriority
-			bPrio2.TextColor3 = Config.Theme.Stroke
-		end
-	end
-	local function CycleTargetPriority()
-		Storage.TargetPriorityIndex = (Storage.TargetPriorityIndex % #Storage.TargetPriorities) + 1
-		Config.Vals.TargetPriority = Storage.TargetPriorities[Storage.TargetPriorityIndex]
-		UpdatePriorityUI()
-		Utils.Notify("🎯 Target Priority", "Priority set to: " .. Config.Vals.TargetPriority)
-	end
-	bPrio1, bPrio2 = AddDual(P1, "🎯 Cycle Priority", CycleTargetPriority, "Priority: " .. Config.Vals.TargetPriority, CycleTargetPriority, getOrder1)
-	UpdatePriorityUI()
-	
-	local bHit1, bHit2
-	local function UpdateHitSoundUI()
-		if bHit2 then
-			bHit2.Text = "Sound: " .. Config.Vals.HitSoundPreset
-			bHit2.TextColor3 = Config.Theme.Stroke
-		end
-	end
-	local function CycleHitSound()
-		Storage.HitSoundIndex = (Storage.HitSoundIndex % #Storage.HitSoundPresets) + 1
-		Config.Vals.HitSoundPreset = Storage.HitSoundPresets[Storage.HitSoundIndex]
-		UpdateHitSoundUI()
-		Utils.Notify("🔊 Hit Sound", "Audio preset: " .. Config.Vals.HitSoundPreset)
-		Utils.PlayHitSound()
-	end
-	bHit1, bHit2 = AddDual(P1, "🔊 Cycle Hit Sound", CycleHitSound, "Sound: " .. Config.Vals.HitSoundPreset, CycleHitSound, getOrder1)
-	UpdateHitSoundUI()
-	
-	AddSection(P1, "SILENT & TRIGGER", getOrder1)
-	AddToggle(P1, "Silent Aim 🔥", "SilentAim", getOrder1)
-	AddToggle(P1, "TriggerBot [T]", "TriggerBot", getOrder1)
-	AddToggle(P1, "🎯 Tactical Hitmarker", "Hitmarker", getOrder1)
-	AddToggle(P1, "🛡️ No Camera Recoil", "NoRecoil", getOrder1)
-	
-	AddSection(P1, "AURA & LOCK", getOrder1)
-	AddToggle(P1, "Kill Aura", "KillAura", getOrder1)
-	AddToggle(P1, "TP Aura", "TPAura", getOrder1)
-	
-	AddSection(P1, "HITBOX", getOrder1)
-	AddToggle(P1, "Head Expander", "HeadExpander", getOrder1)
-	AddSlider(P1, "Head Size", 2, 50, 25, function(v) Config.Vals.HeadSize = v end, getOrder1)
-	AddToggle(P1, "Body Expander", "Hitbox", getOrder1)
-	AddSlider(P1, "Body Size", 2, 50, 15, function(v) Config.Vals.HitboxSize = v end, getOrder1)
-	
-	AddSection(P1, "FILTERS & FOV", getOrder1)
-	AddToggle(P1, "Team Check", "TeamCheck", getOrder1)
-	AddToggle(P1, "Wall Check", "WallCheck", getOrder1)
-	AddToggle(P1, "Show FOV", "ShowFOV", getOrder1)
-	AddToggle(P1, "🧲 Sticky Target Retention", "StickyAim", getOrder1)
-	AddToggle(P1, "🎯 Multi-Bone Dynamic Aim [Titan+]", "MultiBoneAim", getOrder1)
-	AddToggle(P1, "🛡️ Anti-Desync Resolver", "Resolver", getOrder1)
-	local maxTitanFOV = isTitanPlus and 1000 or 800
-	AddSlider(P1, "FOV Size" .. (isTitanPlus and " (TITAN+ APEX)" or ""), 50, maxTitanFOV, 200, function(v) Config.Vals.FOV = v end, getOrder1)
-	
-	AddSection(P2, "HUD & CROSSHAIR", getOrder2)
-	AddToggle(P2, "Show Lock Status", "ShowLockStatus", getOrder2)
-	AddToggle(P2, "👁️ Target Status Indicator", "TargetStatus", getOrder2)
-	AddToggle(P2, "Dynamic Crosshair", "DynamicCrosshair", getOrder2)
-	AddToggle(P2, "Static Crosshair", "Crosshair", getOrder2)
-	
-	AddSection(P2, "ESP", getOrder2)
-	AddToggle(P2, "ESP Master", "ESP", getOrder2)
-	AddToggle(P2, "👻 Detect No-Spawn / Lobby", "DetectUnspawned", getOrder2)
-	AddToggle(P2, "🏷️ Native Billboard Tags (Plan C)", "BillboardTags", getOrder2)
-	local bEng1, bEng2
-	local function UpdateESPEngineUI()
-		if bEng2 then
-			bEng2.Text = "Engine: " .. Config.Vals.ESPEngine
-			bEng2.TextColor3 = Config.Theme.Stroke
-		end
-	end
-	local function CycleESPEngine()
-		Storage.ESPEngineIndex = (Storage.ESPEngineIndex % #Storage.ESPEngines) + 1
-		Config.Vals.ESPEngine = Storage.ESPEngines[Storage.ESPEngineIndex]
-		UpdateESPEngineUI()
-		Utils.Notify("👁️ ESP Engine", "Engine set to: " .. Config.Vals.ESPEngine)
-	end
-	bEng1, bEng2 = AddDual(P2, "👁️ Cycle ESP Engine", CycleESPEngine, "Engine: " .. Config.Vals.ESPEngine, CycleESPEngine, getOrder2)
-	UpdateESPEngineUI()
-	AddToggle(P2, "📦 Item & Loot ESP", "ItemESP", getOrder2)
-	AddToggle(P2, "🔫 Weapon / Tool ESP", "WeaponESP", getOrder2)
-	AddToggle(P2, "📦 3D Box Wireframe ESP", "ESP3D", getOrder2)
-	AddToggle(P2, "👀 View Angle Ray (Look Vector)", "ESPLookRay", getOrder2)
-	AddToggle(P2, "🦴 Full Anatomical Skeleton ESP", "ESPSkeleton", getOrder2)
-	AddToggle(P2, "🧭 Off-screen Target Arrows", "OffscreenArrows", getOrder2)
-	AddToggle(P2, "360° Tracers", "Tracers", getOrder2)
-	AddToggle(P2, "Visibility Check", "VisibilityCheck", getOrder2)
-	AddToggle(P2, "🛡️ Tactical Chams (Vis/Wall)", "Chams", getOrder2)
-	AddToggle(P2, "X-Ray", "XRay", getOrder2)
-	AddToggle(P2, "Fullbright", "Fullbright", getOrder2)
-	
-	AddSection(P2, "👑 VIP ENGINE & ESP CUSTOMIZATION", getOrder2)
-	AddSlider(P2, "⚡ ESP Polling Delay (1=0.1s, 10=1.0s)", 1, 10, 3, function(v) Config.Vals.ESPRefreshRate = v / 10 end, getOrder2)
-	AddSlider(P2, "📦 Item Scan Delay (sec)", 5, 30, 15, function(v) Config.Vals.ItemScanInterval = v / 10 end, getOrder2)
-	AddSlider(P2, "✏️ ESP Line Thickness", 10, 40, 15, function(v)
-		Config.Vals.ESPBoxThickness = v / 10
-		for _, e in pairs(Storage.ESPObjects) do if e.Box then e.Box.Thickness = Config.Vals.ESPBoxThickness end end
-	end, getOrder2)
-	AddSlider(P2, "🔤 ESP Text Size", 9, 18, 13, function(v)
-		Config.Vals.ESPTextSize = v
-		for _, e in pairs(Storage.ESPObjects) do
-			if e.Name then e.Name.Size = v end
-			if e.Distance then e.Distance.Size = v - 1 end
-		end
-	end, getOrder2)
-	AddDual(P2, "🎯 Tracer Origin", function()
-		if Config.Vals.TracerOrigin == "Bottom" then Config.Vals.TracerOrigin = "Center"
-		elseif Config.Vals.TracerOrigin == "Center" then Config.Vals.TracerOrigin = "Mouse"
-		else Config.Vals.TracerOrigin = "Bottom" end
-		Utils.Notify("Tracer Origin", "Origin set to: " .. Config.Vals.TracerOrigin)
-	end, "🎨 Cycle VIP Theme", function()
-		local themes = {"Cyan", "Crimson", "Toxic", "Violet", "Gold"}
-		local colors = {
-			Cyan = Color3.fromRGB(0, 255, 255),
-			Crimson = Color3.fromRGB(255, 55, 85),
-			Toxic = Color3.fromRGB(50, 255, 120),
-			Violet = Color3.fromRGB(190, 80, 255),
-			Gold = Color3.fromRGB(255, 200, 40)
-		}
-		Storage.ThemeIndex = ((Storage.ThemeIndex or 1) % #themes) + 1
-		local tName = themes[Storage.ThemeIndex]
-		Config.Theme.Stroke = colors[tName]
-		if Storage.FOVRingUI and Storage.FOVRingUI:FindFirstChild("UIStroke") then Storage.FOVRingUI.UIStroke.Color = colors[tName] end
-		Utils.Notify("🎨 Theme Applied", "VIP Theme set to: " .. tName)
-	end, getOrder2)
-	AddToggle(P2, "Show Player Names", "ShowName", getOrder2)
-	AddToggle(P2, "Show Health Bar", "ShowHealth", getOrder2)
-	AddToggle(P2, "Show Distance", "ShowDistance", getOrder2)
-	AddToggle(P2, "🏹 360 Off-Screen Threat Arrows", "OffscreenArrows", getOrder2)
-
-	AddSection(P2, "RADAR", getOrder2)
-	AddToggle(P2, "📡 Smart Threat Radar", "Radar", getOrder2)
-	AddSlider(P2, "Radar Range", 50, 500, 100, function(v) Config.Vals.RadarRange = v end, getOrder2)
-	
-	AddSection(P3, "FLY & SPEED", getOrder3)
-	AddToggle(P3, "Fly Mode [Z]", "Fly", getOrder3)
-	AddToggle(P3, "️ Legit Fly", "LegitFly", getOrder3)
-	AddSlider(P3, "Fly Speed", 10, 1500, 150, function(v) Config.Vals.FlySpeed = v end, getOrder3)
-	AddToggle(P3, "Speed Hack", "SpeedHack", getOrder3)
-	AddToggle(P3, "🛡️ CFrame Speed", "CFrameSpeed", getOrder3)
-	AddSlider(P3, "Walk Speed", 16, 1500, 150, function(v) Config.Vals.WalkSpeed = v end, getOrder3)
-	
-	AddSection(P3, "MISC", getOrder3)
-	AddToggle(P3, "Noclip [V]", "Noclip", getOrder3)
-	AddToggle(P3, "Infinite Jump", "InfJump", getOrder3)
-	AddToggle(P3, "God Mode", "AntiKillbrick", getOrder3)
-	AddToggle(P3, "No Fall Damage", "NoFall", getOrder3)
-	AddToggle(P3, "Sky Hide [X]", "SkyHide", getOrder3)
-	AddToggle(P3, "Click TP [Ctrl+Click]", "ClickTP", getOrder3)
-	
-	AddSection(P3, "VEHICLE & DRIVE", getOrder3)
-	AddToggle(P3, "🚗 Vehicle Speed Boost", "VehicleBoost", getOrder3)
-	AddToggle(P3, "🛸 Vehicle Aerial Fly", "VehicleFly", getOrder3)
-	AddSlider(P3, "Vehicle Speed", 50, 400, 180, function(v) Config.Vals.VehicleSpeed = v end, getOrder3)
-
-	AddSection(P3, "CHECKPOINTS", getOrder3)
-	AddDual(P3, "📍 SET P1", function() Utils.SetPoint("P1") end, "⚡ TP P1", function() Utils.TPPoint("P1") end, getOrder3)
-	AddDual(P3, "📍 SET P2", function() Utils.SetPoint("P2") end, "⚡ TP P2", function() Utils.TPPoint("P2") end, getOrder3)
-	AddDual(P3, "📍 SET P3", function() Utils.SetPoint("P3") end, "⚡ TP P3", function() Utils.TPPoint("P3") end, getOrder3)
-	
-	AddSection(P3, "MAP", getOrder3)
-	AddDual(P3, "💥 Destroy [P]", function()
-		local Camera = Utils.GetCurrentCamera()
-		if not Camera then return end
-		local center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
-		local ray = Camera:ViewportPointToRay(center.X, center.Y)
-		local params = RaycastParams.new(); params.FilterDescendantsInstances = {LocalPlayer.Character}; params.FilterType = Enum.RaycastFilterType.Exclude
-		local result = Services.Workspace:Raycast(ray.Origin, ray.Direction * 500, params)
-		if result and result.Position then
-			if not Storage.MapStorageFolder then Storage.MapStorageFolder = Instance.new("Folder", Services.Workspace); Storage.MapStorageFolder.Name = "X_Titan_MapStorage" end
-			local region = Region3.new(result.Position - Vector3.new(15,15,15), result.Position + Vector3.new(15,15,15))
-			local parts = Services.Workspace:FindPartsInRegion3(region, LocalPlayer.Character, 100); local count = 0
-			for _, part in pairs(parts) do
-				if part.Name ~= "Baseplate" and part.Name ~= "Terrain" and not part.Parent:FindFirstChild("Humanoid") and part.Parent ~= Storage.MapStorageFolder then
-					table.insert(Storage.DestroyedParts, {Part = part, Parent = part.Parent}); part.Parent = Storage.MapStorageFolder; count = count + 1
-				end
-			end
-			Utils.Notify("💥 Map Destroyer", "Removed " .. count .. " obstacle parts")
-		end
-	end, "🔄 Restore [L]", function()
-		local count = 0
-		for _, data in pairs(Storage.DestroyedParts) do
-			if data.Part and data.Parent then pcall(function() data.Part.Parent = data.Parent end); count = count + 1 end
-		end
-		table.clear(Storage.DestroyedParts)
-		if Storage.MapStorageFolder then Storage.MapStorageFolder:Destroy(); Storage.MapStorageFolder = nil end
-		Utils.Notify("🔄 Map Restored", "Restored " .. count .. " obstacle parts")
-	end, getOrder3)
-	
-	AddSection(P4, "PLAYER LIST", getOrder4)
-	local PlayerListFrame = Instance.new("ScrollingFrame", P4)
-	PlayerListFrame.LayoutOrder = getOrder4()
-	PlayerListFrame.Size = UDim2.new(1, -4, 0, 320); PlayerListFrame.BackgroundColor3 = Config.Theme.Sec
-	PlayerListFrame.ScrollBarThickness = 4; PlayerListFrame.ScrollBarImageColor3 = Config.Theme.Stroke
-	Instance.new("UICorner", PlayerListFrame).CornerRadius = UDim.new(0, 6)
-	local ListLayout = Instance.new("UIListLayout", PlayerListFrame); ListLayout.Padding = UDim.new(0, 4)
-	Storage.PlayerListFrame = PlayerListFrame
-	
-	local function RefreshPlayerList()
-		for _, child in pairs(PlayerListFrame:GetChildren()) do if child:IsA("Frame") or child:IsA("TextButton") then child:Destroy() end end
-		local allPlayers = Services.Players:GetPlayers()
-		table.sort(allPlayers, function(a, b)
-			local tA = a.Team and a.Team.Name or "Neutral"; local tB = b.Team and b.Team.Name or "Neutral"
-			if tA == tB then return string.lower(a.Name) < string.lower(b.Name) end; return tA < tB
-		end)
-		for _, p in ipairs(allPlayers) do
-			if p == LocalPlayer then continue end
-			local teamName = p.Team and p.Team.Name or "Neutral"
-			local teamColor = p.Team and p.Team.TeamColor.Color or Config.Theme.Text
-			local hpText = "💀 DEAD"
-			if p.Character then
-				local isAlive = Utils.IsAlive(p, p.Character)
-				local curHp, _ = Utils.GetHealth(p, p.Character)
-				hpText = isAlive and ("❤️ " .. math.floor(curHp)) or "💀 DEAD"
-			end
-			local Row = Instance.new("Frame", PlayerListFrame); Row.Size = UDim2.new(1, -8, 0, 28); Row.BackgroundTransparency = 1
-			local PBtn = Instance.new("TextButton", Row); PBtn.Size = UDim2.new(0.62, 0, 1, 0); PBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
-			PBtn.Text = string.format("%s (@%s) [%s] %s", p.DisplayName, p.Name, teamName, hpText)
-			PBtn.TextColor3 = teamColor; PBtn.Font = Enum.Font.GothamBold; PBtn.TextSize = 10; PBtn.AutoButtonColor = true
-			PBtn.TextXAlignment = Enum.TextXAlignment.Left
-			Instance.new("UIPadding", PBtn).PaddingLeft = UDim.new(0, 8); Instance.new("UICorner", PBtn).CornerRadius = UDim.new(0, 4)
-			PBtn.MouseButton1Click:Connect(function() Features.SpectatePlayer(p.Name) end)
-			
-			local YeetBtn = Instance.new("TextButton", Row); YeetBtn.Size = UDim2.new(0.12, 0, 1, 0); YeetBtn.Position = UDim2.new(0.64, 0, 0, 0)
-			YeetBtn.BackgroundColor3 = Color3.fromRGB(160, 40, 40); YeetBtn.Text = "🌪️"; YeetBtn.TextColor3 = Color3.new(1,1,1); YeetBtn.Font = Enum.Font.GothamBlack; YeetBtn.TextSize = 10
-			Instance.new("UICorner", YeetBtn).CornerRadius = UDim.new(0, 4)
-			YeetBtn.MouseButton1Click:Connect(function() Features.FlingPlayer(p) end)
-
-			local TPBtn = Instance.new("TextButton", Row); TPBtn.Size = UDim2.new(0.21, 0, 1, 0); TPBtn.Position = UDim2.new(0.78, 0, 0, 0)
-			TPBtn.BackgroundColor3 = Config.Theme.Sec; TPBtn.Text = "⚡ TP"; TPBtn.TextColor3 = Config.Theme.Stroke; TPBtn.Font = Enum.Font.GothamBlack; TPBtn.TextSize = 10
-			Instance.new("UICorner", TPBtn).CornerRadius = UDim.new(0, 4)
-			local Stroke = Instance.new("UIStroke", TPBtn); Stroke.Color = Config.Theme.Stroke; Stroke.Transparency = 0.5
-			TPBtn.MouseButton1Click:Connect(function()
-				if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-					LocalPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
-					Utils.Notify("⚡ Player TP", "Teleported to: " .. p.Name)
-				end
-			end)
-		end
-		pcall(function() PlayerListFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y end)
-		local pListY = ListLayout.AbsoluteContentSize.Y
-		PlayerListFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(pListY + 10, 400))
-	end
-	RefreshPlayerList()
-	
-	local playerAddedConn = Services.Players.PlayerAdded:Connect(RefreshPlayerList)
-	table.insert(Storage.Connections, playerAddedConn)
-	local playerRemovingConn = Services.Players.PlayerRemoving:Connect(function(p)
-		Features.RemoveESP(p)
-		RefreshPlayerList()
-	end)
-	table.insert(Storage.Connections, playerRemovingConn)
-	
-	AddDual(P4, "🔄 REFRESH", function() RefreshPlayerList() end, "👁️ UNSPECTATE", function() Features.StopSpectate() end, getOrder4)
-	
-	AddSection(P5, "💾 CONFIG PRESETS & STORAGE", getOrder5)
-	AddDual(P5, "💾 Save Default", function() Utils.SaveConfig("titan_default") end, "📂 Load Default", function() Utils.LoadConfig("titan_default") end, getOrder5)
-	AddDual(P5, "⚡ Preset: Legit", function() Utils.ApplyPreset("Legit") end, "🔥 Preset: Rage", function() Utils.ApplyPreset("Rage") end, getOrder5)
-	AddDual(P5, "🎯 Preset: CQB", function() Utils.ApplyPreset("CQB") end, "💾 Save Custom", function() Utils.SaveConfig("titan_custom") end, getOrder5)
-	if isTitanPlus then
-		AddDual(P5, "👑 Preset: HvH Godmode", function() Utils.ApplyPreset("HvHGod") end, "👻 Preset: Silent Ghost", function() Utils.ApplyPreset("SilentGhost") end, getOrder5)
-	end
-	
-	AddSection(P5, "DESYNC & ANTI-AIM", getOrder5)
-	AddToggle(P5, "True Desync (Local)", "Desync", getOrder5)
-	AddToggle(P5, "🛡️ Server Desync", "ServerDesync", getOrder5)
-	AddSlider(P5, "Desync Radius", 1, 20, 5, function(v) Config.Vals.DesyncPower = v end, getOrder5)
-	AddToggle(P5, "Anti-Aim Spin", "AntiAimSpin", getOrder5)
-	AddToggle(P5, "Anti-Aim Head Jitter", "AntiAimHeadJitter", getOrder5)
-	AddSlider(P5, "Spin Speed", 1, 30, 10, function(v) Config.Vals.AntiAimSpinSpeed = v end, getOrder5)
-	AddSlider(P5, "Jitter Radius", 1, 20, 5, function(v) Config.Vals.AntiAimJitterRadius = v end, getOrder5)
-	
-	AddSection(P5, "SYSTEM", getOrder5)
-	local UnloadBtn = Instance.new("TextButton", P5)
-	UnloadBtn.LayoutOrder = getOrder5()
-	UnloadBtn.Size = UDim2.new(1, -4, 0, 40); UnloadBtn.BackgroundColor3 = Color3.fromRGB(150, 20, 20)
-	UnloadBtn.Text = "🗑️ UNLOAD SCRIPT (End)"; UnloadBtn.TextColor3 = Color3.new(1,1,1)
-	UnloadBtn.Font = Enum.Font.GothamBlack; UnloadBtn.TextSize = 12
-	Instance.new("UICorner", UnloadBtn).CornerRadius = UDim.new(0, 6)
-	UnloadBtn.MouseButton1Click:Connect(function() Runtime.Unload() end)
-	
-	AddSection(P6, "⌨️ INTERACTIVE REBINDING", getOrder6)
-	AddKeybindRebind(P6, "Fly Mode Key", "Fly", getOrder6)
-	AddKeybindRebind(P6, "Noclip Key", "Noclip", getOrder6)
-	AddKeybindRebind(P6, "Open Menu Key", "Menu", getOrder6)
-	AddKeybindRebind(P6, "TriggerBot Key", "Trigger", getOrder6)
-	AddKeybindRebind(P6, "Sky Hide Key", "Hide", getOrder6)
-	AddKeybindRebind(P6, "Destroy Map Key", "DestroyMap", getOrder6)
-	
-	AddKeybindInfo(P6, "DEFAULT CONTROLS", {{"Aimbot", "Right Click"}, {"Lock Target", "F (Press)"}, {"Tactical TP", "B"}, {"Click TP", "Ctrl + Click"}, {"Unload Script", "End"}}, getOrder6)
-	
-	-- Ensure all tabs have non-zero canvas size so elements are immediately visible
-	for _, page in ipairs({P1, P2, P3, P4, P5, P6}) do
-		pcall(function()
-			page.AutomaticCanvasSize = Enum.AutomaticSize.Y
-			local l = page:FindFirstChildOfClass("UIListLayout")
-			local y = l and l.AbsoluteContentSize.Y or 0
-			if y > 50 then
-				page.CanvasSize = UDim2.new(0, 0, 0, y + 25)
-			else
-				page.CanvasSize = UDim2.new(0, 0, 2.5, 0)
-			end
-		end)
-	end
-end
-
--- ==============================================================================
--- CORE EXPLOIT HOOKS (V5.6.0 - ALL BUGS FIXED)
--- ==============================================================================
-local HasTitanMetamethodHook = false
-
--- [TIER 2] Mouse.Hit & Target Spoofing (Xeno / Free PC Executors)
-pcall(function()
-	if type(getrawmetatable) == "function" and type(setreadonly) == "function" then
-		local mt = getrawmetatable(game)
-		if mt then
-			setreadonly(mt, false)
-			local oldIndex = mt.__index
-			mt.__index = function(t, k)
-				local inst = _G.X_TITAN_CURRENT_INSTANCE
-				if inst and inst.Config and inst.Config.States.SilentAim and (t:IsA("Mouse") or tostring(t) == "Mouse") then
-					local targetPart, _ = inst.Utils.GetClosestToCenter()
-					if targetPart then
-						local predPos = targetPart.Position
-						local root = targetPart.Parent and targetPart.Parent:FindFirstChild("HumanoidRootPart")
-						if inst.Config.States.SmartPrediction and root then
-							predPos = predPos + (root.AssemblyLinearVelocity * inst.Config.Vals.PredictionStrength)
-						end
-						if k == "Hit" then return CFrame.new(predPos)
-						elseif k == "Target" then return targetPart end
-					end
-				end
-				return oldIndex(t, k)
-			end
-			setreadonly(mt, true)
-		end
-	end
-end)
-
--- [TIER 3] Micro-Flick Silent Aim Fallback for Xeno
-local function TitanMicroFlickSilentAim()
-	local inst = _G.X_TITAN_CURRENT_INSTANCE
-	if not inst or not inst.Config or not inst.Config.States.SilentAim then return end
-	local targetPart, _ = inst.Utils.GetClosestToCenter()
-	if not targetPart or not targetPart.Parent then return end
-
-	local predPos = targetPart.Position
-	local root = targetPart.Parent:FindFirstChild("HumanoidRootPart")
-	if inst.Config.States.SmartPrediction and root then
-		predPos = predPos + (root.AssemblyLinearVelocity * inst.Config.Vals.PredictionStrength)
-	end
-
-	local Camera = inst.Utils.GetCurrentCamera()
-	if not Camera then return end
-	local origCF = Camera.CFrame
-	Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, predPos)
-	if inst.Config.States.HitSound then inst.Utils.PlayHitSound() end
-	task.spawn(function()
-		Services.RunService.RenderStepped:Wait()
-		Camera.CFrame = origCF
-	end)
-end
-
-if not _G.X_TITAN_HOOK_INITIALIZED and type(hookmetamethod) == "function" and type(getnamecallmethod) == "function" then
-	_G.X_TITAN_HOOK_INITIALIZED = true
-	HasTitanMetamethodHook = true
-	local safeUnpack = table.unpack or unpack
-	local oldNamecall
-	
-	oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-		local instance = _G.X_TITAN_CURRENT_INSTANCE
-		if not instance then return oldNamecall(self, ...) end
-		
-		local CurrentConfig = instance.Config
-		local CurrentStorage = instance.Storage
-		local CurrentUtils = instance.Utils
-		
-		if CurrentStorage.IsUnloaded then return oldNamecall(self, ...) end
-		
-		local method = getnamecallmethod()
-		local args = table.pack(...)
-		local argN = args.n
-		
-		if CurrentConfig.States.AntiKillbrick and method == "TakeDamage" and self:IsA("Humanoid") and self:IsDescendantOf(LocalPlayer.Character) then
-			return
-		end
-		
-		if method == "Raycast" or method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRayWithWhitelist" or method == "FindPartOnRay" then
-			-- [P0 FIX] SilentAim Filter: Prevent breaking game interactions (doors, pickups, UI)
-			local shouldProcessSilent = false
-			if CurrentConfig.States.SilentAim then
-				local origin = nil
-				if method == "Raycast" then origin = args[1]
-				else local ray = args[1]; origin = ray and ray.Origin end
-				
-				if origin then
-					local myChar = LocalPlayer.Character
-					local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
-					local myTool = myChar and myChar:FindFirstChildOfClass("Tool")
-					local toolHandle = myTool and myTool:FindFirstChild("Handle")
-					
-					-- Check if ray originates from player's weapon or hand area
-					if myHRP and origin then
-						local distToHRP = (origin - myHRP.Position).Magnitude
-						local distToTool = toolHandle and (origin - toolHandle.Position).Magnitude or math.huge
-						local cam = CurrentUtils.GetCurrentCamera()
-						local distToCam = cam and (origin - cam.CFrame.Position).Magnitude or math.huge
-						if distToHRP < 15 or distToTool < 8 or distToCam < 8 then
-							shouldProcessSilent = true
-						end
-					end
-					
-					-- Optional: getcallingscript check if available
-					if type(getcallingscript) == "function" then
-						local calling = getcallingscript()
-						if calling then
-							local n = string.lower(calling.Name)
-							if n:find("gun") or n:find("weapon") or n:find("shoot") or n:find("client") or n:find("fire") then
-								shouldProcessSilent = true
-							elseif n:find("ui") or n:find("door") or n:find("interact") or n:find("pickup") then
-								shouldProcessSilent = false
-							end
-						end
-					end
-				end
-			end
-			
-			if shouldProcessSilent then
-				local target, isWall = CurrentUtils.GetClosestToCenter()
-				if target and target.Parent then
-					local predPos = target.Position
-					local eRoot = target.Parent:FindFirstChild("HumanoidRootPart")
-					if eRoot and CurrentConfig.States.SmartPrediction then
-						local predTime = CurrentConfig.Vals.PredictionStrength
-						local ping = CurrentUtils.GetPing() / 1000
-						predTime = predTime + ping * CurrentConfig.Vals.PingCompensation
-						predPos = predPos + (eRoot.AssemblyLinearVelocity * predTime)
-					end
-					if method == "Raycast" then
-						local origin = args[1]; local direction = (predPos - origin).Unit * 5000; args[2] = direction
-					else
-						local ray = args[1]; local origin = ray.Origin; local direction = (predPos - origin).Unit * 5000
-						args[1] = Ray.new(origin, direction)
-					end
-				end
-			end
-			
-			local results = table.pack(oldNamecall(self, safeUnpack(args, 1, argN)))
-			if results.n > 0 and results[1] then
-				local hitInstance = nil
-				local r1 = results[1]
-				if typeof(r1) == "RaycastResult" then
-					hitInstance = r1.Instance
-				elseif type(r1) == "table" and r1.Instance then
-					hitInstance = r1.Instance
-				elseif typeof(r1) == "Instance" then
-					hitInstance = r1
-				end
-				if hitInstance then
-					local hitChar = hitInstance:FindFirstAncestorOfClass("Model")
-					local hitPlr = Services.Players:GetPlayerFromCharacter(hitChar)
-					if hitPlr and hitPlr ~= LocalPlayer and CurrentUtils.IsAlive(hitPlr, hitChar) then
-						if not CurrentConfig.States.TeamCheck or not CurrentUtils.IsTeammate(hitPlr) then
-							CurrentStorage.HitmarkerAlpha = 1.0
-						end
-					end
-				end
-			end
-			return safeUnpack(results, 1, results.n)
-		end
-		return oldNamecall(self, ...)
-	end)
-	Storage.HookActive = true
-	Storage.HookOldNamecall = oldNamecall
-end
-
-local auraLoop = task.spawn(function()
-	while task.wait(0.05) do
-		if Storage.IsUnloaded then break end
-		local char = LocalPlayer.Character; local hrp = char and (char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char.PrimaryPart or char:FindFirstChildWhichIsA("BasePart"))
-		if not hrp then Storage.AuraTarget = nil; continue end
-		local target = Features.GetAuraTarget(); Storage.AuraTarget = target
-		if target and target:FindFirstChild("HumanoidRootPart") then
-			if Config.States.TPAura then
-				hrp.CFrame = target.HumanoidRootPart.CFrame * CFrame.new(0, 0, -Config.Vals.TPBehindDist)
-				hrp.AssemblyLinearVelocity = Vector3.zero
-			end
-			if Config.States.KillAura or Config.States.TPAura then
-				local tool = char:FindFirstChildOfClass("Tool"); if tool then tool:Activate() end
-				hrp.CFrame = CFrame.lookAt(hrp.Position, Vector3.new(target.HumanoidRootPart.Position.X, hrp.Position.Y, target.HumanoidRootPart.Position.Z))
-			end
-		else Storage.AuraTarget = nil end
-	end
-end)
-table.insert(Storage.Loops, auraLoop)
-
--- ==============================================================================
--- RUNTIME (V5.6.0)
--- ==============================================================================
-local Runtime = {}
-function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V6.3.0 - GEN-6 TITAN GOD (APEX OMNI)...")
-	Storage.IsUnloaded = true
-	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
-	Storage.Loops = {}
-	for _, conn in pairs(Storage.Connections) do pcall(function() conn:Disconnect() end) end
-	Storage.Connections = {}
-	for k, _ in pairs(Config.States) do Config.States[k] = false end
-	
-	local char = LocalPlayer.Character
-	if char then
-		local hrp = char:FindFirstChild("HumanoidRootPart")
-		if hrp then
-			for _, name in ipairs({"X_Fly_LV", "X_Hide_LV", "X_Speed_LV"}) do
-				local old = hrp:FindFirstChild(name); if old then old:Destroy() end
-			end
-			local rootAtt = hrp:FindFirstChild("RootAttachment")
-			if rootAtt and rootAtt:GetAttribute("X_TitanOwned") then
-				rootAtt:Destroy()
-			end
-		end
-		local hum = char:FindFirstChild("Humanoid")
-		if hum then
-			hum.WalkSpeed = Storage.OriginalWalkSpeed
-			pcall(function() hum:ChangeState(Enum.HumanoidStateType.Running) end)
-		end
-		Utils.RestoreCollision(char, "collide")
-		Utils.RestoreCollision(char, "touch")
-	end
-	
-	for _, p in pairs(Services.Players:GetPlayers()) do
-		if p.Character then
-			for _, partName in ipairs({"Head", "Torso", "UpperTorso", "HumanoidRootPart"}) do
-				local part = p.Character:FindFirstChild(partName)
-				if part and part:GetAttribute("OrigSize") ~= nil then
-					part.Size = part:GetAttribute("OrigSize")
-					local ot = part:GetAttribute("OrigTransparency")
-					part.Transparency = (ot ~= nil) and ot or 0
-					local oc = part:GetAttribute("OrigCanCollide")
-					if oc ~= nil then part.CanCollide = oc end
-					local om = part:GetAttribute("OrigMassless")
-					if om ~= nil then part.Massless = om end
-					part:SetAttribute("OrigSize", nil); part:SetAttribute("OrigTransparency", nil)
-					part:SetAttribute("OrigCanCollide", nil); part:SetAttribute("OrigMassless", nil)
-				end
-			end
-		end
-	end
-	
-	for _, p in pairs(Services.Players:GetPlayers()) do
-		if p.Character then
-			local chams = p.Character:FindFirstChild("X_Chams")
-			if chams then chams:Destroy() end
-		end
-	end
-	
-	ClearItemESP()
-	table.clear(Storage.PlayerCache)
-	table.clear(Storage.CharCache)
-	table.clear(Storage.VisCache)
-	Utils.ToggleXRay(false); Utils.ToggleFullbright(false)
-	for plr, esp in pairs(Storage.ESPObjects) do for _, d in pairs(esp) do pcall(function() d:Remove() end) end end
-	for _, t in pairs(Storage.NativePlayerTags) do pcall(function() t:Destroy() end) end
-	for plr, skel in pairs(Storage.SkeletonParts) do for _, d in pairs(skel) do pcall(function() d:Remove() end) end end
-	for _, l in pairs(Storage.TracerLines) do pcall(function() l:Remove() end) end
-	for _, a in pairs(Storage.OffscreenArrows) do pcall(function() a:Remove() end) end
-	Storage.OffscreenArrows = {}
-	for _, l in pairs(Storage.LookRayLines or {}) do pcall(function() l:Remove() end) end
-	Storage.LookRayLines = {}
-	for _, t in pairs(Storage.OffscreenDistTexts or {}) do pcall(function() t:Remove() end) end
-	Storage.OffscreenDistTexts = {}
-	for _, line in pairs(Storage.CrosshairLines) do if line then pcall(function() line:Remove() end) end end
-	for _, line in pairs(Storage.HitmarkerLines) do if line then pcall(function() line:Remove() end) end end
-	if Storage.TargetStatusDrawing then pcall(function() Storage.TargetStatusDrawing:Remove() end); Storage.TargetStatusDrawing = nil end
-	
-	if Storage.OriginalLighting.Ambient then
-		Services.Lighting.Ambient = Storage.OriginalLighting.Ambient
-		Services.Lighting.Brightness = Storage.OriginalLighting.Brightness
-		Services.Lighting.OutdoorAmbient = Storage.OriginalLighting.OutdoorAmbient
-		Services.Lighting.ClockTime = Storage.OriginalLighting.ClockTime
-		Services.Lighting.FogEnd = Storage.OriginalLighting.FogEnd
-		Services.Lighting.FogStart = Storage.OriginalLighting.FogStart
-	end
-	
-	Services.Workspace.FallenPartsDestroyHeight = Storage.OriginalFallenHeight or -500
-	if #Storage.DestroyedParts > 0 then
-		for _, data in pairs(Storage.DestroyedParts) do
-			if data.Part and data.Parent then pcall(function() data.Part.Parent = data.Parent end) end
-		end
-		table.clear(Storage.DestroyedParts)
-	end
-	if Storage.MapStorageFolder then Storage.MapStorageFolder:Destroy(); Storage.MapStorageFolder = nil end
-	
-	Storage.CurrentSpectate = nil
-	local cam = Utils.GetCurrentCamera()
-	if cam and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-		cam.CameraSubject = LocalPlayer.Character:FindFirstChild("Humanoid")
-	end
-	
-	if Storage.RadarGui then Storage.RadarGui:Destroy() end
-	for _, gui in pairs(targetGui:GetChildren()) do
-		if string.find(gui.Name, "X_TITAN") or string.find(gui.Name, "X_FOV") or string.find(gui.Name, "X_RADAR") or string.find(gui.Name, "X_TacticalHUD") then
-			gui:Destroy()
-		end
-	end
-	
-	Storage.LockedTarget = nil; Storage.AuraTarget = nil
-	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
-	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
-	Storage.RadarObjects = {}
-	print("X TITAN V6.3.0 - GEN-6 TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
-end
-
-local function InitRadar()
-	if Storage.RadarGui then return end
-	local RadarGui = Instance.new("ScreenGui", targetGui)
-	RadarGui.Name = "X_RADAR_V521"; RadarGui.IgnoreGuiInset = true; RadarGui.DisplayOrder = 9999998
-	Storage.RadarGui = RadarGui
-	
-	local RadarFrame = Instance.new("Frame", RadarGui)
-	RadarFrame.Size = UDim2.new(0, 180, 0, 180); RadarFrame.Position = UDim2.new(1, -200, 1, -200)
-	RadarFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0); RadarFrame.BackgroundTransparency = 0.7
-	RadarFrame.Visible = Config.States.Radar
-	Instance.new("UICorner", RadarFrame).CornerRadius = UDim.new(1, 0)
-	local RadarStroke = Instance.new("UIStroke", RadarFrame); RadarStroke.Color = Config.Theme.Stroke; RadarStroke.Thickness = 2
-	Storage.RadarFrame = RadarFrame
-	
-	local CenterDot = Instance.new("Frame", RadarFrame)
-	CenterDot.Size = UDim2.new(0, 5, 0, 5); CenterDot.Position = UDim2.new(0.5, -2.5, 0.5, -2.5)
-	CenterDot.BackgroundColor3 = Config.Theme.Stroke; Instance.new("UICorner", CenterDot).CornerRadius = UDim.new(1, 0)
-	
-	local radarInputConn = RadarFrame.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			local mousePos = input.Position; local radarPos = RadarFrame.AbsolutePosition
-			local center = Vector2.new(radarPos.X + 90, radarPos.Y + 90)
-			local clickPos = Vector2.new(mousePos.X - center.X, mousePos.Y - center.Y)
-			local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-			if not myHRP then return end
-			
-			local closestPlr, closestScore = nil, math.huge
-			for _, p in pairs(Services.Players:GetPlayers()) do
-				if p == LocalPlayer or not p.Character then continue end
-				local eHRP = p.Character:FindFirstChild("HumanoidRootPart")
-				if not eHRP then continue end
-				local relativePos = myHRP.CFrame:PointToObjectSpace(eHRP.Position)
-				local dist = math.sqrt(relativePos.X^2 + relativePos.Z^2)
-				if dist > Config.Vals.RadarRange then continue end
-				local scale = 90 / Config.Vals.RadarRange
-				local x = relativePos.X * scale; local z = -relativePos.Z * scale
-				local dotPos = Vector2.new(x, z)
-				local score = (dotPos - clickPos).Magnitude
-				if score < 15 and score < closestScore then closestScore = score; closestPlr = p end
-			end
-			if closestPlr then
-				Storage.LockedTarget = closestPlr; Storage.CurrentHPRatio = 0
-				Utils.Notify("🎯 Radar Lock", "Target locked: " .. closestPlr.Name)
-			end
-		end
-	end)
-	table.insert(Storage.Connections, radarInputConn)
-end
-
-local function UpdateRadar()
-	if not Storage.RadarFrame then return end
-	local isRadarOn = Config.States.Radar
-	Storage.RadarFrame.Visible = isRadarOn
-	if not isRadarOn then
-		for _, obj in pairs(Storage.RadarObjects) do
-			if obj.Visible then obj.Visible = false end
-		end
-		return
-	end
-	
-	local now = tick()
-	if (now - Storage.LastRadarUpdate) < 0.05 then return end
-	Storage.LastRadarUpdate = now
-	
-	local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-	if not myHRP then return end
-	
-	for plr, obj in pairs(Storage.RadarObjects) do
-		if not Storage.PlayerCache[plr] or not plr.Character then
-			pcall(function() obj:Destroy() end); Storage.RadarObjects[plr] = nil
-		else obj.Visible = false end
-	end
-	
-	for p, data in pairs(Storage.PlayerCache) do
-		if not data.Char.Parent then continue end
-		local eHRP = data.Root
-		local relativePos = myHRP.CFrame:PointToObjectSpace(eHRP.Position)
-		local dist = math.sqrt(relativePos.X^2 + relativePos.Z^2)
-		if dist > Config.Vals.RadarRange then
-			local obj = Storage.RadarObjects[p]; if obj then obj.Visible = false end; continue
-		end
-		local obj = Storage.RadarObjects[p]
-		if not obj then
-			obj = Instance.new("Frame", Storage.RadarFrame)
-			obj.Size = UDim2.new(0, 5, 0, 5); obj.AnchorPoint = Vector2.new(0.5, 0.5)
-			Instance.new("UICorner", obj).CornerRadius = UDim.new(1, 0)
-			Storage.RadarObjects[p] = obj
-		end
-		local scale = 90 / Config.Vals.RadarRange
-		local x = relativePos.X * scale; local z = -relativePos.Z * scale
-		obj.Position = UDim2.new(0.5, x, 0.5, z); obj.Visible = true
-		if Utils.IsTeammate(p) then 
-			obj.BackgroundColor3 = Config.Theme.Team
-		else
-			local vis = Storage.VisCache[p] and Storage.VisCache[p].Visible
-			obj.BackgroundColor3 = vis and Config.Theme.LockColor or Config.Theme.TextDim
-		end
-	end
-end
-
-function Runtime.Init()
-	if _G.X_TITAN_RUNTIME_INITIALIZED then
-		print("X TITAN: Detected existing instance, unloading first...")
-		local oldInstance = _G.X_TITAN_CURRENT_INSTANCE
-		if oldInstance and oldInstance.Storage and not oldInstance.Storage.IsUnloaded then
-			pcall(function()
-				oldInstance.Storage.IsUnloaded = true
-				for _, loop in pairs(oldInstance.Storage.Loops) do pcall(function() task.cancel(loop) end) end
-				for _, conn in pairs(oldInstance.Storage.Connections) do pcall(function() conn:Disconnect() end) end
-			end)
-		end
-	end
-	_G.X_TITAN_RUNTIME_INITIALIZED = true
-	Storage.IsUnloaded = false
-	
-	if LocalPlayer.Character then
-		local hum = LocalPlayer.Character:FindFirstChild("Humanoid")
-		if hum then Storage.OriginalWalkSpeed = hum.WalkSpeed end
-	end
-	Storage.OriginalFallenHeight = Services.Workspace.FallenPartsDestroyHeight
-	
-	local FOVGui = Instance.new("ScreenGui", targetGui); FOVGui.Name = "X_FOV_V521"; FOVGui.IgnoreGuiInset = true; FOVGui.DisplayOrder = 9999999
-	local FOVFrame = Instance.new("Frame", FOVGui)
-	FOVFrame.AnchorPoint = Vector2.new(0.5, 0.5); FOVFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-	FOVFrame.BackgroundTransparency = 1; FOVFrame.Visible = false
-	local FStroke = Instance.new("UIStroke", FOVFrame); FStroke.Color = Config.Theme.Stroke; FStroke.Thickness = 1.5
-	Instance.new("UICorner", FOVFrame).CornerRadius = UDim.new(1, 0); Storage.FOVRingUI = FOVFrame
-	
-	-- [TOP-RIGHT WATERMARK HUD: ANONYMIZED (NO USERNAME)]
-	local WatermarkGui = Instance.new("ScreenGui", targetGui)
-	WatermarkGui.Name = "X_TITAN_WATERMARK_V580"
-	WatermarkGui.ResetOnSpawn = false
-	WatermarkGui.IgnoreGuiInset = true
-	WatermarkGui.DisplayOrder = 9999999
-
-	local WmFrame = Instance.new("Frame", WatermarkGui)
-	WmFrame.Size = UDim2.new(0, 205, 0, 36)
-	WmFrame.Position = UDim2.new(1, -215, 0, 14)
-	WmFrame.BackgroundColor3 = Color3.fromRGB(12, 14, 20)
-	WmFrame.BackgroundTransparency = 0.25
-	Instance.new("UICorner", WmFrame).CornerRadius = UDim.new(0, 6)
-	local wmStroke = Instance.new("UIStroke", WmFrame)
-	wmStroke.Color = Config.Theme.Stroke
-	wmStroke.Thickness = 1.2
-	wmStroke.Transparency = 0.4
-
-	local WmTitle = Instance.new("TextLabel", WmFrame)
-	WmTitle.Size = UDim2.new(1, -12, 0, 16)
-	WmTitle.Position = UDim2.new(0, 8, 0, 3)
-	WmTitle.BackgroundTransparency = 1
-	WmTitle.Text = "⚡ PROJECT X TITAN • V6.1.1"
-	WmTitle.TextColor3 = Config.Theme.Stroke
-	WmTitle.Font = Enum.Font.GothamBlack
-	WmTitle.TextSize = 10
-	WmTitle.TextXAlignment = Enum.TextXAlignment.Left
-
-	local WmStats = Instance.new("TextLabel", WmFrame)
-	WmStats.Size = UDim2.new(1, -12, 0, 14)
-	WmStats.Position = UDim2.new(0, 8, 0, 18)
-	WmStats.BackgroundTransparency = 1
-	WmStats.Text = "FPS: 60 | PING: 25ms"
-	WmStats.TextColor3 = Color3.fromRGB(200, 210, 230)
-	WmStats.Font = Enum.Font.GothamMedium
-	WmStats.TextSize = 9
-	WmStats.TextXAlignment = Enum.TextXAlignment.Left
-	Storage.WatermarkLabel = WmStats
-
-	-- [CYBERNETIC ROBOT TACTICAL HUD & LEADER LINE]
-	local TacticalHUDGui = Instance.new("ScreenGui", targetGui)
-	TacticalHUDGui.Name = "X_TacticalHUD_V580"; TacticalHUDGui.IgnoreGuiInset = true; TacticalHUDGui.DisplayOrder = 9999998
-
-	-- Futuristic Angled Leader Line (Center Reticle to Target Card)
-	local LineH1 = Instance.new("Frame", TacticalHUDGui)
-	LineH1.Size = UDim2.new(0, 45, 0, 2); LineH1.BackgroundColor3 = Config.Theme.Stroke; LineH1.BorderSizePixel = 0; LineH1.Visible = false
-	local LineDiag = Instance.new("Frame", TacticalHUDGui)
-	LineDiag.Size = UDim2.new(0, 50, 0, 2); LineDiag.BackgroundColor3 = Config.Theme.Stroke; LineDiag.BorderSizePixel = 0; LineDiag.Visible = false
-	local LineH2 = Instance.new("Frame", TacticalHUDGui)
-	LineH2.Size = UDim2.new(0, 60, 0, 2); LineH2.BackgroundColor3 = Config.Theme.Stroke; LineH2.BorderSizePixel = 0; LineH2.Visible = false
-
-	local MainPanel = Instance.new("Frame", TacticalHUDGui)
-	MainPanel.Size = UDim2.new(0, 275, 0, 82); MainPanel.AnchorPoint = Vector2.new(0, 0.5)
-	MainPanel.Position = UDim2.new(0.5, 140, 0.5, -40); MainPanel.BackgroundColor3 = Color3.fromRGB(10, 12, 18)
-	MainPanel.BackgroundTransparency = 0.2; MainPanel.Visible = false
-	Instance.new("UICorner", MainPanel).CornerRadius = UDim.new(0, 8)
-	local PanelStroke = Instance.new("UIStroke", MainPanel); PanelStroke.Color = Config.Theme.Stroke; PanelStroke.Thickness = 1.4
-
-	local SubTag = Instance.new("TextLabel", MainPanel)
-	SubTag.Size = UDim2.new(1, -12, 0, 14); SubTag.Position = UDim2.new(0, 8, 0, 4)
-	SubTag.BackgroundTransparency = 1; SubTag.Text = "◈ ROBOT CYBER HUD // TARGET LOCK ◈"
-	SubTag.TextColor3 = Config.Theme.Stroke; SubTag.Font = Enum.Font.GothamBold; SubTag.TextSize = 9; SubTag.TextXAlignment = Enum.TextXAlignment.Left
-
-	local Header = Instance.new("TextLabel", MainPanel)
-	Header.Size = UDim2.new(1, -12, 0, 20); Header.Position = UDim2.new(0, 8, 0, 18)
-	Header.BackgroundTransparency = 1; Header.Font = Enum.Font.GothamBlack; Header.TextSize = 13
-	Header.TextXAlignment = Enum.TextXAlignment.Left; Header.TextColor3 = Config.Theme.Text
-
-	local HPBarBG = Instance.new("Frame", MainPanel)
-	HPBarBG.Size = UDim2.new(1, -16, 0, 7); HPBarBG.Position = UDim2.new(0, 8, 0, 42)
-	HPBarBG.BackgroundColor3 = Color3.fromRGB(35, 38, 46); Instance.new("UICorner", HPBarBG).CornerRadius = UDim.new(1, 0)
-	local HPBarFill = Instance.new("Frame", HPBarBG)
-	HPBarFill.Size = UDim2.new(1, 0, 1, 0); HPBarFill.BackgroundColor3 = Config.Theme.Stroke; Instance.new("UICorner", HPBarFill).CornerRadius = UDim.new(1, 0)
-
-	local Footer = Instance.new("TextLabel", MainPanel)
-	Footer.Size = UDim2.new(1, -12, 0, 18); Footer.Position = UDim2.new(0, 8, 0, 54)
-	Footer.BackgroundTransparency = 1; Footer.Font = Enum.Font.GothamBold; Footer.TextSize = 10
-	Footer.TextXAlignment = Enum.TextXAlignment.Left; Footer.TextColor3 = Config.Theme.TextDim
-
-	Storage.TacticalHUD = {
-		Main = MainPanel, Stroke = PanelStroke, Header = Header, HPFill = HPBarFill, Footer = Footer,
-		Line1 = LineH1, LineDiag = LineDiag, Line2 = LineH2
-	}
-	
-	if Drawing then
-		local function createLine() local l = Drawing.new("Line"); l.Thickness = 1.5; l.Color = Config.Theme.Stroke; l.Visible = false; return l end
-		Storage.CrosshairLines.Top = createLine(); Storage.CrosshairLines.Bottom = createLine()
-		Storage.CrosshairLines.Left = createLine(); Storage.CrosshairLines.Right = createLine()
-		local hm1, hm2, hm3, hm4 = createLine(), createLine(), createLine(), createLine()
-		hm1.Color = Color3.new(1,1,1); hm2.Color = Color3.new(1,1,1); hm3.Color = Color3.new(1,1,1); hm4.Color = Color3.new(1,1,1)
-		Storage.HitmarkerLines.TL = hm1; Storage.HitmarkerLines.TR = hm2
-		Storage.HitmarkerLines.BL = hm3; Storage.HitmarkerLines.BR = hm4
-		
-		local statusTxt = Drawing.new("Text")
-		statusTxt.Size = 13
-		statusTxt.Center = true
-		statusTxt.Outline = true
-		statusTxt.OutlineColor = Color3.fromRGB(0, 0, 0)
-		statusTxt.Color = Config.Theme.LockColor
-		statusTxt.Visible = false
-		Storage.TargetStatusDrawing = statusTxt
-	end
-	
-	for _, p in pairs(Services.Players:GetPlayers()) do pcall(function() Features.CreateESP(p) end) end
-	local function UpdatePlayerCache(p)
-		if not p or p == LocalPlayer then return end
-		local char = p.Character
-		if not char or not char.Parent then
-			Storage.PlayerCache[p] = nil
-			return
-		end
-		local head = char:FindFirstChild("Head") or char:FindFirstChildWhichIsA("BasePart")
-		local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") or head
-		local hum = char:FindFirstChildOfClass("Humanoid")
-		if head and root then
-			local existing = Storage.PlayerCache[p]
-			Storage.PlayerCache[p] = {
-				Char = char,
-				Head = head,
-				Root = root,
-				Hum = hum,
-				IsVisible = existing and existing.IsVisible or false,
-				LastVisCheck = existing and existing.LastVisCheck or 0
-			}
-		else
-			Storage.PlayerCache[p] = nil
-		end
-	end
-
-	table.clear(Storage.PlayerCache)
-	table.clear(Storage.CharCache)
-	table.clear(Storage.VisCache)
-	for _, p in ipairs(Services.Players:GetPlayers()) do
-		if p ~= LocalPlayer then
-			UpdatePlayerCache(p)
-			local cAdded = p.CharacterAdded:Connect(function(newChar)
-				task.wait(0.3)
-				UpdatePlayerCache(p)
-				if newChar then
-					local chAdd = newChar.ChildAdded:Connect(function(child)
-						if child:IsA("Tool") or child:IsA("Model") then
-							local cd = Storage.CharCache[p]
-							if cd then cd.LastWeaponCheck = 0 end
-						end
-					end)
-					table.insert(Storage.Connections, chAdd)
-					local chRem = newChar.ChildRemoved:Connect(function(child)
-						if child:IsA("Tool") or child:IsA("Model") then
-							local cd = Storage.CharCache[p]
-							if cd then cd.LastWeaponCheck = 0 end
-						end
-					end)
-					table.insert(Storage.Connections, chRem)
-				end
-			end)
-			table.insert(Storage.Connections, cAdded)
-			local cRemoved = p.CharacterRemoving:Connect(function()
-				Storage.PlayerCache[p] = nil
-				if Storage.LockedTarget == p then
-					Storage.LockedTarget = nil
-					Storage.CurrentHPRatio = 0
-					if Storage.TacticalHUD then Storage.TacticalHUD.Main.Visible = false end
-				end
-			end)
-			table.insert(Storage.Connections, cRemoved)
-		end
-	end
-
-	local cachePAdded = Services.Players.PlayerAdded:Connect(function(p)
-		local cAdded = p.CharacterAdded:Connect(function()
-			task.wait(0.3)
-			UpdatePlayerCache(p)
-		end)
-		table.insert(Storage.Connections, cAdded)
-		local cRemoved = p.CharacterRemoving:Connect(function()
-			Storage.PlayerCache[p] = nil
-			if Storage.LockedTarget == p then
-				Storage.LockedTarget = nil
-				Storage.CurrentHPRatio = 0
-				if Storage.TacticalHUD then Storage.TacticalHUD.Main.Visible = false end
-			end
-		end)
-		table.insert(Storage.Connections, cRemoved)
-		UpdatePlayerCache(p)
-	end)
-	table.insert(Storage.Connections, cachePAdded)
-
-	local cachePRemoved = Services.Players.PlayerRemoving:Connect(function(p)
-		Storage.PlayerCache[p] = nil
-		Storage.CharCache[p] = nil
-		Storage.VisCache[p] = nil
-		Features.RemoveESP(p)
-	end)
-	table.insert(Storage.Connections, cachePRemoved)
-	UI.Init()
-	InitRadar()
-	
-	local espAddedConn = Services.Players.PlayerAdded:Connect(function(p) task.wait(1); Features.CreateESP(p) end)
-	table.insert(Storage.Connections, espAddedConn)
-	local espRemovedConn = Services.Players.PlayerRemoving:Connect(function(p) Features.RemoveESP(p) end)
-	table.insert(Storage.Connections, espRemovedConn)
-	
-	local respawnConn = LocalPlayer.CharacterAdded:Connect(function(char)
-		local hum = char:FindFirstChild("Humanoid")
-		if hum and not Config.States.SpeedHack then
-			Storage.OriginalWalkSpeed = hum.WalkSpeed
-			Storage.WalkSpeedSnapshotPending = false
-			Storage.LastSafeCFrame = nil
-			Storage.HitSoundObj = nil
-		else
-			Storage.WalkSpeedSnapshotPending = true
-			local humanoidAddedConn
-			humanoidAddedConn = char.ChildAdded:Connect(function(child)
-				if child:IsA("Humanoid") and not Config.States.SpeedHack then
-					Storage.OriginalWalkSpeed = child.WalkSpeed
-					Storage.WalkSpeedSnapshotPending = false
-			Storage.LastSafeCFrame = nil
-			Storage.HitSoundObj = nil
-					humanoidAddedConn:Disconnect()
-				end
-			end)
-			task.delay(5, function()
-				if humanoidAddedConn then pcall(function() humanoidAddedConn:Disconnect() end) end
-				Storage.WalkSpeedSnapshotPending = false
-			Storage.LastSafeCFrame = nil
-			Storage.HitSoundObj = nil
-			end)
-		end
-		task.wait(1)
-		Storage.IsHiding = false; Storage.HideCFrame = nil
-		Storage.LockedTarget = nil; Storage.CurrentHPRatio = 0
-		if Storage.TacticalHUD then Storage.TacticalHUD.Main.Visible = false end
-		local hrp = char:FindFirstChild("HumanoidRootPart")
-		if hrp then
-			for _, name in ipairs({"X_Fly_LV", "X_Hide_LV", "X_Speed_LV"}) do
-				local old = hrp:FindFirstChild(name); if old then old:Destroy() end
-			end
-			local rootAtt = hrp:FindFirstChild("RootAttachment")
-			if rootAtt and rootAtt:GetAttribute("X_TitanOwned") then rootAtt:Destroy() end
-		end
-		Utils.RestoreCollision(char, "collide")
-		Utils.RestoreCollision(char, "touch")
-		if Config.States.Chams then Features.UpdateChams() end
-	end)
-	table.insert(Storage.Connections, respawnConn)
-	
-	-- ======================================================================
-	-- RENDERSTEPPED (V5.0.0 - P2 FIXED: Target Caching)
-	-- ======================================================================
-	local renderConn = Services.RunService.RenderStepped:Connect(function(dt)
-		local CurrentCam = Utils.GetCurrentCamera()
-		if not CurrentCam then return end
-		local char = LocalPlayer.Character; local hrp = char and (char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char.PrimaryPart or char:FindFirstChildWhichIsA("BasePart"))
-		local center = Vector2.new(CurrentCam.ViewportSize.X/2, CurrentCam.ViewportSize.Y/2)
-		
-		-- [ZERO-LAG] Throttled Target Search (Max 60Hz evaluation, full frame lerp)
-		local cachedTarget, cachedIsWall = nil, false
-		if Config.States.Aimbot or Config.States.TriggerBot or Config.States.ShowFOV or Storage.LockedTarget then
-			local now = tick()
-			if (now - Storage.LastTargetScan) > 0.04 then
-				Storage.LastTargetScan = now
-				cachedTarget, cachedIsWall = Utils.GetClosestToCenter()
-				Storage.CachedTargetPart = cachedTarget
-				Storage.CachedIsWall = cachedIsWall
-			else
-				cachedTarget = Storage.CachedTargetPart
-				cachedIsWall = Storage.CachedIsWall
-			end
-		end
-		
-		if Storage.FOVRingUI then
-			if Config.States.ShowFOV then
-				Storage.FOVRingUI.Visible = true
-				Storage.FOVRingUI.Size = UDim2.new(0, Config.Vals.FOV * 2, 0, Config.Vals.FOV * 2)
-				if cachedTarget then 
-					Storage.FOVRingUI.UIStroke.Color = cachedIsWall and Config.Theme.WallColor or Config.Theme.LockColor
-				else 
-					Storage.FOVRingUI.UIStroke.Color = Config.Theme.Stroke 
-				end
-			elseif Storage.FOVRingUI.Visible then
-				Storage.FOVRingUI.Visible = false
-			end
-		end
-		
-		if Storage.TacticalHUD then
-			local showHUD = Config.States.ShowLockStatus and Storage.LockedTarget ~= nil
-			if showHUD and Storage.LockedTarget and Storage.LockedTarget.Character then
-				Storage.TacticalHUD.Main.Visible = true
-				local now = tick()
-				if (now - Storage.LastHUDUpdate) > 0.05 then
-					Storage.LastHUDUpdate = now
-					local lockedPlr = Storage.LockedTarget
-					if not Utils.IsAlive(lockedPlr, lockedPlr.Character) then
-						Storage.LockedTarget = nil
-						Storage.CurrentHPRatio = 0
-						Storage.TacticalHUD.Main.Visible = false
-					else
-						local hrp_t = lockedPlr.Character:FindFirstChild("HumanoidRootPart")
-						local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-						if hrp_t and myHRP then
-							local dist = math.floor((hrp_t.Position - myHRP.Position).Magnitude)
-							local curHp, maxHp = Utils.GetHealth(lockedPlr, lockedPlr.Character)
-							local targetRatio = math.clamp(curHp / maxHp, 0, 1)
-							Storage.CurrentHPRatio = Storage.CurrentHPRatio + (targetRatio - Storage.CurrentHPRatio) * 0.2
-							local hpColor = Color3.new(1 - Storage.CurrentHPRatio, Storage.CurrentHPRatio, 0)
-							Storage.TacticalHUD.HPFill.Size = UDim2.new(Storage.CurrentHPRatio, 0, 1, 0)
-							Storage.TacticalHUD.HPFill.BackgroundColor3 = hpColor
-							local threat, tColor = "LOW", Config.Theme.ThreatLow
-							if dist < 30 then threat, tColor = "HIGH", Config.Theme.ThreatHigh
-							elseif dist < 80 then threat, tColor = "MED", Config.Theme.ThreatMed end
-							local breath = math.sin(now * 3) * 0.2 + 0.8
-							if threat == "HIGH" then tColor = Color3.fromRGB(255, 40 * breath, 40 * breath)
-							elseif threat == "MED" then tColor = Color3.fromRGB(255, 180 * breath, 0) end
-							Storage.TacticalHUD.Header.Text = string.format("[%s] %s", threat, lockedPlr.Name)
-							Storage.TacticalHUD.Header.TextColor3 = tColor
-							Storage.TacticalHUD.Footer.Text = string.format("DIST: %dm | AIM: %s", dist, Config.Vals.AimPart)
-							Storage.TacticalHUD.Stroke.Color = tColor
-						end
-					end
-				end
-			elseif Storage.TacticalHUD.Main.Visible then
-				Storage.TacticalHUD.Main.Visible = false
-			end
-		end
-		
-		if Drawing then
-			local showCross = (Config.States.Crosshair or Config.States.DynamicCrosshair) and not (Storage.MainFrame and Storage.MainFrame.Visible)
-			if showCross then
-				local spread = 6
-				local crosshairColor = Config.Theme.Stroke
-				if Config.States.DynamicCrosshair then
-					if Config.States.Fly or Config.States.SpeedHack then spread = 18
-					elseif hrp and hrp.AssemblyLinearVelocity.Magnitude > 10 then spread = 12 end
-					if Storage.LockedTarget or Config.States.Aimbot then spread = 2; crosshairColor = Config.Theme.LockColor end
-				end
-				local t, b, l, r = Storage.CrosshairLines.Top, Storage.CrosshairLines.Bottom, Storage.CrosshairLines.Left, Storage.CrosshairLines.Right
-				if t and b and l and r then
-					t.Visible = true; t.From = Vector2.new(center.X, center.Y - spread - 4); t.To = Vector2.new(center.X, center.Y - spread); t.Color = crosshairColor
-					b.Visible = true; b.From = Vector2.new(center.X, center.Y + spread + 4); b.To = Vector2.new(center.X, center.Y + spread); b.Color = crosshairColor
-					l.Visible = true; l.From = Vector2.new(center.X - spread - 4, center.Y); l.To = Vector2.new(center.X - spread, center.Y); l.Color = crosshairColor
-					r.Visible = true; r.From = Vector2.new(center.X + spread + 4, center.Y); r.To = Vector2.new(center.X + spread, center.Y); r.Color = crosshairColor
-				end
-				Storage.CrosshairVisible = true
-			elseif Storage.CrosshairVisible then
-				Storage.CrosshairVisible = false
-				local t, b, l, r = Storage.CrosshairLines.Top, Storage.CrosshairLines.Bottom, Storage.CrosshairLines.Left, Storage.CrosshairLines.Right
-				if t then t.Visible = false end
-				if b then b.Visible = false end
-				if l then l.Visible = false end
-				if r then r.Visible = false end
-			end
-			
-			if Config.States.Hitmarker and Storage.HitmarkerAlpha > 0 then
-				local hmSize = 7 + (1 - Storage.HitmarkerAlpha) * 4
-				local hmAlpha = math.clamp(Storage.HitmarkerAlpha, 0.2, 1)
-				local tl = Storage.HitmarkerLines.TL
-				local tr = Storage.HitmarkerLines.TR
-				local bl = Storage.HitmarkerLines.BL
-				local br = Storage.HitmarkerLines.BR
-				if tl and tr and bl and br then
-					tl.Visible = true; tl.Transparency = hmAlpha; tl.From = Vector2.new(center.X - hmSize, center.Y - hmSize); tl.To = Vector2.new(center.X - 2, center.Y - 2)
-					tr.Visible = true; tr.Transparency = hmAlpha; tr.From = Vector2.new(center.X + hmSize, center.Y - hmSize); tr.To = Vector2.new(center.X + 2, center.Y - 2)
-					bl.Visible = true; bl.Transparency = hmAlpha; bl.From = Vector2.new(center.X - hmSize, center.Y + hmSize); bl.To = Vector2.new(center.X - 2, center.Y + 2)
-					br.Visible = true; br.Transparency = hmAlpha; br.From = Vector2.new(center.X + hmSize, center.Y + hmSize); br.To = Vector2.new(center.X + 2, center.Y + 2)
-				end
-				Storage.HitmarkerAlpha = math.max(0, Storage.HitmarkerAlpha - 0.05)
-			else
-				for _, line in pairs(Storage.HitmarkerLines) do if line and line.Visible then line.Visible = false end end
-			end
-			
-			-- [TACTICAL TARGET VISIBILITY STATUS INDICATOR]
-			if Storage.TargetStatusDrawing then
-				if Config.States.TargetStatus and cachedTarget and cachedTarget.Parent and not (Storage.MainFrame and Storage.MainFrame.Visible) then
-					local tPlr = Services.Players:GetPlayerFromCharacter(cachedTarget.Parent)
-					local tName = tPlr and tPlr.Name or cachedTarget.Parent.Name
-					local dist = math.floor((CurrentCam.CFrame.Position - cachedTarget.Position).Magnitude)
-					local curHp, maxHp = Utils.GetHealth(tPlr, cachedTarget.Parent)
-					local hpPct = math.floor(math.clamp(curHp / maxHp, 0, 1) * 100)
-					Storage.TargetStatusDrawing.Visible = true
-					Storage.TargetStatusDrawing.Position = Vector2.new(center.X, center.Y + 24)
-					if cachedIsWall then
-						Storage.TargetStatusDrawing.Color = Config.Theme.WallColor
-						Storage.TargetStatusDrawing.Text = string.format("[🔴 OCCLUDED] %s | %dm | %d%%", tName, dist, hpPct)
-					else
-						Storage.TargetStatusDrawing.Color = Config.Theme.LockColor
-						Storage.TargetStatusDrawing.Text = string.format("[🟢 LOCKED] %s | %dm | %d%%", tName, dist, hpPct)
-					end
-				elseif Storage.TargetStatusDrawing.Visible then
-					Storage.TargetStatusDrawing.Visible = false
-				end
-			end
-		end
-		
-		UpdateRadar()
-		
-		if Config.States.ServerDesync and Storage.RealCFrame and hrp then hrp.CFrame = Storage.RealCFrame end
-		if Config.States.Desync and hrp and Storage.RealCFrame and not Config.States.ServerDesync then
-			hrp.CFrame = Storage.RealCFrame; hrp.AssemblyLinearVelocity = Storage.RealVelocity
-		end
-		
-		if Config.States.TPAura and Storage.AuraTarget and Storage.AuraTarget:FindFirstChild("HumanoidRootPart") then
-			CurrentCam.CFrame = CFrame.lookAt(CurrentCam.CFrame.Position, Storage.AuraTarget.HumanoidRootPart.Position)
-		end
-		
-		if Storage.CurrentSpectate then
-			local tChar = Storage.CurrentSpectate.Character
-			if tChar and Services.Players:FindFirstChild(Storage.CurrentSpectate.Name) then
-				local tHum = tChar:FindFirstChild("Humanoid")
-				if tHum and tHum.Health > 0 then
-					if CurrentCam.CameraSubject ~= tHum then CurrentCam.CameraSubject = tHum end
-				else Features.StopSpectate() end
-			else Features.StopSpectate() end
-		end
-		
-		if Config.States.Aimbot then
-			-- [V6.3.0 STICKY AIMBOT & EXPONENTIAL DT SMOOTHING]: Dynamic ballistic damping & close-range responsiveness
-			if cachedTarget and cachedTarget.Parent then
-				local targetPos = cachedTarget.Position
-				local eRoot = cachedTarget.Parent:FindFirstChild("HumanoidRootPart")
-				local dist3D = (CurrentCam.CFrame.Position - targetPos).Magnitude
-				
-				local predTime = Config.Vals.PredictionStrength
-				if Config.States.SmartPrediction then
-					local ping = Utils.GetPing() / 1000
-					predTime = predTime + ping * Config.Vals.PingCompensation
-				end
-				
-				-- [CQB BALLISTIC DAMPING]:
-				-- At short distance (< 40 studs), bullet travel time is nearly zero in hitscan & high-velocity engines.
-				-- Excessive velocity prediction at short distance causes violent overshooting and erratic camera flips.
-				-- At dist <= 8 studs: prediction is zero (direct bone lock).
-				-- From 8 to 40 studs: prediction scales smoothly up to 100%.
-				local distFactor = math.clamp((dist3D - 8) / 32, 0.0, 1.0)
-				predTime = predTime * distFactor
-				
-				if eRoot and predTime > 0.001 then
-					local vel = eRoot.AssemblyLinearVelocity
-					-- Damp sudden vertical jump velocity jerks in close quarters
-					local velY = (dist3D < 25) and (vel.Y * 0.35) or vel.Y
-					targetPos = targetPos + Vector3.new(vel.X, velY, vel.Z) * predTime
-				end
-				
-				local screenPos, onScreen = CurrentCam:WorldToViewportPoint(targetPos)
-				local screenDist = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
-				
-				-- [EXPONENTIAL DELTATIME DAMPED SMOOTHING (FPS-INDEPENDENT)]:
-				-- Guarantees identical camera responsiveness across 30 FPS to 240+ FPS
-				local safeDt = (dt and dt > 0 and dt < 0.1) and dt or 0.0166
-				local responsiveness = math.clamp(1.0 - Config.Vals.AimbotSmoothness, 0.05, 1.0)
-				local lambda = (responsiveness / math.max(0.01, 1.01 - responsiveness)) * 32.0
-				if dist3D < 40 then
-					local cqbBoost = (1.0 - (dist3D / 40)) * 1.5
-					lambda = lambda * (1.0 + cqbBoost)
-				end
-				if screenDist > 120 then
-					lambda = lambda * 1.4
-				end
-				local expSmooth = math.clamp(1.0 - math.exp(-lambda * safeDt), 0.05, 1.0)
-				
-				-- [MULTI-PLAN AIMBOT EXECUTION & FAILOVER WATCHDOG]
-				local aimPlan = Config.Vals.AimbotPlan or "Auto"
-				local executePlanB = (aimPlan == "Plan B (MouseMove)") or (aimPlan == "Auto" and Storage.CameraOverrideDetected and Config.States.AimbotFailover)
-				
-				if executePlanB then
-					-- Plan B: MouseMoveRel Hardware/Virtual Input Emulation (Bypasses Locked Camera CFrame)
-					local dx = screenPos.X - center.X
-					local dy = screenPos.Y - center.Y
-					local moveRate = math.clamp(expSmooth * 0.9, 0.08, 0.85)
-					if type(mousemoverel) == "function" then
-						mousemoverel(dx * moveRate, dy * moveRate)
-					elseif Services.VirtualInputManager then
-						pcall(function()
-							Services.VirtualInputManager:SendMouseMoveEvent(screenPos.X, screenPos.Y, game)
-						end)
-					else
-						-- Fallback to camera if mouse input is not supported
-						CurrentCam.CFrame = CurrentCam.CFrame:Lerp(CFrame.lookAt(CurrentCam.CFrame.Position, targetPos), expSmooth)
-					end
-				else
-					-- Plan A: High-Precision Camera CFrame Interpolation
-					local oldCF = CurrentCam.CFrame
-					local targetCF = CFrame.lookAt(CurrentCam.CFrame.Position, targetPos)
-					if screenDist < Config.Vals.Deadzone then
-						CurrentCam.CFrame = targetCF
-					else
-						CurrentCam.CFrame = CurrentCam.CFrame:Lerp(targetCF, expSmooth)
-					end
-					
-					-- Failover Watchdog: check if game script immediately overwrites Camera CFrame
-					if (aimPlan == "Auto" and Config.States.AimbotFailover and not Storage.CameraOverrideDetected) then
-						task.defer(function()
-							if Config.States.Aimbot and cachedTarget then
-								local afterVec = CurrentCam.CFrame.LookVector
-								local expectedVec = targetCF.LookVector
-								local deltaExpected = (afterVec - expectedVec).Magnitude
-								local deltaOld = (afterVec - oldCF.LookVector).Magnitude
-								if deltaExpected > 0.85 and deltaOld < 0.05 then
-									Storage.AimbotCameraOverrideCount = (Storage.AimbotCameraOverrideCount or 0) + 1
-									if Storage.AimbotCameraOverrideCount >= 5 then
-										Storage.CameraOverrideDetected = true
-										Utils.Notify("⚡ AIMBOT FAILOVER", "Camera locked by game script! Switched to Plan B (MouseMoveRel)", 4)
-									end
-								else
-									Storage.AimbotCameraOverrideCount = 0
-								end
-							end
-						end)
-					end
-				end
-			end
-		end
-		
-		if Config.States.TriggerBot then
-			-- Use cached target (with alive validation)
-			local trigPlr = cachedTarget and cachedTarget.Parent and Services.Players:GetPlayerFromCharacter(cachedTarget.Parent)
-			if cachedTarget and cachedTarget.Parent and trigPlr and Utils.IsAlive(trigPlr, cachedTarget.Parent) and (not Config.States.WallCheck or Utils.IsVisible(cachedTarget)) then
-				if tick() - Storage.TriggerBotCooldown > Config.Vals.TriggerDelay then
-					mouse1click(); Storage.TriggerBotCooldown = tick()
-				end
-			end
-		end
-		
-		-- [ADAPTIVE ZERO-LAG ESP ENGINE] Skip entire loop if visual features are disabled
-		local anyESP = Config.States.ESP or Config.States.ESPSkeleton or Config.States.Tracers or Config.States.OffscreenArrows
-		if Drawing then
-			if not anyESP then
-				if not Storage.ESPHidden then
-					Storage.ESPHidden = true
-					for _, esp in pairs(Storage.ESPObjects) do
-						pcall(function()
-							esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
-							if esp.Weapon then esp.Weapon.Visible = false end
-						end)
-					end
-					for _, lines in pairs(Storage.SkeletonParts) do
-						pcall(function() for _, l in pairs(lines) do l.Visible = false end end)
-					end
-					for _, ln in pairs(Storage.TracerLines) do
-						pcall(function() ln.Visible = false end)
-					end
-					for _, a in pairs(Storage.OffscreenArrows) do
-						pcall(function() a.Visible = false end)
-					end
-				end
-			else
-				Storage.ESPHidden = false
-				local nowTick = tick()
-				local isCombatActive = Config.States.Aimbot or Storage.LockedTarget ~= nil or cachedTarget ~= nil
-				local shouldThrottle = Config.States.AdaptiveFPS and not isCombatActive and ((nowTick - Storage.LastAdaptiveEspTick) < 0.016)
-
-				if not shouldThrottle then
-					Storage.LastAdaptiveEspTick = nowTick
-					for _, plr in pairs(Services.Players:GetPlayers()) do
-					if plr == LocalPlayer then continue end
-					local cData = Utils.GetCharacterData(plr)
-					if not cData then continue end
-					local pChar = cData.Char
-					local root = cData.Root
-					local head = cData.Head
-					local isAlive, isUnspawned = cData.IsAlive, cData.IsUnspawned
-					local esp = Storage.ESPObjects[plr]
-
-					if not (isAlive or (Config.States.DetectUnspawned and isUnspawned)) then
-						if esp then
-							pcall(function()
-								esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
-								if esp.Weapon then esp.Weapon.Visible = false end
-							end)
-						end
-						if Storage.SkeletonParts[plr] then pcall(function() for _, l in pairs(Storage.SkeletonParts[plr]) do l.Visible = false end end) end
-						if Storage.TracerLines[plr] then pcall(function() Storage.TracerLines[plr].Visible = false end) end
-						if Storage.OffscreenArrows[plr] then pcall(function() Storage.OffscreenArrows[plr].Visible = false end) end
-						continue
-					end
-
-					if not esp then
-						Features.CreateESP(plr)
-						esp = Storage.ESPObjects[plr]
-					end
-					if not esp then continue end
-
-					local rootCFrame = root.CFrame
-					local topPos, topOn = CurrentCam:WorldToViewportPoint((rootCFrame * CFrame.new(0, 2.4, 0)).Position)
-					local bottomPos, bottomOn = CurrentCam:WorldToViewportPoint((rootCFrame * CFrame.new(0, -3.2, 0)).Position)
-					local onScreen = topOn or bottomOn
-
-					-- [ADAPTIVE FRUSTUM CULLING]: Instant skip for offscreen players when OffscreenArrows is disabled
-					if (not onScreen or topPos.Z <= 0) and not Config.States.OffscreenArrows then
-						if esp.Box.Visible then
-							pcall(function()
-								esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
-								if esp.Weapon then esp.Weapon.Visible = false end
-								if Storage.SkeletonParts[plr] then for _, part in pairs(Storage.SkeletonParts[plr]) do if part.Visible then part.Visible = false end end end
-								if Storage.Box3DObjects[plr] then for _, l in pairs(Storage.Box3DObjects[plr]) do if l.Visible then l.Visible = false end end end
-								if Storage.LookRayLines[plr] and Storage.LookRayLines[plr].Visible then Storage.LookRayLines[plr].Visible = false end
-								if Storage.TracerLines[plr] and Storage.TracerLines[plr].Visible then Storage.TracerLines[plr].Visible = false end
-							end)
-						end
-						continue
-					end
-
-					local drawColor = Config.Theme.Stroke
-					if isUnspawned then
-						drawColor = Color3.fromRGB(190, 130, 255)
-					elseif Storage.LockedTarget == plr then
-						if isTitanPlus then
-							local pulse = (math.sin(tick() * 10) + 1) * 0.5
-							drawColor = Color3.fromRGB(255, math.floor(40 + 175 * pulse), 0)
-						else
-							drawColor = Config.Theme.LockColor
-						end
-					elseif Config.States.TeamCheck and Utils.IsTeammate(plr) then
-						drawColor = Config.Theme.Team
-					elseif isTitanPlus then
-						local myRoot = LocalPlayer.Character and (LocalPlayer.Character:FindFirstChild("HumanoidRootPart") or LocalPlayer.Character:FindFirstChild("Head"))
-						local d3d = myRoot and (root.Position - myRoot.Position).Magnitude or 100
-						local hPart = pChar:FindFirstChild("Head")
-						local isLookingAtMe = false
-						if hPart and myRoot then
-							local toMe = (myRoot.Position - hPart.Position).Unit
-							if hPart.CFrame.LookVector:Dot(toMe) > 0.8 then isLookingAtMe = true end
-						end
-						if d3d < 30 or isLookingAtMe then
-							drawColor = Color3.fromRGB(255, 45, 45)
-						elseif d3d < 75 then
-							drawColor = Color3.fromRGB(255, 185, 40)
-						end
-					end
-					if Config.States.VisibilityCheck and onScreen and topPos.Z > 0 and not isUnspawned and not Utils.IsVisible(head, plr) then
-						drawColor = Color3.new(0.5, 0.5, 0.5)
-					end
-
-					if Config.States.Tracers then
-						pcall(function()
-							local ln = Storage.TracerLines[plr] or Drawing.new("Line"); Storage.TracerLines[plr] = ln
-							if onScreen and topPos.Z > 0 then
-								ln.Visible = true; ln.Thickness = Config.Vals.ESPBoxThickness or 1.5; ln.Color = drawColor
-								local tOrigin = center
-								if Config.Vals.TracerOrigin == "Bottom" then
-									tOrigin = Vector2.new(center.X, CurrentCam.ViewportSize.Y)
-								elseif Config.Vals.TracerOrigin == "Mouse" then
-									local mPos = Services.UIS:GetMouseLocation()
-									tOrigin = Vector2.new(mPos.X, mPos.Y)
-								end
-								ln.From = tOrigin; ln.To = Vector2.new(bottomPos.X, bottomPos.Y)
-							else
-								ln.Visible = false
-							end
-						end)
-					elseif Storage.TracerLines[plr] and Storage.TracerLines[plr].Visible then
-						pcall(function() Storage.TracerLines[plr].Visible = false end)
-					end
-
-					-- Off-screen Target Arrows (Guarded)
-					if Config.States.OffscreenArrows then
-						local arrowOk = pcall(function()
-							local arrow = Storage.OffscreenArrows[plr]
-							if not arrow then
-								arrow = Drawing.new("Triangle"); arrow.Filled = true; Storage.OffscreenArrows[plr] = arrow
-							end
-							if (not onScreen or topPos.Z <= 0) and not (Config.States.TeamCheck and Utils.IsTeammate(plr)) then
-								local rel = (root.Position - CurrentCam.CFrame.Position)
-								local forward = CurrentCam.CFrame.LookVector
-								local right = CurrentCam.CFrame.RightVector
-								local dotForward = forward:Dot(rel); local dotRight = right:Dot(rel)
-								local angle = math.atan2(dotRight, dotForward)
-								local arrowRadius = math.min(CurrentCam.ViewportSize.X/2, CurrentCam.ViewportSize.Y/2) * 0.75
-								local arrowCenter = center + Vector2.new(math.sin(angle) * arrowRadius, -math.cos(angle) * arrowRadius)
-								local tip = arrowCenter + Vector2.new(math.sin(angle) * 12, -math.cos(angle) * 12)
-								local leftPt = arrowCenter + Vector2.new(math.sin(angle + 2.5) * 8, -math.cos(angle + 2.5) * 8)
-								local rightPt = arrowCenter + Vector2.new(math.sin(angle - 2.5) * 8, -math.cos(angle - 2.5) * 8)
-								arrow.PointA = tip; arrow.PointB = leftPt; arrow.PointC = rightPt
-								arrow.Color = drawColor; arrow.Visible = true
-								local distTxt = Storage.OffscreenDistTexts and Storage.OffscreenDistTexts[plr]
-								if distTxt then
-									distTxt.Position = arrowCenter + Vector2.new(math.sin(angle) * -12, -math.cos(angle) * -12)
-									distTxt.Text = string.format("%.0fm", rel.Magnitude)
-									distTxt.Color = drawColor
-									distTxt.Visible = true
-								end
-							else
-								arrow.Visible = false
-								if Storage.OffscreenDistTexts and Storage.OffscreenDistTexts[plr] then
-									Storage.OffscreenDistTexts[plr].Visible = false
-								end
-							end
-						end)
-						if not arrowOk then Config.States.OffscreenArrows = false end
-					elseif Storage.OffscreenArrows[plr] then
-						pcall(function()
-							Storage.OffscreenArrows[plr].Visible = false
-							if Storage.OffscreenDistTexts and Storage.OffscreenDistTexts[plr] then
-								Storage.OffscreenDistTexts[plr].Visible = false
-							end
-						end)
-					end
-
-					if onScreen and topPos.Z > 0 then
-						local height = math.abs(topPos.Y - bottomPos.Y)
-						local width = height / 1.6
-						local boxX = topPos.X - width / 2
-						local boxY = math.min(topPos.Y, bottomPos.Y)
-
-						if Config.States.ESP then
-							pcall(function()
-								esp.Box.Visible = true; esp.Box.Size = Vector2.new(width, height); esp.Box.Position = Vector2.new(boxX, boxY); esp.Box.Color = drawColor; esp.Box.Transparency = 1
-								local boxThick = Config.Vals.ESPBoxThickness or 1.5
-								if Storage.LockedTarget == plr then
-									local pulse = (math.sin(tick() * 8) + 1) * 0.5
-									boxThick = boxThick + pulse * 1.5
-								end
-								esp.Box.Thickness = boxThick
-								esp.Name.Visible = (Config.States.ShowName ~= false); esp.Name.Size = Config.Vals.ESPTextSize or 13; esp.Name.Text = isUnspawned and (plr.DisplayName .. " [NO-SPAWN]") or plr.DisplayName; esp.Name.Position = Vector2.new(boxX + width / 2, boxY - 16); esp.Name.Color = drawColor
-								esp.HealthBar.Visible = (Config.States.ShowHealth ~= false); local curHp = cData.CurHp or 100; local maxHp = cData.MaxHp or 100; local healthRatio = math.clamp(curHp / maxHp, 0, 1)
-								esp.HealthBar.Color = Color3.new(1 - healthRatio, healthRatio, 0)
-								esp.HealthBar.From = Vector2.new(boxX - 5, boxY + height); esp.HealthBar.To = Vector2.new(boxX - 5, boxY + height - height * healthRatio)
-								esp.Distance.Visible = (Config.States.ShowDistance ~= false); esp.Distance.Size = (Config.Vals.ESPTextSize or 13) - 1; esp.Distance.Text = string.format("%.0fm", (root.Position - (hrp and hrp.Position or root.Position)).Magnitude)
-								esp.Distance.Position = Vector2.new(boxX + width / 2, boxY + height + 2); esp.Distance.Color = drawColor
-								if Config.States.WeaponESP and esp.Weapon then
-									local now = tick()
-									if not cData.Weapon or (now - (cData.LastWeaponCheck or 0) > 0.6) then
-										cData.Weapon = Utils.GetEquippedWeapon(plr, pChar)
-										cData.LastWeaponCheck = now
-									end
-									local wName = cData.Weapon or "Unarmed"
-									esp.Weapon.Visible = true
-									esp.Weapon.Text = "[" .. wName .. "]"
-									local distOffset = (Config.States.ShowDistance ~= false) and 16 or 2
-									esp.Weapon.Position = Vector2.new(boxX + width / 2, boxY + height + distOffset)
-									esp.Weapon.Color = (wName ~= "Unarmed") and Color3.fromRGB(255, 230, 100) or Color3.fromRGB(180, 180, 180)
-								elseif esp.Weapon then
-									esp.Weapon.Visible = false
-								end
-							end)
-						else
-							pcall(function()
-								esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
-								if esp.Weapon then esp.Weapon.Visible = false end
-							end)
-						end
-
-						-- [GEN-6 3D ORIENTED BOUNDING BOX ESP]
-						if Config.States.ESP3D and Storage.Box3DObjects[plr] then
-							pcall(function()
-								local cf, size = pChar:GetBoundingBox()
-								local sx, sy, sz = size.X * 0.5, size.Y * 0.5, size.Z * 0.5
-								local corners = {
-									cf * Vector3.new(-sx, -sy, -sz), cf * Vector3.new( sx, -sy, -sz),
-									cf * Vector3.new( sx, -sy,  sz), cf * Vector3.new(-sx, -sy,  sz),
-									cf * Vector3.new(-sx,  sy, -sz), cf * Vector3.new( sx,  sy, -sz),
-									cf * Vector3.new( sx,  sy,  sz), cf * Vector3.new(-sx,  sy,  sz)
-								}
-								local sPts = {}
-								local anyVis = false
-								for idx, pt in ipairs(corners) do
-									local sp, onS = CurrentCam:WorldToViewportPoint(pt)
-									sPts[idx] = sp
-									if onS and sp.Z > 0 then anyVis = true end
-								end
-								if anyVis then
-									local edges = {
-										{1,2}, {2,3}, {3,4}, {4,1},
-										{5,6}, {6,7}, {7,8}, {8,5},
-										{1,5}, {2,6}, {3,7}, {4,8}
-									}
-									local b3d = Storage.Box3DObjects[plr]
-									local thick = Config.Vals.ESPBoxThickness or 1.5
-									for i, e in ipairs(edges) do
-										local l = b3d[i]
-										local pA = sPts[e[1]]
-										local pB = sPts[e[2]]
-										if pA and pB and pA.Z > 0 and pB.Z > 0 then
-											l.Visible = true
-											l.From = Vector2.new(pA.X, pA.Y)
-											l.To = Vector2.new(pB.X, pB.Y)
-											l.Color = drawColor
-											l.Thickness = thick
-										else
-											l.Visible = false
-										end
-									end
-								else
-									for _, l in pairs(Storage.Box3DObjects[plr]) do l.Visible = false end
-								end
-							end)
-						elseif Storage.Box3DObjects[plr] then
-							pcall(function() for _, l in pairs(Storage.Box3DObjects[plr]) do l.Visible = false end end)
-						end
-
-						-- [GEN-6.1 LOOK VECTOR RAY ESP]
-						if Config.States.ESPLookRay and Storage.LookRayLines[plr] then
-							pcall(function()
-								local head = pChar:FindFirstChild("Head")
-								if head then
-									local hPos, hOn = CurrentCam:WorldToViewportPoint(head.Position)
-									local rayEnd = head.Position + (head.CFrame.LookVector * 5.0)
-									local ePos, eOn = CurrentCam:WorldToViewportPoint(rayEnd)
-									if (hOn or eOn) and hPos.Z > 0 and ePos.Z > 0 then
-										local l = Storage.LookRayLines[plr]
-										l.Visible = true
-										l.From = Vector2.new(hPos.X, hPos.Y)
-										l.To = Vector2.new(ePos.X, ePos.Y)
-										l.Color = (Storage.LockedTarget == plr) and Config.Theme.LockColor or drawColor
-										l.Thickness = 1.5
-									else
-										Storage.LookRayLines[plr].Visible = false
-									end
-								else
-									Storage.LookRayLines[plr].Visible = false
-								end
-							end)
-						elseif Storage.LookRayLines[plr] then
-							pcall(function() Storage.LookRayLines[plr].Visible = false end)
-						end
-
-						-- [GEN-6 FULL ANATOMICAL SKELETON ESP: R15 & R6]
-						if Config.States.ESPSkeleton and Storage.SkeletonParts[plr] then
-							pcall(function()
-								local pairsList = {}
-								local isR15 = pChar:FindFirstChild("UpperTorso") ~= nil
-								if isR15 then
-									pairsList = {
-										{"Head", "UpperTorso"},
-										{"UpperTorso", "LowerTorso"},
-										{"UpperTorso", "LeftUpperArm"}, {"LeftUpperArm", "LeftLowerArm"}, {"LeftLowerArm", "LeftHand"},
-										{"UpperTorso", "RightUpperArm"}, {"RightUpperArm", "RightLowerArm"}, {"RightLowerArm", "RightHand"},
-										{"LowerTorso", "LeftUpperLeg"}, {"LeftUpperLeg", "LeftLowerLeg"}, {"LeftLowerLeg", "LeftFoot"},
-										{"LowerTorso", "RightUpperLeg"}, {"RightUpperLeg", "RightLowerLeg"}, {"RightLowerLeg", "RightFoot"}
-									}
-								else
-									pairsList = {
-										{"Head", "Torso"},
-										{"Torso", "Left Arm"},
-										{"Torso", "Right Arm"},
-										{"Torso", "Left Leg"},
-										{"Torso", "Right Leg"}
-									}
-								end
-
-								local skel = Storage.SkeletonParts[plr]
-								for i = 1, 14 do
-									local l = skel[i]
-									local pair = pairsList[i]
-									if pair then
-										local pA = pChar:FindFirstChild(pair[1])
-										local pB = pChar:FindFirstChild(pair[2])
-										if pA and pB then
-											local posA, visA = CurrentCam:WorldToViewportPoint(pA.Position)
-											local posB, visB = CurrentCam:WorldToViewportPoint(pB.Position)
-											if (visA or visB) and posA.Z > 0 and posB.Z > 0 then
-												l.Visible = true
-												l.From = Vector2.new(posA.X, posA.Y)
-												l.To = Vector2.new(posB.X, posB.Y)
-												l.Color = drawColor
-												l.Thickness = Config.Vals.ESPBoxThickness or 1.5
-											else
-												l.Visible = false
-											end
-										else
-											l.Visible = false
-										end
-									else
-										l.Visible = false
-									end
-								end
-							end)
-						elseif Storage.SkeletonParts[plr] then
-							pcall(function() for _, part in pairs(Storage.SkeletonParts[plr]) do if part.Visible then part.Visible = false end end end)
-						end
-					else
-						pcall(function()
-							esp.Box.Visible = false; esp.Name.Visible = false; esp.HealthBar.Visible = false; esp.Distance.Visible = false
-							if esp.Weapon then esp.Weapon.Visible = false end
-							if Storage.SkeletonParts[plr] then for _, part in pairs(Storage.SkeletonParts[plr]) do if part.Visible then part.Visible = false end end end
-							if Storage.Box3DObjects[plr] then for _, l in pairs(Storage.Box3DObjects[plr]) do if l.Visible then l.Visible = false end end end
-							if Storage.LookRayLines[plr] and Storage.LookRayLines[plr].Visible then Storage.LookRayLines[plr].Visible = false end
-						end)
-					end
-				end
-				end
-			end
-		end
-	end)
-	table.insert(Storage.Connections, renderConn)
-	
-	-- ======================================================================
-	-- HEARTBEAT (V5.0.0: P1 FIXED - dt math & Fly/Desync Mutex)
-	-- ======================================================================
-	local heartbeatConn = Services.RunService.Heartbeat:Connect(function(dt)
-		if not Utils.IsAlive(LocalPlayer, LocalPlayer.Character) then
-			if LocalPlayer.Character then
-				local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-				if hrp then
-					local bv = hrp:FindFirstChild("X_Fly_BV"); if bv then bv:Destroy() end
-					local bg = hrp:FindFirstChild("X_Fly_BG"); if bg then bg:Destroy() end
-					local lv = hrp:FindFirstChild("X_Speed_LV"); if lv then lv:Destroy() end
-				end
-			end
-			return
-		end
-		-- [V5.6.0] Rainbow Chams & HUD Accent
-		if Config.States.NoRecoil and LocalPlayer.Character then
-			local now = tick()
-			if now - (Storage.LastNoRecoilCheck or 0) > 0.25 then
-				Storage.LastNoRecoilCheck = now
-				pcall(function()
-					local myChar = LocalPlayer.Character
-					for _, item in ipairs(myChar:GetChildren()) do
-						if item:IsA("Tool") or item.Name == "Gun" then
-							for _, v in ipairs(item:GetDescendants()) do
-								if v:IsA("NumberValue") and (string.find(string.lower(v.Name), "recoil") or string.find(string.lower(v.Name), "spread")) then
-									v.Value = 0
-								end
-							end
-						end
-					end
-				end)
-			end
-		end
-
-
-		-- [V5.6.0] Touch Fling Logic (PlayerCache Optimized)
-		if Config.States.TouchFling and hrp then
-			for p, data in pairs(Storage.PlayerCache) do
-				if not (Config.States.TeamCheck and Utils.IsTeammate(p)) then
-					local tHRP = data.Root
-					if tHRP and (tHRP.Position - hrp.Position).Magnitude < 8 then
-						hrp.AssemblyAngularVelocity = Vector3.new(999999, 999999, 999999)
-						tHRP.AssemblyLinearVelocity = Vector3.new(math.random(-50000, 50000), 100000, math.random(-50000, 50000))
-					end
-				end
-			end
-		end
-
-		-- [V5.6.0] Orbit Stalker Aura
-		if Config.States.OrbitAura and Storage.LockedTarget and Storage.LockedTarget.Character and hrp then
-			local tHRP = Storage.LockedTarget.Character:FindFirstChild("HumanoidRootPart")
-			if tHRP then
-				local angle = tick() * Config.Vals.OrbitSpeed
-				local offset = Vector3.new(math.cos(angle) * Config.Vals.OrbitDistance, 3, math.sin(angle) * Config.Vals.OrbitDistance)
-				hrp.CFrame = CFrame.lookAt(tHRP.Position + offset, tHRP.Position)
-				hrp.AssemblyLinearVelocity = Vector3.zero
-			end
-		end
-
-		-- [V5.6.0] Anti-Fling Immortality (PlayerCache Optimized)
-		if Config.States.AntiFling and hrp then
-			for p, data in pairs(Storage.PlayerCache) do
-				local otherHRP = data.Root
-				if otherHRP and (otherHRP.Position - hrp.Position).Magnitude < 15 then
-					if otherHRP.AssemblyLinearVelocity.Magnitude > 70 or otherHRP.AssemblyAngularVelocity.Magnitude > 70 then
-						for _, part in pairs(data.Char:GetDescendants()) do
-							if part:IsA("BasePart") then part.CanCollide = false end
-						end
-						hrp.AssemblyAngularVelocity = Vector3.zero
-					end
-				end
-			end
-		end
-
-		local char = LocalPlayer.Character
-		local hrp = char and char:FindFirstChild("HumanoidRootPart")
-		local hum = char and char:FindFirstChild("Humanoid")
-		if not hrp or not hum then return end
-		
-		if Storage.WalkSpeedSnapshotPending and not Config.States.SpeedHack then
-			local currentHum = char:FindFirstChild("Humanoid")
-			if currentHum then
-				Storage.OriginalWalkSpeed = currentHum.WalkSpeed
-				Storage.WalkSpeedSnapshotPending = false
-			end
-		end
-		
-		
-		-- Vehicle Speed Boost & Aerial Fly
-		if Config.States.VehicleBoost and hum and hum.SeatPart then
-			local seat = hum.SeatPart
-			if seat:IsA("VehicleSeat") then
-				seat.MaxSpeed = math.max(seat.MaxSpeed, Config.Vals.VehicleSpeed)
-				seat.Torque = 2000000
-				seat.TurnSpeed = math.max(seat.TurnSpeed, 2.5)
-			end
-			local carRoot = seat.AssemblyRootPart or seat
-			if carRoot then
-				local isFwd = Services.UIS:IsKeyDown(Enum.KeyCode.W) or (hum.MoveDirection.Magnitude > 0 and hum.MoveDirection:Dot(seat.CFrame.LookVector) >= -0.1)
-				local isBack = Services.UIS:IsKeyDown(Enum.KeyCode.S) or (hum.MoveDirection.Magnitude > 0 and hum.MoveDirection:Dot(seat.CFrame.LookVector) < -0.1)
-				if isFwd or isBack then
-					local dir = seat.CFrame.LookVector * (isFwd and 1 or -1)
-					local curVel = carRoot.AssemblyLinearVelocity
-					local target = dir * Config.Vals.VehicleSpeed
-					carRoot.AssemblyLinearVelocity = Vector3.new(target.X, curVel.Y, target.Z)
-				end
-				if Config.States.VehicleFly then
-					local vFlyDir = 0
-					if Services.UIS:IsKeyDown(Enum.KeyCode.Space) or Services.UIS:IsKeyDown(Enum.KeyCode.E) then
-						vFlyDir = 1
-					elseif Services.UIS:IsKeyDown(Enum.KeyCode.LeftShift) or Services.UIS:IsKeyDown(Enum.KeyCode.Q) then
-						vFlyDir = -1
-					end
-					if vFlyDir ~= 0 then
-						carRoot.AssemblyLinearVelocity = Vector3.new(carRoot.AssemblyLinearVelocity.X, vFlyDir * (Config.Vals.VehicleSpeed * 0.75), carRoot.AssemblyLinearVelocity.Z)
-					end
-				end
-			end
-		end
-
-		if Config.States.NoFall then
-			if hrp.AssemblyLinearVelocity.Y < -30 then
-				hrp.AssemblyLinearVelocity = Vector3.new(hrp.AssemblyLinearVelocity.X, -30, hrp.AssemblyLinearVelocity.Z)
-			end
-		end
-		
-		-- [P1 FIX] Fly + Desync Mutual Exclusion
-		local isActuatorActive = Config.States.Fly or Storage.IsHiding
-		if not isActuatorActive then
-			if Config.States.ServerDesync then
-				Storage.RealCFrame = hrp.CFrame; local rad = Config.Vals.DesyncPower
-				hrp.CFrame = hrp.CFrame * CFrame.new(math.random(-rad, rad), math.random(-rad/2, rad/2), math.random(-rad, rad))
-			elseif Config.States.Desync then
-				Storage.RealCFrame = hrp.CFrame; Storage.RealVelocity = hrp.AssemblyLinearVelocity; local rad = Config.Vals.DesyncPower
-				hrp.CFrame = hrp.CFrame * CFrame.new(math.random(-rad, rad), math.random(-rad/2, rad/2), math.random(-rad, rad))
-			end
-		end
-		
-		if Config.States.AntiAimSpin then
-			hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(tick() * Config.Vals.AntiAimSpinSpeed % 360), 0)
-		end
-		if Config.States.AntiAimHeadJitter then
-			local head = char:FindFirstChild("Head")
-			if head then
-				head.CFrame = head.CFrame * CFrame.new(Vector3.new(
-					math.random(-Config.Vals.AntiAimJitterRadius, Config.Vals.AntiAimJitterRadius),
-					math.random(-Config.Vals.AntiAimJitterRadius, Config.Vals.AntiAimJitterRadius),
-					math.random(-Config.Vals.AntiAimJitterRadius, Config.Vals.AntiAimJitterRadius)
-				) * 0.1)
-			end
-		end
-		
-		if Config.States.Hitbox or Config.States.HeadExpander then Features.UpdateHitboxes() end
-		
-		local rootAtt = hrp:FindFirstChild("RootAttachment")
-		if not rootAtt then
-			rootAtt = Instance.new("Attachment", hrp); rootAtt.Name = "RootAttachment"
-			rootAtt:SetAttribute("X_TitanOwned", true)
-			Storage.RootAttachmentOwned = true
-		end
-		
-		-- [ZERO-LAG COLLISION ENGINE] Only modify/restore when active states change
-		local needsNoCollide = Config.States.Noclip or Storage.IsHiding
-		local needsNoTouch = Config.States.AntiKillbrick
-		if needsNoCollide then
-			if not Storage.NoCollideActive then
-				Storage.NoCollideActive = true
-				Utils.SaveCollision(char, "collide")
-			end
-			for _, v in pairs(char:GetDescendants()) do
-				if v:IsA("BasePart") and v.CanCollide then v.CanCollide = false end
-			end
-		elseif Storage.NoCollideActive then
-			Storage.NoCollideActive = false
-			Utils.RestoreCollision(char, "collide")
-		end
-		if needsNoTouch then
-			if not Storage.NoTouchActive then
-				Storage.NoTouchActive = true
-				Utils.SaveCollision(char, "touch")
-				Services.Workspace.FallenPartsDestroyHeight = 0/0
-			end
-			for _, v in pairs(char:GetDescendants()) do
-				if v:IsA("BasePart") and v.CanTouch then v.CanTouch = false end
-			end
-		elseif Storage.NoTouchActive then
-			Storage.NoTouchActive = false
-			Utils.RestoreCollision(char, "touch")
-			Services.Workspace.FallenPartsDestroyHeight = Storage.OriginalFallenHeight or -500
-		end
-		
-		if Storage.IsHiding then
-			local flyLV = hrp:FindFirstChild("X_Fly_LV")
-			if flyLV then flyLV:Destroy() end
-			local lv = hrp:FindFirstChild("X_Hide_LV")
-			if not lv then
-				lv = Instance.new("LinearVelocity"); lv.Name = "X_Hide_LV"
-				lv.Attachment0 = rootAtt; lv.MaxForce = math.huge
-				lv.VelocityConstraintMode = Enum.VelocityConstraintMode.Vector; lv.Parent = hrp
-			end
-			local dir = Vector3.zero; local cam = Utils.GetCurrentCamera()
-			if cam then
-				local cf = cam.CFrame
-				if Services.UIS:IsKeyDown(Enum.KeyCode.W) then dir = dir + cf.LookVector end
-				if Services.UIS:IsKeyDown(Enum.KeyCode.S) then dir = dir - cf.LookVector end
-				if Services.UIS:IsKeyDown(Enum.KeyCode.A) then dir = dir - cf.RightVector end
-				if Services.UIS:IsKeyDown(Enum.KeyCode.D) then dir = dir + cf.RightVector end
-			end
-			if Services.UIS:IsKeyDown(Enum.KeyCode.E) or Services.UIS:IsKeyDown(Enum.KeyCode.Space) then dir = dir + Vector3.yAxis end
-			if Services.UIS:IsKeyDown(Enum.KeyCode.Q) or Services.UIS:IsKeyDown(Enum.KeyCode.LeftShift) then dir = dir - Vector3.yAxis end
-			lv.VectorVelocity = dir.Magnitude > 0 and dir.Unit * Config.Vals.FlySpeed or Vector3.zero
-		elseif Config.States.Fly then
-			local hideLV = hrp:FindFirstChild("X_Hide_LV")
-			if hideLV then hideLV:Destroy() end
-			local lv = hrp:FindFirstChild("X_Fly_LV")
-			if not lv then
-				lv = Instance.new("LinearVelocity"); lv.Name = "X_Fly_LV"
-				lv.Attachment0 = rootAtt; lv.MaxForce = math.huge
-				lv.VelocityConstraintMode = Enum.VelocityConstraintMode.Vector; lv.Parent = hrp
-			end
-			local dir = Vector3.zero; local cam = Utils.GetCurrentCamera()
-			if cam then
-				local cf = cam.CFrame
-				if Services.UIS:IsKeyDown(Enum.KeyCode.W) then dir = dir + cf.LookVector end
-				if Services.UIS:IsKeyDown(Enum.KeyCode.S) then dir = dir - cf.LookVector end
-				if Services.UIS:IsKeyDown(Enum.KeyCode.A) then dir = dir - cf.RightVector end
-				if Services.UIS:IsKeyDown(Enum.KeyCode.D) then dir = dir + cf.RightVector end
-			end
-			if Services.UIS:IsKeyDown(Enum.KeyCode.E) or Services.UIS:IsKeyDown(Enum.KeyCode.Space) then dir = dir + Vector3.yAxis end
-			if Services.UIS:IsKeyDown(Enum.KeyCode.Q) or Services.UIS:IsKeyDown(Enum.KeyCode.LeftShift) then dir = dir - Vector3.yAxis end
-			if Config.States.LegitFly then
-				local targetVel = dir.Magnitude > 0 and dir.Unit * Config.Vals.FlySpeed or Vector3.zero
-				local currentVel = lv.VectorVelocity or Vector3.zero
-				if math.abs(targetVel.Y - currentVel.Y) > 50 then
-					targetVel = Vector3.new(targetVel.X, currentVel.Y + math.sign(targetVel.Y - currentVel.Y) * 50, targetVel.Z)
-				end
-				lv.VectorVelocity = currentVel:Lerp(targetVel, Config.Vals.LegitFlySmooth)
-			else
-				lv.VectorVelocity = dir.Magnitude > 0 and dir.Unit * Config.Vals.FlySpeed or Vector3.zero
-			end
-			local currentState = hum:GetState()
-			if currentState ~= Enum.HumanoidStateType.Physics then
-				pcall(function() hum:ChangeState(Enum.HumanoidStateType.Physics) end)
-			end
-		else
-			local lv = hrp:FindFirstChild("X_Fly_LV"); if lv then lv:Destroy() end
-			local lvH = hrp:FindFirstChild("X_Hide_LV"); if lvH then lvH:Destroy() end
-			local currentState = hum:GetState()
-			if currentState == Enum.HumanoidStateType.Physics then
-				pcall(function() hum:ChangeState(Enum.HumanoidStateType.Running) end)
-			end
-		end
-		
-		if Config.States.SpeedHack then
-			if Config.States.CFrameSpeed then
-				hum.WalkSpeed = Storage.OriginalWalkSpeed; local moveDir = hum.MoveDirection
-				if moveDir.Magnitude > 0.1 then 
-					-- [P1 FIX] Use dt for frame-independent speed
-					hrp.CFrame = hrp.CFrame + moveDir * (Config.Vals.WalkSpeed * dt) 
-				end
-			else
-				local safeSpeed = math.min(Config.Vals.WalkSpeed, 32); hum.WalkSpeed = safeSpeed
-				local lv = hrp:FindFirstChild("X_Speed_LV")
-				if not lv then
-					lv = Instance.new("LinearVelocity"); lv.Name = "X_Speed_LV"
-					lv.Attachment0 = rootAtt; lv.MaxForce = 5000
-					lv.VelocityConstraintMode = Enum.VelocityConstraintMode.Line; lv.Parent = hrp
-				end
-				local moveDir = hum.MoveDirection
-				if moveDir.Magnitude > 0.1 then
-					local extra = Config.Vals.WalkSpeed - safeSpeed
-					lv.LineVelocity = extra > 0 and extra or 0; lv.LineDirection = moveDir
-				else lv.LineVelocity = 0 end
-			end
-		else
-			hum.WalkSpeed = Storage.OriginalWalkSpeed
-			local lv = hrp:FindFirstChild("X_Speed_LV"); if lv then lv:Destroy() end
-		end
-		
-		if Config.States.InfJump and Services.UIS:IsKeyDown(Enum.KeyCode.Space) then
-			hum:ChangeState(Enum.HumanoidStateType.Jumping)
-		end
-	end)
-	table.insert(Storage.Connections, heartbeatConn)
-	
-	-- ======================================================================
-	-- INPUT
-	-- ======================================================================
-	local inputBeganConn = Services.UIS.InputBegan:Connect(function(i, g)
-		if (i.KeyCode == Config.Keys.Menu or i.KeyCode == Enum.KeyCode.RightControl or i.KeyCode == Enum.KeyCode.RightShift) and Storage.MainFrame then
-			local focused = Services.UIS:GetFocusedTextBox()
-			if not focused then
-				if not Storage.MenuDebounce then
-					Storage.MenuDebounce = true
-					Storage.MainFrame.Visible = not Storage.MainFrame.Visible
-					local floatBtn = targetGui:FindFirstChild("X_Titan_Floating_Toggle", true)
-					if floatBtn then
-						floatBtn.Text = Storage.MainFrame.Visible and "✕" or "X"
-						floatBtn.TextColor3 = Storage.MainFrame.Visible and Color3.fromRGB(255, 80, 80) or Config.Theme.Stroke
-						local strk = floatBtn:FindFirstChildOfClass("UIStroke")
-						if strk then strk.Color = Storage.MainFrame.Visible and Color3.fromRGB(255, 80, 80) or Config.Theme.Stroke end
-					end
-					Utils.Notify("📱 Menu", Storage.MainFrame.Visible and "OPENED" or "CLOSED", 1)
-					task.delay(0.2, function() Storage.MenuDebounce = false end)
-				end
-				return
-			end
-		end
-		if g then return end
-		if i.KeyCode == Config.Keys.Unload then Runtime.Unload(); return end
-		if i.UserInputType == Enum.UserInputType.MouseButton2 and Config.States.RightClickToggle then Config.States.Aimbot = true end
-		if i.KeyCode == Config.Keys.Fly then
-			if Storage.ToggleFuncs.Fly then
-				Storage.ToggleFuncs.Fly(not Config.States.Fly)
-			else
-				Config.States.Fly = not Config.States.Fly
-				Utils.Notify("✈️ Fly Mode", Config.States.Fly and "ENABLED" or "DISABLED", 1.5)
-			end
-		end
-		if i.KeyCode == Config.Keys.Noclip then
-			if Storage.ToggleFuncs.Noclip then
-				Storage.ToggleFuncs.Noclip(not Config.States.Noclip)
-			else
-				Config.States.Noclip = not Config.States.Noclip
-				Utils.Notify("👻 Noclip", Config.States.Noclip and "ENABLED" or "DISABLED", 1.5)
-			end
-		end
-		if i.KeyCode == Config.Keys.Trigger then
-			if Storage.ToggleFuncs.TriggerBot then
-				Storage.ToggleFuncs.TriggerBot(not Config.States.TriggerBot)
-			else
-				Config.States.TriggerBot = not Config.States.TriggerBot
-				Utils.Notify("⚡ TriggerBot", Config.States.TriggerBot and "ENABLED" or "DISABLED", 1.5)
-			end
-		end
-		if i.KeyCode == Config.Keys.LockTarget then
-			local Camera = Utils.GetCurrentCamera()
-			if not Camera then return end
-			if Storage.LockedTarget then
-				local oldName = Storage.LockedTarget.Name
-				Storage.LockedTarget = nil
-				Storage.CurrentHPRatio = 0
-				if Storage.TacticalHUD then Storage.TacticalHUD.Main.Visible = false end
-				Utils.Notify("🔓 Target Unlocked", "Released focus on: " .. oldName)
-			else
-				local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-				local highestThreat, target = -1, nil
-				for p, data in pairs(Storage.PlayerCache) do
-					if not data.Char.Parent then continue end
-					if not Utils.IsAlive(p, data.Char) then continue end
-					if Config.States.TeamCheck and Utils.IsTeammate(p) then continue end
-					local aimPart = Utils.GetSmartAimPart(data.Char)
-					if not aimPart then continue end
-					local pos, onScreen = Camera:WorldToViewportPoint(aimPart.Position)
-					if onScreen and pos.Z > 0 and (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude <= Config.Vals.FOV then
-						local score = Utils.CalculateThreatScore(p, myHRP)
-						if score > highestThreat then highestThreat = score; target = p end
-					end
-				end
-				if target then
-					Storage.LockedTarget = target
-					Storage.CurrentHPRatio = 0
-					Utils.Notify("🎯 Target Locked", "Locked: " .. target.Name .. " (1-Target Focus)")
-				else
-					Utils.Notify("❌ No Target", "No valid enemy inside FOV circle!")
-				end
-			end
-		end
-		if i.KeyCode == Config.Keys.Hide and Config.States.SkyHide then
-			local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-			if hrp then
-				if Storage.IsHiding then
-					Storage.IsHiding = false
-					if Storage.HideCFrame then hrp.CFrame = Storage.HideCFrame; Storage.HideCFrame = nil end
-					Utils.Notify("🪂 Descent", "Returned to ground origin!")
-				else
-					Storage.HideCFrame = hrp.CFrame; Storage.IsHiding = true
-					hrp.CFrame = hrp.CFrame * CFrame.new(0, 3000, 0)
-					Utils.Notify("🛸 UFO Sky Hide", "Flight active. Press [X] to return", 3)
-				end
-			end
-		end
-		if i.UserInputType == Enum.UserInputType.MouseButton1 and Config.States.SilentAim and not HasTitanMetamethodHook then
-			TitanMicroFlickSilentAim()
-		end
-		if i.UserInputType == Enum.UserInputType.MouseButton1 and Config.States.ClickTP and Services.UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
-			if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and Mouse.Target then
-				LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(Mouse.Hit.Position + Vector3.new(0, 3, 0))
-			end
-		end
-		if i.KeyCode == Config.Keys.TacticalTP then
-			local target, _ = Utils.GetClosestToCenter()
-			if target and target.Parent then
-				local tp = Services.Players:GetPlayerFromCharacter(target.Parent)
-				if tp then
-					local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-					local eHRP = tp.Character and tp.Character:FindFirstChild("HumanoidRootPart")
-					if hrp and eHRP then
-						hrp.CFrame = eHRP.CFrame * CFrame.new(0, 0, -Config.Vals.TPBehindDist)
-						Utils.Notify("⚡ Tactical TP", "Teleported behind: " .. tp.Name)
-					end
-				end
-			end
-		end
-		if i.KeyCode == Config.Keys.DestroyMap then
-			local Camera = Utils.GetCurrentCamera()
-			if not Camera then return end
-			local center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
-			local ray = Camera:ViewportPointToRay(center.X, center.Y)
-			local params = RaycastParams.new(); params.FilterDescendantsInstances = {LocalPlayer.Character}; params.FilterType = Enum.RaycastFilterType.Exclude
-			local result = Services.Workspace:Raycast(ray.Origin, ray.Direction * 500, params)
-			if result and result.Position then
-				if not Storage.MapStorageFolder then Storage.MapStorageFolder = Instance.new("Folder", Services.Workspace); Storage.MapStorageFolder.Name = "X_Titan_MapStorage" end
-				local region = Region3.new(result.Position - Vector3.new(15,15,15), result.Position + Vector3.new(15,15,15))
-				local parts = Services.Workspace:FindPartsInRegion3(region, LocalPlayer.Character, 100); local count = 0
-				for _, part in pairs(parts) do
-					if part.Name ~= "Baseplate" and part.Name ~= "Terrain" and not part.Parent:FindFirstChild("Humanoid") and part.Parent ~= Storage.MapStorageFolder then
-						table.insert(Storage.DestroyedParts, {Part = part, Parent = part.Parent}); part.Parent = Storage.MapStorageFolder; count = count + 1
-					end
-				end
-				Utils.Notify("💥 Map Destroyer", "Removed " .. count .. " obstacle parts")
-			end
-		end
-		if i.KeyCode == Config.Keys.RestoreMap then
-			local count = 0
-			for _, data in pairs(Storage.DestroyedParts) do
-				if data.Part and data.Parent then pcall(function() data.Part.Parent = data.Parent end); count = count + 1 end
-			end
-			table.clear(Storage.DestroyedParts)
-			if Storage.MapStorageFolder then Storage.MapStorageFolder:Destroy(); Storage.MapStorageFolder = nil end
-			Utils.Notify("🔄 Map Restored", "Restored " .. count .. " obstacle parts")
-		end
-		if i.KeyCode == Config.Keys.ToggleLockMenu then
-			if Storage.ToggleFuncs.ShowFOV then
-				Storage.ToggleFuncs.ShowFOV(not Config.States.ShowFOV)
-			else
-				Config.States.ShowFOV = not Config.States.ShowFOV
-				if Storage.FOVRingUI then Storage.FOVRingUI.Visible = Config.States.ShowFOV end
-				Utils.Notify("🎯 FOV Ring", Config.States.ShowFOV and "ENABLED" or "DISABLED", 1.5)
-			end
-		end
-	end)
-	table.insert(Storage.Connections, inputBeganConn)
-	
-	local inputEndedConn = Services.UIS.InputEnded:Connect(function(i, g)
-		if g then return end
-		if i.UserInputType == Enum.UserInputType.MouseButton2 and Config.States.RightClickToggle then Config.States.Aimbot = false end
-	end)
-	table.insert(Storage.Connections, inputEndedConn)
+-- ==================================================================
+-- PROTECTED BYTECODE STREAM DECRYPTION ENGINE
+-- ==================================================================
+local _0xK = {141, 228, 104, 150, 124, 161, 57, 179, 52, 101, 77, 222, 135, 101, 119, 54}
+local _0xRAW = [===[
+a0c25eecf3f82320d881ef1645d447ed13ac005778a50bf7793646319bf088dfac01fe50477cfb48ad785eef4b1b3c75d4d6ae9ae5e2a63dbc9ea412
+756044996d891e330dee5eac23f81e65f19489cfd068d91f21689750b35e4dae180de0278d5cfbbba49de91a8c9eb71e47754881579263a7289971f0
+0fece244b0bdc1ff7f0e9d5c087edbc8753b4fb2f911e232ce3fe288bb638b18e89999e05e5061581aa62af4e0d135874ce9f54382f9bbd2690b6b35
+116226bd3c0879ddbbc2d30aa04a93a5896cde6085669ff23b513f7f18b11a87dcad07841decc22a9ec444b35de07032260c72c140481f96c6e4d41f
+fd6ca368975ca339b27f018a76643118b7cf2ad6dabf1e74ac9ed224629678b754eb57470bfc4ac4490b4b4feee0e1c2832bb774694cb412cc0040fb
+24173a7ed9a2aee898b3c453df949e235e407cc24782135738ac01e02fe41479aec6b4fddd1e80537165af15885d48b3120bef6be06aeab6a59def48
+c38cfb510b4748953ed73ce816c131b538b8c34eafa980d9660a8c442275d6a0317506eab649ac66802293dae535960d81c5d6ba06197c3650f263aa
+b58566dd5195a60ad6e9cc862042337a055536ad216576daa6b99c56f01283cad525867df135c6aa76096c2640e2539aa5f561991a98f400d5bc5e9f
+64db5f19173155f3782915b4eeb4c513b851c40e884baa3cb0306dd235271542e281569ea2d17269eae8e41025ac4e8f74cb6f2907c165e368392544
+fe8a93fe833bb77a6d18ba0e880844f0450c2e6fd4abcf89e7a1c543c89985245e2a739e23db571a0db66eae20e71a73ebc0b9fe9355e72e1117ac5e
+a4677f8e2f25cf14e441cd8389b6d86582baae195f7d5c9e73ea20eb17c92ff87592822ebea892ce6409de686f76a3df58016f96c52bd815ee4befa9
+9b4d8563c89799e65c41617f05aa309d81b1528c03cbfa5bcba7d1863d20496960375fd9481905b8d2caf23f8c61fdb2c64bcf2fbe699cf2413d5812
+0ef127d4cda6079f1ddcce23dbd921bf5ffa7b5d417112c6431a7ba887b4dd5bb451ee779941b923f46b25eb342b1158ad800c97d3a55220e8a79b27
+68957db715f95b093bfc42df52504227cfc5b2e0c32cbf796b5db74880013bd20530581bf891eacdb1e18276f3aaeb38372442cb24c11e0709f149b3
+64fb5554a4dabffe9e2b8748763bcb1f8e1850ba5244e5248d7ffdb6a494b346d986b803427b5fd3749f2dbd3cc138b333f6e542b8b0c9822d0a9053
+01789eee684232deee1af551b47ac083f102a244dd8b80a94c45287f45ff70a7bd91518502cc915b84b790d73d0c6f215d2b67ff723d1982fda49c4b
+e55bc7878d30d82ca3669ee52e52783b40e24e85febd059308d1c429d9c460a549af7d3b27167ed2490e72d7c4e6911da851ad739147a578b3312bd5
+3e301459e3cf1197cdb61f0ae0a7d83667d442be4fe947043dfb0b8d1c03610eebc8a0f2883dad373518a8018a4d58db043a1469f899a6a0d985ee2a
+dbbdbf347e7657822eca165538f45ab929fa0835e29dfd91f40d9b494b2d9906955b4ee74644f22acb6addbba796fe72c98ef3104a7954c11ada3ad4
+1dda3db93ffda30589b18ff8681d885e4b3dd9a9256431dede3dc27b803fdd86be6de85cd3968ed55e42696c0ca23badcfdd2fb309daed5e88b1d999
+480c6b3571067be5680b2e95ededc20eef0697dbe211f729ab608ffe255371265dac0fc1fd8b079f12ddf9229dcc66aa40ea24102d0c48c55e1e3294
+cebc9337b458a6739146ac72f53127ad5210164ee8812dd2daae1263e9e88677789577be7ef341093dda4ed6141f0a6ade9e86ee991cbb657e51b805
+c40a4fc00e311f68f88df8aedb8da939b5f4c16e4c6b53803edf5f140db806e03fe91d7288d8bef5980d8b41302f8a1d99026ca20f37e439db66fdb2
+e0dacc4fde83a8074a7754d97496628d71fb3fb12eecee559cb1888b304f8d564e3db8ec63265e85ee12b93cdc72cbdd9f6ddf63d98a9dee58416929
+3ebb3fe5fcdd29a719c1b91ec2f8fbb24e107b295c3b6ee26a312882bbb98118ac49dbb48477d5259e6d9dbf2c553c7e47980bd3cbad198615dbce6f
+d9b76ebe43eb4d323a0e72c3494a72de879eb828a95eba74d815eb23bd7e6ee4372b0f4edf8a189fcfb91665b68fde23589163ad54fc4b4f7adb5fd1
+480b492e9288cb82a53baa675b5da916854b7e975674025afb9acdabd786ee42f9bee3007a6944d10aca4a240dea4da92fed533583c0a5ebae3a9c51
+712b8e52d51121ba7108ee28cc63be9ba79bfa4cfc84ba0e4e6611c67dec2bf50ec128b52fb6db4bbabd84d97e41b2584b3997d0602942b2f97efd34
+de7ec2c79567de43d9d8d6a7774b226a019f32f6f1dd29da2bcdef7a84a182de3556042e5e4865ff68782c86f6e19b22be63d1968c7ddf68e5288fff
+2e5a717c1cb20b89d4a70a9419dc91109a8d75e304af7b392c7211cc430b3a9b8be0d009ba5aba408d41c139ba387fde2b21494ce89b16c2c1f15b3d
+b1e899317e9a72af54f0404578fc43d552724b279b84b1e88c23b23f6e4db503984174d9437d514ffc8de9a2ccaffe79bce5eb007e70499e24871757
+0df65fe946ed1573c1ddb7bb93309a076c299917994c6cb21244f523c86194f7e8d8bb54cd9abc125f5344927d826ecb17cb2abc0cf4ea5ebeb6dbed
+64019a71412a88f44f2052bbef3bf718d17edd94f02afb5cdd818ef57c51282944ef31e5a8f434830dc4cb5b8aad94c927286f2e4c2e64e25f30228b
+ffac833ba14ec7929a5fce29ee24dba67b1d5b7e13bb64cefee8059f0898df26898364bf6afa77773c107ece26487bd78be4d21ab153e6618d46a824
+b577658f7264154aff881bc3efad1220b1e8f73868957d8b51fe57022ab27cd1550c2d68c9e7a9e2812bf6355854ba19895a5cc20276581bf891eaee
+b28de57496b1ad47756b55cb39ce4c100dec7cb525a80f7faedaf1ec9c2d800f3a10cb23a9717f824144c61ee42fcab6ba9ffe548c8eba1e477155da
+7f966ef51ddc3ea232b8ee49bfceeb86204fc30a1565c6bd317506eab649ac66802293dae535960d81c5d6ba06197c3650f263aab58566dd5195a60a
+d6e9cc862042337a055536ad216576daa6b99c56f01283cad525867df135c6aa76096c2677f24387db8725b635fffe15bab0488463af38771b2c54f2
+6d2f1ed783c28755ee11fe2ef205e670e125369a66795c16b0d2438a95e5463db1f5866a36c92ce600a2135a65b5168d0145563a8699fcb6d072e32a
+3505e65dd115268a56694c06a0c2b3fa85d5b62da1e5f65a26391cd67092034a55a531ac23eb1a7bebf7bef59b3689072568907af5734ebe0844bc6b
+d60597de859df5558cd5fb3245615cd516da37c417cc2efe15f6f842a9b0cd8b4b0387171578beee7925159cee0dd234d97a80bdf428e55fdf9482f7
+1b19614e03ba33b9c3dd22a303ccfe19bdf8fbb2142b7c2e5f0f6ee23c656ba2f5f1cc45864ac7b4877cde6e9824dbd32e47256912a623c6e8e856d0
+39d6de2ad5af64b26ee07a326628378064013f928ba9913eb34aa329b34db213b37c6e8903686b2284bd1bc4dcb70965c1a9cb7736d454b548f2002c
+3df168df581d454b978495ea8e3bb77469548f30cc153bf205211c15d69af784d78cee3edef4c16e12504e8c2ac35b3b07fb508d29e60e37f69494f5
+8832c06c7d31a81f985d058b1e02f50ac17bb2f79d96f74fcd8cfb4a0b515f8e309105e201eb24b439b6ce49bfe8eba204239154430c9af26b2d4ff7
+b654d435c87280acbd71e85fd89dc5c1312d3c2767c60affedd53ec05188e03de2ddbcda74112e7a182b64fc732a78c9fdf6ce069f68fcdfd9289760
+fd38d7b77a0178375d8c0bc4b8f54bb313d4c435c8ca67b942e24c100a502990004869c787b4834ef413c40ef17bbf22b3736e8766642244e1800c84
+86be096fe19afc1523c43dfb0faa1b4b78ba1e8515544b53dec5acabd06f9d786457a953c24e69d806063679b5cfa2e78addbe3cbce9fb5732282be2
+44fb5b0f1cb806e00fe71778b987fffd8f3083755f0ac342c90d07e74951b4678d3dabe2e1d4bb74c990af33427911c67dfc21eb17da78fe3aeae44a
+8983a3833c5ace1b0869ceb020680ae2bb5dbd51b416e288bb63e85fd09799a70604026401a02ca4a6de298f01fadc75c3e6c48e315f3b7714483ea0
+35746bb0fae8cd28a243d185c8259b03a36494e5781a376912b23ce0dae059c549948b75cbd42deb1da6325d41714fc85e0d3a83e3fdd613fd02ee44
+9744a422ef366dd53429336ccfc74c829df45b34bce49b633bdd3dfb69f75c0239fc66d558585627f8cbade49f7cf0717a57b632ab6a33855e615d1b
+acc7beeb98d8a23cbc8ca3157e6555a722d81e4a48db54ac23fa4839adc6bef6af18ac0f2c78c750ce0d1eeb5b55b17b840597aae4f29273d889af12
+58340cdb26b5478e39c126b233ecab1afba280c77e0ad2177b3197e5623c7abee654ac7bdb7ec294bd248b78d9998fc24354206509aa2cb7b5983d81
+00dbfe1bcb9c98cf7f10766705486df1702b2ecb918da83fbf46d9908d6af92fb828c6b72d553d6818f34ef3fda906b314ddc82cdbd921bf5ffa7b7b
+682f7acc402b3392c8ff9146fd59af6b8b4de75ad5114ef40b645c0beb8e12c4cdf45b45df9888132bc931bd5cf35d0274a86ee36c2b0062d7c1b5e4
+836fe3376e59b71389043bf238043d54f294dca6c1c8b630fab9a7147e2801a638c34a1e2af755a50de11637f694a5e9883ac2074c3a8a13994a58e7
+4644e72ac17cfbfbe8aafe53c384ad1259340cdb29cd3be254881db92ff1e94eb7ad95d24e079b544378c6a06a2957a4ee58b118d57ec394f8358b56
+dd9498e2172e4802359d3feea8857b860dc4e852c7f4b7ce71136c35510f63e43c656b81fae8d20ee10ffd85876bc828ad6189b77614377a11ac0b8b
+b88c129e1dd5c224b8966eb85ee77f3e3a582680581a2e92879eb8729b53b727c508ad31b06b6e8b7b17114ee88b36d6cbb35b3dacaeda3b78913dfb
+74f1482d2de55b9001580d66d7d7a4a7cd01b1746451ab40d1087dd607271417bdb1e181d984e730a1f8ad06777744c747a6373606ec528b25e41775
+b9ddb2f0dd62ce4179249815d0186aa90f0dd724c46bbeeae88ce955c9c4fb3f4260629428d12aa745883fa229fda7078fab94c86529925e463fdbbd
+2c2e5abbf811bd7be97edc80bd7ced5cd5968ca70604276a01bc3bbba8f9359405eef75e85b3d1863d0b7c325d442bc77d342785faeac64bf00fca85
+9d7d9760837a99fe3f7524691cff5387fea9078319948b04978d62a079df3e6a681e7acc5f0d77d7f8ffc833b45bab27c508ad31b06b6e8b7b09005b
+c98a0dc3dab70265fee886776d957da858b3246e51c342dc50391e75da84fcab8b2eb2646d14fb34bc696ec50a744c1bfb9ee2b4ddc4ab54f9abb209
+78241ccb2bce52040db41b8122fc1256a2d982eb9431ce1a382e8a1c8f5d07e73a0af522ec66f39fad99ff6ac59caf1259340cdb3bde22f41d8441d9
+55cae240b3b0a2c7640c9563473f9cec696806f7ff06e43e913ffd8fb77fed7fead8d6a75d452d7808e37ec3e9db2f890fc9f77b84b79a9b205f6826
+541b6ebc165142b4f3ebd627a24cd5a49c79cf35bf28c6b73f46247e51ff3dcaf9ba1fa00eddcf2e989068a443af23773c0a6ec500481a82dffbf012
+b06faf758c08f670ba7967d43e686b2284a31bd0c1ac3d6cf5e886776d957da858b30e343dfa5dd54e3c0e74c2caa2abd06fb876644bbe4ccc6b5dc5
+0a391468ed9aeba398d5ab76fdb4b8023724738a29ce4c5755b85da120fb1e3bebfda5fe901abd773875cb169d5458a25744d72ec566fdbbadbaf44f
+df9cfb4a0b7250972eda62a72ecd23b93ff4ee61b7bdc1962d099f5b5b3dd78a05416cb2ea04fe35f84cfec7e528df42c99dc7a7744227780ebd3bf2
+e6f9299203dfe817d6f497da710c6b6b182664c2793b248ef7a49c4bab4ed2848d349b04a97c9ef43f613f680dbe19c9fdac4bcd5cccd9329ec80bc2
+24dc76383f3c72d358093594ceb48c5ba94dbb62d4089838b36f43c23a281543add25ec3daad1e2cac9bd3387cba70b658bf13472cfa5ed51072620e
+facdace9823b98766154b416895a3b8a4b20034ef8d3ae85d184e772f3b9b9034f6546986d921e1109f448a56082721e8ad0b0eb893698425e18b850
+c1185fb50e01ad6be566eabaa98af045dec8e6575f66449e719f1df311cb20a91df1e607e6e495d9780ad2177c3989e7693c68a3ea00e4289d228e93
+aa7dce3ab585c78d327220671eef63b7f3b252e92ae7cd17d6f4c38b2d532e084a0a62e458313893faeac20eed129ecfc438f432ae618fc43b51347f
+5de24e9fb4e82d9c15d6cc17949364b90db23e6678482b901c447ba0caf8da28ad5aab63d815eb61e92827871d281878fd8a1bd388e55b31b9f89777
+439d65b952e77d0e22ed0b8d1c495e2b9beca4ea891cb76d6d18e640de1d37bd625d3052f09de1b3eb85e47fe8b0a502687701d66d9f104444b86bb2
+29ec1274bfddbef5ae2b9c42762f9f18dc050bf75555b7678d4bfba4b196f870c39fbe050b2911ce71b5478e39dd39b10ef9e540bee4dc8b3f5ad217
+7c08b9e5642155b3cf1de22f9d228ed3f428ff42d59f8ce2496024670cb67eaaa88875d15984913ee2959fcf743e672a6b1862fe4f282e82ffa49c4b
+fc1f92d7a976cf298d6196dd2240257e0f8d0fc3f1bd18d041989e6bdba568a67dee6c2368453b82640d3a9389b8bb72d47bab669c52a43eb9383687
+6e68417be48119f4c7b50b65e2bbda23629b7ffb00bf1e4968bd07906e190f66c9f6a0e58a2afe2a2809eb50c00857d20c3d057df186ddaad787ff78
+bce5eb5735350dcb1bca561e0bf45e933ced1e73eb89f1aac56fc22d1141ae23ac6a4ea10901f223ff6eeab2e8c5bb1082dbf7576e4761b932c71aef
+11cb20be39ebf807e6e4d0853843de727b08afe5743c68bef111b1669d2e9dcbf841df55d1ab88e6556d2f7f08bd28f6e49866c05d86ae1bcb8083da
+7e1a7c084a016cf9727876c7b9c6ce1fb940d3d5c412b2498d6196f5244001771cb14e9ab8ea2a8508d7896bdba1529b68e1793e261d3b9d0c4a1a82
+dffb9357d736c753995aac35a84879ce3436085ff4cf43978a9b096fffbbd336628633f71dd747130be75ede58281962c8c1b5abd06ffc596d4ebe12
+804768d249785168e996edacc1aec446d1ada7133b3901da639c0b5b48cb4fa92fe30250b9d5b2fedd62ce17367ade5cdc6b5fae180ff803d47ceab2
+ba9de849dfc8e657192101cb57b6338d05a241bc33fbea4bfb9795c47f0e99520865dbfb064178bfee17fa2bd276c093ab289610c7a8daba554d2d27
+4d9f6caae6d137cc4cf8a80a85bd9dc6317507026b3844f2763d2893e8a49c4bb65292d7bb73de2ca97c94f91b55236f0eff5387e3b547d03ed7d374
+bfab63a148ec6a2468453bdb51447bbbc4fbda29bc46826e964db870e13870da77642e4deb9c1dc5cdbd1544e5bbcf036e8c65a81da20e1c25a40be4
+4e190862c9e8a8e5883cfe2a2843a64ce6214fd80c331d5edb8ae0a4cbc8b630e7a5e7475d4b77b924c1592221b806e022e1173bebf9b0f293199c46
+752dcb4ddc5642ab576e8819c86ef281ad94f443c59ca2571634679e3ecb21f54b8631b52ef7a70789a180c74e298c56453ddbbd2c2652bba77e9814
+cf76c98eb669c77cd59f83f3524a262b50ef25eaa498138918caf44fa7b582cf480f6a264c0d2bad3c6867ed92c5d419ac7bdf858f7dcf60f12895fe
+2718715808ad1cc2f6bc388019dbdf268f8121f60de1773b645848ce4d180b9bcaedd409fd02ee699144e75ad55464c43021057fec9d19d2dcf84620
+e2a1d77b2bbd629354fb47093fa816905a190774de88e1c3842bbb544e4aba0d89082697053d1d1797f6caa2cb9cf97fe5bdaf377a7655986d921e0c
+15b41b8d2df82863a4c6b0fc9819814b7c2d9950c11845ae1748a102d96af3929ba8d442c68db80358340cdb26c2628d71e922bd0cf9f953a8e4dc8b
+764db652493cd9ac2c6a6fb8f907fe79913f8cafad65ca5ed3918fd5544b355b0cbd2ab5f5947ba105c5cb5699a0b8d5791a766705483abc16511b8b
+fafdc4198146cd83ae6ada2da928c6b7255d3d375d9c01c9f6ad088415d7c534dbd921b050a33e1b27176bd30c557b8cd6b8bb72894da7609f4db912
+b36c48c834280544fa815e8a88e8570a8584da247fa070a95afa5a313de40b8d1c03162b9be8a0f8991bbf656f5daf34854b709756740a46b1f58788
+de8ef873eebdae095a7653843adc1e4a48e346ec46812976afd5a3d49f358b446c3bcb4ddc4356eb5b36e02fcc7dd9a2a1d8a600c281b75b0b46509f
+3ccd08f519c52ef061b8e54eb7e8eba2590e9d43413b9aec441d7ff7b654ff32d1338ea4ad7ad955d28ca3d76945356202ef63b7b89451e92fdaf444
+98bc90d26f3367295d1b2bad3c231f88ebb9cf02a1039eb5876ccf2fa13595fe2718715718b91a9af6a107dc5ceac22093903ca544e3637b427153c9
+58053a85c0f1c337b451ab74d815eb2b885436c932284d0bd9bd43d9c1b45720ce84863962983dfb7fcd130931e4569c3671236ecfc9a0f9862aac56
+6448b301cc153b87475e7868e996edacc1bcea62fbbdbf4726244f822183347e3bec52a327f12f76b9d3b4efad3e9c533875cb1e955407cd7237f522
+ce64e79ba78bef74c58bb057163401d757b61ae60acf2ea40fecea53aeb7a5d96c1897594f78c6a0622157fb817ddc3ed36aea82ba67de5edf9dcbba
+1b4220671eaa72b7c9db2f891acdc85b82b094c93d422e29510427b04f342283fef6e519ac489ecac87eda2cbf6dd79d427b23721ab600c6f49f0a9c
+17ebdb229e8021f60dbe287b427154d2450f3299caf8f71ab153ab69b04da237b46c2b9a7b69541bbdc374bee0b7146bcdabcf3e7d9131e61df94f0b
+2bed07ba35300468d0ebadefa32eb3726b59b70ccc153bd902385d3194b6fd92d684e471f8bdaf472624478a21dc5b5b629169af23fc3a63bfd5b2f3
+903a8053573f8515981816e71d05ed38c82394de9f99f74bff98be124f475f9a2dcc26e80cf82ebe38f1e540fbf9c1cd6c038d520452f2cc6d3b4f84
+ea12f418fb6dcf8abd289610d29187ab312d0962199c31e2e6dc14820688a61785bd9d9717765e2b59116ee25f39288ffea49c4bb65292fde15de810
+84619ff32e5a71265db90fcbebad47fa75f6c40494886da249ea5f343c116dc50c557b91caf8c21ef135c749977ca425bf704ac42f2d174eadd25ed1
+c9b40865a0c2b21b6a8765895cfb4f150df84fd1481d4b3a9b94ed81e403bf647c708e24b9587fd61f315106bdcfa2cdb1a4ea63e88caa157c6155b8
+2ece505755b80bec46813776b8c090ff9c2f9a4e6e2dae038c6c42a41044bc6b9d2394de8b99f848c98c8f165973548f0dde3cf358956bbe35f4a72d
+d28780c8650a9a7e5b0f9aec606806f7ed15fd28d833a4ee9b7ac443cf908aee4972287804ad32f2a8857b860dc4e852c7def8f8751e7c04590b63f5
+3c656b9ce6a8ab629b46cdb4897bd325ec35dbec36185b1233be1aceeead3b9c1dc1ce35af8566b80db23e2c355411a96d013695c4e0f21ab05abc66
+b75eae22ae716fc2182b1445f9cf439798f45b43eda5de256abb67be4fed47033dcc4ec4591b1f62df84fcab8b2eb2646d14fb249e496cde05333349
+f294eba998d5ab76fdb4b802370e28aa24c25c181cc857a122fb5b2aebcff3da882b81053468c920905945e73a44a908cc62fba5a9d1b90c8cca8b1b
+4a7a11b97d9703e80ddb2e9d33eeee0ef9e8c1895d039f59081bdba85f2157b2e500b879c0338ea6b165c95fc8a887e6556d2f6f08b77eaaa88977ea
+65edc867aeba96d2731a7d67054870b25d2d3f88b9a881499d43df99c8599b68887a9ae0225a36325ff34e85c8a40a9e5cfa8b6fc8a0218845ee7324
+615a37800e383796c5b4f25bf57da76b944aa431ae7c22852668416edebf3bd9cfb11565c5a6df3273d42cfb0cb3246e0ce959d7590c3b75d2cbb3e2
+9926bb642805fb1bce6b69d81827195af48daceb98cac77febbdb813535403c76d8d7a1e1bec5aae2fed4853e998f1b9a9379c42793cc90dd0187fa6
+0903e43ffd7df7b8ba91ef59e586bf1253340cdb6c93448e30c13f8333ede5438bb684d8681b8d17157880a2422d4db2f918fe28d83d82c7fa5bc055
+d98cc9ab1b06137e1ebb7cbba89a1f8902cfb91bcbf6a1d46d5d736b182062e44f373e89ffcdcf0fa8579ecac829b13dc602a4d0656c0e4f348b2fe9
+c78b3ea22efde513a4ad4f9879ce50140d582680576252b4c4fad712ba1ff327bb47a536b57f27ad52171544ff8e19d288e55b53f8a7c9366c913dd1
+34ca5a0e34fb0b8d1c16026b97aec8cd882eaa627a5da840d10875de075e0c3197d2a3e785d5b62da1e5f65a26391cd67092034a55a506fd71b5462a
+f689eca6c062d31a2575d64dc10516fa4659bc769032a3eaf5c5a61d91d5e64a16290cc6608273ba459576ed61a5b61ae6f9dc963052f41a0578aed4
+45047283c231c27b954998c9eb269b19b6d5c6a706197c3650f263aab58566dd5195a60ad6e9cc862042337a055536ad216576daa6b99c56f01283ca
+d525867df135c6aa76096c2640e2539aa5f556cd4185967ac6d93cf610b2236a7545269d115551da86b48c46e002f33ac515f66de125369a66795c16
+b0d2438a95e5463db1f5866a36c92ce600a2135a65b5168d0145563a8699fcb6d072e32a3505e65dd115268a56694c06a0c2b3fa85d5b62da1e5f65a
+11290ccb06ea67574eb87d8f19c63f52999490cea917ab694c01a831a87164895b4cd502f94ed0fce8a8c96f81b0fb367b5169d2579263a7459576ed
+61a5b61ae6f9dc963052c30a1565c6bd317506eab649ac66802293dae535960d81c5d6ba06197c3650f263aab58566dd5195a60ad6e9cc862042337a
+055536ad216576daa6b99c56f012b49b877bda2cec6998e32242345018a64e9ab8bc048308cac2299ccc66ae59e87b393e50328e670d22d7c4e6911c
+b84ba962965ee379f24b68d532341560e8965ed8daf80863fea1cb23549f74a21df05c477aaa02ba50170866d784b4fb9d2aac5c6d41fb5dcc5b6fc5
+023a1615e88ffea2cac0ea73e8b1bd02506158c247c3511409f41ba93fce1462a5d0b4e9dd62ce0f6d389b158e734ebe5b59bc6b8f57b38381acda6e
+81b89722783969af6a8876be5a816bbf2eb8a354afb688c56a41985e463cd3f57c385ea5c011e8779d3df6b3ef3f93099ed1cbf906042f6201e654fb
+e7db3a8c4cc1e8648eb89dde6f5f3367101d7be0792a0082e2a49c56ed0de6dabc51ef018225a3b5623e3d741ebe0287f1bb3f9908d9c517979172eb
+10af77240e176ece480d29d7c4e69112ae6cab6b944db95ad67464c43a28417ef98612c488e55b7bf1c2e41025ac4e8f74cb6f2907cb7ee26e3d2553
+e4ed8fd8b90e90544d168e14854468975674244ff493fdcdb284e473fdb4eb297470488d34fc4a181af95ca56cb55b6cc1bd92f4932b8f4e762d9950
+c11845ae17488b42ec6ceabebe9dd841de8ca85716344a8657c2448d14c728b130b8ed52b5a795c26201de7e46318fce633c52b1f237fe35c97ec789
+bd7a8319b6f182e11b6a2e7f04a927c4fcd729810bcdb57484ba85da74116b35180965f43c162493f2e2d838b940cc968f7d9503a3668ff6225a3469
+538f0fd5fda61fd008d0ce29db9664bf58fd707706176fc94a110883c4e6d01cb8118d68965caa39b27d79873e2a0521848311d4c9b45b67f9a19b6a
+2b8070a95afa5a202de111f655160f41d2d6b2ffae27b77b6c10f938b36654e322123878dcabc788f6bba93996d1a2013b6a4e9f6dc84b1e48ec53a5
+2282721eacc1b8bbc07fa7496b3c8a1e9f5d05a91e13a969fe6cecb2ad96dc55c5caf27d221d568e349100e615cd6bed7cbad378958bb5e24b26bd76
+7c11b4ce5f6a31de8213e432934dcb94bd7ce45eef888af055047c2b0bae32e4edb252e90bddf219a2b39fd46f1a4932512165e3792c6bdabbf0d31e
+a825b7fe8f6dd26e886188e7275528540fbb0bd5b8f54bc94581927ec2ee08c24afa7779181969c5421c7bca8be0d009ba5aba408d41c159b9766fad
+524e6847e28c1fdb88be0961e1ad9b6a2b9364b207d947093cce42c24f0c286fd2c8a5a3cf01b163615ea22c855b6f95425e7852fbdfe0a8ccc8ed62
+fdb5ae476f6c448547a637111af956a56cb55b5ea5c7a5fa933c8b09762d9c58de7e59a61601a362a70697b1ba99f64582a6ba1a4e340cdb7ff121f3
+11ce329c35ebff05d1cde8cd7f0e9352060b92fa696806f7de30f8368f31c082af209b1c9ccaddb7170470274de26ca7a1b252e90adafa5a8efaa1d4
+6e167a2e57062bad3c0d0f8ef6b68f05a85896c6c4389672fb38d7b77b18712a4df664ae91ae199111dd85059a876aac5fe06b392c2c69c1421b2b96
+d9f1df18a41ff327c922c259b07768c637640d42fe9b5e8a88911573f8a9d5346eda7fbe4ab70c3211c442c348340a7ed4d1b5a9c16fb8656955be49
+e62112db02270515db96e2abfc81f975ffaca20875241ccb08c14b1a46de52ac20cc1265aed7a5f29231c0717d3a9f199f5947cd726ded22de7bb081
+ad8aef49cf89b736477d569530da20f358956b9532ede6098da193df640c9f5b693492e762255eb9ff5ad334c96bc18ad201a25cd58b9fa9734b3362
+17a030e3e9d41a8c05cff55a8eba859b205f4b294d0525d8732a229df4ead50aa16ed29e8f76d625a27cd5c52253396f77d667cbf1bb1fde2cd9cf23
+928a66eb10af4b13211535ce491f73c787b48952d736c7618a49a635f2486ad53e2a150bb0cf19c2c1d27265e2acb15e459b65b25be67d1337fa4ad7
+59562868d5d0a0e2832aac373518bd128d457ebd6226144fe88de0e7de9aea7df9d2ae097f0e2b8d38c15d0301f755e019fc127bb89a9ff48936885e
+303c8204905d07e70f01f93f812ffaa2bad19129c89da9571634558e2f9f21f5589a65e55691e748b8a58d8b6204d2174b3795f46d2155b2f954ac7b
+cd7ccf8bb420e25ed58ca5e84f4d27722ea030e3e9d135851e81913e82b2d1d5720b2e28534864e23c362493bbe7ce05b94ed7998d6a9b34a46d959d
+423d21781cb3028ffebd059308d1c429d3cd21bb5fe67023605a40820c4675d7dffbc20faf56a060d05ca224b07d2287756a4109d0cf5c9786f65b74
+e3bbcf25629a76f349fa561371a10bd5521c420db2adb3ee993aac790231be0e882211be4679517ff8d2eab2c884e273fdacae473424549b29ce4a12
+48fd43a93ffc1279ac94bff48936884e7b299f1993560bb01210e96bde6ef3b2e88cf254c08dfb04467b5e8f35d3378d71c12df012f7ff4ebdbdb2df
+621d9f504d76bae378214db2c815e33fce44da8eac64ce6d9c8c83e2552e480201a03df6e49838811eccdf569fb5d1863d316133510e72c368373986
+fce18f2aae5bd7818d5bda32a87ba0e322403d7e20d567aef1ae4b931dcacf039a9060e56eee6c33681975c40c0b3a85cfd0d00fbc118d668a4ce500
+bd6a6ec92f641543e88174bea1d11861feacff367f953f9f58ec4d490ced53c41c454b73d4d7b5f98421b93f7c5da314c52212be62371049f9bbefb3
+d9c6ce68ecb1b91e3b39019f24cc555f41b810e028fd091dc2bdd8f29b7f8d466a2caf1188590597090be639c87ced95a98abb54c48db57d221d38f2
+3ede3ce33cc93fb172c8f948bcb684d87e2d9f45060b92fa696806f7de30f8368f31c082af209a1c9cc8c7a70b08613944c5579e81b108851edef254
+8ea7dfef6a1a6b296b0d79e6753b2eddd8f6c40ab94a9694896adf04ad7c9ab91b463e7c0fba1dd4daa919dc5cecdc229e8a48a54be030392d0f33c4
+591a77d7eefac416f37aaf749146ac03a86167c275080845e88e0c9e84f80053e5b2de7736d4449f54f21c4936ed5c980c544b379784f1a7cd7df76a
+21028b0c8d51339e615d7832f891eacdb1e1827cf3bbaa0b3b624d8a3ec77d1804f749e071a85364bfc6b8f59a71884e762cc30499405feb5b46c207
+e25cdb93ead1bb4fdec8a803597d5f9c73d927e91c803fb524eca707f980a8f84c2db2726c7ad2a92c2955b3ab37fe37d26d9dc9be7ac45deebfa9af
+091174274df76ebba8806bc94cc7e917a8bb9dd46f4c20214a0766c25b1a63d7b7a49359fd039ec5dd2d924ac501f2c42e4627721eba1d89ccbf0e95
+12ebce358d8d62ae17cc6c32290c7e884f092993eff5c51af36cba759743ae7cfc4c7cc23e2a2845eb8050d9cdaf5330a2f9897e27d46a9852f34115
+78b50bd65019186ff8cbade49f32f72d5854ba19c40111be625d225eef89e7a4dd9ba544ebbdae094861539d24cc5b4d2bea5ea138ed5374aac6b5df
+9c2b8f095a29995cdc6c5ca21e0ac825cb60b0b9ad8fb31082d9e95e07344ab93cdc25e00ac73ebe38dbe44bb4b6d28b304f985b492b93c3632454a5
+f65dab0bd17ed7cff102a239b58a8ef34e562f0164c63bf9ecb2528502cc913de2f9dc9b5e1062284a487bf1703d3f93fea4c30abe4adad787769b23
+a3668ff233405b1211b00dc6f4e80a931fddc533dbd921e36ee07031211f35f4440d36928bf5df1ffd178d68964ea237f24c63c236214f78f99d11dc
+cdf81472ac8bd4396d9d76f569f74b0a3da66ad35f1d0573928de1e49f6f9d786457a953c24e69d806063679b5cfa2e78adabb3cbceafe52320e2882
+2b8f4d031af155a762ee1279af9ca5f289338b0b386a09ed701a02e71416a138d97df7b9afd6fd49c28cf3034e6c45d77d9d0dcb37fb0e947eb1ab48
+a9e492df7f069050063e92ee68604fbeff18f4779d3dfb89b467ca549ed1cbe84904327f1fa630f0a6de328e0880ef5293a0dd9b3f3b4714792a47d5
+587a62c7f4f68118b95dd7998f36dd29a26cd3e32e4c25375dfd2ac2ebab0e9e089a82678f8c64a5278617362b1b7ece584866d7e8fbdd14af0ce061
+8a47a6029b5a23956e714d0bbada529790ed520a85add7246e9d77fb4eeb5c0e36ef05d655160f2fcfcdb5e78863fe35eaa45e42c50874c54b270549
+f491e9e9de81e574b4acae1f6f2801c902ff7b392ddc19e96ce70937b8c0a3f29338c04171268f58885d53b35744a30ee34edc9b8dbcb9098c87a957
+5860439233d860e111c62ff828fdf353f7e4c3f8582cbd727b0bd9a92c3c53b2e57e9852dc7ccd82b67c8b0d9cbb84eb545672250bbd31fadaff19c8
+5998b717d9e6c4973d4e3d72116202f5702b2e8efda4d21fbf46d090c67ed22ea8208ffe3f5834375dfd9e38166749d95cd7d967889073a243e83031
+21167f8858012f9bceb891593fa56f25d108a422fc6b7fd5322a0605eb8610d380ac1274e0ad977729048e4aacbd07472ce04ede36716266d8c7a4e5
+996fe3374b57b70f9e1b35d1193b1c69dabda6f794c8b922acf4eb552e3108e144ca52040df15de03ffc097ea5d3fffd94318a0f6c219f1c99140be5
+99fe21a41580bcfee897e900df9ca91e45731f9d34d12aaf0cc13fbc39b4ab052b5b720d2f46de585a7888f47e2155b0a512f835d937da8eac64ce1c
+9cda1b18a98163224dbb36f2e6b252e90dcbf85285a0d1863d3c612b571a38be7a2a248ac9c3e343ff1a8bdbc82a8b70e028cda7623e587e13bb64ad
+91a404931dd48b249a9665eb10af57393b0c7ace4f0d7599cee399599b4daf6a9d0ae25ad57b6ad53f6a2f4ae08a5e8a88fa2f6fedbbcf146a8675f9
+37964d062aec05e355020e27868494cf8422ec39665dac48dc043b855e645d1badd3aef28ac18119ffb9b9033546408826c84c181df65f8323e41465
+f894ecbbbe3082486a7bc5168e5746953c26a97a9b23bee6f0d4bb129ac1d17e4875439f73fd2fe413cf39bf29f6ef73a9a58fd87d0e8c52463b82a0
+31680add8217f029d931ed8bb178d874d98b88e25540206519bc7eaaa8cc299509a2927e85a785da731c6b69560d7cb83e0d02a4f4f6cf0ebf0d92d7
+8b79c924e526b8f8395a34692fbe0aceedbb4bcd5cedef2e96ca6fae5aa72e7b684032aa26613798c8f5dd5bae4bbc68934deb6dfc5165d42f250f48
+e8c110d2dff05955c59bcf25649f74f911bf4d062aec02ba350b1f75d4cfa4a5ae20b2787a18e6408d4b78d205207b32ee8bfca8d38da544f4b1a80c
+756152986d921e4646aa31c93ffc0978a0d1ffcf8f3e805468299915925b52e74644b041a706f2b8ab99f700ce89a957163478952ecb2fe91bcd65be
+39efa3059db680c6684dd2174b3989e4254232b5ea06bf15dc72cbc7e5288971df9b8ee94f6620794fc557f5e9ca75b305d2fe17d6f4a4ff74123c69
+560d7cb82c746bd3b7a49047ed1f97fde17ada32e24a9af42053237408b10ae4f7a404824f9896679a8762ae43fb145e2a19698e6e072993cee6e212
+a75a9e6e804da770e1383bad514d0d44ee8e1297dc94196cacf59b1e658765ba53fc4b4936ed5c981e2c0e7fcfe8a0e98823fc3b285bba12880111be
+1f181357b3b1efaaddc8b630be8ca213776103e144db721504b668a936ed5b2aebe195f2906dc0497d3fc341d01806f64d48a17b812fafefe1f29254
+e08ab7597b7b429229d621e958956b8518f1e615f5aa84dc255fd217196ad7a03c641befa27e982ff17dc2c99a69c85bdb8a84f2554015790ca12de7
+e9ca3e8e0fd1bb0acbe5fbb269336c2b163c6ee8681b248bf4f6924bf00ffd988477c973e26e89f82666165955ed5b92b4e859c549948b75ced128c1
+24fb523524565dcf421c7bca8bd1df0eb0118868965ce517b36c63c636060e47e9e577c3e4ba172ed8adc323589d6bbe1da20e566a8222c4701a0729
+efc1b9ffb50eb27e6f56b605825c3b8a4b111f4ef0d1daa2c09cd351f0b1ac0976614f9f63e35b111c9232b400ea17399fd1a9efdd62ce53773b9f02
+95564cef0f0df527c82694debcb4f94c82bcbe0f5f40439a33cc3ee60acd25b325b8b607eaceeba261009d5644789fcc6e241beaab3dff28c97ec084
+bd26c555cbd0c9d35e5c35470cad3bfbaa947b830ddaff1ee1dd95f77f13200959056eb0217869b3fefcd549c726dabb8a749513a5729eb77614045f
+14b25c89f6ad1cd84d948b6acad22deb1da33e667e5111a94824399b85c4de08b44ba7689608f670895c62ca696a0f4efac74e9b88e9492cacf89777
+39c338d134fb620534a669d15f130c75d4d1afefb93dbf797b48ba12894678ce4b69510a97f6ea8bda84a544f9a0bf2474684e997e8f03572bf757af
+3ebb5571b9dbbcc9ba1dc616207dc750cd011beb5b56b17e840597b3849af70eea87b5030b2911be33ca23a93ec725a472dfe453b3a58ce6680b9742
+4552f2e4402a57f9df11e92fee76d482f8358b018df2e2e377462d2539aa26e3d0f937890bc6f65285a0d1863d3a603255465ff5642c13a6f7edc605
+a04ad083c654de26b802f2f307563d3529ba16d3b8f54b8413cbdf35928a66e359ea6623617212c4600a37d9fff1c90f894daf698b58aa22b97668de
+7b79411a87e577dbc7bb1a6cacb8f93679d42cfb74f15d1339e648d512160e70938687f98c22bb352418b8019e4c32bd6224335aefd1c0a6d58dab2d
+bcfa9b157463538e3edc1c7d61e879a13ea6287eb1d1f1a6dd0aaa4e757ac51e994f03f65744b1678d3fb2f7fad19129dcaaba0505445e8834cb27e8
+168876f009dce24ae9ea8fce7a47ce1b0868d7a03d641bfab95d9b52cd5dcf95f64aca53d79f99e84e4a254802a331e5bb9866c00dcbf85285a0fbb2
+6d3d6f35162a64e2783d39b4f2fec43ba457db9bc8259b70c6018bd52a467f591cbc05c0eaa71e9e18ecd926959771aa5fea7034315826801c4669fd
+a19dd21aaf5be057995aae3ea8383687382b0f5fec8610d2dad27109e0a7d83667d472ba4ffb67093ee70b8d1c03610eb2e7a0f9896fe3376b59a904
+c02212be38200354f69aaefa989bff62f3b3ae4b110d28a92cdd1e4a48fa5ab26082721e8fd1a2f8dd62ce43542a875cf6312297090be639c87ced95
+a98abb1d8c98991659383bf254fe2de41dc63f9333f4e455fbf9c1ca6e0c9b595c74f189050d43a7e206e87b803fda8ebb6383199cd3cbe34e564b02
+10c557d9e7cc328615fbef5899b596de333e6d33511e6ed37d2a2f94c0f0c81fa14ae3d7d538d821be6cb2f92d5b5b1174f24387cba4029419988d67
+bd8565ae0de6705d412b7ed25a013892d8bae50cb85aa0549d5abd39bf7d31e42921005fe8c71dd6dabc5720d8bfde3265bd7fbd52b140022fa01b9e
+0e4d4727fecab4e6c30abf646156bc33985177d24505045af9d3ae82d69de63ed9b9b80e756365823fca5d0301f755ee03fd0f3ee794aad99c3c8540
+6a279e1e986c59a61517f12adf6af0b4b1d8a6009cc6eb4f563d0bab31de37af51a2428339eafd4eb8a1928559189b52460b9ef27a2158b2b137e33e
+dc6bcbcfab7cd95fd79dc7a76f53246e038630f1e79635851b80ab19d9e1d8973d045a35590678e07d2a2e89f8fd8156ed1f90c5dd65927a9c649aee
+631d5b122eba1cd1f1ab0e8352ecdc229e8a52ae5ff977342d4258d249092f9283e0fd19b113ee538f4dae3e95766dc8752a045ca5df50859df15720
+f79cde2f7fa063ba53ec5e062aed45d3455856278bd9e8b1bd23bf6e2011d169bf4d69c102371448b3abf9a2dd86d875eeaea2047e3e629928ce4a12
+40fc77a220a45b43bcd1b4f5b431884836268e07d40805f54e4dad6bd65bfbafbcace941c29bab1659715f98249f73a748d562ea0cf4ea5ef3edeba2
+5e0a8c41413b9ef3221c4cb2ee1ac23ecf69c784bd32e842d9999fe21354036a1fe37ec3ffdd3e8e25c6fd58c5ba94cc351b7b3514484efe693565a2
+faf7c805aa7cca8e847d950ca5669ef6391d7d3b068c07ddfde856d029fcc22ac9ca6fae5aa72e7b684837801c447bc582e998418d53af7ed001c15a
+d56c6ad4306a125bec98109fcead1563f8a1d43923dd1bd234e8460e34ed0bc4551b002f9284fdab8e2eac734156bd0fc26d63c70226081bf99084ce
+b1e1ff71efb3e5107a6d55c37d810f5e629132c925ee5b79a4c0f1f89c2d8a0948299915924c0bb31301ef6bdf6aeaa2ba96bb45c28cd17e22715f9f
+57b647ee1e8828b12efcab46b5a0c1c86c1d9a19783989e5623c1ba3e311ff51b416a7b4bd7add59df9d98a96f53246e039c3be5fed1388556ebe952
+8aa094937e1e7c2314485fe7793d25aef5e2ce45a34ac9dfd8368972e028bef93e597f5e1cac07c9ff9b1f8910dd85168e8565e70dca702225565ec1
+5f013590effdc31ebe4ba7689606823ef5342bdc19250240ea9d11c2c6bc2f72eda6c8276a8674b55ee60e5a78b9569906280766c28ce881e446d744
+6d4aad098f4d68993f23145ef3acebb5ce81e875a69bb9027a7044c33edb4c1803fd17e018ff1e72a5fdbffd927180426f60db5ece0a02eb5b1fd539
+cc61eda7a98afe4ecf91fb4a0b254cd267ef22e6018062da55918274beb697c26e0a8d197c2f9ee5621b5ea5fd1df23e875cdc82b97cce18c8b489eb
+1704157c08aa30dee6de34ce02cdec1fdbfac392315f75135d107fc46e392594ebe5d30ea34cc7d7d5388a3de532abfb2a4d793277d667aecbad1986
+15dbce34d5b076ae48e14d323a0e72c349521885cef5c51ef55b82659404eb04ab7d6ec9122a0744a3811bc080e85532a5e49b2c5f9169af69ed4f09
+2bf84ac25916087e9b99e1ba9066e4476459a248c52212be62201048f6d1f9a6d19ca320b2eaf94e110d28e224c91e1409ea5fe02de61f37a8d5a3ff
+d30f8f557d269f5088504ea95b07e039c935dab2bb8ce94fd5c0f2574e7a55f154b647ee1e8805bf28f1ed5e88b08ed96c089b19693b8fe97a2d78b6
+f910e200c976da8bbd558b0d81d888e6494008650ba07ee3e0dd35ea65a1923ea5bb85d27b065d33571a6af779760a84efedd70e8e4ecc939b43cf29
+b8649eca6b09717514b364ae91c10e9e18b2a24e9e8a65c124ea703361727ece486251fdcde1df18a956a169d87dbf39b06b25ee2810044ae0821fc3
+cdf00b6cfee1b15e629231b552eb0e1734fa0bdf4e580568cf848de48e2eb2476459a2059e0874c54b241d49bdc2b3e7f487e871f088a706626153cb
+39c75b1948ea5eb439fa1537bfc6a4fedd3a80431241c65ddc7959b41e0ae0278d29be82a691ed45de9bba1b0b5277ba7ddc26e21bc371f015f6ab61
+9d85c1c6620b9b1b083d8de57e3154b9ee54f8289d7ec0c7b778db5fd29d85f31b41376e03ef37f1a8d9289305cff5528ff485d43d394806181c6ef1
+7152428efda4d107bf01ea9289759b21a26cdbe727467f4f18be0389d6a906955c859667d9a2478a0faf6a3f2d163bd2491c2e85c5b4d71ab14cab27
+9d46af5ad5716d872b281305d98a1fda88b91564ac84d4346a9841b75ce64b1576dc4ed151580a69df84b1e79f618a726955fb5dd10857d808351d6b
+f19ef7a2cac6df75fdb5eb1373614fcb3fca4a021af61bb43efd1e37aedab591f43688076824995ea85d4aaa380bed24df2fffb9acd8d74fcf89b727
+4775489e2f911ae219c508bf30f7f907baaa858b7d038c197c3d9aed4f2757b8f954ac669d53c184b964fb5cdd818ef51570246a008c31fbe7ca7b94
+04cdf51799b185ce6f112e334a1d6eb079362fed92f6c41fb85dd0d78e79d733a9029ef92f3e5b7712bc0fcbb89b03910eddcf159a9d62aa5efb4e36
+3a1976d30c557ba5caedd21aae4b9e668a49a623f2766ed0736d6b78e58e0cd2cc8a1a79efa9c8235b9563ba50ec002131e45fd54e2c1277de84fcab
+a821ab7a266aba198f4968c32d3d1d4ff88ddabec88da555e4bba7127f612bb825ce4c120cca5ab92fe908639bd5a3fa902cc06e7f268402996f4ab3
+1e16a1768d7beca2adf29146d986b803427b5fdb08cb27eb0b860cb528dbe346a9a582df681dba565c39d3f0603a12dd821df77bd370dac7a864d910
+c8908ee91b56247f18bd30b7e6d137c009c6ff3de2b89ed87c132e29571f2bad3c2c2284f0ac8861c443d19489749b23ad6b93f22f146c3b2eab01d5
+f9af0ede3fd0ca35b88562a348d46e3b3a2511a9450e7b94caf7d91eb91faf699c08e33eb36f2b8a7b270048e58a1a99e4b90874deadc838678274fb
+01bf062437e64dd95b563d66d7d7efcebe1f8c726e4abe13847a7ac30e741e49bdcfa0f58dc1a230e8b0ae09110d28822b8f5d160bf05ea462cb1376
+b994b0f5997f8d467b208e14d27b43a6094ad12adf6af0a3e899f5448c8bba14437155d50fd021f358c925b47cfbea44b3a185855f00914306089af2
+69264ff7ff1cf435b716a7eeb16e8b53dd9b83e25f0a097e00ef2affedd651e965a192548ab799de79514d324a207bb021782886f8ecc40fe367cb9a
+c650de21a07c939d423d58121ebe0dcffdac45bd1dc0e337dbd921e34eee7d3f2d1c35e8590575bacaecf91ebc53ba6fd816eb60f5386ac93f64024a
+ee871bd386900e6da285da2f439170b749f70e082aa81a800c72620eb2c1afefe746d71e6457b801800872c42a38184df8d3aeaecbbde563ecb9bc09
+7e6001d66dfa4a1e04eb15893fc9177ebdd1f9eb912dc2077b298818995c05841305f3678d6cffb4a09dff0ee49db65e211d38f23ede2def1dcc6599
+2fd9e74eada1c1962d068d7644318de5064132dee815f233d87b80aeab5dc543cc999ce95e4061364da62dc2e6cb2b811bc6fe53e1ddf8b26f1a7a32
+4a062bf37d3b2382ff8ea862a841dafde17dd524c602f2fb245730775dbc06c6eae856d00cd4d969b88c60b94cec6a323a7212c94a483598dfb49918
+b55ebc279946af70bf706ad575140059e8810a97c9b61f20efa0da2531bd629f58ec4d0236ec4ade48370d2fe8c1b3fd842cbb64266fb412875b6bd6
+08315812bd8be6a2d6e28219ffb0aa153b3901b828dd481e0bfd48ee1be7097cb8c4b0f89865a84e762cad198e4b5f84130ded2f857ff2a5e6b6fa4d
+c9c1d17e227d57db33d03aa71bc02aa27cece342b5cee8a2040391544934dbe62c751b84ee06e732de7addc98f67d95bcf888ae45e1e076203ab18fe
+facb2fa304c1f753c3f6b2d37c0d6f244c0d79e33e716b88e9a4f20ebf59d7948d6b9517a37a90e43b55327e479907c9fc8e02820fcce82f928865e3
+0fdf7236311d69d30e4151fea29dd81dfd59ee73904da570bf706ad57b79414db7a917d9cc9e1272ffbcf83f629875f34df35c4916e946d515580e69
+dfaec8828821ba1d015db504e62172d14b3a1e4fbdd7edafd99aab71f2bceb04736553c51dce4c1206ec1ba122ec5b74a3d5a3a1b42caa426b2b8e1e
+985945b33402a918c87de8beab9de80efb87a91c58645098389667a70cc02ebe56918274afab93ca6a0ad074403989c36d2b53b2d004fd29e03f93c7
+b661c73ab5f199e24f5133654da137fb82b13e8e08a2913e87bb92da715f7c28571c2bad3c3b2386e9bee702a34bf89e9a6bcf03a46197f36316196e
+10be00c8f1ac399f13ccfb26899023e20de06c772b107ad2162e3299cfd2d809ae4b8d6f9144af78fe4c64d5282b4302ad800c97cbb01a72b68ed239
+6fb278a94eeb6d0f31e44f981e2d1b77ded695e49f3cb1352118b412cc4b73d6197a2149f492efb5c1b8ea62e8d2c20e7d244f84398f4c1807ec1bb4
+24ed151dc2bd82ef922d8f407d66a8189d4a68a6180ce410dd63ec8ae8c5bb4ec584d17e2266548f28cd20a716c127da55fde543d1cee8c7620c9f5b
+08309ee1686806f7e81cf0298759c789bc4ec242cf8ca8ef524825234f873bf6ec9a72c003dabb4584bb85b11413612459042bf869356bdabbe7c90a
+bf15f89e867cfd29be7b8fd4235d3d7f32b92dcbf9bb18d85ef0de2a9a8a6ea249ad375d411474c34d047b9ed8d5dd12ab5ae227915b9e3eaf686ad0
+3521050bb0cf2bc3c1b4082ec5bbfa3b628274f34df35c4b78eb43d14e544b6fcec9e881e746f33a2871bd408a476ed90f740752fcdfd9a8ca83f860
+fdbbae47686140992ec71e1606fc1ba938a81264ebdabeefdd3e824e6e2dc75098570b893430a12ac960eea3e899e800dc84ba0e4e66119835de3ce6
+1bdc2ea27cb0f942b1a182df2d0b9b564c7898ef7e3848b2f85d9b52d4798ecfa864d91eff908af55a47356e1fef63aaa8d6328c4cc7e9179bb88395
+5e176f35590b7ff56e7835dabbe7c90abf069e96867c9b2ea37cdbfe38753d720bba4ed3f0ad05fa75b1f833949660ac48a15d3f290a58c14f003eac
+dbf8c326fd02ee699144c159d56a6ed32e360f0be38612bda1bd156486c2b23b649770b71dfc5b1510f807905119134fcb84fcabdc7fee3b2809eb50
+e62172d14b3c0456bd8be6a2d6e28219ffadb92f6b241ccb25da535920fd5aac38e0711ec2d9b0e3b52fce1a38608305911666a6032ce42ac17bf6f7
+f6d8ab098c89b5130b7c449673f22fff30cd2abc28f0ab48a9e4d09b3d65f752442b9e8a054158a2f93ce1779d72cf9f90788b0d9cad9fee57576f4c
+08bb16f2e9d42f8844d8f745c7f492d37c0d274d310d65f41652428bf4e7c007ed4bdf8389388660af6998ff2e5071740fff15da92c10f9108d98504
+938573eb10af7d3f290a11a948092f9685dcd41ab91ff327904daa34d6116fc62f254f79e2800a9795f8096fe3bcb15e6f9565ba13d75b0a78b50bd8
+4915610edfc5b5eac306ad566451ad05cc153bde18151d52eb9a84cedc89ff71b291b8327577518a3ac15b1348a51ba93fdd1564bbd5a6f5983be42e
+7c299f11d27b5eb53314a1768d6ceba580889129c889af160559508315cf6eba58c52aa814e8812ebfa595ca23239f445c0a9ef363244db2ab49b135
+d268a4eeb16e8b5ed38ccbe35a5020253aaa3fe7e7d67b8f1e88b35984a3d1963d576a264c0925dc7d2b3fb0fee5d104a36cd6928b739b2fbe28cbbe
+6b0a712b53e94787eca00e9e76b1a2239a9060e57aea7f2727163b9d0c3d2f9ec7e79f3cb84b8b768d41bb20b97c5cc23a340e45a59f12c584f81868
+edba925d02fd75ba49fe002b39fb5fe759191b68d5e7a9ee8e24fe2a2856b417e6217ed90f5e7b32ce8be1b5d98fee3edfb0aa155865428328f44e1b
+1ac51bfd6cec1a63aabed8e9982b9b5576688f11885921a215008b41cb7af0b4bc91f44e8cbdaf1e47671fbc38cb06e219c43fb874e8e755f7e482c3
+6c1dd73d21319da062274ff7fb18e37bc977cb89f87ace44c98a85a70b08613a5dff7ef2e6dc51e90fc0fa45cbe9d1d8751e7c67571a2be0702a65a4
+f3e5d30aae5bdb85e212b26de128bae538513f7a11ff20f5c88a38d034ddca2b8f8c219854fc6a32257212cc430b3a9b8bfac30bbf4cee3ad858a722
+e65e62c93f020859fe9b3ddfc1b41f28ae86e90749a733f23796470178e659c05e0b4b73d3c1af81e446b2786b59b74084584dd607744c1bf38dfea5
+cbd2cd79f2bc8d0e697755a825c6521340ba73a52de40f7fe99ddb92f43381447924cb1d9d4063b72d05ed6b902ff0a5b89ae81aea81b5136d7d4388
+29fc26ee14cc63f211f9f36fbea58ddf654dd73d215192e62c204b81ea18b13ad37b8e8fa85eca5c86b198c61306176a01ba3bd5e9cb3ec24588ef5f
+8ebafbb2147662285b0967b07f2d39c7a6a4d504a35ad3958d6a9328bc5e9afb6562307708ba4787f7ba4bc076b1a24e978b62aa41af733630582680
+04053a8fe3e4e71ab11faf699c08a631a4507bf13a285b62feae5695feb91775e98ada246ed638fb5cf14a472ce745c5511a0e7593c9a0f3a53f8876
+64168d01805d7e9e42741e49bdcebef7b2e18219eebdbf12696a018838dd125740f55ab86cb65b27ebd5bfffdd328f5f38279950cd081bee716d882e
+c36b94dead96ff2aa6e1f65a0b47459a33db2ff51c8819bf3ef4e45ffb8c94c66c01915e4c78b3e56d244fbf817df83d9d7cc686aa28df58d996e18e
+32482e680ca37efffdd57bdd4ccbf35699eeb7d2731b482e4a1b7fd374312783d4e2e207ac5ccddfca50ce2dad6694fe2f16781174d607c1b8a01e9d
+5cccc32295ee08c224e3713429143bc3591a7bca8bfcc416f377ab66945ca35ad51102cb34270047ad821fcf88e55b68f9a5951a6a8c59be5cf35a0f
+78b60b801c1905639bccb4e6c302bf6f405dba0c98403bd81974400badf587ceb19aee64e9aaa547787153c76dc25f0f629132a522ec711ec299fcbb
+be2a9d537725cb32935c52e73c05ec2ede2fb687a099f554c385fb314466529e2e936ec10ac725a430f1e542a8e8c1ef62008c440478b8f57f3c54ba
+ab26f83cce36a4eed164c453dd94cbef4b7220674df27ef4e0d929da2ac1f553adbd83c8693c662e540c23b2543d2a8befec8342ed40ccd78b70da32
+f64e92f92f7238690eab2dcff1a40fd85ef0fb65d2c46eb90dec76363a425dc9420c1d9ed9e7c538b556a263d00aa320fe312bc82964495be19d5ed6
+c6bc5b70e0ba8111629a759d54ed5d131be042dc58504954cfc5b5fe9e6df7376956bf409c4469993820104fe88cb481d186ef56f5aab813586c4887
+29871c3f0df957b424aa523ec1bdd8f29b7f86574e2987509d564fe71314d72ac135d7a489d0b976cd84ae126975429e7f966ee616cc6ba433f6fe4a
+b9a19383651fa8564476ade1603d5efeab00f93ed315a7eed17ace44c98a85a75645356343a23fefa08877c018c7f54286b694c935177e11590425c6
+7d343e82b2ad8d4bfc1f8efde111de2ea802f29e275b327a11ff06d7d9bc1f825c858b24938573f16aea6a163c0c69c94e1d2f9283b6f91ebc53ba6f
+da01eb3fae3868cf3a365b6ce89b3fc3dcaa1262f9bcde7f29bc41f91495276e31ee0bd84c391f73c984a0e5896faa78664db602895a33df1b15054f
+efd6aeb3d08de51a95d1c20b746740876dc25f0f29ec4fb26cb55b74a3d5a3a1ba3a9a666c3c99199e4d5fa25346cc2ad547fbb6a48cf30285c8b405
+0b77599a2f8509e20ce93fa42ef1e952afa1c989400e867f787ad2a0633a1be6bb449b52b416dc82ac7dd95e9c958af3530a2c6a15e76ebba8cc348e
+19c5f95299fc99cb5c0b7a35114127b071393f8fb5e9c013e51e92d79c77d535a16a9ee5635930633cab1ad5b1e161f975ddc523f1ed64a549851725
+2d0c6ed242486ac79bb8914aed0fc462964cc15aba6d65c42f2d0e45adba0adec4ab5549ff89d73e7d9139ba4ff81f4b78e959d70e544b66c9c3f2a2
+e746b2786b59b7409c44699b4b37195aefd3aeafcd858119f5beeb13627444c32cdd594641b806fd6caa0e64aec6b5fa893ecc0779268f509d4a4cf6
+412df20a852dcebba981fe528ec1fb0343715ff154b63eeb0a8876f03deaec16d1cde8c8650e8c1715789af26b7a1bb8f954e137cf31ed8fb97aca53
+c89d998d32412d7808c5579eebd03a924c95bb5699b3c0b114766632554836b07d2a2cd5918da81ba15d9ecac879c927ff2894e56b1c32731cad4ec6
+f6ac4ba319cadd2e988172e57de37f2e2d0a689a6b0d2fa7c7f5c81eaf79bc68956ba331ae7968d33e364948e58e0c9e81d27265e2acb15e629231b5
+52eb0e0430e95990530a4b69d4d0e1e8852eac395859a905825c3bc303311f1bef9afab2ca86ab76fdb4b8023724478a21dc5b570df65fca4681563a
+eb85ffbbb439ce57742992158e1843a60844e0258d6efda3a18efe00cf80ba054a77459e2f9f2ff40bc12cbe39fcab53b3a5958b690698514d2a88a0
+6a3a54baab17f93acf338e93b061d810df908af51b4d322b0ca17ef8eacb348c09dcfe178fb190df3d1c6135481b6e9a15312dc7ebe8d34bac41dad7
+9874c96e8f609ae52a57257e0fff0fc9fce81b9c0e96e82f9a9660a859ea6c7736453bc3440929d7dffcd415d736c7759d5cbe22b2386dc637370407
+ad891fdbdbbd7109e9a6df5d01fd3cf61dad00471be04ed3575802619bd4a0f98821aa726c18af0fcc4b74c51b271414f99aecb5d19ba477eeb9bd02
+6265538f6dcc51191cf952ae29fa081dc2d8bef89c33ce4448299915924c0bfa5b07e92adf21ceb6ba9df554a6e1b2110b77619a2fda20f358c925b4
+7cfbdb46a9a18fdf2d11c3177b3d89f6652b5ea4a523fe29d66cde86bb6d8b44d49d858d322d2d640eae32b7f8f63a8d0988a617888490c978117a69
+760966f51651428efda4d125ac42dbd7d5259b62886d99e52247733b12ad4ed7d6a906955c859667d9a76eb95dfc7b246a5874d20c181596c6f19146
+e01fec44975abb23b93a2bc829641165ec821b9795e55b22c8adda3329d47ea91def600635ed0b8d01584955dac3a5e48123ad352857a9409c667ada
+0e744c06bddddca6df8ce47cf0faeb08692451a52cc25b5755a51be208ed1a7389dbb5f2982ccc07773acb00b25946a25b59bc6b8f48ecb6be9de241
+de8cf9574466118b13de23e2589576f07eccf946a8acc38b79079b592251f2897e2d4fa2f91ab13ddc73dd82f428cd51d08b8e8d322d246509c557f2
+e6dc51ea6585b617d8fad1ed740b6f2b181a64ff68783b86e9f0814ded4dd182867cda32b52898ff2e573a1174b301c4f9a44b8213d7df67c6c462a3
+4cfd241121167fe6451a2883e8fcd817b917ec4f8d45aa3eb3716ff5342b157bec9d0a9581f81472acabd33679ce57b253fb680e2afb5ff354110763
+938695e49f3cb1352118b412cc4b73d6196e3752f39bc8aeca9bff53f4b1a7033326749b3dca4c2307ea48af6ea15b78b994b2f39c2dc0776a218611
+8e417ba609108b42c469beb9a78cbb52c387af574466119532cb6ef517c73ffe0cf9f942b5b0c1df650a90175a3d8ff57e261bb1ea18e23e913fc886
+b47bce10d9968f8d312d2d640eae32b7fae834934c95bb4584bb85954d107d2e4c0164fe16512281bbf6f104be01e7d7d4389673fc38cbb724467176
+1cab0689f9aa18d80ee8c434d5bc28eb13af2c6778482b900c0729d7c6f5c513f35eac74d05a9b3faf36518e7b7a4119bddf4e8798f80f68e9a6b15e
+028674af48ed40473ee947c359544b61dac8b2eee746bb796c32d169804778d607741848db9efca6cf89f25cf3baa91e3b3901c33fff510446c11bfe
+6cbb4b27fb94bee9dd328f5370668a128f1059971417af13842fa0f7fbc8ab109cc8b4050b79508f35912fe50b80398033eba57df2e4df8b3e5fce07
+1871f18a056516f7bf5ab100ed5afca1f84eea63e8d5bbc66f6c1c314d9c2af6e6dc3a920888c95889b89ec33d377b2a590664f9787863a4f4f2c419
+be0f87cfcd38d426ec7b8ff62550306919ff09c6f5ad18d00bd1df2fdbbe449962af6d233a1175c70c043498c0e1c108f435c76f8d45eb6dfc707eca
+7b2b130bee871fc5929e126ee88ed225788052b354f34a283ecb47d14f0b4325f3d1acea8320b7732a11d169854e3bdf1e39514ff59ae0cdb1e1e276
+bcb0be0a354c448a21db565754a51bf06cfc1372a594a3fe892a9c49382e8a1c8f5d07e71d05ed38c82ffbb9acf29229c087b8164734428f3ccb2ba7
+458823a531a2cc42af9795ca790ad61e2251f2e96a6848a3ea00f47b80228ea2b67dc61ef48d86e6554b286f3ebb3fe3edec22900986df528ab0d1cf
+751a60674a0d7fe56e366b81fae8d20ee10fd896846bde60a9669f9d423d387d5df71dd3f9bc0ed041858b0295916ce565fa7336261772c47f1c3a83
+cec0c80bb8119e6f815ba233af3864d57b37154af98a5e8a95f83e6ef9a5951f7e9970b552f64a342ce95fd568011b6295f6a0ec8920b27b2118ba0e
+880833df1e395f73f89ee2b3d0c8b72dbce9eb0869244f84398f560205b669a53dfd1265aec79ffe9e34c7076c208e1ef63122ce0901f53edf61beb1
+a994e84580c8bd16476754f154b62be91ca242d971b5ab61bab7958b69068c524b2cdbe1783c49bee901e53e9d7cc682bb638b18d297cbf35a462d6e
+4da62af2fad92f8903c6b23de2dd98dd3d1c66264a524cf568193f93e9edc31eb94a96d5ac7dda24ee21dbaa7614256908ba4ec8eae808981dca9100
+9e9040bf59fd77353d0c7e880e2128b3cef5d559f41ff33ad85cb925b93864d57b27094affd539d2dc990f74fea1d9227f9139f96ffe490337e44792
+1558563a9bd0b3fe886fb165285bb3019e125cd21f15054fef96ecb2cc8da332d8b7bc097e6003c26d9203571cea4ea56cfc1372a5bed892f42d8b53
+6d3a85509a5947b41e48a12dcc63edb2c2f19245c28cd17e22785e983cd36eef1dc92ff061b8e84fbab6dbed64019a71412a88f44f2052bbef5cb313
+d87ecac5f102a239d59ecbe95450616308ae3ab7e7ca7b8e03dcbb5f8eb595954d1e7c22561c2be4743d25c7e9e1d51ebf419e918974c825e0289df6
+2747343b18b10aad91c102965cd1d8019a9660bc4cf652382a1a628058003e998be6d40fa84da0279e49a723b9342bd32931040be8811abda1d10965
+f8bdc9392b8063ae58b30e0139e458d536710e69dfaecb82c062fe2226189d01804479d6083f515df28daea9d786a658e9b5aa09746d45cb2eda4d03
+07f51ba223ec1272b894f9da8f2c8b497924cb3eae6869945744c739c261eabba196fe5380c8be03483a18f154d628a708c439f03df6ef07f3a380c6
+6841ae5b493b9ec9686806eaab46a96d8d269ed3ea318b5fced88ce656416f4c0ca23bdeec9866dd4c99aa06d2e1c98d284f2e284a487bfc6e620d8e
+f5e0e702bf5ccab48071d724e42ab5c51b76023954f64ed3f0ad05fa75b1c72898856deb43fd6e353b5826805c0429cdedfddf1f9b56bc748c6ba339
+b07c238515163169decd57bda1d11266aca6c927698731af55fa406d518122dc531b0a6b9bccb1dd8c23fe2a2856a9108e5b21f1023a157df48dfdb3
+fb80e27cf8f0e92f7e654d9f258d177d619132a92aa813679dd5bdbb9c318a077038bd11900262b43a4ca31dcc63ebb28a99e8458ec1fb16457011d3
+29d020f215ca2ea274f0fb71baa8cffd6c038b52017894f22c7812f7b749b16b9d6bc682b602a239b5f199e24f5133654da93ffbfbdd77c00ac9f744
+8edef8b2141a6023326102f5723c41eefeeac561c726d2988b79d760a86d9af305553c7e0eff5387e3ea2f951ddc896bdbc653aa4aeb713b245a3780
+0e3a3a90cffbdd17b85bec2bd80a8f39b97c298b7b662244ff9f0dd28af45b22c8a7cc396e9033f71dbd650937eb40d5585a472799e0a4ea9927fc3b
+281a902fce043b95203b5317bdddc8a6d186ff75f8fae74739464d8e28cb71021cba17e06edd1574a4daa2f894309b543a64cb52b95442aa120ae03f
+c86bbcfbe8dad253e88dba13093811d916d622eb1dcc69ad5691ed48a9e4be872d0bb056453ddbe9626852a7ea1de328957bcb86bc46ca5dd98bc2a7
+5f4b4b0264a331f4e9d47b8d0ddaf05299f4cc9b7e176f35022e62fe781e2295e8f0e203a443dadf8c56da2da921f19e425d373b10be1cccfdba4b84
+14ddc54df2ed08a24baf73363a137ed2162128b683b6f314b2539866945dae72f5387fcf3e2a6b2284e677decef81661fea3de2525a270b748fa0e5a
+65a85fc2491d4b73d3c1afab9f2aaa627a56fb068d4468d24774175af18cebe7dd86ef1a95d1c202777744822b8f53161af35eb276c10856e39698f5
+89098f4b6d2dc959dc5759e71605f320c87da49ebbb9b302e29db6154e66679a31ca2ba551883fb839f6812ed2cde8c26b4f93565a339ef2221e5abb
+fe11b166803f9fc7b77a8b5ddd8a80e2490a176a01ba3bb7b5857b941eddfe179fbc94d53d0d6b334d1a65b07a392794fea8810dac43cd92c87dd524
+c601f29e2e58227e77d667ae91ba0e8409cac5679d856db848a33e31291468c5266152fecefad571d436ab699c22c235b27c01ad52220e59adb05297
+cc990f74fee8d2392b9d61ba54ed5d4f23aa6fd55d1c492b9b8688f8a92abf732a14fb42be497cd304381d19b1dfac95d98fef7ff0b4ae03392801c9
+09c049190dfc19ec6caa3079a4d7bafe997dc2073a03821c905d4fe55744a31ec36cf1b9bb9bf24fd99bf95b0b36779a34d13ae21c8a36f97cfce42d
+d2cd88cd2d0c96565a62bce578094fa3f91df32ec97a8683997cdf4295d8d6ba1b50337e08ef31e5a8902b8c1e88fa598ff481d76f4549224c297fe4
+6e312992efe1890f8c5bca85c138867dec7c89e22e1d716f15ba00ad91c1628219ccde3595c467aa41fc7b7b681e7acc5f0d51fea2f1df1fd736ab69
+9c22c159b07768c63764025effa70e9b88875b3dac9dcf3e67873f9c58eb660239e45fd8140807759784a2e38c3df71d0151bd408f5d69ff1b744d06
+bdcfaeb3d08de530eebdbf12696a018d2cc34d1244b85da120fb1e37aedab591f75682487b298750945d4aa35b59a128c56eeced8e91f544ea81a904
+5f57599231db66a530cd2ab47eb1812eb2a2c1c5621bde5f4d399fa0633a1bb9e400b133d87ecac98869d955d28ccbf353412f2b1faa2ae2fad67b86
+0dc4e852c7f497da710c6b675d066f9a15342484fae8811fa25dcd98c8259b23a46989ad0d5d3f7f3bb61cd4ec8b039910dc8365af8b73b842ad3777
+270a3bc3440929cdedfddf1f9b56bc748c6ba339b07c23850e34114effbb11c5dbb7592986c1d2312b807ea94ef00e0636ec0bde530c4b6fcec9e1ff
+852ab01d0131b70f8f49779705311250bdc2aeafdd89ef2adab1a5035d6d539839ec561e04fc13e202ed187ce99df1f48f7f9a486a3b844aba5145a3
+3d0df338d94cf6bea49cb302e28db81c093d11942f9f26e219cc719635f6ef61b2b692df4e07975b4c179dc3602948a4a356dc34c970dcd19c2a8210
+d38acbf354563264578937f9ecfe32921fdcd85f82b895f47b3c62264b1b23b251373f88e9b2e549e425b7fe817e9b2ea37cdbf92e573a3b09b70bc9
+b8ba0e8409cac5679d856db848a33e31291468c50c0d3593a19dd415b935c40e914eeb39af5e6ad53a330052c1801cd5d1f80f68e9a69b256e8064a9
+53bf480634fb4e9c1c0c1972de84a4e58945d7656d4cae1282086fc51e315d1bfb9ee2b4dde2ee7ef8d2c1016e6a429f24c050573dec52ac3fa63c72
+bff7a4e98f3a80535b2986158e5903ee716ded24ce6ef2f7ab99f60091c888125962589838cc60d017da20a32cf9e842f58794d97f0a90436b3996e5
+7e2931dee212b135d26b8e84b9658b44d49d858d322d27641fef01bba8ce7b890288eb5682a682934e1a7c31510b6ee3320f2495f0f7d10aae4a84b0
+8d6cf828a5649fe52e5a793254ff0ac892c162f915de8b31c1ad728a05ad5d36251d69c10e417b83c3f1df5baf5aba728a46eb26fc7d65c3514d684e
+e38b74becdb61f0a85bade237e867ffb5efe436d3de64fba36140464dac8e1e88c2cb6726c7eb20c984d69f40335031ba0dfe0aed4e2e77fffb9a747
+7865428328cb781e04ec5eb20fe91637f694bff2915582487b2987509a4d45a40f0dee258d5aeeb3a98cfe72cd91b8165860779231cb2bf550cb2abd
+7592824bb4a780c72d0cde0a081494e36d246bbbea0df429935cc686aa69c844d98ae18e524261684db163b7ebd9388809ccdd5e87a094c95e176f35
+180779b07f3926c7e5b98108ac4cd6928c5ed22cb86d89d42a59716f15ba00ad91c108911fd0ce23bd8d6dbf48fd5d3f290a3b9d0c0b51fea2f7d018
+b55aaa419144bf35ae5b6aca7b794148ec8274bea1b41463eda49b31629865be4fbf134723f521b935110d27d8c5a2e3882b987e644cbe12af407ac5
+4b20195ef3dffaa6da84ee3ef5b6b8026970098d24c34a121ab41ba32deb1372aff2b8f7893a9c6470299959dc5d45a3716d8822cb2ffdb6ab90fe44
+ea81b7034e66729a309f3aef1dc66ba43dfae742f5ad8fd8681d8a1f4e3197f4693a17f7e815f233d87be88eb47cce42ff9986ae1b412f6f67c657c4
+e0d9298508fafa4e88b582cf4d1e7c26551b25d675343f82e9c0c418ae4ad0938976cf33856688e32a5a327e0eff5387fea1078419caa14e9e8a65c1
+48e17a5d421e6ece4f1c3298c5b4e40fb453bd29b15b9d39af7169cb3e6c154aff881bc3e0bd1a64a0e8cf36799374af6df35c4e528142d61c160473
+9bd0a0f98a2aaa5f6d59bf40835a3bd90420514ffc8de9a2cca0ee71f8f69b0669614f9f6ddb561206b849a538fd0979ebd2b0f78e3ace42762ce179
+905748a61744ef24da2fa3f7bc91f84b84c1d17e4272118f3ccd29e20cf827a27cece342b5cee8a261009d56447898a0316868a3e406f03cd831f88e
+ab4bca53d49db0f35a56266e199f32e5d5b252e905cebb54cbb59fdf3d5760284f4826b07f760786e8f0e203a84cd5d7d4388b6efe3dd2b73f5c3475
+77d667aeeaad1f850ed68b24d5b268b844ed7232427112c5420c51fecefad571d736a2689b49a7709f7966c229254116adba0adec4ab5547e9bcf822
+798674b549dc4f0a3dfa4a981572626edd84afe4996f9d76655da901cc5c73d20574035ee98afca9988eea7cefbdeb0275602be221c05d1604b854b2
+25ef1279eb89f1d89c328b557966a8368e5946a25534ee38c47bf7b8a6f2924cc38bba1b0b70588938dc3aee17c66bed7cb0ff46a9a384df450a9f53
+060894f3653c52b8e554bc7bd26dc780b166823ab6f1bef75f45356e3fae27f4e9cb2fa605c4ef5299fcb2da701a7c26116202fc733b2a8bbbf7d408
+ae4acd84c438c925bf7d97e36b09716b1ebe02cbb09b0e820ad1c82288ca56a45fe46d27291b7e8e7e092294cae7c557fd6cab758e41a835af365cc8
+292f125bec8c1b9b88b70969eba1d57b2b9078a958fc5a0e37e607906f100a75dec093ea942cbf647c68ba128d45689e615d1d54fe9ee2e7d19bdd79
+eff8f6477d654d9828a5371e0eb855af38a80862a8d7b4e88e7f815538268404dc4a4eb40e08f56bd967fbb9c2f19249dfbeb2040b29118f2fca2b8d
+71cd27a339f1ed07a9a192de611bd07e462b8fe1622b5ef7ea1af57bcf7add92b47c8579d28b9fe65547243124bc1af2fbdb3e8e08c9f543a4b2d9cf
+7c0d69224c206ef178761b86e9e1cf1fe40fca9f8d76b149c56188c1224771265dab1cd2fdc2629510cbce2e9dc442a443e97730662b6fc1580d28d9
+fcf5dd17bf5ea060d849a534fc6a6ed42e281505c4810dc3c9b61865acbcd33265fe18d210b20e3c0fc967fc7e3925409bf484c5a81b8c565c71942e
+b1123be70e3a144fef9efaa29886e47eb1bba40b776d458a2fc35b5b48ff57a13ffb5737bcdbbeffd17f8155383c8319921848a80d01f341a406f2b8
+ab99f700c586a8030b29118938cc3beb0c8602be2fecea49b8a1eba20406981746378fa0652648a3a537f035fe70c28bb16cce10d38acbee55573525
+39bd3ff9fbc83a9209c6f84ecbead18b334c3b67571a2bf9722b3fc9d6e5d50ebf46df9bc825866089668efa6579306f18ad07c6f4e62c9c1dcbd867
+949621a243fc6a7905196fc55e013a9b8ba98c5b9851bb6ad665aa24b96a62c6376a3644e28b5ed8daf8126effbc9504628e74f570fe490931fc5ed4
+595857278f84b5e38821d41e0131b213ba41689756740549e89a84ceb18de57496d1ae097f0e2be224c91e0309ea5ca538d81765ebc0b9fe9355e72e
+74278811901848e74644d23fc27dffb0add6cd49dfabba1443716a8f3ccd29e20cf827a20192822eb2a2c1c82d1b96524652f289052b159bea07e518
+d57acd8cf8358b5ed38fe18e322d22253ba62dfeead43ec05188f244bdbd82b114766b2b4b0d019915511893f4f6c00ca801e89e9b5bda23a46da0e3
+2a46367e098f02d5c5e856d00798e726889042a348ec7577755875cf5b447ba1c2e7d819b15aee3ad841b806b56b2bda514d684ee38b74becdb61f0a
+85bade237e867ffb54ec780e2b824ede58726161cecaa2ff8420b0375d4cb20c9f065cd21f041855fad7a7cdb184e473fdb4eb17726a46cb708f0e7d
+61e858a120e45371bedab2ef9430800f3142e279905748a61744f23fcc7bedf7f5d8c845de9eb2144e671fa829de3af458c739f02ff9ed4298a88ec5
+683d9b51003f9aed69727cb2ff27f429cb76cd82f02af844dd8c98a5120d4b0264a638b7fbcc3a941f88fa598ff482cf7c0b7d69760d7fe7732a20c7
+faeac54bbe5bdf839b36f525b87f94e5201a027e0fa90bd5cbbc0a840ff1df2296c475a348e1145e41716bc9420f7bca8be7c51aa94ce0499d5cbc3f
+ae7325f43e36174effbc0ad6dcab3274e9a5e0754f9565ba1dcf47093faa768a7b1d1f51dac8b4eec566d41e015db504e6217ed90f7d7b32ef9afab2
+ca86ab60f5b6ac6d7e6a45e147a552180bf957e004e10f44a4c1bfffb03e9e072568907af5764eb11e16ed24de6abeeae8dae942d489a8044e60589f
+679061b14d9b7fe968a0bb1ee9e6cda1043c95524d2cdbbd2c6a49b5f315e228d86bc783e227840484c9dcbf0b1d703355ed729d81ea2e931888a617
+c9a693c37c0c7d224c016faa33777ed7afb79458f41a8fc1ca34b149886195f06b0971390fbd16c6ebbb0e8415dc9168d4d639fd18bd2c607a4f2a82
+006252a7c4e49146fd1dbc658049b823b96c62c3616b4e1ab4d74b8e90ef4233aec2c65d019264b55eeb470836a87ec455141829ebc8a0f2a526aa44
+674db504c40111be02325178f291e8aedfc6d864fdacae14354c489f20ce4c1c0dea1bb424ed151dc2bd82ef922d8f407d66a31988554ab51001f30a
+c17ff6b6e8c5bb1182d8d17e4e7a55f154d628a716c73ff01ff7e541b2a3cff8790e8a525b76b3e9781b54a2e510b12fd57ac0c7aa6ddf45ce96cbe2
+55404b021dac3ffbe4903d9502cbef5e84bad9921776072b570b6afc3c2b2492f5e0e80fed129ebf816ce82fb9669fda2a440a5812b108ceffe63d91
+10cb850f929052a458e17a073a1d68c558357b98d9b49309bf47af748b4dbf39b82224886d71521fb4db468791ea590a85c1d2312b9a7eaf1dcc5a08
+2ae94cd512300273e8cbb4e58900bc7d2857a940bf5c74c50a331415d596fa94d79de574d3baa149486b548529e65a5716a51bb323fd157382d0f1ef
+953a802d1141e2199a1878b31416e02cc821d6bebcabf455c28c94154134459338d16ed40cc739b13bfda56fb2b0b2c478019a784a32c1c4693b4fa5
+e40db9729d7ac083d201a239d09788e65704326509ef63b7c1d628940dc6f852c5ba94cc355d5d284d066fb2355242ee92f7cf0fe37cd182867cf224
+ec35dbe424413f7f34bb64ae91c1189e1896fd2897916cae0db23e6766412eaa25615284c5f09f2bbc4dab698c08f6708f7d79d132270458a3bc11c2
+c6bc2865febed2346ed47ea91dcc4b152ee148d54f563c68c9cfb2fb8c2cbb1d0131d233984769d60c315f73f48bdda8cd86ef5ffeb2eb5a3b774f8f
+47a6371206fc31c945db0f78b9d5b6fed31787534b279e1e987749ad4134ed2ad427b7ddc19df54485e2be194f1e3b9732dc2feb58eb24be3af1ec61
+b4a885ce7f4fc3170a0889ef662d58a3d32bc532c97ec0b89b67c556d59f98a5312e277e03ac2afee7d67bb518c1f744c58790cd783c61295e016cb8
+72392682b28ea802ab0fca8e987d9337be618ff22d5d3d7e54ff109ab8ea0d8512dbdf2e948a23eb59e77b39427112f55801378485dade0fb459b72f
+daca51f033a0848708300e59ec881b97e6b70f69efad997b2bd654a358fc5b1337fa0bd4531d1827d5cbb5ab9e3aae67674aaf409b5a72c30e321857
+f8d1aceeb2e18262f9acbe157524478a21dc5b7d61fd55a446811778a8d5bdbb9234ce1a38388811905403a10e0ae23fc460f0ffe1f29229c58efb03
+526454d330de25e21ec727b439eaa207e6f9c1896b1a90545c3194ee2e685ab9ef54e522cd7a868eab6ec45cd89d99ae1b197c2b4fa92bf9ebcc328f
+028abb5685b0d1d5720b2e2e4b0e64fc783d39cfd8ebcf0da448f898847cde32e5288fff2e5a5b1274d603c6f3ad0d9f10dcce35d3a76ea54be67911
+27147fc55e4151fea2f1df1fd736c76b974baa3cfc686ade372b004fadd25ecca2d17209dfbcda236e8731e61ddc41093ee14c9e6f0c0a73ded7ed81
+e446d7416954a840d10858d80532185cb3a9efabcbe28219e1d2c26e6c76489f28c9571b0db078af22ee12708ddbbdff982dce093668c95fde1805e9
+5b0ae026c82fb0f9e8dab54adf87b5550734629e2fc927e41ddb659828ecfb74beb697c26e0ac47d7b17b5c5622b54b3ee5ce13ac473c186bc21823a
+b5f1bef35248322523a02afeeec173c29c370989cb979ed57b1669676b097df5787a67c7b9d4d30ebe4acad79b79cd25a8289ae47114733b53f14ec9
+f9a50ed976b1ce299fcd0bc25fea6a223a163bcf47623e99cf9ebb1da851ad739147a570896c62cb286a2d44ec8b3dd8c6be1267a4a6da3a6edd1bd2
+54f90e1321f84e984e1d0a63ddcdadeec46fa02a281abd15824b6fde043a531bf28daeb3c198ee38f5abad0e776108cb33921e550eed55a338e11479
+e994a5f39831e42e111d9f19904b05891410e82dd427bc355258749823c888034466509c389f00e80cc128b57eb4ab059ebc84c8781b9145083c94e5
+7f6855b8ff54e22ecd6fc195ac28d955dd9c8dee57416f2944c5579efadd2f951ec6bb518ab882de17766b295c6202fc733b2a8bbbf4c01fa50f83d7
+ab77d526a56fbdf8275034695df14087bae749d052968b299a8964eb03a13e75661268cf424a51fec2f29115b24bee6e8b4ea23cb9307bc62f2c480b
+f9871bd9a2d17255f8a1d72425ba7eaf54f9574f7a6ab63c1c3b0469ddcda6aba026ad646156bc42c00839e71931025ee9dfe8aed48dab7ef3aceb01
+74714f8f778f1c5746b61bae2de51e3ec1bdd8e9982b9b5576688d11904b4ecd7201ef2fa706f2b8ab99f700c383fb4a0b64529a31d366e10dc628a4
+35f7e50ff2cee8a261009d56447898ef623c5eb9ff54ac7bcf7acf83be61c75594888af3530d4b0264a331f4e9d47b840ddcfa17d6f4a2de6f096724
+5d1b25d8682c3bb4fef6d702ae4a84bdbb57f504a96b94f32e1c327413ab0bc9ece161f975d1cd679f8575aa0dee7033681c7ad44d460883cae0d408
+fd4ba6629622c259d57e64d57b2f4d0bfbcf17d988a81a69febb93336a8070f56eeb4f133dfb02905817610eb2adc8e28b6f9d78665eb207c27b6fd6
+1f310260f6a2aeb985c8e579f0f8bf0f7e6a01a822c1581e0fb668b42dfc1e6490df8cbbc07f98077d268f7af53122a215008b42a46af0b3c2f19249
+cac8bf165f75119a33db6ee319dc2afe0af9e754fbb089ce6365f73e213e94f22c2317f7fd54f8359d6fcf8eaa7b8354dd8c8aa96d452d7844ef3af8
+82b152e965c1fd17a8bb9fdd74182011590478cb77056b99a6a4cf02a10fca9f8d769b03a3669dfe2c1a077a11ac35ccc5e856d00a98ce299fee08c2
+24ea7033427112c5420c51fea2c1c512b14ce049975ca236a5302957c4d7e30bce8010d1c1bf5b4ce3a9df326fd63dfb1fcf5c022bed5f905d1b1f6e
+cdc1fbabcf6ff0392856ba0d890111be0e3a151297f6fca2cc9df97ebcb7a06d7e6a45e147c94b190bec52af22a82e63a2d8a2b5bc2f9e4b61189915
+8f5d5fef0b16e438c87bd0b6a59db22aa581bd575b66548838cb00e615cd6bed61b8a96bbea388df2f4f8a5f4d36f189050b54b9ed1df675ee6bcf93
+bd7b8571d59589e84f047c2b19bd2bf282b152a303c6fd5e8cfaa7da710c2006510569ff680b2688f4f0c905a85ccdd7d5388b6efa3df19e42773e75
+1bb60989cea9078352fee411dbd921fa1fbf145e413b74ce4a013cd9fdf5dd08f36baf759f4dbf00ae7164d53230180bb0cf5cf4dab70873e4a9d225
+29fe18d27ef0400131ef05e348191f62c88a96ea81239d7f6d5bb040d1086fc51e317b3294bce1a9de81ec3ecfacaa137e770fb824c35b191cd952ad
+6cb55b71aad8a2fef756e76477268d199b1678b31a10e4388347fbb6acbde350cd86bf1259340cdb3bde22f41da242d91ff7e541b2a3cff8790e8a52
+5b76b3e9782a54afab49b13ddc73dd82d201a273d3968dee5c0a127f0cbb3be4a6fd08b04c95bb4399a194b114764d28560e62f7320b3f86efe1d245
+8e47df9a9b388660aa6997e42e3e581228ab07cbebe6259f08d1cd3ed3c6e3518caf4e252d0b7ed40c292b87c7fdd41fff13ee25b44dac39a8384ed4
+2b2b135ffecf0ec5c7be126ce9e8da347f9d67be13bd076d51ed47c359110d27cbd6a4f8883b9076655dfb5dd10839e50a331419bd8be6a2d6e28219
+dfb7a50172630fb839ce4a121bb67aa921ea1463eb89f1ef8f2a8b2d1141a81f925e42a05532e027de21dfbea59af454ff85b4185f7c5f9e2ecc6eba
+589865e06992822e98ab8fcd6408d061493488ae4a076df7b654a76b8d15a7ee9b67c556d59fc5d15a48322539ae2cf0edcc0b9205c7e95e9fadd186
+3d5d5a2f4a0d6ae43e5242eed8ebcf0da44890a49c79cf25bf26acf62758127318bc0587a5e80d9110cbce4df2ed42a443e97730662b6fc1580d28d9
+fcf5dd17bf5ea060d815eb24ae6d6ead524d2244e38917d0868b0f61f8adc879589d7dbe53eb6f0e35a81690480a1e62b1adc8c88221b87e6f168814
+8d5c7ec4451c145af9baf6b7d986ef75eef8f6476f76548e47a6373407f65da92ba62863aac0b4e8d31787537a279350c1185fb50e018b42a44cf1b9
+ae91fc0eff9cba034e671fbe0eef6eba58dc39a53992822e98ab8fcd6408d0645c398fe57f6678bfea19e27b803fda95ad6da139b5ad9fee57576f45
+02bb37f1f1907910f33c3e17bba694c8780b2e06481867f9793c69cbbba6e604a90fec968f7d9b30be679dfe2751717a1eab07d1fde649d976b1ce2b
+888168ad0dff6c323b1d6fee4d053ed796a991599e6e8c25d85ca335b21202ae182b0f4de48850e4dcb90f65ffe6fa3e66967eaf1da20e132afd4eba
+35712868d5c2a8ecc319bf7b7b169a09814a74c338391e54e997e0a2cb9bab2dbce8e555110d28a822c1581e0fb66da120fb555184e2f1a6dd6dd617
+1241e23393564dae1c4ad72ac17cb083a98afc45d8b8a91e4466588f249f73a75aec22a328f9e544bef7a5890766f77447369de96b6668a3ea00f428
+9348cf8bb44bc355df93cbba1b50337e08c5579ecbd7358605cfb5649fb585de6e514b14684836b0682a3e82918da83eb946d284c656d434a56e82bf
+69c4ce95d2ff3ed5fdbb0e845cf9db37978d64af0fa33e750b2959806f043484ceb9e00ebc4dba628a5beb20ae776dce3721414aee9b17c1cdf65929
+86c1de3b789178bd1def5c022bed5ffe5d150e278699e1a9a5399650675cf94098407ed9615d7878f291e8aedfc6d864fdacae14354548862fc04a57
+55b84fb239ed711ec2f7bef59b3689094e298703d27942aa190bf518c060f1a3a096fe53dfc8e6571b3a01f154b60de816ce22b772ceea4ba8eaa7e4
+5b4fc3171968cbb006413294e41af732da31f886b47b8564dd8a8ce24f74336202bd37e3f19866c04efcf3458eb585991776070457066df97b761893
+faf0c418e378df9b845bd325af63dbaa6b5230770eba64ae918b049e1ad1cc69a89060bf48fc3000291477c24d063cd796b4c509a85ac40ef16ba43e
+ba716c890830005fe89c50e4c1b41e6ef889d23a2bc931af4fea4b6d518168df521e026095f7b5ea992aad39405dba04a9506bd605301449bdc2aeb3
+ca9dee1a95d188087562488c63f95f1b1bb673a52dec287eb1d1f1a6dd67de2d1141a81f925e42a05537f52ad96aedf98091ef42c390fb4a0b60438e
+38b5478e3bc725b635ffa571baa8928545068a554720a8e9762d1beaab4ca151b416ed88b66ec25792ab9fe64f41322539bd37f0efdd29a203dcbb0a
+cba083ce7875074e7b0765f6753f65b4efe5d50ebe01fba4b8388660b87a8ef2413d585812b108ceffe638841dccce34d5a1529b7ee47b3b2d0c74ce
+0c557b83d9e1d471d4368d68964ea237f24b7fc62f211205d99d1fd4cdaa0820b1e8cf257e911bd234dc41093ee14c9e6f0c0a73ded7efc8852eb364
+2805fb149e5d7ebd625d3254f399e7a096bbff71e8bdb8495f61529223cc1e4a48ec49b52982721e88dbbffd9438c0746c299f158f166aa90f0dc022
+c05ceebea6d8a600d89aae12211d38ae29d622f456e624a435fef20ff9347e3a9c4fae454d2b9ef42c094ba7e71df43f9f338ec5907ee310fb978fea
+5440242b458b31fae1d63a9403dab2178ab785d26b1a2f65116202f5702b2e8efda4d119a85cdb83a679d625ec35c6b76967387718b11ae0f0a71884
+5e98df2f9e8a0bc224cc71392e117c8e7f1c3a83cee79f3ab452ac688c08f670ba7967d43e4e6822ce8010d1c1bf5553f8a9cf3278da42b251fa4013
+19e1469001581f75cec1cb82e40cb1796e51bc4eba4977c445123e6dbdc2aef48dd88119959ba4097d6d46c51edb5f030deb159324e70c5184e2f1a6
+dd398f4b6b2de179f57b44a91d0de665fe7bffa3ad8bb577cd84b734437152907d826ee119c438b556918264b4aa87c26a41ad43492c9ef3221f5abb
+e716f035da3f93c7ac7ade55b6f1e2c4544a27620ae10de3e9cc3e9342e0fe568f9189cb7c116a224a4836b07a392794fe8ea8628e40d091817f9513
+b8698ff2381a197209bd01dfb8f54b961dd4d822f1ed088842e1783e2f5648d44d1c3e8485d1e22bfd02ee738a5dae5ad51148c83522084ca3bc0ad6
+dcbd082ecfa0da3a78d42cfb49ed5b02528122f353160d6edc8a92ff8c3bbb64266eb213854a72db02200878f59aedac98d5ab64eeadae6d120d749f
+24c34d5926f74fa92af153353b2b4020dd0f9c426b2d9f50bd485bab1201e569812fbc84a194fe4ed8c89c1f446745db75ec3ae219c43fb87cdce44a
+b2aa80df6400901e083998f4653e5ef6a95d9b52d871caedbd66cf3ab69e9ee95850286403ef0be3e1d428ce2bcdef729aa198cb6d1a6a105d097bff
+72703b8be9a88108a54eccdee211d226ec6694e36b57397a0fff1acffda64b8219ccde3595c4239e43ee6c3a2d1c398049063ffda29eb856f01f8662
+8d5aa223a87168876a7e4178f98e10d3c9aa1f20dea7d93b648c318f52f042473ce159d55f0c077e9bcdafabae27bf65695baf059e2212db04371057
+bd8be1a8d4c8b630ffb0aa152142488529e957051bec78a825e41f58adf7bdfa8e2cc6054c27841cde1121ce1202a13fc260f2f7a996ff00d887b41b
+055a5096389f2fe91c883fbf33f4a569baa9848b7352de150a788fe8692631de8206f42fc86dc0c7ac67c45c92b68aea5e2e486e03ab549e82b176cd
+4ce0fe4299bd82cf741c2e75024848f87d2a2a84efe1d3449d43df8e8d6a9b01b87c89fe2941257e0ed567cbf7ab0a9c5cd9df3389af64b25eaf2377
+335a5ed159012b87cef0e61ebc4fa169da04eb729f6d79d53e2a157ce88e0ed8c6fa5720ae9fde367b9b7ff911bf0c2229fd42c04c1d0f53d4cbada9
+c16ffc566b4cb216897f7ed61b3b1f19b1dfac8fdd84ef59e8bda645372403ac38c11c0a62915daf3ea8243bebdff1f2937f875779219903d4595fb3
+092fe432de26beb3a7f29229c087b816473450db609f2def19da719739ecca53afb688c9781b9b1f4371dbef7e6813a7e706b13ad37b8e97b47a9177
+d98caaf34f56286918bb3bbfe39172ea65a1f251cbb5d1da731b2e3341186eb87d716bdaa6a48318b95dd7998f3a9b21a26cdbf66b4a6c3b5ffd4ec6
+f6ac4b915cc69667d9aa6ea548ad3e23201d75aa25615285cee0c409b31faf0df121ae3eb81202c235206b2287e6539a88901e75fea1c823629731e8
+07bf780634fd4eff5e120e64cfd7e1e2833cb7736d1898088d5a7ad41f31031bf28dae97d489f275eed2c201747601b4618f555701f61ba93ce91265
+b89cb0ef892da542613bc250985721ce7208ee28cc63beb8aa92bb1d8c8bb316592e779233db08ee0adb3f9334f1e743f3afc88b621dde1f583489a0
+6d265ff7fb18e361fb76c0839e61d943c8bb83ee5740696044e6549e81d13dc003caf1179fbc94d51776074e510e2bff7e3271aee8c589499e5bcc9e
+867fed21a07d9eb56214307519ff01c5f2e63d9110cdce6785d921e90faf7f392c5874c246460d96c7e1d45ba302ee25b647a535fe387fcf3e2a6b22
+84e677c5cdac0e72e2e8d43561da47ba51ea4b6d518122d5500b0e6edd84aee9877597644910f92f8e427ed41f021057e89aacee9889e574bcb7a90d
+3552408738ca1e0300fd55ca4581721eb9d1a5ee8f31ce487a22c5269d545ea2552ae026c80597dec19df544a6e1d21245703bf238d12a8d71a242fd
+71b8c342aeb688d879069d171c62dbc4692c52b4ea00f43f9d48cb86a867c51093d8aef64e4d316608a12ab7ced7378409dae83de2b89ed87c132e21
+57046ff56e2b6bdabbff833ca84ece98866b996cec2abee63e5d216b18bb4c8bb8ea2c85129a8767d9a374a55ead32776a3b6ed25e0d3583fcf1d00b
+b251ec2bd80a8a22b17779de79684109c89e0bded8b51e6ef8eac65d02927ea91dc002473ec64add595802699bcdb1ea843dad3f6e57b704895a689e
+4b301e3194f6e2a8db89e730faf8f647786c409977e957190cde52b23ffc387fa2d8b5b39b118f4a7d61e179f5514de71d44f523c86194dec1f1f246
+8c8ee13e585519d909d021eb5a816bbf2eb8ed1d92b7a0832f2291534d34d9a92c3c53b2e57e9852b416dc82ac7dd95e9c9ec5c95a49240164c657f2
+e6dc51e965a1fd5899f4ae973d1c2e2e564862e07d313994b3e29b2ca85bfd9f8174df32a966d3be6214357477d667ae91a10dd054db910e88a529e9
+60e07a32245a3280431a7b9491ddc23af51d9a689744e979fc777987387e2858ccc75cf5c9ab1e50edbacf7522dd31ba53fb0e0476c64add5958153a
+9b86e3ab8c21ba376b169501814d3bc956745375f291ebe5989ce375f2d2c26e120d289928db4b0506b858ee02e91672c1bdd892f43a80431241e279
+99564fcd726de425c90597b2a69c9129a6e1f65a0b5c548e2fd63df311cb6be566b8c648afab939d494fd1177f3d97e42c094fa3ea17f936d871dac7
+b1668b78dd968ff41b0c027e1ebb31faa8ee32851bc5f4538eb882944f166934116202fc733b2a8bbbecc005a95c9ecac863b149c56b93f6390e1772
+13bb28ceeabb1fb314d1c723d3c653a24ae76a1f29167f8205447b94c3f5c3419b56a063be41b923a85b63ce37204909df8619dfdcf83a72e1ea927b
+01fd18b855fe5c5d1ee145d47a111974cfe7a9e2812bf635445dbd14a44975d3497d5d1bfe97efb582aee27ef89ea2156870628324c35a5f4ad45ea6
+38a83a65a696f891f422e42e7e279950a3140baf1a0ae56bc461bebeb899f252dfc0b316457042d27ddb218d71a122b67cf0ea49bfe495c36801f43e
+21519def7e6864fbab1eb132d33fc797b961d94394908ae95f1e066e198c36fee4dc29850280b21ecbb09eb11476074e510e2bfa261138a6b3a6ec04
+b940ccc1ac3a9260a37adbfd717d225a55fd39c2f4ac49d95cd7d96791de48b86ca73c002d147fe343062883d9f5d815a91de7278c40ae3ed61102ae
+524d0d44ee8e1297d8b90974acf59b3d25a470a949ae0e082aa8419e6c1919738baec882e446d77e6e18ab019e5c3bd60530514bfc8dfae7c6d5ab78
+fdb6af476f6c448547a6377e619132ac23eb1a7bebc49ffa903ace1a38388a02881665a61601bb27c278fba5e0d19129a5e1d27e227d57db33d03aa7
+08e62abd39a2ed4eb5a0c9896c1d931501789aee686855b8ff54e115dc72cbddbe61c55494da83e6554063224dae30f3a8d634944cd8d55686b1cbdd
+74116a6f1a1c64e26f3769cebbe5cf0fed41d183c868f521a16dc1f1225a35335fad01c8ecea42d008d0ce29f1ed08c22486175e241778c1404836d7
+96b4c11aaf4bf4419146af16b56a78d31a2a024efe9b11c5ffb01263e481c81623d65cb459fa4245718222b93571620eb2cda7ab806fbf796c18b640
+92153bd40335031bfc91eae7d5c6db71eebda5133b391ccb2ec75f0548ec53a52282721ec2bdd892f4569c426c3d991edc5505891a09e441a40697de
+c1f19245c09bbe1e4d34419a2fcb60d719da2ebe28b8b61afba789ca7f4f9f594c788be17e3c1599ea19f47bc3228ec59069c554d09dc9a74f4c2465
+67c6579e81b152e965dafe439ea69f9b6d1e7c3316266afd795242ee928da862c44ad2848d71dd60bc6989e36564306918b11a87f9a60fd00cd9d933
+d5b460b948e16a7736453bc3440929d7cafad55bad5ebc73d678aa22b9767f8725794178e89d08decbbd082edba7c93c788470b858bf5a0f3de621b9
+3571620eb2adc8f9883bab656618ab019e5c35e70a261455e9d1c0a6d58d811995d1c26e120d448529a5377e619132c929e61f1dc2bdd892f43a8043
+1241e279f55d45a3716d8842c861faddc1f1fe4ec8e2d21245703bf257b663aa58e02ea52ef1f853b2a7c19d374fba5e5a3d98f42c0b53bee710b116
+d27bcb8bab28dc59c890cbd05e45316403ef17f9ecd1388118c7e944e1dd97d46f5f516b180b63f9703c6b8ef5a4c81bac46cc84c07bd321be32bcf2
+3f77397211bb1cc2f6e042d95cdcc44df2ed68ad0dec763e241c21e95f2973d5e6fbd51eb11de7279946af70bf7062cb3f6a2f4ae08a5ec995f81868
+edba95196a9974fb5cf14a4736e75f905f10026bdf9e87e2832b987e7a4baf23844177d324323257fc8cfdef9aa0fe7dfdb6a40e7f2608cb2cc15a57
+06f74fe02fe0127baf8e98e8bc77cc667b2b8e038f5759be594da13fc56af0ddc1f1924cc38bba1b0b777f9a30da6eba58cb23b930fca569baa98491
+610089525a70d28a054132beed54f233d473cadd9e61c554fa9199f44f67296201ab76b5c0d9358400cdb91ecbbb839b7e17672b5c524df9723c0d8e
+e9f7d528a546d293c03af635b67297f2691d71740fff0dcff1a40fca3ad1c523bd8d73b859cc763e241c33827f013c9fdfb6985bb24dee649041a734
+e65e62c93f020859fe9b3ddfc1b41f28ae8ada2579917df914bf411578eb43d9501c5141d2caa5cd843dad634b50b20c880039fa0a335312bd90fce7
+db80e27cf8e28d0e756067823fdc4a3400f157a464aa3676acd5abf2933acc0e382799509f5042ab1f5ec722c36bd8beba8bef63c481b71303367096
+30d06cae58dc23b53292822ed2cd93ce791a8c59083b93e9602c1599ea19f451b416a782b66ca139b5f182e11b470f6a00aa64f1e1d63fc84ecfee59
+c9fdd1d46f5f6d0959056eaa7a312583b3a6d302ab43dbd5c138d432ec6bb5f626516b7d14b10a8fbab8028308d7c765d2c46eb90dec5036251d21c6
+45063fdf89e7c614af5bec2ed847b970bf566aca3e7e0742e38b5695c3b61266e9ea9277648631b873fe430262ee42de58504965d4d3e3a2cd20ac37
+6b76ba0d89127dde05305919ff93efa3ddcaa230f3aaeb0455654c8e77c957190cb019b324e70f70bedaf3b2dd309c077b068a1d99024dae1500a969
+de61f7a7ad8ab9098c87a957485a5096388528ee16cc63f22ff5ec05f2e495c36801f43e2151f2f2693c4ea5e554f233d473cac99669c655b6f1e28e
+5e4a250164c63bf9ecb2528502cc913ee1dd83de690a7c29184a5efe7d2a2682ffa6ab0ea34bb4fd8e6dd523b86194f96b61257211ac40e4f9a40885
+10d9df22af8c73ae4cfb4d34270a7e885c0429db8bf9c8338f6fe2278b4bb935b9764fce2830482184861897c6b70f20fca4c979489c70a95cfc5a02
+2aa844c21c1604739bc9b8c3bf1ffe63605db5409e4d6fc2193a510bbd9ae0a3b2e1e77fffb9a7477e4c73bb6d921e0704ea158324e90976a8c0b4e9
+c71987497c0e82028f4c68af1208e5638f47ebbaa996f449c8bab4185f445089299d678d71c424b33df4ab4293a180cf2d52de47442ad5c3642949b6
+e800f4298759c789bc4ec242cf8ca8ef524825234f873bf6ec9a72ea65c1fd1785bb859b78375c17180779b072373fc7feccc40aa90fca9f8d769b32
+a97c8ee52514613b18b10aad91a404931dd48b23929775eb10af3632002a4b8e7c07289edffdde15fd12ee6a81609900f24864d432300844e3c650fa
+c9bf1569f8bddf3201fd3cf61dc46d361aa87be27537394eeffd9cb1cd0cb2787b5dfb148d5a7cd21f27514bf28cebe7d185e675f8b1aa137e244d8e
+39c75f1b48fc5aae2bed091dc2d8bef89c33ce547b279915dc050bf44b54b16b822ff3b6bc90b54dcd90f313426745d77d8e678d71c424b33df4ab53
+bab686ce792391584378c6a069005eb6ef5ad21dcf7ec382f644c45fd7ae8ee44f4b330164a331f4e9d47b9403e5fe17d6f4d9d664375c17163864e3
+752c2288f5a48c4ba867db968c36eb2fbf618ffe245a783528b107d392c102965cccca359c81758742e0756d0c176f885807169282b48f5bed11f632
+d85ca335b23878c43436040bb0cf0dd4c7aa1e20a7e883673bd474b55995270b37eb4adc1c0e0e6b9b99e1eea51d8e39494ba805814a77ce273d1f5e
+fc8dd8a2d487e879e8a1e52a7a634f8239da5a12629152a66cfe1e7beb8af1a9cd7f9a4f7d26cb039f5759a25b59a138ce60ecb2e8d3bb129cd8fb12
+45703bf234d96ef41bda2eb532dce254afe495c36801f43e212b98ef7e2d1beaab07f234cf7a8eccf865ca44d4d686e6430c71274dfc6ea7a8957b93
+0fdafe52859098c86956044e5d066f9a152a2e93eef6cf4bbe4cd1858d12de2ea802f1f13e5a326f14b00087cdbc029c0f96ec228fb76caa5ffb5f3e
+25287ad25840389fcae6d018a95abc2ef221a236fc7664d37b27094aff8e1dc3cdaa5b74e4add577799165ae4ff10e0931e40bd5521c610ed7cba2ea
+816f9d76655da901cc153be21f3d1d48b3b8ebb3fb9df962f9b6bf247a6944992c87177d61f454a32de45b7faed5b5bbc07f8d4f793a8a13885d59fd
+3d0def2feb66eca4bcbbf349c08cf3556371509f7f96448e14c728b130b8fe57aba193ff621d8d580865dbe3642949b6e800f4298759c789bc4ec242
+cf8ca8ef524825234f9a2ee7edca0f8f1edbf415c2def8d7721c6f2b180464e7792a1f88e9f7ce4bf00fdd9f896ada23b86d89ad0d5d3f7f3bb61cd4
+ec8b039910dc8365b78b76ae5fdb71253b17398926613798c8f5dd5ba950bc749708f670bf706ad53a27154effd538dec6bc3d69febbcf14639d7dbf
+15bd7a082afb4492155804759bd1b1fb883d8a787a4bb440835a3bdb04231449c990fcb4d7e2827cf3bbaa0b3b6c539b6d921e1400f949a12ffc1e65
+f1f2b8f5991987556b3ca81895544fef592cf426cc61f1beacaaf44fd8b8ba055f3618f157b663aa58f30c9512b5bd09eae4acfe413bb71a6a17b5c5
+2c0c6299ca39d8189d5eeaa6885ce266f9d8bfc66963045f248119ca82b132864cebf4598dbd96954e0b6f335d1b25dd69343f8ed9ebcf0e8c46d3d7
+8976df608f6996f23955716f15ba00ad91c1079f1fd9c76798816fbf48fd3e6a682e7ec3580729c585fad40cf57caf6a9d5aaa7e8a716ed02b2b135f
+de8604d286805b2aacf8956227d452ba50fa5c0676de42d54b080475cff7a8f1886187372218eb4ed90111be62381e58fc93aea4d08de87bdeb7a502
+55654c8e3e8f0357139232c945aa3372aad0f3b7dd7dbb57682d9924934a58a85948a169e160e9b2baacf452df87f95b0b3665942fcc21a554886998
+29f5ea49b4ad85f962008a67492a8fa2204232de8256c332da77dab2a878ce42fd8a86a51704634708a92ac2f8c83e922ddaf615c7f4d3e974186633
+74077cf56e19398ab9a88149814ad883a477cc25be4989fa69185b1274d64cf5f1af03845cf9d92ad9c821e961ea7823683969cd0e6252fed69eb872
+b150ad669408a935af6c5bc629304d0bef8a0dc3ecb10874acf59b3962983dfb04a6175e618222b95a171927e488e1e9a32eb3722851b54085587ade
+19275958f59aedacfa87e575d2b9a602682d018f22a5377e61f454a32de45b75a4dab4bbc07f8d4f793a8a13885d59fd3d0def2feb66eca4bcbbf349
+c08cf31565755c9e74b5478e71c12df03ef7e542fba58fcf2d0d91594d62b2f34d601995ea07f40bdc6ddac5f128df58d996e18e322d486702ac3ffb
+a8c834934088f459b8b783de78112e7a182b6afd792a2addccebd307a97bd1a1817dcc30a37a8fc7245d3f6f55bd01c9fde63b9f0fd1df2e948a28c1
+2486175e211e3bcf423b3885cef1df5bbc51aa278847b87e863835876b641543e88174bea1d17209e0a7d83667d478a86bf65d4765a85fc2491d610e
+b2adc8828429fe546756bd098b0648c30a201448b3a8efabd4abe375ffb3eb1373614fe144a6377e619152b31ae10837f69484ef94339d09513bbd19
+8f5149ab1e4ce324c36ab2f7a691f709a6e1d27e221d549539b5478e71a142b93ab8e2548dad928b79079b592251f289054132bbe417f0379d6cea8e
+ab7c8b0d9cd0bde258502e795fe130f2ff902b8f1f86c31bcba49ec833262767154868f5722c2e95b2aaec0aaa41d7839d7cde4ac501f29e423d387d
+5dbd20c6f5ad4bcd4198890f9e8565e90dfb7632265868e4451b2fd796b4c23fb44cba27d208fb7ee42d2bc235204106a0cf2ec5c1b70969f8b19b35
+629562fb5bf05c4730ed4ad44f100473c8aec882e446d71e615efb13a84168c34b685159f88cfa83d19bff30e8b0ae09110d28e244a6377e0afd48b4
+08e10863eb89f1e8b9369d531241e279f53122ce1901f23ffd6eeca3e8c5bb42c386be7d221d38f254b62be91ca242d955918242b5a0eba204669b59
+4c52f28969265fdd827df435d915a7eeb16e8b52d98b9fd75a56352b19a73bf9a8ca3e9419daf51789b182cf4d1e7c33180d65f416512e89ff8eab62
+e0029eacb854fa0eec49dbb16b671c5a2f8b4ee6dc893ba435eeee1ac1c448ad0dce6b23273972cd7c0929838bfdc25bbc5cba6e8e4de770ac7168cc
+7b2b115fe4821fdb88a81a72f8e8d92e2b8278a854fd470b31fc529f58111873dacaa2eee746b771287bb40e8a417c993820104ff88ca086cd9ce451
+f5b59b066970018a23cb1e1f0df95fe02de61f37e3c0bee98e30ce486a6883028c110bb31301ef41a406f7b1e8bbfa4dc99aba575f7c549557b6478e
+14c728b130b8e342baa0b1c47e43de58460b98f2692d55f7b654d23ad07adc86e25fc442d09cbfe86d4d247c1da02ce3d8d7328e1880f3528ab0dfeb
+720c6733510765b9165142eef2e28104a37cdd858d7dd560b8609ef9413d581274b301c4f9a44b8413cad828ab8b72eb10af5d36251d69c1163f3485
+c7f0e5148b56ab708847b9248c7762c92f6c495fe29d0dd888b70920e4bacb7e25a47ea854eb470836a121b93571626edd84acea9927f0766a4bf308
+89497fe704275f62bdd2aeb3d79af87fccb7b849422d01c16d9f104348a41bf27ca80f7faedadb92f456e72e6a2d9f058e560bb31416f2248d60ecf7
+a08aeb2aa5e1d27e4e7a55f154b647e216cc41d955fde543d1cde8d9681b8b45467893e56d2c31deee1af551b71683caf853e671f2adaacb1b770447
+288c0adec7f606da4cfbef4582b7859b680c6b35180b63ff753b2ec7ecedd503ed4ecb838775da34a56bdbc727553f3b3eff08c6f4a409911fd3d84d
+f28d67eb6ee07031211f35f64d0428d9eafddc2bbc4dba27c515eb72947d6ac379641543e88174bea1b11d20e4adda332b8079be53bf5c022cfd59de
+1c100e66df84a4e58945d71e2515fb30804975972874175af193eca6db83ab79faf883027a6001823e8f531e1beb52ae2ba71f72b8c0a3f4843a8a2d
+11418216dc4d5bb71e16d524df7cf1f7bc90fe4e8c9abe035e665fdb28cf3ee20afc24a22ff7ab42b5a0eba2040698175c3789f363684fbfee1ab129
+d86bdb95b628df5fce8b84a75e4a250164c637f1a8d029904cdcf35285f483de690a7c29180079e03c3d2583918dc407be4ad791c85bd42eaa619cb9
+1d553d68539e07cac8a919845c859667d9b06eb95ee03c773c107ece2661529ecdb4c514af4ca1278c40ae3efc6a6ed32e360f0bf9800cc4c7f81e6e
+e8c2b25e629231ae4def4b150ce759c353581f6fdecae1f9883bab656618ae109c4d69e304260254bd9ae0a3b2e18279faf8a3156b24558328c11e05
+0dec4eb222a81365bb94b4f59955e72e712ecb1899594fe70f0ce4258d7dfba3bd8af500c48dba130b715f9f57b62beb0bcd22b67cdbe449bdad8685
+5b0e9244061992ed5c2949a3ab49ac7b9f57db8ab966c459d8aa84e84f74207919ed7ee3e0dd35ea65a1f251cbbc83cb3d0b6622564879f5682d3989
+bbecd31bed4ad093e211b229aa288ff839473e3b09b70bc9b8ba0e8409cac5678f8b73b842af7b392c7212a9450e7b9fcef5d55ba957ab69d85aae24
+a96a65873321004fad8a10d3a2d11e6ee8c2b15e26d931806dd36f2978cb0bf5713d3940feea82d2cd099f5b447a9a23a77521973931054eef91aea6
+d691ab66fdb4a2033b7449923ec65d1604b879a13fed2b76b9c0db929439ce4f6a38cb04945d45e70901f53edf61bebfba88bb45c28cd17e42721193
+38de2aa70cc02ebe7ceaee53aeb68f8b650a9f53083d95e4064152b1ab00fe29ce708e93b06dc510ce9d9ff2494a617f02bd2df8a8dd358466a1fd58
+99f4ae973d0f6f354c4862fe3c282a8ee9f78908a54ecc968b6cde32f64f9ee3085c387719ad0bc9b0e142d018d7a14ef28d67eb5dee6c23723168e1
+044a1996d8f1e11aaf4bec2ed849a534fc686ad52f6a3559ec810dc7c9aa1e6eefb19b6b2bc531ba53fb0e1739fa5f9e6f11116295e9a0ec8326aa62
+6c5dfb5ecc1835824b20195ef3f587ceb19aee64e9aaa5476b65539f47a6371206fc31c929e61f1dc2c6b4ef882d80077621877a99564fcd7102f425
+ce7bf7b8a6d8ce54c584a8596c7145b831d03de20bdc1fbf1ffde553beb6c982076692584b3997a04f2956b2f915b1669d4ada8eb47b8577d98ca8f2
+49562465198c3ffaedca3ac845a2925e8df49fd4695f4d26550d79f13c2c2382f5a4d30eb95acc99c876d22ce0289df62747343b18b10aad91a40493
+1dd48b249e8a75ae5faf23771e1d78d4431a69d9c5f1c6539e5ea3628a49e506b57d7cd734361578e4951b99f0f7492cac8bda3a6e8670f56bf64b10
+28e759c46f11116295fdeeb9c445d77b675bba0ccc4562ff39045106bdb3e1a4d984db7cfda1ae153547498a3fce5d030dea1ba122ec5b5ba4d7b0f7
+ad338f5e7d3ac533945959a61810e4399749f7b9acbef252df9c981f427855d37ff73bea19c624b938cae448af9480d9794dd73d2152f2ad216876b6
+e501f0379d4bcf95bf6ddf10f09788ec1b4c20784dae3ce4e7d42e940988eb4582bb83d26906044e510e2bc368373986fce18f27a24cd5928c4cda32
+ab6d8fb72a5a353b2eab01d5f9af0ede30d7c82c9e8055aa5fe87b23663b73c15e093883cee6910fb55aa00df121a73fbf7967872f07094affcf4397
+fbac1472edafde79479b72b058fb7a062aef4ec4123b0366c9c5a2ff883dd41e0151bd40b95c72db187a3848dc93e7b1ddc0d864f3aaaa007e2a6d84
+2ec45b133cf949a729fc5737bff7b9fa8f76ce53702d857af53122ab1407e0278d6ef7ba9899e9548cd5fb225f7d5d8873f82bf32bc52aa228d9e24a
+8ba593df251bbd5f492ad28a054132beed54f032d04fcf95ac28df58d996e18e322d486702ac3ffba8c834934088f459b8b783de78112e7a182b6afd
+792a2addccebd307a97bd1a1817dcc30a37a8fc7245d3f6f55be07cac8a9198452e8c434929068a443a6145e417112c94a483499f8f7c31eb851ee66
+964ceb20b36b25fd7b7a411bad9b16d2c6d2720985c1b23e6dd452b453f9470076db5fd1481d1829ecc5ade7ae27bb746318ba0e880875d81f74244f
+f493fde9f19bdd79efb1a90b7e2c408220ff5f051cb41b9338e70976acd1ffd7923c85427c1c8a029b5d5fee5b10e92ec32fecb2bc8de94e8c89b21a
+7b75438f719f3af50dcd6bb532fc812ed2cde8a27f0a8a425a36dbe165256bb6f900bd7bdb7ec294bd02a239b5f18ee95f2e480264aa30f382b15285
+00dbfe3de2ddf8ee69166234162664e4753e32cfb9743eff5e0fea969a7fde34ec4d97fe265d3f7a09ba0a85b4e849a41dcacc228fc46da44ee43e25
+2d147ec15f0d3fcd8bb69155f31f9d73975aaa37b93647c8382f044fd98e0cd0cdac554eeda5de7e01fd18d26eeb411539ef4e9e7017086cdec095ea
+9f28bb632805fb0e854411be625d224ff28defa0ddc6c865eeaaae096f4c71b92cdb571848a51bf04681721ea2d2f1c889309c467f2dc5249d5b5fae
+1805ed03f84bbea3a09df500ff9cb4054a7354d509de2df311cb2abc14cdcf0996a588c523399744413a97e52c751bb1ea18e23e9d7ac083d201a255
+d29ce18e5e4a250164c557baa59800b338e1d87cb2f4a5e95c3c45671e4843c94f0c0eb5ded7e838ed7dfba3ad56ef098346dbd205731855388264ae
+b5e54ba714d1c722db9775a24ee4677729117680451b7b92c5f3d01cb85be2279549a23ea87962c97b280e48e6cf11d988bb0e72feadd5232b8765b2
+5ef457472ce959d7590c4b6ed5d7a8ef886fbb6f7859b504894c3bd504211f5ffc8df7cdb181ed30dfb7a50172630fb839ce4a121bb668b425eb106e
+8addbcbb9c318a074b3c84029d5f4ee92810e828c676cab6ba9ffe548c89b5130b4745942fde29e256fb3fb93ff3f273bab686ce7941ae565a3d95f4
+2c3c53b2e57e9852d170cd86b428d860d08acbba1b7735641fae39f2a6eb2f890fc3e2638aa696de6975074e540768f1707838a4f3e5d34bf00fcda7
+846a9503a46989f62840346977d667cbf7ab0a9c5cd1d806978d77ae0db23e240b107ad20c0935938bc1c512b14ce04e8b69a739aa7d23d40b281307
+ad9c3ddfc9aa520a85c1d73868957dfb54ec7a0239e50b8d1c3b0469ddcda6a5be3bbf636d4bf534894976f403311250bd9ee0a398bdff79f0abe52e
+6850448a20c25f030db0489020fa521dc2bdb8fddd369d6674219d15dc5945a35b0aee3f8d66ed83ad99f600d880be19211d38f231d02de614883880
+3deaff07e6e4b4df64038d196f3d8fd3612949a3ca1dfc0bdc6ddacfab4bc351ced1e18e322d286d4dbc0ef6facc7b9404cdf53de2ddf8b271106d26
+544878c0732b67c7e8cbcf38ae5ddb92863886608f6996f239556b4c12ad02c3cca73d9919cfdb28899051a444e16a7f3b287ad258460b98d8fdc512
+b251e70df121c259b57e2bd4142a3248ff8a1bd988b91564acbbeb3878da4bfb03bf1e472ce04ede3671620eb2adade48e2eb2377b7cb21398082697
+43021458e990fcf59686ee67b4ab9b08682a79c76ddc6e181bb662e96ca55b74aedaa5fe8f76c06a792f8519884d4fa2716d8842a406f2b8ab99f700
+de8daf31644211c67dfc21e91ec12cfe0af9e754f582aefd2d45de1f6b3795e6652f1581ea18e275ee6bc784b371ed7feab59eeb4f042e794dfe70a4
+bd9151e965a1923e87bb92da715f67346e0178b021781e93f2e8d245845ce89e9b71d92ca92088c72a4625375dac3ecbeae161f975b1a24e928221b8
+69e66d23684426805e0d2fb1e4c2910fb55aa00df121c259d51162c17b2a0e5fadac11d9ceb11c2edfbcda236e873f8c5cf3422430ed48db1c171927
+d2d797e29e6faa7f6d56d169e52112be625d224ff28defa0ddc6d864f5bba01e576b529f19c65d1c48a51bb425eb103fe2bed892f456e72e111b9f1f
+8e594ca25537f522ce64e783a98afc45d8b8ba055f340cdb2eef2ff50ca242d95591822ed2b684df781d90175b089af278641bb1ea18e23eb716a7ee
+d101a255d08b8e8d322d480264c657baa59814830fc4ee538eb0cb9b6b1a7c2e5e112bf76e392882bbf4c419a440dafde111b249c501f2fe2d14796f
+14bc058fb1e846d02fccc4359a8364e57efb7734230157cf5f1c0f9ec8ff985be102ee2fbb47a536b57f25f13a281205de9b17d4c3a13c72edabde77
+648631eb13ad1b4e78fc43d55272620eb2adc882e446ac727c4da90ecc5b4bd619205d1be98dfba2b2e1821995d1c26e7e68528e47a6377e619132c9
+45db0f78b9d5b6fed30c9a4e7b2392249d4a4ca20f44bc6bc366f2ddc1f19229a5e1d21245703bf254b6478e71cd25b45691822ed2cd84c77e0af43e
+2151f289056516f7c401e528d47bcbc7bd70db51d29c8ee31b56247f08a12afee7d67ba623fea1179db183d27b062e204a0968f53c282e95f2ebc561
+c426b7fee111d226ec208ffe285f79325df24ef4eca719911bdd85148f8d62a054c371243c2c72c347417bcb96b49938b251a86e9f069d31b06b25f4
+2f2d0240f4a80cd6cbbd5b6ffee88b7939c138fb49f74b09528122b93571620ec9c1b5fe9f21fe645859a914c00875d81f741848cb96fdcdb1e18219
+95d1ae0b68612be244a6377e619168b423fa1a70ae9a82ef943c855e4c299917994c0bfa5b0ae827a70697dec1f19245c28cd17e221d38f238d12a8d
+71a142d939f4f842d1cde8a20466d31a080c9eed7c2749b6f91dfd229d70c881ab6bd955d996d1a75c56206808ef3ce2eede3e9266a1923ee2dd98dd
+3d577a2e5b0323b93c756bb4efebd30aaa4a90a49c71d82bb54494e43f60387816f64e99b8e0289f12dec220d5b260a75ea14d23211b70d96b1a3a94
+ceb4de09fd0fe035cd01eb24b47d65ad524d682284e62dc3c7aa1a67e9e6e82362977aa269fe5c003dfc0b8d1c16026bb1adc882e446bb796c32d269
+e5217ed90f5e7832949ae2b4dde2821995d198137476408c28816d0301fb50b918e90970aec0f1a6dd31874b1241e27999564fcd726de427de6a94de
+c1f1c854c39aba104e3a628f34dc25fe2cc939b739ecab1afbaa88c70766f752463cf18969265fdd827e9837d27ccf8bf860c257d49d98f36f4c336e
+0cbb72b7fcd9298709dccb5699a0dd9b7f1a7d3368046ae9792a67c7f9e1d21f845ce99684749b7dec25cabb6b5a387751ff00cef4e44b961dd4d822
+f1ed67a45faf417b68083bc942483287cafdc308f56cab758e41a835af365bcb3a3d0459fed539d2dc881761f5adc92423dd38fb59f0246e51e14d90
+4c58563a9be8aee88c238e7b6941be12cc5c73d205741254f38be7a9cd8dab75f2bcc16e126d47cb0ec0501101ff159338e90f72b89a85fe9c32ad4f
+7d2b80509d564fe72e10e827de21d7a49c9dfa4dc189af12036418db29d72be958cb24be28f1e552bee484c56965f73e443798e160685893ea00f07b
+803ffb93b164d81efb9d9fc45345336a0ebb3be5ccd92f8144d8b23de2dd98dd3d116133180b4ff168396b88e9a4cf04b90fddb3896cda6e857bbafb
+2242343b09b70bc9b8ab049e08d1c5329ec464a54985175e241778c140483a9ec6c4d009a91ff327ad5ca23caf364cc22f170c4aff9b3fdec5881a72
+f8e0d8136a8070f57ef74f15718222b9551e4b69d4d0e1ea84228e767a4cfb14844d7597083b1f4ff491fba2988de57496d1c20b746740876ddf5104
+44b854ae1feb0972aedaf1a6dd1c8f4a7d3a8a4aab5759ab1f30ee1dc46ae9a7a78aef70c381b503037558960dde3cf356f824a335ece248b5edeba2
+040698174736a8e37e2d5eb9ab15ff3f9d6fc194f6528b0e9cc8cbf353412f0164c657fbe7db3a8c4cdbf8458eb19fff740c7a67054823c6793b3f88
+e9b68f05a8589687876b9518e0288bf8381a08325df24ec4fda61f950e91850a9a836fa259fa7a32427112a940073896c7b4c51aaf58ab73bc41b824
+ef5c2b9a7b291863dfbf5ed6c6bc5b28eda1d6076a8665f56df05d0e2ce144de1c554b6ac2ec93dbc31fb164614cb20f820135fa0a331f52e98aeaa2
+9887f930ade8fb6d120d28c6608f7d262ab87d8f1aa82972bfd1bfef943080075a3d8d16994a11e71808ee38c82feab6ba9ffe54dfc8a9124871588d
+389f2bff08c925b439fcab619492c1c9780998525a52f289052454b4ea18b13edb79cb84ac61dd55fab7bda70604026403a937f0a6ee3a8c1f86dd78
+bddef8b2141668674c0979f7792c0f8ee8f0922fed139ec4dd38d432ec5b8ff83955367e539301c4f3ad0fa41dcacc228fc43cf60dff3e383a5848d4
+431a3a90cebae20fb45ca57eac49b937b96c2b9a6664110bf9871bd9a2d1720985addd316e9765b24bfa68280ea81690591e0d62d8d0a8fd88099141
+2812fb48dd062b9740741c5ae997a0a4d489e660b4f0f8523b29019f2cdd59121cdc52b338bb3f3eeb9bf1a8c873ce173679c750cc161eee526e8842
+a46af0b3c2f19229c58efb044866549e33fb27f40c8877ed7cfded41bea795c27b0ab8787e788fe8692631de827d9837d27ccf8bf861d866d58bcbba
+1b71356201bc70defbee329305caf752c3b598d64d1e7c3314487bb9165142ee92edc74b8e40d091817f9513b8698ff2381a067a11b32dcffdab00d0
+1dd6cf67958b75eb44fc483e3b586fc849067b94c4fac512b34aab279d46af5ad51102ae372b024ae1cf0dd4c7aa1e20b1e88b5d02fd18d251f04d06
+34a85bc25517196ecfdde1b6cd0cb1796e51bc4eba4977c445001049fa9afa97ca81e462f5acb247747601c90edd51041bf05aa93eaa711ec2bdd8f2
+9b7f9e557127991988410bfa4644a308df60eda4a099f2528ec8af1f4e7a3bf254b6478e0bcb24a239b8b607f3a187cd680c8a5e5e3dbdcf5a6816f7
+f817e33ed871ea8eab7c821096d8dab7312d480264aa32e4edd13dc01cdaf25899bd85c23d4233671a2464e7792b3fafcba6811fa54ad0fde111b249
+c56494f42a58717808ad26d7b4e8069104f0db67c6c454bf44e36d790f1d6fe849093783c3bcc157fd5c8a668c49e513b479798e514d682284e60dd4
+c7aa1e20b1e88a673bc421fb10bf4d122ac05bba3571620edec8b2ee8429fe677a51b412855c629756695119d996fdb3d986e875af9ce9476f6c4485
+47a6377e619148a323fa1e37f694e4abcd6fce0838258a04941646a6034cf52adf68fba38c91e8549facf7571a3d3bf254b647e214db2ef071b5ab05
+8fac93ce6c1bdc3d2151f289053b58b8f911b1669d4ada8eb47b8573dd9488f25745356e39a72cf2e9cc088303dafe1f9bf8d1d664375c17144878f3
+6e3d2e89dfedd21fe425b7fee111de2ea802f29e423d5b1274d6678ab5e830b825ebff02a9a152827eaf5f191c3136ea653c0fb2f9b4fd349e74933d
+f221c259d535268708301344e38812ce88ba1261ffe8cf387c9563bf1deb460278eb5ec24e1d0573d7dde1e7822cb5726c18a814854b70ce4b201049
+fa9afae7cc87ab75f0b1a60e7565558e6dcc5f1a0dea5ae026e10f63aec6db92f456e74e7e68a81f925e42a05537f52ad96aedf99b8cf243c7919a1e
+46345095399f1df317da2ab739b6d853b2a78ad2590e8c504d2cdbbd31684bf7ff1cf435b716a7eed101d853d38a8ea70604326802bd3bb7a39873a3
+03c6fd5e8cfaa7da710c20144c0168fb65103294efe1d30ebe46cdd7876a9b72f938cbbe413d581274ba00c392c162f975b2a24ef2ed68ad0dfc7d38
+3a1d3b9e0c003290c3f1c20f8957bc62995ceb24b47d65ad524d6822848717d0c0bd0874d8a0c9326a8031e61dec4d082aed21b93571620ecfc5b3ec
+883b8e767a4cfb5dcc4972da3b35034f97f687ceb1e1e975efac9b0b7a7d44996d921e07629132c945811972b8c098e8aa3e824b3875cb1e934c0bae
+0832e838a70697dec19df544a6e1d27e4e7a55f154b62be91ca242b532fc812ed1cd88cd2d0d9b445c0897e1752d49f7ea1af57bc97edc80bd7cfb51
+ce8ccbf353412f0164c637f1a8fb348e0ac1fc19b8a090cf780c20144c0168fb6519228abbf0c90ea325b7fee14bcf2fbe699cf2656725721eb417f3
+f9ba0c9508989667998172bf7de37f2e2d0a11a925610883c4e6d01cb8119d73914ba029887979c03e30314aff9b5e8a88ac1a72ebadcf076a8665d1
+349627342ce759d15b1d4554cfcda2e09403b1647c6cb203870826971f3d1250b5d684ceb18de57496d1c2157e705499238f4a161aff5eb41ce90963
+e794b3fe8e2ba7544f29871cf6314ea91f6e8841a466f8f78b97f546c58ff5245f75459e2e911df311cb20a91df1e607baaa858b251b97544370d2a0
+216868a3e406f03cd831fd93b16bc049f09798f36f4d226044ef60b7a0fb348e0ac1fc19bdb59dc8332c7a2e5b0372d76e392882bbebd34bfd018cc2
+c138cf28a966f19e426725740fbe09c2b69b1f991fd3d2139a9666ae59af2377261177aa25610883c4e6d01cb8119d73914ba029887979c03e30314a
+ff9b5e8a88b6126c86c1de396ffe18a958eb5b1536a845d950544b61dac8b2eee72ab0730232bd15824b6fde043a516ee996e2b496bbea66f99ba40b
+776d528222c1161400f949ec6ce51473ae9ddb929439ce49773ccb13945959e70f0ce4258d7dfba3bd8af500c986bf7d22785e983cd36ee60cdc399e
+3df5ee07e6e4c9c6620b9b171565dba278274eb4e356b87bdc71cac7fa50f47fce918cc45a4a156418ac36b5a8d729c04ef0c47899bd96f87c114d28
+540462f4797a41eef7ebc20aa10fce858768f521a16ddbaa6b1c3c7419ba4e9aa5e8498413cdc82fd9cd21aa43eb3e750b1975f4431d389f89b4de09
+fd1d8d66966ba43cb0716fc2794e684de29d5ee884f80d20e5a69b276a9d63a815fc46062ab26cd5483c0e74d8c1afef8c21aa642011f240884711be
+623d171bebc5c7b4f9c0a952fdabae377a7655c9648f4a1f0df631c945811271ebc2ebdc982baf536c3a8212894c4eef1a10f539e36ef3b2e1d8a61d
+8c86b21b0b60599e33b5478e71a13dea0ffdff66afb093c26f1a8a5200398ff47e065abaee58b12de66fdc88a846ca5dd9a5c28d322d486e03ab549e
+81dd358466a1fe598fde94d5797504214d0668e4753725c7cef0c807be01ec929b6cd432a94b94fb275d227212b146c4f0a919dc5cd5c4239ecd0bc2
+44e93e39270c3bc3440929d7dffcd415fd4dab738d5aa570b9766fad52280e48ec835ed6dcac094eeda5de7736d439b652fb4b4765b50b9248171e64
+d386e8ab8c21ba372a60842f9e417cf40a3a2554e89ce6e59887f930be809428696d46a82cc17d1804f452a429aa711ea7dbb2fa917f9e557738a511
+915d0bfa5b4cec24c96abeeaf5d8b954c39db81f093d119a33db6ea53bc9258433ede84ff9e48ed92d4dbd56461b94ec60215fb2a97e983dd26d8eb8
+f428dd10d596cbf75a4d337845ac36f6fa821c8518ecfe4488b19fdf7c117a34104122b0783741ee92edc74bbb15f784a9309902ad7b9ec72a462539
+54ff1acffda661f975b1c72898856deb42fd773068453bd6162f3e83eae0c509b45dbb739d00aa24a86a45c63621482184e677decef81472e5af9b29
+36d47fb251bf5a0f3de621b935716271e0d4b3e49d01bf7a6d65fb5dcc4769de0c5e783294f6f8fdeb8dff51e8acb90e7971558e65ce4a031ad65aad
+29a45b79a2d8f891f456e742762ce179f55d45a3716de425c905fbb9acf29146d986b803427b5fdb08cb27eb0b8619b52ffdff64b4a88dc27e069159
+0071f189602758b6e754f233dc6d8edaf844c453dd94bbeb5a5d2479438c36f6fad9389409da913e82b2d1d8751e7c674c006efe165142b2efedcd18
+e37ddb849c77c9258f6797fb2247387413f70dcff9ba47d05edbc42b978d65ae0fa6145e412d6fc9401b75a5cee7c514af5a8d689444a223b577658f
+382c0059a1cf5cc3c7ad1868aee1b15e6e9a75d158f14a6d52ee5ede5f0c0268d58494ff8423ad395b5daf30834175c3433a58319496e8e7f487e871
+f088a706626153c50ec75f0509fb4fa53ea81a79af949df49e3e8277742992158e1668af1a16e028d96aeced8e91f544ea81a9045f57599231db66a5
+30dd26b132f7e24389ab8edf5d0e8c430a71dbf4642d55dd827dc22fd26dcf80bd26e858d99b80f7544d2f7f1e9430caa8857bac03cbfa5bbbb890c2
+780d2004500979f17f2c2e95b5ccd406ac41d19e8c4ad42fb8589ae53f1a125d0fbe03c292c162a508d1c734d5aa6ebf44e9677f6a888433a148189f
+cef7da0bb256a073d87baa26b97c298b7b662d44ee8e0adec7b65b73edbede332b807efb4ef3411362a8099012564b6992aec8ee832bd472665cd16a
+8a5d75d41f3d1e55bdaafaaed49ba544cc88a40e7570098564a5371e0eb868b423fa1a70ae9a92f3983c8557772185048f63459a5b05ef2f8d43f1b4
+a994cb4ccd91be050557599a2fde2df31dda6bb132fcab6bb4a780c75d039f4e4d2ad5c3642949b6e800f4298759c789bc4ec242cf8ca8ef52482523
+4f872bfae9d6348908faf4589f8490c9695d27674c006efe165142abf4e7c0079d43df8e8d6a9503a46989f62840346953971bcaf9a6049918eac428
+8fb460b959a15d113a1976c50c557ba4dffbc31aba5ae044904da83bac7762c92f373a45d0e577befdac126cffe6f5387f9d77a215bdccfdf9a87fd5
+501d1b68c9d0a4efcf63fe355c5db7059c4769c30e30514ff2dffdabd79cb130bef8e5493b6a08e144ca501362fd55a446821d62a5d7a5f29231ce72
+6c218703d26c44a01c08e413ff6ee7ffbb8cfa54c9c1d17e4d7b43db02936ef158c125f02cf9e255a8ecb2ce7f1997544d2bd5d7633a50a4fb15f23e
+8758cb939c6dd853d9968fe65550322344e67ef3e7b252e905cebb41d19d82fa355d4c264b0d5bf16e2c69cebbe5cf0fed41d183c86e9510ad7a9ef9
+3f0e177213bb28ceeabb1fb314d1c723d3c649be40ee7038211c39890c1c3392c59eb872d456a8278b5caa24b9387fcf3e2a6b2284e677decef80d2e
+d8bada39788470a958f14d1e78b40b8012414b73d3c1af81e446d71e0151bd409a125cd21f15054fef96ecb2cc8da332c48a9428696d46c9648f034a
+48f652ac6cfc1372a594a7a1ae3a9a666c3c99199e4d5fa25346d919f240ecbeafdab700dac68f054a7a428b3ccd2be91bd162f039f6ef2dd2cde8a2
+0419d0635a3995f37c2949b2e517e87b803f9ec9ee02a239b5f18ee95f2e480264aa32e4edb252e965a1f75888b59d9b720d672018552be6261f2e93
+daf0d519a44dcb838d3099189e57b4e52253733277d667ae91a10dd013cac220db9a3ceb43e672773c107ece0c1e75a3d9f5df08ad5ebc62964bb270
+e13864d532235a0bfbd52dd2dc990f74fea1d9227f9139f965cd71282ae14c921058056ed78de1ee832bd41e0131be0e882212be0e3a1531949ae0a3
+b28de57496d2ad127567558222c11e221cf157b362dc1470acd8b4dd883382456a218c18881058b31a10e462a706f7b1e88bef41d88dfb0343715ff1
+54b627e158c624a47ccbff48a9a586ce23208c5e4f3195e1600452b0e300f835da31ef8aba61ce5ec8d89fef5e4a4b0264c60de3e7ca3a870986d445
+82b398d57c13422e5f007ff9723f6bdabbffab62c426b7b6857ad225a27cdbaa6b6734690bb60dc2ebe627991bd0df2e95832f8a40ed7732260c3780
+6e1a3290c3e0df1eae4cee3ad87bae22aa7168c2286a2d42ea870adec6bf5542fea1dc3f7f9a74a84eb3246e518122ff490c0f68d4d680e68f26bb79
+7c18e640bf4d69c102371448b3b3e7a0d09ce27efbf684126f604e843fee531501fd55b460a8387ba4d7bacf94328b072568b8158e4e42a41e17af07
+c468f6a3a196fc0eef84b414404058963893448e71a1429633ffce49bfe4dc8b5e0a8c41413b9ef3220452b0e300f835da31e888bf4dc55490d8ade8
+5c77356a1fbb7eaaa8eb3e921ac1f85298fabdd27a177a2e560f25d6733f1893faf6d561c426b78ae211b225a26cf19e426734690bb60dc2ebe62799
+1bd0df2e95832f8a40ed7732260c3b9d0c2b349bc4e68255b35ab92fc904eb61f0383a8e6064324eff9917d4cdab554ce5afd323629a76f57fed4700
+30fc45d54f0b4b3a9b96cb82e41cbb657e51b8059f0657de0c3c0552f398a088cd9cef7ff3aa8a0a796d4485398f03572bf757af3ebb5579aec3f9aa
+d17fdf0b3879c24bdc6b4eb50d0de22ede21d2beaf90ef49c28ff534477b529009d623e258956be16892822e88a193dd640c9b44061492e7643c52b9
+ec5ad734da5ac083f8358b018cc8dbb70b1f615808bd28feebdd28ce20c1fc5f9fbd9fdc333961206b1c6ae2687876c7ab8ea80ea15cdbfde111d226
+ec5b8ff83955367e53901cceffa1059110f4c220939068a54aa15f3a2a117ece58482f9fcefabb72d4369d628a5ea233b96b25eb3223095fe4811999
+e9b51969e9a6cf7736d442af52ed4f003da664c2551f0269dac88de28a27aa7e665ff521814a72d205207b3294f6dda2ca9ee273f9abe52b7263499f
+24c159592aea52a724fc1572b8c7f1a6dd0c9a486a298c15d27759ae1c0def2ac143f7b0a08cf24ecbc699054273598f33da3df472a142d90ffdf951
+b2a784d823239750402c92ee6b6674a2ff10fe34cf5ec385b16dc5449cc5cbd44f4b336a0aaa70d8fad13c8902c9f77b82b399cf74116969771d7ff4
+733739a6f6e6c80ea35bb4fee111e825be7e92f42e477f5714b806d3f1a60cde3fd4c42490b068a648af23771b0c74d24d0f3ed9e4e6d81cb451af6b
+b441ac38a87165c075070d44ee842adec5bd710985c1e832798278b858ec002b31ef43c455160c29fdcba6ce832bfe2a286baf0f9e497cd2451b0352
+fa96e0a6d4a4e277f4aca2097c2a67842aea5013629132c91fed0961a2d7b4e8d3138740703c821e9b166da81c37f52adf7bbeeae8abef4fde89bc12
+055b43923ad620e614e422b734ece249bceaa7c46a3c8a565a2cf189054168a3e406f03cd831e195b16fc25edd94a7ee5c4c356203a87eaaa8c326ea
+65a1fe598fdef8de731b0422560c019a31756bdaa6b99c56f01283cad525867df135c6aa76096c2640e2539aa5f556cd4185967ac6d93cf610b2236a
+7545269d115566ca96a98c46e002f33ac515f66de125369a66795c16b0d2438a95e5463db1c2967a2bb2549a69ca7c220ba80d90792b3b0d9689e1b6
+d072e32a3505e65dd115268a56694c06a0c2b3fa85d5b62da1e5f65a26391cd67092034a55a506fd71b5462af689eca6c062d31a2575d64dc10516fa
+4659bc769032a3eaf5c5a61d91d5e64a161e5d943ede22a73ecd2aa429eaee54fbf9c1d07065a1700600a4d4451c7a99d437c409ef5ae0b38741e563
+e8b9a5c47e0a076e0cbb2be5edcb7bdd4ceefe569fa183de6e75044d5e1d65f368312489bbc2c40ab95acc929b36fd2ca5669cc72755287e0ff71ac6
+eaaf0e842cd4d96ef1ed68ad0de17123680c7ad24b0d2fa7c7e69114af1fa0688c08bf31ae7f6ed30b281305ce871fc5c9bb0f65fee8cf3f6e9a31a9
+58eb5b1536a84ede5872626bd4c7a0e7cd22a7546059a940d10857d808351d6bf19ef7a2cac6c878fdaaaa046f6153e144c3511409f41bad35c02947
+eb89f1f6841c86466a688a1e981846be380ce0399749f7b9acbef252df9c981f427855d37ff73bea19c624b938cae448af9480d9794dd73d213494e3
+6d241ba3c326c17b803fda86aa6fce44ec9499a9784c20790cac2af2fa821d8902ccdd5e99a785f875166223104a43e571392588f2e0f304a25bee96
+9a6c9969c60192f16b5a3e6f5db217efca984b9f0e98c5288fc475837fdf3e23201d75805e0d2f82d9fa911eb35bc40e9447a831b03864d53223226d
+add25edad1902950a28bfd256a9974d134f3410439e40bc3481919739b99e1ff842cb53f2132d235984177c4451a1e4ff499f7ef9a18149c363773e8
+3b5040992aca4a5731fd5eb46ea45b358dd8b8f59a3680402268c950d2160bb31a16e62ed95ff2a5e6b6fa4dc9c1d17e5c7c5897389f3aee1bc363f9
+7cb5ab54afa593df2d53de07066cdbe4634232ded811e32dd47ccb94f65ade5eef9d99f15247242525aa3fe5fcda3e811892cc5682a0d9921776072e
+5e4865ff6878269ed3d6f14ba25d9e99876c9b34845aabb72446717512ab4ed3d09a3bde2cd9d922959021bf45ea70772a0a7ec147483e99cf9eb872
+b0468655a8068816ae7966c27b79415fc5bd2e99eb9e0961e1ad9b7d2bb757a95cf24b4919e64cdc590b436adad0a9a59f2eb0736755f349c61e3797
+06350553b38defa9dc87e638b5f2fd4b3b69409f25814c1606fc54ad64a15121e2bed8929026a6754866aa038f5d46a5171dcd22c36affa59e9df74f
+cf81af0e0b2911ad38dc3ae80a9b65be39efa31eebf4d19b214fc7071868cbac2c710be7bb44b851b416c39e905afb1efd8b98e256462d722ca139e2
+e4d929b609c4f45482a0889b205f58225b1c64e22f762582ecac985bfd1f8edbc8218b70fc38d7b77204612b4df664aefda60ffa75d5d20fa9b42f8a
+5efc7b3a2a1462ec45063e96d9c2d417b25ca7738108f6708a7d68d334365205f78a0cd8a2d11679c49aeb794a8762be50fd421e19e64cc550191951
+dec8aee8843ba73735188d058f5c74c5587a0b5eef9084ced591c342ccf6882169654c8e6d921e181af15c830a827242bfddbde8d3118153712e9258
+dedab7425b3de42ed92fddb8a588f745d88df95b0b6050893ada3ad714da659e3df5ee07f5eac1892d039f42463b93e5686852b9ff1bb134cf7dc793
+f92a823ad9968f8d314234650ebb37f8e6981d850ddcee458ea7dfed72166a034a077bc47d2a2c82efacd50abf48db83b874c969c60192f16b5a3e6f
+5dab0fd5ffad1fa010ca8b2889c46fa459af6a363a1f7ed47c0429d9e8fcd009bc5cba628a08bf38b9762bd53e301459e3cf1bd9ccd2726ce3abda3b
+2b99689855fe5c4765a867df5f190757d7c5b8ee9f619d7f694aba03984d69bd62381e58fc93aeaac1a0d940bce5eb0a6247498a3f8f5f190cb856b9
+0fe01a65f1f2b8f5991987556b3ca81895544fef592cf426cc61f1beacaaf44fd8b8ba055f3618f154d321e419c46ba414cadb07e6e495ca7f089b43
+783489ae4f205aa5ea17e53ecf25e88eb66ced59ce8b9fc4534d2d6f45ed16e2e5d9358f05ccc95884a0a1da6f0b2c6e326162f63c362493bbe9d823
+9f7f9e989a38d52fb8288fdf1964716f15ba0087eaad1f850ed68b2295800bc241e07d36245874d2450f18b18ba99116a4779c57d66b8d22bd756ead
+52280e48ec835ed1c9b41765e2809b6a2bd924eb0d9527173be947dc141e1e69d8d0a8e48367f7376e59b70c894653975674225eef89e7a4dd9ba547
+f3aaa0146b65428e63e95f1b04fd55902dfa0f648fd1a2ef8f30976f7d218c1888184ea91f4d8b42f87bf7bbbbd6d54fd881bd0e0336c164c80ca13f
+f7881dbf35fcab63a9ab9189214fdc735a399ce765265cf7a954bf759d6bcf95bf6ddf60d08ac5c95a49242b43e17eb5a8cc34c01ac7f253c5fadf99
+34750733703a5bbe5d2b3882f6e6cd128146d092896aed25a06798fe3f4d71265d890bc4eca719c352d6ce30d3d42deb00b72e67784837801c4151fe
+c6edf9298d118d418a49a635fc252be41d360046e8c110d2dff00f48de989507648778af54f0404900a40bd65d140762d5ece1a0cd7deb3b284c9332
+bc064bd8183d0552f291a09d91e28264fdaba0496c65489f659f1045419232ad35c02947e5f797e99c328b0725688402955f6881716dec32e55dcef9
+898be845c18ab70e677d5f9e3ccd18e214c728b928e1ab1afb9284c879008c0406229ef263423282ff1dfd289351c193b16ed2189e1a77021b722e62
+09ef1befeddb2e9409ccb91bcba090c97a1a7a17541a25de7d352ec7b5aa8149ed4bcc989868de24ec7c94b73d5b387f5cfd47adfda60ffa76dede29
+989068a443af5832290c6ed2491b75a4dbf1d20fbc4bab579449b235ae3065c636214821848311d4c9b45b74edbadc327fd42cfb53f6426d51ee44c2
+1c274727cb84a8e5cd3fbf7e7a4bf333895a6dde08310215cd93efbedd9af82adbbdbf377765588e3fdc165e41b85faf4681727ead94a2ef8f368040
+363b9e12d44b5fb5120ae665c160e9b2bad0eb0ee289b612023811ca719f3df30ac125b772f4ee49f3aa80c66846d7171565dbf3783a52b9ec5afd34
+ca7adccfb669c65595f2e28e5456617819bd37f9ef9628950e80e84399bd9fdc331361305d1a23e0321c2294ebe8c012834ed392c1349b71e02888e3
+395d3f7c53b30bc9b0a60a9d19918267c6d921b859fd77392f5677cf5b0d29dfc5f5dc1ef41fba6f9d46c159d5117fc62923045fadd25ec793f81972
+e9a9d05d02fd74b55995270236ec21b9551e4b73dad6a6ee996faa7f6d56d169e57b6fd81935165eb3bcfbb5ca8de564cfa8ae046f65558e6d921e03
+09ea5ca53882721ea7dbb2fa917f8d467568d650a94c42ab084ac62ed94ceba5ba9df554ef89b612597519d257b647ee1e8828b131b8ea49bfe495ca
+7f089b43061b93e17e2958a3ee06b13ad37b8e93b97acc55c8d6a8ef5a56206819aa2cadced135842ac1e9449f9799d2711b2665701d66f172372283
+b9ad811fa54ad0fde111b223ad65d5d42a5934691c8c1bc5f2ad08845c858b339a9666ae59a15d3f290a7ac3580d29d9e3e1dc1ab350a763f221c235
+b27c01ae52111542e19c50f9c7ac1266f5e099a79465903485100e3428ed48c45d0c0e259784e3d89d2abd63694cb20e8b123b954b7a5f1be99efca0
+dd9ca554f5abbb0b7a7d6f8a20ca12575bb131c929e40872c1bdd8ce8936825436068404955e52ef59861cc78d4aeca5a78ab90c8cca8b1b4a6d5489
+7dd121f358ce24a532fcaa05f2cee8ce630bf452463cf18a6a3d55b4ff1dfe359d59cb86ac7dd955cfd6b8f35454127b08ac2af6fcdd73c966a1c843
+84a690dc78514d324a1a6efe680b3b82f8f0c01fa80f83d78671d74ac56494f42a5871781cb24e9ab89d1f9910cb85009e9042be5ffd7b393c3b7acd
+491a3adf829eb812bb1fad669508aa3eb83847c838250d7be18e07d2daf63868edbada347f9163fb5cf14a4714e748d150280766c2c1b3a5ae27bf65
+695baf059e125dde05303752ef8cfa84d081e774b4fa831276654f8424cb1c5e48ec53a52282721ea8d5bcb5be3e83426a29b8059e524ea40f44bc6b
+e160fdb6a4a8f741d58da959687c50893cdc3ae20a8603a531f9e548b2a0eba2043a8a5e442bd5ce633c52b1f25cb3ab228e2f0860878b63cc9d88f3
+5a50242941ef7cc4f8dd38940ddcfe1798a09ecb6d1a6a65116202f5723c4182f5e0ab61ab5ad0949c71d42eec4e9ef63f41237e0ef13bd7fca91f95
+3fd0ca2a88cc28c124e97125682737805c4832998be4d012af4ce6549d5abd39bf7d78890b280052e89d0d8defbd0f50e0a9c232798739f214bf4a08
+528122d95a581b27c599e1c7822cbf7b5854ba19895a3bd60530514bb3bce6a6ca89e864f9aaeb1373614fe144a6371b07fb5aac6ce01270a3d8b8fc
+952bce1a3838c533945959a61810e4399749f7b9acbef252df9c981f427855d37fe711c410c926a37eb1812ed2cd88cd2d2c91594e319cae5f3c5aa3
+ee07bf18d57ec394f87cc355d2f2e28e322d286d4da131e3a8d0328704c4f25083a0d1cf751a604d3161029915302280f3e8c80ca55b9ecac851d533
+b86995f42e1a3f7e0af74ceff1af039c15dfc333d9c821bb03cc76363a1978d4491a72fda29db872d457a7609044a237b46c25e93a29040bb0cf5cef
+f79b1361e1bb996c2b9c78bc55f3470030fc05f655140753c9c5aff89d2eac72665ba240d1082b995e614a1bf596e9afd481ec78e8f684126f684885
+28fb4c1606eb4ba13eed1574b294ecbbcd71df121241e279f55d45a3716d8842a466f8f79d8cf24cdfc692047f71509630de3ae250d862f028f0ee49
+d1cde8a20466965e4f3097e96b204ff9cd1dfd37fe70c288aa289610ff9785e152436f5f05aa33f2a6ec3e8101a2923ee2ddf8d37418662b510f63e4
+32173e93f7edcf0e8e40d2989a3886608f6795f122537f4f15ba03c2b69c0e9111b2a24ef2ed64a75eea145e417112a940073896c7b4d91ebc5bee3a
+d858e513b47979c638300459b7a917d9cc9e1272ffbcf83f629875f31fd74b063caa02ba3571620eb2c8aee88c23fe7e7b6eb213cc153bdf0e35151b
+fc91eae7ed9ce27ceff682144d6d52822fc35b5f00fd5aa460a80b3ec1bdd892f456864e7f2087199b505fe93d0ded27ee60f2b8bad8a600c59b8d1e
+58345095399f0de814c739e372fef948b696a6e9255dcb020478cdb020680de7a254fe299d5cc18bb77a981eda8a84ea696303235ffa6bbba8896dd0
+4088a907c2def8b21476072f510f63fc753f2393b5cbd41fa146d092ab77d72fbe28c6b7224707720eff0fc9fce8289f10d7d974d58273a440dd5915
+604a2e9500486ac79bb8914aed0fe727975aeb13b37464d5686a0759e2822cf0eaf04935b9e49b653bc43dfb0baf076d518122b959160f0db2adc8ee
+813cbb1d0131d269854e3bdf02331957f498e6b3989ce375f2f8a30e7c6c4d822ac74a4d2cfd48b43ee7023fe294b4f59955e72e112d8514f63122a2
+15008b42c861faddad96ff2aa68eae1948605894339f08e219dc3ea239eba572aba080df68219f43412e9ed46d2f48ffa27e9837d27ccf8bf87fca5e
+c8ac8ae048047c2b2ea030f1e1df75b318c9ef5298fab3d271136c28591a6fc47d3f38c7f4f681438e40d091817f9513b8698ff2381a14482dff0fc9
+fce843a308d7d9269c812f8f5fee693e261f59d243033e998bfbc35b9e50a061914fe506bd7478891e17316ee38817d9cdf8463daceaeb3b6a9a3198
+1db76c0e34e449df5d0a0f2e9984aef9cd0cb1796e51bc4eba4977c44511226bd891e9aed68dab2da1f8e9266e704ec96486347e01fe1bae23fc5b60
+aadaa5cf9c389d076c208e1ef63122a11416a13b812ff9a2a1d8f24e8c98ba1e596719a829d03ce61fcd659e3dece251be948dca740a8c63493f88a9
+2c2c54dd827d982bde7ec28bf06ede5edf8c82e8550c682b0aba37adccdd28941ec7e21fc2f494d57956044e310d65f416514293fae6cd0ee34cd292
+896a9313b86789f62c517f551cab07d1fd98079105ddd9139a8372e2278617252d0c6ed242625292c5f0bb72d736a2689b49a770b56c6eca1c31087b
+ec9d1bd9dcf84620c0a7d83667a47dba44fa5c5d1ee145d47a111974cfe7a9e2812b91714b54ba139f0039e70735085eefb8fbae9ac1ab7feef8bf06
+6963449f0ada577d61fe54b26cd75737bb94b8f5dd2f8f4e6a3bc323994a5dae1801f265fd63ffaead8ae81aeb8daf274775489e2fcc66ae51882fbf
+5691824ebde4918b3052de7b473b9aec5c245aaeee06b12fd57ac0c7bb67c544d5969ee21b412f6f67c657fbe7db3a8c4ccbf35699f4cc9b6d514d2f
+591a6af3683d39ed928dc80ded41d183c87bd321be2894e56b5a3e6f5dbc06c6eae63b910eddc533db9069ae4385175e41117d807f1c3485caf3d455
+935eba6e8e4d9b3cbd616ed50f250658d69f2397dcb01e6e86c1b25e028472ba51f306012de648c45517052f928492ff823dbf706d16950198416dd2
+3b381042f88ddaa6df9bd060c1e28f0268705384348717570df65fe94681721ec2e7a5f48f3e894236068a04954e4e971705f82edf5bffb0bba3eb7d
+8cd5fb1942783bf254b62be91ca242d955fbe449afad8fde6865f73e4d369f8a054131de8218fe38dc738e8eab49c759ca9dc7a7525714651ebf3fe0
+e6dd3fc05188ce4382b88295540c4f2b511e6eb86c746b84f3e5d342c726b79e8e38d52fb828d3fe38753d720bba4ec8eae843b313d6cd2e9cca52bf
+4cfb7b24663c7ed4490b2fa2c5e7c11aaa51ab63d849a534fc7178f23537114afa811bd381f15b74e4add55d02fd18b25bbf7d1337fa4ad759562566
+cfcdb7eebd23bf6e6d4a8f018b5b40c736740553f89184ceb1e18260ffb9a70b336254852edb571806b012e01ffc1465aad3b4b5b33e9a4e6e2dbb1c
+9d414eb52f05e638f67fc3ed8c9de854de87a25f023454953996448e71a1428328f7f946bca1cfe56c1b97414d0897e1752d4983ea13e200cd428eda
+f866c25cb6f1e28e5e4a250164c657f4e7d62f8902ddfe3de2dd94d57975074e326102f97a780888f5e2c80ce37cca969c7dc86e986d9afa085c3478
+16ff0fc9fce83e8415d4d869b29755ae4ce273363c1d33d005482f9fcefabb72d436a761d87bbf3fae796cc2750a005fe4991be7c4b90265fe9cda30
+78af61861deb4602368222b935711b64dac8ada38b3ab0747c51b40ec4013be41f3b035afa9aa089d99ce266f988a706626153bf2cc84d2c18c50184
+29fb0f65a4cdf9b2dd3a80433142e279f53178b31416e02cc821d0b6bc91ed45fc84ba0e4e66659a3acc15f7258876f032f1e72dd2cde8ce630bf43e
+215198ef623c52b9fe119b52b47ac083d201a23ab5f187e858452d2b0e8b3fe3e99866c039dcf25b98fab6de693c66264a0968e4792a0f86efe5891b
+e425b7fe817e9b2ea37cdbf40f55257a5db01c87f6a71fd054dbef268f852f825ece723e3e1d3bcf5e4873b4c4fad712ba119d73995cae23f25c6ed3
+3e27157ee39c0ed6dfb61e64aca9d5332b9755ba49fe002e2bdd45c34c191c69dec0e8a2cd3bb6726632d269e5417d9738201e49fc98ebe9f689ff79
+eabd9b0b7a7d449919ce590433e866e038e01e79c1bdd892f42f8d467424c316895648b3120bef63842fcda3a78afa47c9c695165f7d479e0dd32ffe
+1dda1fb13bebd05786fea5ce7e1b8c585170d2a069265ffe817d9852b44cda88aa69cc5592b68af35252245b01ae27f2faec3a871ff3eb6acbe9d1d5
+7413044e31616efe785242ee92e7ce05b946d0828d12b249a9669f9d423d3d741ebe0287f0ad0a945c858b24bf8575aa03c77b362c5874d20c0b1f96
+dff59f29b250ba0df121a236fc7664d37b2c044ae9cf0adfcdb65b63e3a6cf3e658174fb58f14a6d518121b935140464dac8e1e98a6fe3375b4cb412
+8d4f7e9925350552eb9adeabd991ee62c8b9ac1440747ce144a652180bf957e028fa1a6088dbbdf48f7fd3077b0c8a049d1662b42e0af23bcc78f0b2
+acd8fa4ec8c89818477b43c873d93ce815fa0c9274a9b217f7e4d0983d43de051d6dd2a0633a1bffa327e534cf7ec982f644c453d79d8fd35a56266e
+19ef63aaa8c872c00dc6ff17a8bb9fdd74182013500d66f532142484f0c7ce07a25d9e989a38f82fa26e92f06560397e10ba40f4ecba049b1991a14e
+f2886ea84ce33e3a313049f00c557bbbc4f7d0178d53af7e9d5ae513b47979c638300459ad8e10d388941463eda4eb3b6a8d74a913dc46062ae948c4
+590a5141d2caa5cd843dad634b50b20c880039ff1e391055f296ea95d787ff40fdaabf45320e28e221c05d1604b85fa93ffc5b2aebd9a8d3af0fce46
+762ccb1d9d4c43e91d08ee24df27b6bfad99ff0efc87a81e5f7d5e957d926eea01e0198072c8e454b2b088c46346d07a493f95e9783d5fb2a254fe29
+9d2fa4eed164c453dd94cbe44e56097b4df27ef4ccd92f8142ebee45a3a4d1d46f5f3f770862029970372886f7a4cc0ab567ced7d538d804ad7c9ab9
+065529530dff01d5b8f95bc076b1a22b948760a70df85036251d3b9d0c0b1f96dff59f2cb85ebe689608a422fc3a5ec93a360c4ee9cd74bea1d27209
+e5ae9b39648031b95abf411578e644c41c1a0c29ebc5b3ee833bfe63605db56ae52112d50c744c1bd491fdb3d986e875b2b6ae103326638221c35c18
+09ea5f8739e1593ec1bdd8929f38c06979258e50c118099f2430c81fec41c18389bfc4028cc6f5575b3a7f9a30da448e71a129b772d9e750babd92e4
+633b91470865dbf47e3d5edd827d9839da31fd8ea26d8b0d9cadafee56166f6508b876a7a4986ad65c84bb07c7f4c5833475074e310a6cbe4f2c3e83
+e8cbc70dbe4acad7d538ed25af7c94e5781a3f7e0af75e8bb8fa45c850989b6ef1ed08c24fe830162c1769ce490d7bca8bfcd41ab935c70ef14aac7e
+917973e33237154ae38c1b9795f84a35bcf8b15e02fd1bd2349642083be9479048190c4bdac6a4e7cd72fe5e664baf01824b7e9905310613bfabebbf
+cca4ea72f9b4e94b3b6646c247a6377e1cf95c8c2dea1e7be5fab0f6987fd3073a068a1d996c4aa0596e8842a47bffb08499f945c0c6881e517111c6
+7dea0aee159a65be39efa316f7e4d1872d5fd217196ed28a054132a3ea13dd3adf7ac2c98867d859c89184e91b19615e29a633a5a6d63e974498b717
+dbf8d18b315f3e6e3261029968392cabfae6c407e36ddf94837fc92fb9669fc339553f680dbe1cc2f6ab12d041989a4df2ed08bf4ce852362a1d778e
+6a0735838ba9913eb34aa329be47a524f25f64d333250c69e2831abda1d17274edaff73669917df569fa56130be151d51c454b3689aec882e43bbf70
+4459b90580064fd213203254f190fcf498d5ab74eeb9bc2474684e9947a6377e1cf95c8c2dea1e7be5e0b4e3890c9a5577238e248e5945b40b05f32e
+c36ce7f7f5d8ab0e9ee2d27e2260509c11de2ce214861fb524ecab1afbb4cfef641c8e5b4921b5e1612d1bf9a554b37be63d8ec9f628df5fcf8c99ee
+5543696f04bc2abea89675c04ec5c615e1ddf8b21776074e540768f170782397d9e5d34bf00ff7999b6cda2eaf6dd5f92e4379393bad0fcafdea47d0
+1edf824df2ed08a35dcd7f2566367acd494866d789dce139bc4dec0df121c238ac5a6ad575170851e8cf4397fd9c126dbee6d5327cdc21f505b30e57
+74a81b9c1c4b420db2adc8e39d0dbf652668b413855c72d805744c1bc8bbe7aa8ac6e575ebf0fb492a2801db618f0e5b48a903e94681721ea3c493fa
+8f71ac467b238c02934d45a3380bed24df3cbeeae8bbf44cc39ae8594d665e960ff80caf4c9867f068a8a707eff4c8a10466f75f581a9af2220a54a5
+ef11e308d465cbb7b170ce5c9cc5cbb7312d480267c6579ee4d738810088f347adbd9dd73d422e0e561b7ff1723b2ec9f5e1d643ef69cc96857d996c
+ec608bd52a46781174d667cfe88e029c1096e526968121f60dad583e241439aa2561529bc4f7d017fd4daf739147eb6dfc756ad3336a0247ec820e9f
+cbad0948fce89477669569934db30e5774a81a993671620ed3d487e28123f0446142be40d1084ef302394315f39af9efca89ff79f3f4eb57372410c7
+6d9f177d619132a83cce127ba79a93fa9e348955773d8514bf5747a80957a1768d4cf1bba78aa80ec28dac5f1a341cdb2fde3aee17846ba23dece248
+f7e4d1820766f73e4028bde960241595e406f53ecf4cc79dbd58c248d994cbba1b144b0264c6549e81b1378f0fc9f7179c9890d978132e7a182165e3
+68392584feaacf0eba079ca38d60cf0cad6a9efb691871791af664ae91c11cbc1ddace2bd5aa60a648af23776a2f7ed078093cd5a19db872aa73af65
+9d44e503b5626e876664346fe4824c99c6bd0c28bde49b6727d421f71dae1a4e528122b94b340a65dec8efdb823cb7636157b540d1084ef302394315
+f39af9ef88c4ab20b0f8fb4b3b3615c247a6377e1fd45aa229e45555aad7bafc8f309b497c1c9911924b5ba60901ef28d42fa3f7f9f29229a59f9716
+49715dd51bd020f358956b9532ede6099dab8fdf23289143403996cd692c52a2e67e9852b468e286ba6dc71ee89d93f3684d3b6e4df27ea6b8b252e9
+65dfd75689b19d95491a76337b0767ff6e6b6bdabbc7ce07a25d8dd98e6ad42d9e4fb9bf790164375ded5d97b4e85ac04c91a14ef2ed76874ced7b3b
+662c7ed8583b2f85c4ffd42faf5ea0748849b935b27b728766645105bee577bea1af3761eeadd7795f9169af1da20e4503aa0b9e12581c49dac9a4ab
+c361fe35551ad169e52111be625d135cb3afefb5dd86ff30a1f8a2137e69669e24ff5f050df64fca45817244bfdba3fa9a3ac069793c8206996847a6
+0201f31fcc68ed8cb8a5bb1d8c8abc7d221d54972eda448e71a129b772d9ef48a9aa84ce2d52de5f4d399f8a054132bbe417f0379d6bcf809469c955
+d0d8d6a759437b4d04a13ad1e1ca28942fc0f25b8ffcd3f57c126b13590f29b9165142eef2e2811fac48f2968a7dd760b8609ef9413d581274ab0fc0
+d4a909951096ff22839042a441e06c6468453bc45e092cb4c4f8de09d736c70ef15caa37907969c2376a354ef59b5e8a88a85544e5bbcb3b6a8d5fba
+50fa0e4976a80990675a4b299584b5e49e3bac7e665ff304855b6f9e4b7a5f1bbf92d3e5b2e18219f9b6af6d120d288722cc5f1b48f04b822dfa5b2a
+ebd6b6a1bb3680435e219903887b43ae1700a969e55fdcb6badab22aa5e1d21e4d34598b1fde3ca70cc02ebe5691822ed2a88ec86c03de5f581e92ec
+606806f7e304d33acf25e88eb66ced59ce8b9fc4534d2d6f45ed18fee4d479c966a1923ee2bd979b750f482e54042be4743d25ed928da862c443d194
+89749b32ad7c92f86b0971761cab0689fba40a9d0c90c83289ac71eb02af733630306b8c0c5877d79abdbb72d436c70e90588d39b07425f4323e040b
+b0cf2bf3c1b5492ee2adcc7f799565b252b30e5774a81a9c1c48420db2adc882e427ae516154b74eae4978dc0c261e4ef39bcda8d487f923bce5eb24
+74684e997e8150121fb00ae061a80976bfddbeb7dd2d8f537127c750cc1121ce726d882ec36b94dec1f1fe4ec8e2d27e22785e983cd36ef034c929b5
+30b8b607b9a3dbed64019a71412a88f44f2052bbef5cb30cd86ffa86bf2a823ab5f1e2ee5d0436470cad3bfba8cc338502a2923ee2dd86f77c1d6b2b
+163c6ee8687876c7b9df834be3019e80a679d625ec26d5b76969731174d667c2f6ac61f975ddc523f1ed64a54985175d411e74d20c1877d7c9f39112
+b31fbe66915ab8788f6c64d53a230405c38e0adedebd2b6cedb1de255f9576a814bf4a08528122d95a580568cf8492ee9f39b7746d4bf530804962d2
+19274b7df491ea81d19af864dfb0a20b7f2c51c503ce531241b854b26ce61463ebc4ffd8953e9c467b3c8e02dc4c43a2156e8842a47ffdb6a494b346
+d986b803427b5fd3749f2ce042ec2ea328eae45ef3edc1ce630bd73d2151f2d3782749b6ec11bf15dc6bc791bd58c751c59d99d35a4332501d927eaa
+a8d6328c66a1925285b0fbb278116a4d5d066f9a163e3e89f8f0c804a30ff892896cce32a97bd5d43951306f189a3df7b0b8078255b2a22e9dc471a7
+5faf236a683474c34d040b9bcaedd409fd50bc27ab5ca422bd7f6e891e173164ef851bd4dcab2070e0bae6777f9c74b51ded4b132dfa459059160f0d
+b2cda7ab8320aa374c4aba1785467c971f3c1455bd8debb3cd9ae530f9b6af6d12684e882cc31e121be81bfd6cf3711ec2f6bee3dd62ce636a299c19
+925f05a91e13a969fe7eebb6ba9db90980c89516467111c67dfb3ce60fc125b772f6ee50f3e6b5ce751bdc1e0452f289442d5abbff1cd33acf3f93c7
+9c7aca47d5968ca9554136234f8337f9ed9a72cc4cecf2449fb59fd8785f33677c1a6ae775362cc9f5e1d643ef7bdb8f9c3a926cc601f2c02e552174
+13ff5387dcba0a8715d6cc69958176e30fdb7b2f3c5a32aa251551fecee7c1559f50b629ac40a233b7766ed428645c0bbcc14b8c88bd0870a28ad42f
+25b77eb752ed0e5a78cb44de5a110c29efcca4e688618d637a57b005d7087ec41b7a3354e5d1c8aed484ee74bce5eb017a68528e768f5b0418b679af
+34a62f65aadaa2eb9c2d8b497b31cb4ddc0910e71e17f165ef60e6f99e91e849ce84be571634579a31cc2b8d71cd38a072d6ea4abeeab2c2770ade0a
+0869c8bb2c2d48a7a53af036d831ed82b67cce429cc5cbf3495124304daa2de7a6f63a8d0986d4429fb898d5785f33674c1a7ef527782e94ebaaef0a
+a04a90b48774d432ec35dbd424583e694ef100c2efe05adc4d949a6ec0c464b85da15036251d35f6451b3295c7f19146fd59af6b8b4dc159b96b7b89
+13210047f9873cd6daf62f68e5abd0396e8762fb00bf1f496db30bd54f08454fdec5adff850dbf65267bb40c835a3b8a4b171e57f28dbde9d68dfc38
+acf4fa4b2b2d1acb28dc4e5920fd5aac38e03976b99a87f28e368c4b7d68d6509a5947b41e6e882ede7fb093a18bef41c28bbe59787d4b9e7d826eb6
+4a936bb52fe8a563b2b795ca630c9b196b3d95f4693a1beaab00e32ed8248e82ab788574d58b9fe65547242522ba2afbe1d63ec05188ef459eb1ca9b
+780c7e697c0178e47d362882b5c7ce07a25d9ecac85bd42ca37ac8b9255126334cf35f8ba9e150d019cbdb69bf8d72bf4ce17d32662e72d3450a3792
+8ba9911dbc53bd62f221ae23ac365cc23a340e45a3bc17cdcdf84620bdf980776e8761f56afa4f1737e605f359161f62c984fcab993dab723318be13
+9c064cd20a241e55b3b0fbb3d481e575bce5eb13697144d06dca4d0746cf5ea13ce7153988dbbdf48f7fd3075b27871f8e0b05a1090bec19ea4db6e5
+fdcdb7009edbeb5b0b2501cb74846ee20bd8658739f9fb48b5eab7c27e069c5b4d78c6a06a2957a4ee7e9808c970dc86bf6d8575efa8a4e55141227f
+1e942efbfae57bdd4ccde847e1dddc963d4e3a6a7a0765f53c192586efebcc02ae4ed2d7bb73de2ca97c94f9413d3d741ebe0287eba30e9c30d1c522
+88c43ceb56f2145e2e176980454866d79ab8914ae91faa68f221c23cb37b6acb7b280845e8cf4397ecaa1a77e5a6dc79659166f31fd347093daa02ba
+3571076ed5c1efdf8526bd7c665da813cc153b8645617b329493e7a9ddc6c87ff0b7b9472624628423c9571046cc53a521ed5544bfc6bef09855e72e
+74218515d26e42b41206ed2e8d32beb1a994e845a6e1d2034a765d9e73d620f41dda3ff82ff3ee4b97ad8fce7e43de5b41369ea906415eb9ef7e9808
+c970dc86bf6d8563d79d87e24f4b2f5b0cbd2ae4d3c837923188a61798bf94d7511660224b62019931756bd6a9a9ed02a34a9ec4ac38f432a56d95e3
+2e50715912aa00c3f1a60cd03ed7d367ac8d73ae4bfd7f3a2d7212cc430b3a9b8bf6de03ee7b826e964db870e13870da514d0744ffcf179795f84a2c
+acf989776f9b1bd234f3410439e40bdc55160e27868485f98c38b7796f16b5059b0039fb023a1419b4f587ced481e575b28ca30e786f4f8e3edc1e4a
+48a915f54681727ba2dab4b5be3082486a68d650bf5745a11203af1fc56af3b2e6abef52c383be7d221d5d9233da60d111db22b230fdab1afba280c7
+7e0af43e212c9ae2602d15bee507f429c937cc88a03bef7cd5968ef417042d6203aa779d81dd358466a1c84384a690dc78514c28405b4fdf7e322e84
+eff7fa1ba15de3d7d538d92fb43bbfdb225a346877d5678ab5e858b45cf4c42890c457ae4efb7125682a7ad926613798c8f5dd5bb150a16caa49b270
+e1384fd53a330845eac110d2dff0594ce5a6de7522fe18b752f0453539f105e45411086cd5c1b2f8cd72fe26260dd169804774dc39350815de90e2a8
+cac8b630dfb7a50172630fbf25ca531246d958a329e60f37a4c6f1d8923381552b668d0293557980394cb1678d3dace7e4d8a91599c1d17e477b5e90
+0fde37a92ec138b93ef4ee07e6e487ca611c9b3d210b8fef7e295cb2a538fe34d64dcf9e9461c555cfa39beb497961364da331f8e3ea3a9966a2921a
+c6f4bedd7b0c6d355d0d65b058313893faeac20eed7bdf90e211d72faf6997b72452374f18a71a87a5e82f821dcfc2299cca6fae5aa73c032d006f82
+05625298cdf2e51ea54be0549152ae70e1383a96514d0e4debbb1bcfdcf63865e2bcde252bc931af4fea4b6d51e74dd6681d137395ebb4ff8126b072
+2805fb149e5d7ebd623b175dc99af6b396abe47cf3aaeb5a3b474e8722dd0d590eea54ad1ecf393ff981e4b7dd6ddb123468d945c91121ce1402e71f
+c877eaf99e91e849ce84be571634579a31cc2b8d71fb3fbf2ef9ec42f58b87cd7e0c8c524d36bfe97f3c6fb2f300e200cd73dcbaf8358b5fda9ebfe2
+43504b6e03ab549deecd358318c1f459cb9294da690a7c224b4659f571373d82ded7f143bd43ccdee211d226ec5b8ff83955367e53910fd3f1be0ea0
+10d9d22289b060ac5ed46e3b3a253bd4440d35fda29dc118bc53a22f9e5da533a87164c9736d4178f9800cd6cfbd554eedbcd2216ea47dba44fa5c33
+39ef58eb4c14195a81e0a4f8993db16e2011fb05824c32bd625d224ff28defa0ddc6c571e8b1bd024b68409228dd6a160feb60b020fa2637f694bff2
+9155e742762ce179955e0b940f0bf32aca6ab0929ba8d442c68db803584f41972fe26ef310cd25da5591ed48a9e4be872d0bde5e46788be1653a48ff
+d800fe29dc78cbc99d5bfb7fde928ee44f571a7b01bd03bea8dc34c01ccbfa5b87fc97ce731c7a2e570623b93c3c71b5fee9ce1da80797d78d76df69
+ec6d95f3413d584809b01cc6ffad45b52fe8e425918162bf5ed46e3b3a253b9d0c06329ba19dd415b935c76e9e089824b36a6ac03e6a3240e8831bc3
+c7b62b61febcc80c7b9863861deb4602368222b95a171927e488e1fb8c3daa376156fb108d4169c443070554ef9ee9a296bbe075f0bdbf0875544099
+39dc650704ea66e96cec1437bbd7b0f791778852762b9f19935603ee5b14e039d935ccb2a597ed4584c1fb12457018db38d12a8d71a118a433eaea40
+beeab2c068039b434736abe17e3c488cfb18e3069d228e89b164a139d9968f8d324d272b3ebb31e5e9df3ece2ec7e304af9b93d1781c7a34631867e2
+41783f8ffeeaab62c449d185c8479760a06195f26b5d3f3b0dbe07d5ebe0388413caca209eca43a455bc5a182a127ec3581b0087c7e6ec52fd5ba127
+884baa3cb0306dd235271542e281569e88b4126ee9f2e932669b67be15b60e0236ec029059160f0db2ad92ff823dbf706d16990f941b5ff8093e1458
+e98cd5b7d49ad630a1f8a50e770e288e23cb347e01fe1b9338e70976acd1ffcf8f3e8d426a04821e994b70b71716dc6bd967fbb9c2f19250cf89b71b
+037244953ecb27e8168062f00fece455baa38485591d9f544d2ab7e9622d488cfb18e306874dcb8ab77ece1895d88ee95f0d4b02649c2af8fad93c85
+42fce95688b183f774116b34631867e2417876c7f5edcd61c44ad093e211d226ec5b8ff83955367e539008c1ebab199519d6ea35898b76b876ff7225
+15586fc8490651fea2e4d21ab153e6618d46a824b577658f7264325fe29d1fd0cdf63466eabbd8256e917f9a4fed41102bd35bdc4e255155dec9aefd
+8867f7376d56bf49e62112e41f3b035afa9aa088de8ef873eebdae095a7653843adc650704ea66e071a8157ea7bed8fe933be42e712ecb23885759a6
+1c01af07c260f585a981d749c28da82c5b7843a67dcb26e216a242d92cfbea4bb7ec87de630c8a5e4736d3a92c1b4fb8f915f63e9353c188b35aca49
+f09185e2487f31671f9264c5edd534960980b2178eba9592177607144c0779f17b3d65abf4ebca39ac56f29e867dc81bbc6489ca6b09717514b364ae
+fda60ffa75d1cd67a8906eb94ce87b79071e7dd34f1a3e92c5d0d808a96bab7f8c5b9020b06a56872f2c044587e677c7cbb9176ca4aece39688078b4
+53b707470bfc44c25d1f0e29f4c2a7f88e3dbb72667cb213987c7ecf1f272a4bf18dd3fdea8de67feabde34e3b614f8f64a5377e3bec54b22def1e39
+84d2b7e89e2d8b42760c8203886c4ebf0f17da3bc17dc3f7f5d8f549c0e2d21245703b9e33db448d1edd25b328f1e449fb8284ca791a8c525b76aef0
+68294fb2c412f728de6dcb82b649d942d38f98af122e486702ac3ffba8fb3a8d09dafa17d6f4a4cf74137d697f0d7fd3692a3982f5f0e20aa04acc96
+c031b149a56edbf9244071581cb20bd5f9e81f9819d68b359e9074b943af7b392c7212cc430b3a9b8bf7d415a95abc27c5089d35bf6c64d5696a0f4e
+fac73dd6c5bd0961a29ed2327c847ea949cc471d3da673901358592b9be7a0e6883dbf395e51be179c4769c3383d0b5eb3a6aee898daa21a95b4a404
+7a6801992ccb57021bb806e021e90f7fe5d9b8f5d53c8b496c2d995ea4140ba41e0af52edf21c7fee8d2bb1082deee7d22785e983cd36ee419c50896
+7ca5ab64baa984d96c41bd715a3996e5064232b1e406b104913fdec7b1668b40dd9199f4137724791ba63df2fb960b8c0dd1fe4598eeb6de692f6226
+410d79e3347162c7ffebab62c446d8d79838867dec4494f42a5801771ca60bd5b8bc03951298c828959068a558ea3e32261c11a925043494caf89118
+b55ebc27c508bb7e9f706ad53a27154effe577bec1be5b6ee3bc9b34639563fb52ed0e0937fc0bd354191929ebc5b3ee833bfe63605db56ae52112de
+0d74224ff28defa0ddc6c476faaba8157e614faa3fdd51001bc34b9d6cfc1372a59482ef922d8f407d66a4169a4b48b51e01ef0adf7df1a0bba3eb7d
+82beb20442765d9e7d826ee119c438b57cfde543d1cde8a26e00904341368ee5064132b2e5109b51b416c781f866c4449cad9fee57576f421e8e32fe
+fedd73904088f85f8aa6d89b69176b2932610299753e6bb4efebd30aaa4a90b88e7ec823be6d9ef90a4623740aac35d7c5e81f9819d68b148f8b73aa
+4aea30182e1e68c35e0d3e99eae6c314aa4c9577a5069d39af7169cb3e645c0beb8e12c4cdf81e6ee8c2b25e02977eb549f640123d8222b959160f0d
+b1adc8e28b6f9d78665eb207c27b6fd61f310215c99aefaafb80ee73f7f8aa097f24749f24c34d5921eb6fa52de51676bfd1f9ebd47f9a4f7d26e179
+f53142a15b37f524df6ef9b2e6b7fd46df8ba9124e7a70892fd039f423d816f028f0ee49fb9795c47f0e995206179de67f2b49b2ee1ad029cf70d994
+8378f61eea9198ee5948242b50ef38f6e4cb3ec009c6ff3de2ddf8d872117a2e561d6e9a15512e89ff8eab62c443d19489749b32a3678fb776143273
+1cad54e1f1a60fb615cad833b88c68a749a73c1f3d157ace43013fa5c4fbc52bbc4dba25d108a422fc7b63c6297e2742e38b38dedaab0f43e4a1d733
+23d645b44fec414571a844c21c1b0366c99e87e2832b987e7a4baf23844177d34376395efc9baceeb2e18279faf8a5086f24538422db1e0300fd55ca
+4581727ead9482ef922d8f407d66a4169a4b48b51e01ef0adf7df1a0bba3eb7d8c9cb3124534628f32cd2fe01d8604b63aebe855bea18fea7f1d9140
+5b038bdd221e52a4e216fd3e9d228e81b964d8559c9d85e3312d48020ea030e3e1d62e8566a1925285b0fbb1147662285b0967b06f3b3982feeaf104
+be039e98864bd832a96d95b77614127a10ba1cc6a29f048210dcff28ad8d64bc5de06c23181772ce58402998c4e09f2bb24ca7739147a579d61102ce
+3d640e45de8c0cd2cdb65b74e4add55d02fd18f610bf6f0b2aed4ad445581d6ec8cda3e7886fb179284bb812894d759b4b3c185ff8dfe1a1de9be862
+f9bda5477a7653843aa5377e61f15de01ffc1465aad3b4b5b23988547b3a8e15927959b51413f210dd52bea3a09df500ff9cb4054a7354d512d928f4
+1bda2eb532d9f955b4b392f07d32d061412b92e2602d1beaab12f037ce7a8e82b66ca139b5f188e85550286518aa549e81dd358466a2923ec6f9d1ef
+7c0d69224c4862e33c170da1b6d7e239886af0cdc85bda2caf7d97f63f5171284bef4ec3fdaf19951998ca299c8864eb4bfd713a681b7acd491a3ad7
+c4e6d81eb34baf739147a55ad51167c838250d0bf9803bd9cdb50220b1e89325649b65f56df05d0e2ce144de1c554b64dac982cdc31fb164614cb20f
+820111be62381e58fc93aea3d79cd979fbb0bf472624558408c15b1a11a27faf38a01876a6f797b5af36894f6c1e8e13885759ee716d8827c26cffbb
+e89cf454f998fb4a0b605ebe33da23fe42ec24a474fbea4a9882cffe7d399b545c3789a9064132bbe417f0379d7ec080b46d8b0d9c958af3530a207f
+0ca16cbfa5dc349439d8b7178fbb85e9741866331162019915342484fae8810abf5dd180ab7dd534a97adbaa6b57347509ba1c87b3e83d951fccc435
+c9ca6fae5aa773363c1035c3431b7396c5f3dd1ef413ee6a995ca37eaf71658f3a2a0647e8c6579782f80961e8a1ce2401fd18b752fc4f0b78fc42c0
+1c454b64decab5ee9f6ff5375e5db814835a299905310613f09efaaf968be463b4b9a500776108c76dc25f0300b648a922a01a79acd8b4b2d47fc407
+303a8a14954d58e75044b07f840597dea497f841c0c8ab460b29119838d13ae20a8860f00afde853b4b6d385630a891f45398fe8222b54a4a315ff3c
+d17a8eccf83885028ed1c7a75645356343bc37f9a0d9358700cdbb1ccbe4df892f562767124823e27d3c2292e8a48c4bfb06b4fee174d423ad64dbe7
+79146c3b1eba00d3fdba4bdb5ceece248f8b73f903e17b2060157ad444463898d8bcd015ba53ab27d508fb7eee2a228b7b29005fe5c10ddec6f01a6e
+eba4de7726d421f50fad074e78a20b984e190f6eced7e1a6cd79f71d0231d20c834b7adb4b301848e9dfb3e7d589ff78b2bea7087476099f22ea5012
+05e1158d2def157ebfc1b5fed455e72e7427881190185faf0901e03fee60f2b8bad8a600ef87b51142731faf35da23e256fc23a239f9ff6bb4b3eba2
+040698174c3188f42c741be3bb54e533d8718e93b07ace51c8bb84eb545661364d8c31f9eed13cce38c0fe5a8efaa5d36f1a6f3370016cf816514282
+f7f7c402ab0fda9e9b6c9b7cec31cbb73f5c34755dab06d5fda91fb313d4c435dbd9218842e1783e2f564fc849053ed9fffcc31ebc4b83629c08ae3e
+b81201ae522d070bc99d1fc0c1b61c20f8a0de3901fd18d254f90e0937fc0be348171966dcc1efc48b29ad747a5dbe0ead5a69d81c272a4bc0dffaaf
+dd86811995d1c20b746740876ddb4c1e48a51b843ee90c7ea5d3fff59828c6054c3a8211925f47a2594d8b42a40697a3ba91b566c584b7124f340cdb
+29cd3be272a142d955ecf94ef59089c26e0490525b2bdbbd2c7931de827d9808c970dc86bf6d857fda9e98e4494124652cbd2cf8ffcb00903188a617
+9fa698b114760722560c019915512788f8e5cd4bb95dd7d7d538e834a37a9af02e1a1e7d1bac0dd5fdad05b10ecac43088bf71962786175e3c0a728e
+7c073299dfd59146fd4ba777f221c259a86a62890b2b0845f9ad5e8a88a84a0a85c1b223799d3f8b52f640131ba816904c4a610eb2adb5f984619d78
+6457a940d1086fdf1931104fde90e2a8cae2821995acb90e3552489824cd521248a51bb43efd1e1dc2bdb4f59955e742762ce115925c21cd1d11ef28
+d966f1b9e8befe41d89da912583a648b39de3ae230c13fb233e0ee54f3edeba261009d56447895ef7b6806f7ff1df2309536a4eeb16e8b5ed38fcbaa
+1b7735641fae39f2a6f032940ec7e37b8aa785ee6d1b6f335d4837b02c767ac7efecc405ed5ddb839d6ad560a9669f9d426725740fbe09c2b6800284
+1ed7d30b9a97759e5deb7f232d58268042072cfda2f2de09fd60e2278808a23efc686ace29374978e89d08decbbd082edca4da2e6e8662e17afa5a37
+34e952d54e0b432e9284a5e4e746d77e6e18ab4092153bfb04371057cd93efbedd9aab71f2bceb173547498a3fce5d030dea1bb424ed151dc2bdd8f2
+9b7f80486c68be04955458e93217c027c479fbffb8d4bb5082abb3165975528f38cd67a70cc02ebe7cfbe449afad8fde684f9b594c52f28905215df7
+c81bff3dd47880b4ac69df55cfd6bfe25a49026308ac35b7e9d63fc039dcf25b98fab8c8491a6f2a55097ff5342862c7efecc405ed4cd1999c71d535
+a9289ef92f3e581274b301c4f9a44b9534ddca23dbd921bb03cc76363a1978d4491a61b1c2fad53db44dbd73bb40a23cb83029ef3e250509a4e577be
+a1b41463eda49b32499b75a21da20e1776cb43d14e190873ded6fbcd8421ba51614aa814af4072db0f7c536ff28dfda89ac1ab7feef8bb49586c4099
+2ccc4a121aa27da922ec3d7eb9c7a5d895368243306abe008c5d59931416f2248f26beb8bad8eb0eef80ba054a77459e2f8508ee16cc0db92eebff64
+b3ad8dcf254db642453995ef652c69b8e400c13acf6b8cced201a239b6f1e28e5242614802a138feef9608940ddcfe44c59c94da793a763759066ff5
+6e782a89ffa4c423a84edad79c70de2ec601f29e425d373b18970bc6fcf22c9508f9df33898d63be59ea3675070a72c77f01219289bd9146e01fa06e
+9408bf38b97601ae524d6822e8a71bd6cce22865f889cf23799d73ae49fa064517fa42d76f1111629988e1eea52abf73266bb21a890111be625d7832
+f8b7eba6dcd2d875e899bf13696d439e39ca165527ea52a718fa1a79b8c4b0e998318d5e3a64cb15b45d4aa35530f32ac37ceeb6ba9df543d5c1d17e
+221d38f238f72be61c9218b528d9ff53a9ad83de790ad615672a92e74f295594e418fd32d97a8ccbf86de355dd9cc5c45a4a026401a337f3ed9151e9
+65a1923e8e9c94da79455d224c297fe46e312992efe18949825dd790a579c833a06d88e46918717e35ba0fc3b6850a830fd4ce3488cd0bc224861732
+261c11a925615292e3f1d01ff36ca77d9d08f6708a7d68d334365205e38a099febb71566e5af95016a9862f575fa4f030be151d510582868d5c2a8ec
+c319bf7b7b1693058d4c48de11315d1bde90e0a1d18fa546fdb4b8495361408f1ec64412419232c945811e5faed5b5b5a92d8f496b388a02995648be
+5b59a17b8338a5f7adb0fe41c8c6981645575e9731d62ae258956bb63df4f842e0e484e3680e9a19653988f3602d48a4ab49b12fcf6acbedd101a255
+d08b8eee5d04244308ae3ab7e9d63fc009e0fe568feeb6de693e7a334a0169e5683d63c5d4f6c80c9e46c492ca319b3ef12895fe2714257318b164ae
+91c1629534ddca23d5b768b148af23772d307ec148521c92dfd5c50faf56ac728c4de372936a62c0082d1b4eafc674bea1d1726ce3abda3b2b9b65fb
+00bf4b2f3de94f8a7b1d1f46cfd0b3e28f3aaa72201a9412854f4fc50a3a024bfc8deba9db91a93996d1c26e1261698e2ccb10231af955b33ce90972
+a5d7a8bbc07fc6486c68954ddc5642ab5244e025c92ff1a3e897e9009ce2d27e221d5d943ede22a717da22b71ff7e74bb2a0848b304f9b7f4d399fba
+4b2d4f96ff00e332df6ada82f02ae442d59fa8e655672e6701a63af2aa9151e965a1925e8df49ec974184d28540462f4797835dabbeac807ed5bd692
+8638de08a9699fb908553f5812b302cefcad4bcd5cd7d92e9ca76ea741e67a32681d75c4266152fea2f8de18bc53ee688a41ac1dbd6b78cb3e37120b
+b0cf1bffcdb91f3acbadcf167f8063b25fea5a0270aa64c2551f2666c8d7adee9e3cfc3e0231d269e5417d970426185cd09efdb4d48df863bca6f647
+756d4dcb39c75b1948fd73a52dec555aaac7a2f7982c9d0725688402955f66a60817ed2ede7cbeb2a69c9129a5e1d2126371509f67ec2bf339dc3fa2
+35fafe53beecc3e47f06996441229ea2206855bee75daa7bd857cb86bc32f855c8b99ff3494d237e19aa76b5c7ca328738dafa5998a490c978116d3e
+1a442bfe753462ed928da862a867db968c22e825b8498fe3395d336e09ba4685d7ba02973fd9c50494886da249ea3c7b681672cc05537b92e3f1d01f
+e76cab73b95cbf22b57a7ed33e6c4364ff8619fac9ab086ce9bbc87527d47fb251b6246e51814ede5872620eb2aec882e426b8374b57b506854f35e4
+1f35055eeed1c6aecc8ae468bcb9a5033b61638429d61e0300fd55ca4581721ea2d2f1febf308a5e220f8e04bd4c5fb51206f43fc827bc98ba91fc73
+c592be5502340cc67dd127eb58dc23b53292822ed2cde8ce4f009a4e120b9ef44d3c4fa5e216e42fd8378ca8aa61cc63d5828ea51704244902ab27b9
+dbd1218545a2923ee2ddf8de5f106a3e023b6ee45d2c3f95f2e6d41fa8079cb89a71dc14be6995e43b55237e13bc1785b4e80eb213dcd269af9660a5
+5eff7f252d1678d9056252fea29db81e9f50aa7ec27bae249d6c7fd53226145fe8c75cf8dab11c43eda6f838679878bf58bd02473dca44d445562866
+d5e7aee78126ba722132d269e52112d2293b1542a7acebb3f99cff62f5babe137e2c03a43fc6593a09eb48ac29fb0835e794b4d9923b970955299803
+905d58b4526e8842a406fbb9acf29229a5e1be35447048d50ed634e258956b8639fbff48a9f7cfc56818d67447369de96b666db6e707bf13d46bcc88
+a05bc24ad9d4cbc4544a27620ae108f6e4cb75a805dcf958938798c178532e0457066df97b761d86f7f78f23a45bdc98904bd23aa921f19e423d587e
+3fb00adeb69c199112cbdb2689816fa854af237778562c9b0c0d1998cfed9f38bc518d689444a234b93836873d250d58e8d45ed2eab71f79a285da24
+789874a84ebf13472cfa5ed53671620edec8b2ee8429fe724a57bf19cc4975d34b313354f986b480dd9cca64e8aaa2056e7044c36fe04c1e0fcb52ba
+29aa5237b589f1f59433ce53702d857af53122ce1e26ee2fd421cdbeb29dbb1d8c8d99184f6d0bbc38cb0ff30cda22b229ecee0ff98b93c26a3c974d
+4d7ad28a054132dee71bf23ad13fc193f8358b55fe978ffe0163247f2cbb2ae5e1da2e940980b97899bd96ef6f1e6034480979f5723b32c5b28ea862
+c426dbb5877cc26e987a9af93844306918b10ddeb8f54bd813cc8b39c6c46fa241a63e36261c3bcf584834858ba4bb72d436c76b974baa3cfc7779ce
+3c070e47e1861ad288e55b65cea7df2e31b374af7ceb5a1531ea5ec459504948c9cda6c88c219d786454b204890a32bd625d7832f499aea8ca81ec53
+f3b4a70e7f610195708f501e04b84fa829e65b7289dbb5e2d31c8f495b27871c955c4ee74644ee39c468ddb8a494f244c9c8be194f1e38f254b622e8
+1bc927f033eae24096a592d8610a8d440865dbe54e275faeb133f42ffc6bda95b16ade44d9d0c9c8494d26460cbc2dfbedcb28c245a2923ee2dd98dd
+3d107c2e5f256ae36f342e94e8a4df56ed41d79bc86cd325a2289ed52450283530be1dd4f4ad18835c858b28898d66864cfc6d3b2d0b688049063ffd
+a29db872b87da16381129835a8597fd3292d035ef98a5695e7aa1267dfa1c13229d831b554f3075c78ed69df58015154ded080ff993db7757d4cbe48
+ce6769de0c00035af38cfea6ca8de573e5fae747756d4dc247a6377e61fd79af28f14144aec090ef892d87456d3c8e58de7759ae1c27e025ee60f2bb
+a19cfe0280c8b51e473d0adb38fd21e3019218b528d9ff53a9ad83de790ad615672a92e7412948a4e711e2289f338e89b164823ab5f1e2e255404b02
+64aa30f382b13e8e08a2fe598fdefbdd68116d33510765b05a3d2a93eef6c418e368db83a96dc921986989f02e40793277d602c8fba907d008d9d920
+9e902deb49e66d2368453bce450477d7e8fbdf1db458e0519944b87e9d6d79c609250f4ce8e577dbc7bb1a6caca5c21f59a431e61dd3410439e47bdc
+5d010e7595e7a9ea9f2ebd636d4afb01824c3bfb04371057cd93efbedd9aa553f4b9b9067870449977e957190cde52b23ffc387fa2d8b5b3df179b4a
+79268419986a44a80f34e039d92db7ddc191fd00c287af57466d79a90d9f3aef1dc66ba239ecfe55b5e48fc2614f9b594c52f2e6633a1b88a754e17b
+d4718e97b961d94394ab8ef54d4d226e1ee10efbe9c13e921f92dc529f849dda641a7c34104122b0783741ee92edc74bbd0fc0cac854d423ad64abfb
+2a4d34695dbe00c3b8b845b314d9d926989064b90dee7033680835e344092996c8e0d409e779a7699c6ea222af6c48cf32280503afa70bdac9b61469
+e89ad4387fa470a949bd07472ce04ede3671620ed2c2e1e5823bfe427c51b713c26168f6073d075eb58fa2e7c8c6c878fdaaaa046f6153c26ddb5612
+06b858af22fc1279bed1f1fe933be42e11418216dc7b44a91d0de665fe7bffa3ad8bb574c989b634437152907dde20e358fd3fb930eba56ea89084ca
+60029f434d708ba92c3c53b2e554f234d36bc789ad6d8b55d29ce18e322d2d640eae32b7ec9866c044d8b57483b583da7e0b6b3516207efd7d36248e
+ffd6ce04b97fdf859c36eb2fbf618ffe245a71365db217efca9845a013cbc233928b6fe203c27f3026116fd5480d51fea29dd81dfd5bee3bd84ca223
+a8387fcf3e2a414fe49c0a9795f81f3bacbcda256c9165fb00bf5e491be04ac25d1b1f62c984a4e58945d71e6d56bf6ae54d75d3615d035ee98afca9
+989cea62fbbdbf6d7e6a45e14782135755a506fd71b5462af689eca6c062d31a2575d64dc10516fa4659bc769032a3eaf5c5a61d91d5e64a16290cc6
+608273ba459576ed61a5b61ae6f9dc963052c30a1565c6bd317506eab649ac668022a4caf528fe799cabb2d46f610c2b459968b9bb966bc96685b617
+d6e9cc862042337a055536ad216576daa6b99c56f01283cad525867df135c6aa76096c2640e2539aa5f556cd4185967ac6d93cf610b2236a7545269d
+115566ca96a98c46e002f33ac515f66de125018a7664287fc8a25e918894344fd8e8fe045bd4428e7fcc77340ccd6690142e5d29888af1a2e723b174
+6954fb06994678c3023b1f1bde93eba6caa1ff75f19d9837332d2be22bc04c5737b41ba22ba81279ebc4b0f28f2cc6746c2799119b5d058e0f01ec0e
+fe5fd1b5a29df854dfc1fb13441e38f22ddc2feb14802da532fbff4eb4aac9822d0d990d6c3d88f47e2742ffa254f435d936a4eebd66cf3ab58c8ae5
+57416f6801aa3fe5a0eb2f8f1ec9fc52c59d85de703a5d17770a61f57f2c38ce91e1cf0fc725d2988b79d760aa7d95f43f5d3e755d8a1ec3f9bc0eb9
+08ddc602a8b429e227867731681674d40c2b3499cdfdd6558e4baf739d5be519a87d66e20814415fe58a10bda1d1386ce9a9c91e7f917c9e6ecf064e
+528122c2590c1e75d5aec8ee832bd41e6457b801800876ce283c1049bdc2ae8bd78bea7cccb4aa1e7e760fa825ce4c160bec5eb246811778a8d5bdbb
+9026a6556868d650914168af1a16a12ac36bbeffa581d848cd9ae131427a55bd34cd3df33bc022bc38b0a96faea980c562069a6547378fd06d3a4ff5
+a254fe299d72d7a4b069d90afa9185e37d4d3378198c36fee4dc73c238c7e94484f6d89b720d2e2a412b63f16e761b95f2e9c019b47fdf859c31b149
+a56edbf92440717604971cd7b8bc03951298d9228f9173a50dea7033427212cc430b3a9b8bf9c82bb24cee3ad845b218ae6825f73437085fe48010bd
+a1b41463eda49b3164817fbf1da20e1c258221b950170866d784a7fe832caa7e6756fb01884c52c30e39594bfc8dfaeb9886ea7df9f4eb0e6f614cbf
+34df5b5e629132a92aa81578bf94a1fa8f2bce486a68851f88185ba60910bb02de4eb6f58a99e845fc89a903093d11942f9f20e80c883bb12eecb16e
+a88084d86e0a905349368fcf6a6068b2f902f838d86c80b0b77ac043cc9988e21204356308a17ee5edcc2e920288fe598fdef8b271106d2654486ff9
+6f2c6bdabbacd10abf5b90a7876bd234a56795b766143c622db01d8eb6850a9712d1df329f810bc224e678772c1168d40c5466d79aa4814bfd4ba662
+9622c259d57e64d235203a5bec9d0aea88e55b7bac86da3a6ed42cfb53fe430274a86fd94f0c4b3a9bc9a0ff8561b87b6757a948884168c34278516f
+e48febe785c8e264f9b59f1e6b6101843f8f1c1e1cfd56e26cf5711ec2d1bffff7568b497c42e179d1150b92150df72edf7cffbbe8b1ef45c1c8fd57
+677b5e8f7dec2de616c62ea25691e748b8a58d8b61009143633d82f7633a5fa4ab49b120b716a7c5bc7ac4409ed4cba5525024664fe37eb5e4d73494
+4e84bb159fbb9ed73f532e654f0d6ae0733669cbbba6d102ae44cb87ca349b62af609ee43f167d1174d64cc4eaa91f955e948b65998b79e901af3c3e
+260c7ed24d0b2fd587b4931fb85dbc6e8b0ae770fe7f79c82e2a0509a1cf5cd2c6ac1274f5ea975d02fd33a84dfe59097aa40b925f17076bdec7b5a9
+c16ffc74694bb342c00839da043a1442bfd3aee5c89ae460bed2c21a110e288722cc5f1b48fe4eae2ffc1278a594b8e8b13081535b2785049d5145a2
+094cef2ac06ab7ddc1f1f74fcf89b757477a5096389f73a716c926b566f4e450beb6c9820766f751472adbdf206850a0ab1dff7bd46fcf8eaa7b835c
+d3979fcc5e5d36641fab2dbea8dc34ea65a1925e8df49dd57c126b7d5e0165f434333ccebbf0c90ea30fcc929c6dc92eec7c89e22e14347519d567ae
+fda60ffa75b1d9228f9173a50de97f3b3b1d11a949063ffda19ddd14be5ea2279e5da533a87164c97b37024ae3ac11d9dcb9126ee9ba9334649a65ba
+54f14b15718222b9551e4b69d4d0e1e88221aa766156be12cc5c73d20574035ee98afca9988de57496d1c20b746740876dcc561e04fc49a522a84637
+a8dbbfef9c3680426a72ac15887b43ae1700f32ec327b7ddc1f1fd4fdec8845b0b6744997dd620a711d82ab92eeba344b3ad8dcf7f0a901e083c948a
+054132beed54e22edf25e79499208964d39787a51204356308a1549e81b1528c03cbfa5bcba4d1863d0c7b25022e62fe781e2295e8f0e203a443dadf
+ca50da2ea8649eb562143e695dac1bc5a28e029e18fec235889042a344e37a00201178c8651b1adf89d6d008b86faf758c0ae25ad51102ae3222415b
+ad9b16d2c6f81a64e881cf3266dc61f71dec5b0576c64add59544b25cfcbaee7cf66fe72665cd169e5217edb1831185dbd8cfba582a1f851b4fa8906
+6861718a3fdb1c5e48ec53a52282721ec2bdbdf49e3e8207683a841d8c4c0bfa5b17f4299749f7b9acbef252df9c981f427855ac35d62def31db0af8
+7ec8f948a3ad8cc27916ae4547358bf42e641ba3f901f472b716a7eed161cd10cc8a84ea4b50616a03ab7ee7fad736901886de598ab69dde795f7a2f
+5d060199155142eef7ebc20aa10fca9e9c74de60f1288be52459216f53900ccdfdab1fa419c0df6785d921e90faf7f392c586bd243052b8385dbd311
+b85cba539d50bf70b36a2bd7292b0c5bf9c13fd4dcb1146ed8adc32301fd18d23496470178fc42c4501d4b3a8684e3a9cd20ac377c51af0c8908268a
+4b763855e99afca6db9ca930f3aaeb1372704d8e6d9203574acd48a56ea81465ebc0b8ef913ace1a2568c920955b40e72e14a36bd967fbb9e88cf254
+c08dfb4a0b67449973f12fea1d882ebe3892822ed2cde8ca690bb7434d35d3f3792a17f7ff1de537d8338ec5a87ac45dcc8cc9ae312d480264aa32e4
+edb252e965a192568fb0b8cf781226344d0a27b06f2d29c9d5e5cc0ee10f9c9e9c7dd662e502f29e423d347519d567ae91ad078319d1cd67889163f1
+64fc5f7f6a3574c4490479de8bf5df1ffd51a173d85bbe32e65e62c93f020859fe9b3ddfc1b41f4fea8bd736788739f975ea430636e742d41e514b73
+d3c1af81e446d71e6457b80180086bc50439014fbdc2aeb4cd8ab156f5b6af217276529f0ec7571b0ccf53a92fe032648a9cf3cb8f30964e75219f09
+ac4a44aa0b10a3678d7beca2add19129a5e1d21b447750977dcf6eba58db3eb272c8f94eb6a593d25d0e8c43083789a07f3d59edcd1dff3ffb76dc94
+ac4bc359d09cc3a573452f6f01aa7cbea8d729c01fddf90dadbd9fdf5b167c344c2b63f9703c1c8ff2e7c922be6e96d5aa79c8259c6989e3691d5b12
+74d667cefee81bd008d0ce29f1ed08c224867731680869cf41182fd7cafad55bad4da16a885ce515b27969cb3e20415fe58a10bda1d1720985c1d738
+68957dfb49f65a0b3da816904c0a046acbd0efc48f25bb747c6cbe189808658a4b76531bfc91eae7c89ae47decace528796e448839fb5b0f1cb854b2
+6cf80978a6c4a5b5bc3c9a4e7726bf15844c21ce726d8842a466f8f7bc91ef4cc9c8e64a0b3613db32cd6ef311dc27b57ca5b607f98d8fdf681d9f54
+5c7adbef7e684fbeff18f47b80228ec58d7bce129c9799a74f4d356708ef63aaa89a0b890fc3bb629bf6d1cf751a60674c017ffc797876c7e8f1c345
+834ed392c87dd524c601f29e423d587a19bb27d3fda543805098df2e8f8864e70dad6e2527156bd40e4151fea29db872b853bd62f221c259d51102c6
+3f20285fe88256c784f80875eee6f53666913dfb1ffc41092ce942de590a492eb1adc882e446bb796c32d269e5217ed90f5e7832949ae0a3b2e18275
+f2bcc16e7e6a45e147a658181ab864ec6ce10f72a694b8f5dd369e46713a9858af5d59b11207e4388358f1a5a38beb41cf8de1304e60729334d32af5
+1dc663f975b8ef48d1cde8c26b4f97434d35c1c97f0913f5df1bfe379f368e93b06dc53ab5f1e2eb544720674dbf7eaaa8d12f850192dd5e85b0b7d2
+6f0c7a04500167f4347a0386f5e0cd0eef069e989a38d234a965c1d1225a355d14ad1dd3dba0029c18efc32e988c48b86ca73c15290b7ef04d1a2fd5
+829eb872d456a8278808bf38b9762bc63f20285fe88256c784f81274e9a595196a9974f71dbd5a0837e409991c1d0563b1adc8ee813cbb7e6e18b214
+894521fe18155919df9efda2e889f964bef1eb1373614fe144a6371b07fb5aac6cf80978a6c4a5bbc07f87537d25d13695564f811216f23fee67f7bb
+acaff349cf8092046a3c13ab2fd036ee15c13fa90ceae44aabb0c3872d1b8c424d71f189054152b1ab04e334d06fdac7b966cf10cc8a84ea4b506f4e
+03ae3cfbeddc7b9404cdf53de2ddf8b271106d2654487ff968342ec7a6a4d119a242ce83c657d92aa96b8fc32e4c253b03e24e85bae80a9e1898db35
+948971bf03c07c3d2d1b6ff449102fd7c4e6910baf50a3778c068a33a87164c90f21195f87e677bea1b11d20f8a1cf3b6ed42ce61dbd0c4737fa0bc4
+550c07629b99fcabcf06b0636d4aba03980a3bd819740552e993ebe785d5ab32c9abae453b6b53cb39c64a1b0db806fd6caa2b7ea8dff1ce8d7dce53
+702d855088515fab1e44bc6bc47bfbbae6b6fa4dc9c8be194f1e38f254b62fe31ce13fb531b0e253bea9cd8b79068a5b4d74dba27c3a54bafb00b372
+b716a7eebd66cf3ab5f1e2eb544720674dac32feebd37bdd4cc1ef5286eeb7d2731b482e4a1b7fd374312783ccecc808a566cdb6c03af82ca56b90d3
+2e40347809b01c85b4e81f8209dd824df2ed08a24baf7d3b211b708058003e998bf5d51f944bab6ad041bf35b1342bce2f210c05c38e13d284f85963
+e0a1d83c29dd31be53fb246e51ed47c359110d2793cdb5ee807597644910f92683447fd21976581bf28daeaecc8de62ad5ab8a4f39494e8f28c31c5e
+41b85aae28a81578bf94b8ef9832d46171268f36954a58b3380ce827c940f894a499e85384ca930246755f9434db6cae58dc23b53292822ed2ad878b
+641cb258472cb8ef623c5abee511e373d46bcb8af646ca5dd9d1cbf353412f0164c6579efbdb3a8e2fc7f5438abd9fde6f5767335d05229a15514282
+f5e0ab62c44ad093e211de2ea802f19e275b327a11ff0ac2faba02835c858b149e9677a24eea6d791f1769cb5f183a94ceaef712b35b886e8a5bbf13
+b47167c37366254eef9d17c48af17109e5ae9b336e9663b24ebf4f093ca803d4591a196ec89e88f8ac67fc516754bf059e0a32970426515ff89dfcae
+cbd2c263ddf0e92a746044876f8617571cf05eae46817264a8d5bfd892319a4671268e02d45c4ea5090df262a706fbb9acf2912981c5fb254e78589a
+3fd32ba708c939b532ecab41b4b6c1e964039255473989e44b3d52a4ab15f229d26cddc7b964c710d9808ee44e502e791eef76d3edd42f814088da45
+88b184c83d2722676b0767f16e3967c7cce5d70ee425b79b877bda2cec618ff2267324722dbe1cc2f6bc4bcd5cf4c4249a8851a74cf67b25723e72ce
+482e3285d8e0f213b453aa489e6ba731af6b23850b280052e89d39c2c1fa5220e3ba9b236a8676be49d85b0e528222d6530a4b77dad6b5a7cd2bbf63
+6918b20ecc587ade1927595df28ae0a391c8ef7f96d1c20b746740876dcd595755b868b423fa1a70ae9a98ef9832ab744807891a995b5fb42014e039
+d95294dec194f443cd84fb1e487b5fdb609f66e319dc2afe08e1fb42fbf9dc8b2f1f8c5845288fa22c2955b3ab5673c7153f8ccef867d910949c8af3
+5a0a15721daa7eaab598799403c7f715cbb59fdf3d5dfed8acc32bb235782495bbacc50ab94e90a39168de60f135dbb52858387816fd4ec6f6ac4bd2
+8c273df6145c8eeb0fa63e383a583950b3fbfdd7899eb872b150ad669408a83fb07779876664494fec9b1f99fca10b65acf5867729807eb451bd0e06
+36ec0bf353140475888aa7f982228c504a10ea50dc043b8559645d1bafcabbee91c8e462bcf0af066f650fbf34df5b5755a51be23cfa147abbc0f3bb
+9c318a075b27871f8e0b05a1090bec19ea4db6e5fdcdb7009edbeb5b0b2c01d2749f21f558eb24bc33eab809bdb68ec65f28bc1f1a6dceac2c7a0be7
+a754a76b9415a7eeb16e8b5ed38ccbe55c042e794da131e3a8da3cce3cc9e95285a0d1cf751a604d316102f27b7876c7d2ead21fac41dd92c676de37
+e42ab9fe275833741cad0ae0eda149d976b1a24e99832f854ce27b77755839f873210fb2e6cbf4288d1dc40ef121a937f25967d03a3d1264e3bb11c7
+88e55b74febdde5d02fd18b95ab17d0e22ed0b8d1c2d2f6ed696efe58838f6272418ea56dc043b874774430fb4f587ceb18aec3eddbca415756144cb
+708f4e161aec31c945811970e5f9b0e3b9369d5379268815dc050bf64b54b141a40697ddc1f1924cc38bba1b0b7853977d826ece16db3fb132fbee09
+b5a196832f3b9b4f5c149ae2692419fbab16f672b716a7eeb46ac71ef29986e21b19612939ae39b582b152e900caf719b8bd8bde3d422e127c0166a2
+32362e90b3b58d4bfd039ec6c4388b69c601f29e27563d353fbe0dccffba048512dcff359a8a72bb4cfd7b392b013b9d0c5951fea29ddd19b1119a62
+805c883fb07779947b794148e28311c5a2d17209e0aad7795f9169af6eeb5c0833ed68df501719349b99e1c88223b1653b16bd12834549f0297c4117
+bdcfa2e788c1811995d1a705772a758e35db6d031af750a518fa1a79b8c4b0e998318d5e3875cb40d20a21ce726ded29c121d8b8a68cbb1d8cadb502
+463a779433cb60c017dc23b131dae44bbfcee8a204039c5b060c9ef8781b52adee54ac7b8c2ea4eed101c752d0d6bfe2435061364da63df8e69875ce
+4cccfa438afabfda701a2e69164829b0477a6bc9b5a4d504be5bcc9e867f9324ad7c9ab90f5d226f54ff4089b8ea06ad5eb2a24ef2ee08c224ed7979
+181969c5421c7bca8bfdc51eb078bb6ea849b935b26c01ae524d325fe29d1fd0cdf63274e9a5fe045bbb73b158fc5a1403f84ac248254b3a9bc6a681
+e446bb7b7b5dd169e52177d808351d1bf19de2e785c8e977a69ea2097f4248993edb7d1f01f45fe86edc1a70e99ddb92f45687413824891cdc4c43a2
+156e8842a406f2b5a4d6cf45d49cfb4a0b7d5294339f60a958cc2aa43db6c546b6a1c185234fdc17737adbae22684fb8f800e332d3788683b97cca1e
+f89198f312046f254ded33caaab252e965cdf553e1ddf8de731b044e5d066f9a16512d88e9a4d10abf5b92d78a7f9b29a2288bf6224622332eab01d5
+f9af0ede35ccce2abeb751844fe57b343c0b3280480751fea2fdd75bb350ba279e47be3eb8437bc629303c0be29d5ed9c7ac5b70edbacf795b9563be
+53eb0e1330ed45ba35716277d8c5ade7c529ab796b4cb20f8200329709334b7ff88cfab5d791a339bcbda503320e28e244fc4a181af95ca562c10f72
+a6f182cbb23d84427b3c982b8c5959b32644bc6bc366f2ddc1f1fe4ec8e2d21245703b9e33db448d14c728b130b8de6efbf9c1d070659842463b8fe9
+63261b82c25ad835d46b86ced201c75fdf9987a75c5128450ca23bb7b59879b833fcd263aa9aaeed28473f65326162f63c2c2a95fce1d52cb84684b1
+8176df06a57a88e3085c387719f709d2f1860a9d19918b3393816feb59ee6c302d0c5cd545333c82c2dad016b862f4439d5bbf22b361238e7b210f4f
+87e674bec4b71861e0e8e834799174b57aea474765a862de4f0c0a69d8c1efe58838f6355b5ba90589465cc202765d1be99efca0dd9ccc65f5f1c16e
+4867538e28c1790201b675a121ed5b2aebd3a4f2b33e83422368b8138e5d4ea93c11e865ff6aedb2bcb7f573dc89ac190b29119d3cd33de2438818b3
+2efdee499cb18885440890585a3dbcf5650155a4ee00b1669d6bdc92bd338b63df8a8ee255633462438b37e4f8d43a9923daff5299f4cc9b2446377e
+015132a9255242ed92e8ce08ac439eba8971d560f128b2f9384030751eba40c9fdbf43d23acaca2a9ec62deb7eec6c322d165cd5454151fee6f5d815
+f36ca77d9d08f670895c62ca696a0f4efac74e9b88ee4f30a0e88b7b2bc029eb14a40e2a39e1459e6c17186ecfcdaee5cd72fe424c51b652c2467ec0
+43645f0eb1dfa3f48ad8a730acf6fe4b3b2913df7d86347e25f952ae62ca1a74a0d3a3f488318a6477248402cf1816e7380bef2dc468b083a09df645
+82a5ba1e452f11b63cd620a939cb3fb92afdab1afbb093de6854de7a493195ae483a5ab0ec15f337d83f93c7ac7ade55b6f1a2e9485020650eaa70f9
+edcf73c239e1d85899ba94c93f532e0a590165b9321b2495f5e1d339ac4bd7829b388660994c92fa655a346c55ef4287a9f842fa75d4c4249a88219e
+64dc6a2527137e8011481299d8e0d015be5ae0699d5fe372895158d3292b0a4eafc35efac9b11529b7e8ee1e588063b456fa002437e444c21c454b44
+d4caa7e28a618a7f6d55be4ebf5c69d800314a1bc8b6ddb3ca87e075b28ca30e786f4f8e3edc1e4a48a915f577a82e5e98c0a3f4963ac0736a298503
+8c5959a21507f86b902faef9fbcd9129ff9cb4054a7354d510de27e93eda2abd39b8b60796a588c50765f71a0578bdec63294fbee513b114cd7ac0c8
+9b64c443d9d8a9f24f502e654de71ffbffd922934cdef24482b69dde3d1060674b0b79f5793667c7f8e8c808a60fca98c86cd427ab649eb726513f6e
+54d567cbf7ab0a9c5cecc4209c88648959e13e6a683175d358093594cebadf1eaa17ec539d50bf12a96c7fc835664d0bde8c0cd2cdb63c75e5e1b15e
+5f9b76bc51fa6c1336a665d1511d4b3a9b8699d4b926aa7666679d0c83496fde05332e6ff298e9abddca8119c8b7ac007761639f23816d1e12fd1bfd
+6cdd3f7ea686fff59828c6173468df42d0181beb5b50b362a706cab8af9ff745ee9cb5597b7b429229d621e958956b8518f1e615f5aa84dc255fd217
+196ed7a03c660fe2a754a172b716fa88bf6fc755fe8c85a9794522600abd31e2e6dc188f00c7e904cbe9d1f87211682e5f465ff879352ec9c8e1c261
+c47bd1908f74de02b866d5c32e4c253b40ff4cffbac262a413dfcc2b9ea675a503db7b2f3c3b74cc431a68d796b4f214b359a760d67ca335b17d25f4
+2f360e40e8e577e3c7bf1c6ce98acf3925b27eb549bf13471de65edd123e0469cf8a86e49927bf7a4a57b704e6214fd80c331d5edf8be0e9ec8df364
+cfb1b1023b3901da75a5372307ff5cac29ca0f79e5f5b2ef94298b0725689f02895d21ce2f0be62cc16adca3a6d6df52cd8fbc16497854db609f3af5
+0dcd41d915f6f853baaa82ce23019b40007aaec94f2749b9ee06b3779d4bc180bf64ce72c896c2a9784b336508bd0cf6ecd12e934c95bb62afbd9c95
+731a796f08442ba12c7141eef7ebc20aa10fca95bb6cc92fa76ddbaa6b7d3f6809be00c4fde605950b908912b2b775b942e47b7564584fcf4b0f3792
+e9e0df52d736ba65ab5cb93fb77d25e434280e59add25ef4c7b61d69ebe6ef3f6e9974f56eeb5c0833ed21b9481a3873c9cbaaeec31bb67e6b53b505
+9f5b3b8a4b655f0e97f6faa5eb9cf97ff7bde53369654f983dce4c1206fb42e071a84b39f8bedb92a9308940742da904921666a80e17e409d87beab8
+a6c9d84cc58bb04d687b5f9538dc3aaf1edd25b328f1e449f3edeba2040698177b2c94f26d2f5ef9c615f835fb6dcf8abd28df58d996e18e322d127f
+02bd3ff0ed96168105c6dd458ab994954b167d2e5a046eb021782588efa4f21fa25ddf908d36f621a566bde52a5934352bb61dcefaa40efa75b1a213
+948366a748cd6a39662c7ed8584866d7f8e0de09bc58ab29b549a23e9a6a6aca3e6a3742fe861cdbcdf81a6ee8e899b5976133fb52ed0e4500aa21b9
+35713f68dcc3adeeaf3bb0395c5da314af4777d819675106bdacfaa8ca89ec75b295aa0e7542538a20ca102101eb52a220ed5b76a5d0f1d892338155
+2b668d0293557980394cb37e9823beeff8d4bb189cc1fb185934729433d927e056fc23b531fda574afb68ec06865f73e212c99d3783a54bcee5ad234
+d170dcc7e528f844d38a8ae05e0a0c6a04a118e5e9d53ece3ac1e85e89b8949b7c116a677b0767ff6e6b6581e9ebcc398a6d96c5dd2d9760f438d7b7
+7304783b12ad4ee4f7a60d991b96ff2f9e8964e57efb6c38231d11a925610e83c2f8c2559350ba6e9e51e3722c8798167b090445f8cd5297fbac1472
+edafde79469578b57bed4f0a3da67dd94f11096bde84a0e5896ffc58587d9525a80a3bd819745378d1b0dd82fccaa730adf1c16e12614f8f47a65b19
+0cb131c946811778a8d5bdbbae368a4248298515901816e7320af23fcc61fdb2e696fe5784ca9d054a7954d9719f03e611c662da55cbe243be9480c5
+6803d06441229ea031686e93e219a375d37ad9cfe8248b0189cdc7a70a08613b44f47ec4e1dc3eb00dc6fe5bc59690d876187c284d066fd373342495
+a8a49c4b8e40d091817f9514a46d96f26567347877d627c9ebbc0a9e1fdd85299e9329e978c65d383a167ed20e447ba4c2f0d42bbc51ab6bd106883f
+ae766ed509250542f89c5e8a888d3f69e1e6d5327cdc21f71dae1e4e528121b950170866d78495e29923bb373518920e9f5c7ad908315f55f888a6e5
+ec8df364d0b9a90277260dcb1ec65a1238f955a520a1711ea2d2f1f28e198152762c8e02dc4c43a2156e8842f966eabbadd6cf45d49cfb4a0b36c164
+c91a6edf58fc02841dd6b741b4aa958b6e0092585a65dca36a2e0be7be41b66596238181b766df0e9cc48de85550616802a331e5b59f78860acbff04
+d9f3cfe0452b3970005156ac333e2489efba8350ed7bd783847d9512a56b93c32e4c253b40ff1ad5edad61f919d4d822928221a25edc7b3b241d6980
+58003e99a19db82fb44ba262d67cae28a838368779b4febf28cf2697fc912f41c2f4dd38658031b852f3411565af08d65a485b328e83ffa0d160b878
+664ce540d04e74d91f741254f190fcfa9fcbbb20f8eaad013c3a7aa8028278383dd67f851ed54738addbbfefc37dd5074c219f1c991679ae180cd52e
+d57bbeeae88ce955c9e2d212476754923b9f27f42cc13fb132c8e752a8e495c36801f43e210c92f4602d1583ee0ce57b803f8c17479c0e10e4d8bfce
+6f650f370ba030e3a8db348c03daa610c8b2978b2d4a3b60064337bf7a372593a5a49d0da241cad78b77d72fbe35dcb42d52327f4eed4999c39839bf
+51e08b06aba1599611a07838260c258217480f9edff8d4558f56ad6fac4db324fc252bd329310421848a12c4cdd27209d8a1cf3b6eda45be45eb0e5a
+78aac92a9d583327efed95caa36de5375c51af0c890649de083c255ee58baefa988eea7cefbdc16e7e6a45e144fb570304fd159325f21e37f69484df
+9432dc09762d9c58cd140bea4a52ad6b9d23bee5fcd1a000f881af1b4e3a61942ed63aee17c66bed7ccdcf4eb6f6cfc56818d6070478cab220680bfb
+ab45a372b716fa8eac64ce1efe9988ec5c562e7e03ab0ae5e9d628900ddafe5988add1863d4e35676c017ffc79761f82e3f0e204a140ccc4c8259b03
+a3669dfe2c1a057318b20b89cbbc199f17dda14eaf8d75a748a15838260c3b9d0c2d3582c6baf714b34be040975ca331b15a67c6382f5a0bd9860adb
+cdf62f65f4bce83e719131e61dae1a5c78dc42c4501d4553dedcb5d3ac23b7706655be0e980826972e3a0456b3abebbfccb0ca7cf5bfa50a7e6a55c5
+01ca5803629232ac23eb1a7bebe7a4f989369a4b7d68d650b55658b31a0ae22e8361fba0e0dacf45d49c971649715dd9719f1dee1ccd1bb132fde70e
+d1cd88cd2d068d71472d95e4693a1ba3e311ff51b416fd92ba7cc244d09dc5d35e5c352b50ef7c671729cac02be7df7aa490b49b5c2f4b1f188a8b32
+3c0e7dc9aaaa9049c726b7a49d7acf29b8649eb91f51296f3eb002c8eafb4bcd5cfbc42b949632e54bfd713a1a3f59881e5d6edb8ba6814ef11ffb37
+d122c235b06b6ece3d640858de8a12dbcdaa5b74e4add55d02fd42ae5feb471334ed05e459001f278684e37b72dd50374b77f626a37d55f32e06516d
+d4afae25384aab46aaf6fa492a262be244fc4b151cf14fac29a62f72b3c092f491309c143875cb33935444b5484ae739c262cc908ad0ab0c8cdaea47
+073403ce6896448e1dc438b535feab4ea89088df6c01ae5b5d2bdbf4642d55dd827dc22edf6bc793b46d8564d9809fa7060463e9f76e7ec7daf776b8
+4ce9cb72b3f4133bbf5f5871165925a13e5242eec8f1c31fa45bd292c64cde38b84b94fb2446623b40ff2dc8f4a719c352ded92896b6468905bd2b62
+6458299019447bc29bbdbb72b853bd62f221c203a97a7fce2f280405d98a06c388e55b22da87f2132ba3509776da7c47ba0889906a4e45369595e381
+e4468d626a4cb214804d35e30e2c0578f293e1b58bc8b630dfb7a50172630fbf25ca531246cc5eb838cc127ac1bdb4f59955e7746d2a9f1988544ee9
+280dfb2e8d32be828c91f6128286be0003251ddb708e78ab589867f06daca21cfb9794c979068a5b4d76abef7f214fbee41ab1669d4aea8eb53a855e
+d98fc3b71704703941ef6ebba88b6fc966a1c84289a098cf711a2005590b60f76e373e89ffd0d30aa35cce969a7dd523b528c6b77a3e584808bd1ace
+eca40ede3ad7c533dbd9218e43fa73790e1775d4022f3483c3f5dc39b253aa3cd87bbe32a8717fcb3e6a354ef59b2dded2bd5b3dacf18077588173af
+54eb420276dc4ec848202a6bd2c3afe68821aa3735189e0e994535e30e2c0563dc93e7a0d685ee7ee8f687027d702be247a652180bf957e018e9195f
+a4d8b5fe8f7fd307512698049d5648a2550ae43c852dd8a5a995fe0280c8881e4f71619a33da22ae72a11fb13ed0e44bbfa193855e0684520865dbd5
+482156e5a51af42c952e82c7f5399d1c9cc9c7a71615713b44f47ec3e9da138f00ccfe45c5849ec8740b6728564836b0491c228aa9aacf0eba078edb
+c8209760fc24dba27d1d6a3b29be0ceff7a40f950e96e926988f66b942fa70331c0a7ace5f183a85cefad202fd02ee36f221a73fbf7967870f250367
+ec9611c2dcf84620c5a6c8236a9a72be13f14b1070aa7ef970111873f7c5b8e4983bfc3b286cba02a44777d30e265800bdabefa5f489f27fe9ace537
+7a60458223c81e4a48cd7fa921a61572bc9ce1b7dd6bc72d1241871f9f5947e7280de52ef861f2b8a99cd954c2c8e657627a428f3cd12de256c62ea7
+74badf42a3b0a3de791b91590a74dbd3652c5e87ea1af4379415a7b4b16cce65d29484e65f66356543813ffaed9866c04efbf2538e819fd7721e6a65
+326158f9783d1e89f7ebc00f8f5bd0d9bb71c125ec35dbc20f5d3c2953b10bd0b0f947d051899d6bdbd42deb1ebf376c682b72c4493d359bc4f5d539
+a951e057975ba224b57765876664346fe4824c99c6bd0c28bce49b6f27d420f71db21d5f718222e3551c0e52d5c8aeea890daa79267aba03874f69d8
+1e3a1578f293e1b58bc8b630dfb7a70869370f8d3fc053252fda13f174b85737ff84fdbbc96fc72d111b8214996d45ab1405e509d961b083ad80ef00
+91c8f995b69811ae13f301c63c88109532fcd605e0e4b2c2690aab5944379ae44e3c55f9df11e92ffe70c288aa3b8b0d9cbb84eb545672250bbd31fa
+daff19c85e9dae1bcbe6c48e315f3c720d4101994f312f82ceeacd04ac4bfc838636fd2fa27cdbaa6b713f6e10f128c8f6bc45b713ccc32696a66ea7
+49b43e04211c7ef542043496cfd6c515f36bab7f8c7ba22ab93836876a756b22c4810dc3c9b61865a2a6de2023d644927ef05c093dfa099c1c2b0263
+def1afe7822eba557c56f24eaf4769d90e26235af996fbb498d5ab45d8b1a649756156c37d831e414192329325ec1e42a5d8befa991d9a4936058405
+8f5d69b20f10ee259c4cf2beab93a163c386b5124860199d28d12df311c725f87592822e89b18fdf64029b197d3697ef6d2c13fe817df435d936a4ee
+d201c75fdf9987a76b45266e25a032f3edca7bdd4ce1f5449fb59fd8785160224f4029d66e392682b9a88126ac46d0dee211eb21ab6db3f827503469
+538c07ddfde856d029fcc22ac9ca6fae5aa72f7b68552a971c447bc687b49c4ae916f527a849ac35947767c33e364f7be29c17c3c1b71520b1e8ee13
+629923f553fa594f68a40b810a4a47278b88e1bcc474fe47695fbe2883447fd2197a335afe94e9b5d79de574c8aaaa096874409928c15d0e48a51bf1
+4681711ea7dbb2fa917f9b4e573a8f158e7b44b21510e4398d32bee7c2f1f74fcf89b7574d615f9829d621e958cf2ea412fdf35394b685ce7f47d717
+5d31b4f2682d4994e401ff2fd86d8edaf87dc27fce9c8ef5784b346519aa2cb7a3986adb4cdafe439ea69f9b681641355c0d79d3732d2593fef6810e
+a34bb4fee211d72faf6997b72d413f7809b601c9b88b19951dccce179a8364e343ee7332617212a940073896c7b4e11aba5aee3ad861a523a87965c4
+3e6a0f4efac75ce4cbaa146ce0a1d5304d8670b658bd024708e94cd574170763ded6e881e4468e766f5df53385527e975674247ff492bce9d68dfc38
+adf4eb57372410c76d9f174c48c85aa729a63976a8dfb6e9922a80434c3a8a1e8f484ab51e0ae2328d32bee6f3d8cb41cb8df5214267589931da6eba
+58ce2abc2ffd812ed29480cc6841ad545a3797ec4e294983e31df230d37add94f8358b0487d8bbe65c416f580ebd31fbe4fa3a9225c5fa508e979ed7
+720d3d67054848ff723e2280b5d0c90ea04a90a49c6ad42ba902f29e1b55367e539d01d5fcad19a315c2ce17929c64a70db23e67427112f04d0f3ed9
+e8f5df0dbc4c9d6e824deb6dfc4d4fce36764f45e898568784f84b2cacf897773bdd1bd234ef4d0634e403d649160873d2cbafa3c46f8e766f5df521
+995c74da0a201858de9ee0b1d99bd879e6bdeb5a3b414f9e20817f021cf756a138e11844a2ceb4b5a47f8b497c61e179f53222ce170be22ac12fd2be
+bb8cbb1d8ca1b5045f755f98389120e20f80698515d4e254af8880d2621a8a150478abe16b2d12ecab38f828c931fe86bc6cc25edbd8d6a76e602866
+43a13be0a08877c05981a017a7bd82cf332c61354c2779f4792a6bdabbc1cf1ea001ed989a6cf432a86d89b90755287408ab21d5fcad19fa75b1c728
+98856deb7dee7a77755852ce5f1c3a99c8f19f15b848e625ad619b31b87c62c93c664d0bdd8e19d281d27209dca9df795b9575bf54f1492537fc5fdf
+51585627eee0a8e6c321bb602008f740de1c32bd625d215af9d1dea6dc8ce27efb8aa200737001d66dfa7a1e05b655a53ba04b3beb82f891f456be46
+7c66bb11985c42a91c30ee3b8d32be828c91f60ec28dac5f1b3811c974b5478e72a142bc33fbea4bfba294c56e1b9758467889e56a3a5ea4e337f035
+cb7eddcff102a239b59484e45a4861724df27edbe1cb2fce2dcae85887a185de5e1060335d067fc375222ec9c28ea862c446d8d791388560f938dbe3
+23513f1174d667aec8a90c9552fbca298d85729844f57b7775584ee4450569d9c5f1c653ed13ee37d408fb7cfc612b8c7b77510287e677becdb40865
+86c1b25e02a470bc58b16d0636fe4ac36f1111629b99e1dea926b3252656be17c41837975b78510bb1dfbeeeb2e18219f9b6af6d120d448529a5377e
+24f148b476cf1e639bc6beeb982d9a5e5b208a1e9b5d4f941203ef2ac127bc96aa8bf44cd99cbe34447a459e33cb1dee02cd69f966dbe449b5a182df
+251d9b515a3d88e84f2955a1ea07b851b416fe86bf6d9177d98cbbf55454247919b61dffe9d63c8508fbf25085b59d933f296734510a67f53e7171a4
+f4eacf0eae5b96919d76d834a56795bf623e581274b60887c8a90c9552eec23492866dae0dfb7632267212a925610b96ccf19f38bc51b8668b78a423
+b56c62c835645c0bdb8a1dc3c7aa492ee2adcc7f3bd831eb1495276e51815fd14f134563dec2a4f9c53dbb717a5da808af4975c10a27583194f687a2
+d68c811995bda503320e28e247a6371b07fb5aac6cdc1a7589c0bfbbc07fa7496b3c8a1e9f5d05a91e13a969f96ae6a38a8def54c386f95b0b405099
+15d022e31dda62da5591df46b98695c5233c974d4d78c6a0590c52bab95aff3eca379fcbf83887108cd4cbb4090d7a2b39ae3cd5fcd675a20dcbf050
+99bb84d5793c612b571a38b021780888f7ebd358e349cc98854afc02e43bcbbb78047d2848f664ae919c0a923eccc569af8179bf0db23e3929157e9b
+0c3c3a95e9e0df55895ab673bb47a73fae2b2b9a7b070e45eb861999fcb01e6de9e6ef32738055b250a40e3339ea69c452562d68d5d0e1b6cd0ab062
+65169d0f825c35f00420195af0bde1abdcd3ab44fdba8913752a758e35db6d1e12fd1bfd6cb94a2cebe0b0f9bf2b8009593d9f1fbe4d5fb3140ac224
+c160ecf7f5d8fd41c09bbe7d221d78952ecb2fe91bcd65be39efa3058e8da2c47f019b450a74dbd46d2a79a3e55dbf18d26dc082aa5aca54d58d98a7
+0604144f04a270f9edcf73d04088ad1ee1ddf8ef7c1d4c33564646ff692b2ea5eef0d504a31efd9b817bd07a8f6795f92e5725331baa00c4eca1049e
+5491a14ef2ed67a45faf417b3e5872ce0c183a9ed9e7992bbc58ab4f9744af35ae224cc22f070942e18b0cd2c6f05229acacd477629231ad07d65d26
+70aa78d34e17076bd2caa6cd9f2eb3722a11fb14844d75971d7a2752ee96ecabddc8b630fab9a7147e244485298f5b190c9232c945ee1465ebebfded
+dd368007682982028f107fa6192cee27c96aeced8f9def63c481b71359715fd374966ee3178822b67ceeb16ea885c989590a86436a2d8ff4632619fe
+ab00f93ed33fd8c99a69c85bdb8a84f25540026401a02ca4a8857ba303c4f445d8fa97c972125c007a4038a0306b7bcba8b18850ed5990a38d60cf03
+a36494e578146c3b3eb000c1f1af45a414ddc622d5b064b359cb773a681d75c40c0d3593a19db8728d5ea962d67ea223b57a67c27b79415fff9a1b8c
+888c1a62cebcd579499572b05aed411236ec68df501719349b99e1c88221b87e6f168f0889457e9938200354f69ab5e7ec89e952e8b6e5337e7c55a8
+22c351055bb806e00fe71571a2d3ffcf953a834236058a19923222ce7234e02cc821ddb6a68efa53fc87a81e5f7d5e957d826ed11dcb3fbf2eaaa549
+beb3c99b214fce1e2251f289782948bca510f43dd86d8695bd6ed955cf90a8e65552207844c5579eedd63fc966a192458ea084c9735f5e265f0d27b0
+483929a5efea8d4baa4acab98d60cf0fbe6c9ee5413d347519d567ad91a404931dd48b218e8a62bf44e07077091c7ff4430f3c9bcebcc11aba5ae227
+8c4db324f0386dcb3a234d0bea8a0af8dabc1e72a5c2b25e679b72ba51bf6c1336a8169075161873dacaa2eec321bb60201a8f05945c59c21f201e55
+bfd3aeb7d98fee3996d1c2256f6a0fa72cd651021cd749a429fa5b2aebd3b4efb22d8a426a60c24bdc7a5fa95537e831c82fa3f79dbcf24d9ec6b512
+5c3c00d77d927aab589867f06faea21cfb8695c5232d9f54433f89ef79265f94e418fe298e3f93c79b67c556d59fc5d353412c6e439c3bf4b3981994
+0286cf5293a0d1863d5d2e671a532bd2683665a6eef0ce29b85bca98865bd42ca37adbaa6b5230770eba64ae9181058308d9c5249eca6fae5aa73c02
+013b74d2420d29d587b4f30fb316e044975aa535ae4a6ac33231120bb0cf2bf3c1b5556ee9bf936727d427f23796270b37eb4adc1c2b1f75d4cfa4ab
+d06f97797b4cba0e8f4d35d90e235919c8b6ddb3ca87e075bef4eb256f6a08d06dfc4a0507f35eee0fe71778b994ecbbbe308041712fc524945d46a2
+5537f539c264fbece8abef52c383be597f6650952ecf2ff51dc628a97ca5ab17f5fcd4a1046692584b3997a0402959b2e754ac7bf471dd93b966c855
+92968ef01306156e15bb12f6eadd37c24088d94385fdfbb214336f255d0425c479203fc7a6a4d50eb55b85d7a479d925a026a8fe315171265d8a2ace
+f5fa459e19cf8377d5d335e70dbf327779543b9005537bbbcaf6d417f36fa174915ca23fb23836870e000846bfc110d2dff04b2cacf9897b2bc43dfb
+0db6246e51c44ad259144545dac7aaec9f20ab796c6ca901825b6bd619311f58e4dfb3e789d3ab5cfdbaae0b3550449339ec511b07ea08e071a83878
+a5d2b8fcd30b8642752dc52499405ffc5b28e029c863b091a796ef0091c89e195e791fbd32d13aa93fc73fb83df5d842b6ad83c4610bc517643999e5
+60666fb2f300c232c77a8edaf8399a0b9cb48ae55e486f5f08b72acfc9d4328702c5fe599ff4cc9b58117b2a163c6ee868000a8bf2e3cf06a841cad9
+a47ddd34c601f2fb245730775d9600c3f1ab0a8413ca8b7adbad6fb859ee70342d5675c55b4079b1d9f5dc1eff13ee458c46e25ad51142c93f2d024a
+f9800c99fbb10165acf59b024f9d7ce913f14b1070b807900f4c47278b88e1bad566e5374156bf098f496fd8197a2154ee96faaed786ab2dbc8d8f0e
+76360f8528d8164644b816f47aa45b27e581fdbbd066c71c38018514955b4ab31416af09cc6cf5b0ba97ee4ec8abb41b446602db609f0de814c739e3
+72fef948b696a6e9255bcb1b086cceac2c7d0efe817d9812d36cda86b66bce1ed29d9caf1971084802bd30f2fa9a77c025c6ff5e88b585d46f562004
+571a65f56e0a2a83f2f1d24bf00febb38175952ea97fd3a66714613277d667cbf7ab0a9c5cd1c523a89073a446ea3e6a683175d358093594cebadf1e
+aa17ec52b17bbf22b3736e8577642845e9861dd6dcb70929b7e8d2396fa765a952f44b491be747df4e585627f8cbafed8428f043605db605c27b6fc5
+043f1400bd96e0a3eb9cf97ff7bde53369654f983dce4c1206fb42e071a84b39fc81eabb94318a746c3a841b99167faf1207ea25c87cedf7f5d8aa2a
+a5e1b71848755ddb19d03aa7458802be2fecea49b8a1cfc56818d6156e2a9aed696a17f7c21af532de7eda88aa21a139b5bc84f31577287108ef63b7
+ddfc328d5e86f5529cfcc1973d4e3a6b185827b02d6c62dcbbc0ce1fe37fd184816cd22fa228c6b71e7038764ff100c2efe05bdc5c8a8767cbca34e7
+0da2297e73585fcf58461996c8ffd609b24aa063bb47a73fae2b2b9a7b070e47e29d4d99ceaa146dde8ff97f3ac121f71dae1b5774a81a860c51610e
+b2edaff8992eb0746d16b5059b0039e222171e49f39afce594c8cf7fe8f1e52474764f8e3ffd5f1301ed48e071a82e53a2d9fff59828c6163468db59
+f63122cd726ded24ce6ef2f7ae8df543d881b4190b41419f3ccb2baf0ec927fc7cebe04eab8a8edf6409871e2251f289602758b6e754f27b803fd886
+b428ca5ed8d8a8e85542286c439b36f2e5dd75b318daf45c8ef49ec93d3c612b571a38be7a2a248ac9c3e343fc1a8edbc8298e70e028caa17b1d5b12
+74d602c8fba907d01edfe867c6c477aa41af7f392c5858cf400729c485f2c314b06d8945d018e770ea2827876c71480be29d5ef4c7b41472bfe6dd25
+6499439c7fb71a5274a81f8510585e3292aec882e423b1746954fb10cc153bc10a38515af39bae92fc81e622b2b6ae1033350dcb609e085b48a815f5
+60a85620e294bee9dd0aaa4e757ac51e994f03f75744b3678d3fb0e2e4d8b61785e2d27e224754892bd62de20b861fa739fde574beb697c26e0ac474
+5a3d9af469607fb8ff58b10fca7acb899166cd5f92968ef013146f3944e37eecd8d7288918c1f459cbe9d1cb315f4c265b036ce2732d2583d8ebcd04
+bf1c9ecac87bc669f65897f6321c781174d667f4fdba1d991fddd869af9364ae43dc7b253e1178c5162b2992cae0d4539451aa6e9b49bf3fae342bf3
+2c210445c48118d886b61e77a4f8956522d831a07ffe4d0c3ffa44c5521c2868d7cbb3b8cd72fe756f7ba649d67877d6127c583194f68794dd9afd79
+ffbdb8494f73448e23fc5b051ef158a576cb0972aac0b4b3ae2b9c48732dc750a84f4ea2152def2dc221f0b2bfd0ab0e9ec1f7575040439a33cc3ee6
+0acd25b325b8b607ada58d8b6c019a171876cfa0633a1be7a54ca4269425fe8bb9718319b6f1e28e784b2f6d04a870c4fcd92f851ff3fd5b8ab3ac9b
+205f78265462029915282886f7e8890db841dd838177d568e502f29e423d387d5db902c6ffe856cd5c9af3159a9d23eb4ce17a771d0c72cc5f460f98
+ccf3dd1e856daf7ed85ca335b2385ed332281205d98019d0c4bd2352edb193216a9838fb58f14a6d518122b9551e4b61d7c5a6abd072fe354e4db70c
+8e5a72d00320531bfc91eae7ed9ce27ceff69f087c634d8e0bda521b0aea52a724fc5b63a3d1bfbba82b874b6b66bf1f9b5f47a23d11ed27cf7df7b0
+a08cb356cd84f2574e7a55f154b6478e11ce6bb630f9ec07e6f9c1894c018a5e633197ec6e3a52b4e056b13ad37b8e89b77c8b46dd94cbe655406158
+19a02cf6efdd75af1ec1fc5e85b59dfd7c13622256206ef97b303fc7efecc405c726b7fee111e825be7e92f42e477f4c12ad05d4e8a9089552feca2b
+97816f9b4cfd6a240c1d68d45e0722bfcefdd613a91ff327ab5ca422bd7f6e891436084ce4811fdbeeb9176ce9a6f332629379af3796276e51ed45d4
+3671620eb2cda7ab8b23bf702805e640ce6b73d60627531bfc91eae7fe8dea64e9aaae143551518f2cdb5b3400f956b36cfc1372a59497fe9c2b9b55
+7d3bc5258c5c4ab31e27e92ac07cb6fee89df544a6e1d27e227d57db3bd32fe0589576f07ed1ff42b681b2fb2f4f8a5f4d36f189054132dee212b135
+d26b8e91b9648b44d49d858d322d480264c637f1a8fb37850ddad2438eb9b4e84d5f7a2f5d062bd3703d2a95d2f0c406887ceedfc138de2ea802f29e
+423d587e11ac0bad91c162f975b1c221dbb171af4cfb7b1e3c1d76e57f387b83c3f1df5ba95ebd6cd65bbb31ab7623f22b20005fe8a60ad2c59d2850
+a5e8de396ffe18d23496270236ec21b935716262d5c0cb82e446d77e6e18bd0c8d4f3b8a5674536cf89efea8d6add840bef8aa097f244f84398f4816
+04b85aae28a83f65aac3b8f59a7f9a4f7d26e179f53122ce1d0bf36bf223beb2bb88bb49c2c8ab16426642d30ecb21f519cf2efe19cbdb68b9ae84c8
+791cd7174c37f189054132de821df77bd86cdec98f6dca40d396cbf353412f2b08bc2eb9dfdd3a9003c6b56182a798d9711a2e7a180e6afc6f3d6b82
+f5e0ab62c426b7fe8d76df4ac501f29e2e5a351174d667aef1ae4b9610d9cc67c6d921e968dc4e75681975c40c0634838be2d017fd5ea063d86cb931
+ab7165c07b30094ee3e577bea1d17266e3ba9b0827d474a84dbf470978f84ad94e0b4354cfcbb3ea8a2af0525b689402864d78c3187d515ff2f587ce
+b1e18219ecbbaa0b772c479e23cc4a1e07f613e94681721ec2bdd892982c9e095a27935eaa5158ae1908e46b902ff8b6a48bfe1b8c8da807055a5096
+389118ee0bc129bc39b8b607bda58dd86865f73e2151f289052d48a7a53cf43ad16bc6a5b97a8566d58b82e5574161364da93ffbfbdd60c009dbeb19
+afbd82cf7c116d22163e62e3753a2782bbb9810dac43cd92e211b249c501f29e2252717e0eaf40f0fda91b9f1298df2f9e8a21ae5eff30002d196bcf
+42460d9ed8fdd317b81ff3279e49a723b9386ec93f4e682284e677becdb61f2986c1b25e02fd74b55995276e51814ede5872620eb2ada8edcd29b276
+6f18e65dcc0a49d60f350319bd9ee0a398bbff7feeb9ac023556408f2cdd780509f55ee038e01e79c1bdd892f456bd53773a8a17991679a61f05f30d
+df6ef3b2e6aef253c58ab7120b29118d3cd3448e71a142d935feab49b4b0c1dd6c03de43403d958a054132de827df734cf3ff1cbf867c95a9c9185a7
+4b4528791ee70de3e7ca3a870986c9568fb583f47f156b244c1b22b078376b8efda4ce09a701e89e9b71d92ca9288fff2e5a71741fb540f1f1bb0292
+10dd8b7adb8260a75eea3e32261c3bc5420c51fea29db872b851aa0df121c259b9766fad524d6822e4895ed1c4b91c20b1f59b75589c7eac7bd07845
+78e945d41c2b1f68c9c5a6eec30991415a51b507b9613bc303311f3194f687ceb1bbff7feeb9ac0235426ebd1fc650103dd1159625fb1275a7d1f1a6
+dd298f4b1241e279f55d45a3716d8842a466f8f7ae94fa478cd5e657094759942af321e413fb3fb128edf805fba58fcf2d3c8a585a399ce5221c5ab4
+ff1df23ad157fba3f87cc355d2f2e28e322d485819a02cf6efdd75b40dcbef5e88b59df3483b200a590165be4a31388ef9e8c44bf00fc8968438da2e
+a828d3c43f5b237a1aba40ebf7ab009518ecca359c8175eb53b23e39211432aa256152fecefad571d436c762964ce25ad51102ce3d640f44f9cf0ddc
+c1a8356ff8a1dd2e2b957fbf1dca5a0e34fb0bd1521c4b52cfcdadf8c301b163615ea24098407ed9615d7832948feda6d484a376e9b6a813726b4fc3
+64a5377e6191329538e11764e5fabeef9439970f6c2d9304d0185da61744e025c92fbc9286b9d96ce9acf957446611d919f61dc63ae40e947eb4ab16
+f5f1c8a10466f73e4d369fa9064132deee1af551b416cb89bc02a239ef8c84f55a43242539a039f0e4dd1d9502cbe86c8db890dc405f33676d186ff1
+683d70c7cef4c50ab94a96b48776dd29ab26a8e32a40346826b902c6ff9547d008cade22d2ee08c26ffb707905176ed3492a2e83dffbdf4a9e53a764
+9312883fb2766ec42f6c075ee38c0adec7b65329ac9dcb336a8074f353f05a471be745d6551f4554cfc5b5ee9e14b87b695f8649cc4d75d3425e785e
+f39b84ceb2e1e77fffb9a7477d714f8839c6511948d95fa41fe41273aec6f9eb9c388b0b383c8e0888140baa120aad6bc06ee6fbe89cfe4680c8b815
+0734569e29f03ce31dda62da5591e748b8a58d8b4b1d9f5a4d78c6a0452648a3ea1af23e9371cb90f02aed42dd958ea51704316a0aaa779d81b11d92
+0dc5fe19a7b588d4680b41355c0d79b021782c82efcbd30fa85d96ded338fd32ad659eb9185d2b7e5de24ef2dca106c252d6ce30d3d52deb00bb3277
+78543b941a4160d7ede6d016b8118c669b43ac22b36d65c3182b0d44ffdc5e8a889b146eeaa1dc795f9c74b658b17d023b8222b975161873dacaa2ee
+c321bb60201a8e29af4769d90e265317bdb9fca6d58da23edfb7b9097e76738a29c64b0448a51b9508e11639a5d1a6b3cd73ce113142e279905748a6
+1744e718d97df1bcadd8a600e586a8034a7a529e73d12bf0508a1e990fecf948b0a1c3872d298c56453dd2bb2c2e68a3f91bfa3e935cc18bb77a8b0d
+9cbb84e95d4d262539a73bfaed9608941ec7f052d0f497e8690d612c5d465fe27d363897faf6c405ae569ecac8289578f902f29e413d587712bc0fcb
+b8840a9219d48b7adbad6fb859ee70342d5675c55b4079a3ceecc537bc5dab6bda04eb16ae7966c2724e6822c18e1cd2c4f62f65f4bc9b6a2b8074a3
+49a40e2b39ea4edc122b027dde84fcabb80bb77a3a16b5059b002b995c665d1badd3aef794c8ba28b5e3eb2b7a66448763ff510401ec52af22a84637
+9ef0b8f6cf7180426f60db5cdc091beb5b54ad6b992694dec1b4fa42c984f5354a775a9c2fd03be91cfc39b132ebfb46a9a18fc8744fc3171963dbcc
+6d2a5ebba520f423c95cc18bb77a981081d8a8e85542286c439b36f2e5dd75b409d0ef0ccb9890d97813200157067fb021780e89eee98f2da241cad9
+af77cf28ad65a8f2265d337411bb5587d4a909951096ff22839052a257ea3e6a68492aaa25611796c9f1dd55895ab673a069a739bb7666c235304116
+adaa10c2c5f62f65f4bce316679d76b550fa401376c44ed64872610eb2c8aee88c23fe41695497018e4d779756743855ee8befa9db8da57ef9afe345
+4f61599f01ce5c1204ba17e00afa1a7aae9ddb92f4098f4b5429891590167fa20310a1768d7bf1a4bc8af24ecbc0bf124d3d0adb0bde22cb19ca2ebc
+72cbe25dbee4dc8b582b975a1a7695e57b600bf9b940bd7b8d338ed7f4289a0895c3cbd15a480d6a0faa32b9d8d7288918c1f459cbe9d1ee59166375
+16066ee7346865d0afa88146fc1f92d7d8349b74e502f29e1d553d571cbd0bcbb68a0a9317dfd9288e8a659f5fee7024381969c5420b22d796b48040
+fd69af6bb449a935b0365fc223302244e1800c8488e55b43e3a6dd3e6cda45b358f24b490bfc59df571d5027edc5adc78c2dbb7b267eb40e98082697
+2e3a0456b3b9e1a9ccc6cc7fe8b0aa0a596b4d8f768f681604d45aa229e45543aecca5c894258b072568da41f63122911a08cd2acf6af2f99c9de354
+f4a9b71e4c7a5c9e33cb6eba58ed25a531b6df42a3b0b9ea61069959453d95f4221a52b0e3009b51b416c288bb69c710ef9482e35e6620794df27ede
+e6cb2f8102cbfe1985b186933f2b6b3f4c2a7ee4683725c5b7a4e719ac42dbdee211b213a0619ff2095523352eb614c2b8f54ba538d1c675d58a64bc
+05be3277654a2b8c0c5877d79dbd8a5b8e53a7639d6aaa22f24864d432300844e3cf4397fd9c126dbee6d5327cdc21f71dae1e4b78b807900e40423c
+9bf7ade2892a9c767a1699018f437cc504211f5fde90e2a8cadbab2dbc9ba40b747612c52bdd511a3adf79e878bd5723fe98e4aed464ce7474218f15
+be5959e92f01f93f8d32bef5e8d8b92aa5e19219586050953eda60e91ddf63f209d1c848a9aa84d92f43de6444319fe54e2949fea537fe29d37adcb5
+b96cc245cfd8d6a76e60286643a13be0a08977c05c81913ee2b89ed87c132e25591a58e46e372082bbb98122a35cca96867bde6ea26d8cbf69611848
+09ad01ccfdea47d02fd4c2239ea660b904b43e35290a48d45e07309285d7de17b24dee3ad86ba43eba716c890f2c0446e8c12dc3dab71065b7e8d936
+79a765a952f44b490cfa4ade4f080a75decaa2f2cd72fe272600ee6ae62112db04371057bdb9e7abd4c8b630d5b6b8137a6a428e63c15b0040ba7db2
+2de51e35e79482f7943b8b65793ac27af5316dae1708af18c475fbf7f5d8ce64c585e959457146d375db2be155c522be75b7a34ababcccc66401d71b
+0868d7a03d641be7a24fb11dd473c2c99a69c85bdb8a84f25540026401a02ca4a8857ba303c6fd5e8cfaa5d378126b696b1c79ff773d41ee92cdcf18
+b94ed0948d36d525bb20d9c202773e6913ba1c85b4e82d9910d48269b88b73a548fd4c362c116ed30c557ba2effddc55b35ab92fc904eb60f51202ae
+514d6847e28c1fdb888b1769e8adc9136a8070fb00bf552539fa0b8d1c2b076edfc183ea9f63fe516154b740d1085dde07385d1bd19eeca2d4c8b630
+d0b9a902772801bd2cc372160afd57e071a82d76a7f8b0f99833c20755218550c11846ae1548a106cc77beeae895fa5880c898164778539a3ed46eba
+58cb29fc7cccee5fafe4dc8b790a86435552f2896a3d55b4ff1dfe359d4cc28ebc6dd974dd8c8abd6841355d0ca32bf2a0ce3a8c45a2923ee2a290d7
+3d422e2a591c63be7f342a8aebacd70aa1039e9a81769760a16983be70143d741ebe0287e8ab1fd0419883319a8821e60de277396158348004053a8f
+8bb99116b451e70df121c216b5746789082d1b4eadd25ee2ecb11632a2a6de20238472af11bf1e4b78b907900c515027edc5adc78c2dbb7b266cbe18
+980826971f3b024fef96e0a09085ea64f4f6ad0b746b53c33bce525e419232c945e11d37a8d6f1ef953a80077b2ac31d9d4c43e91d08ee24df27e8b6
+a4d1b200c986bf7d221d549539b5478e2bc422b439daea55f5898ede7e0abc425c2c94ee3d0c54a0e54ed234d371cb84ac20cd45d29b9fee544a6922
+4d9c2af8fad93c8542e9f84382a294e871166a224a4836b04f342283fef6e50ab94e85d7bb6cd432ad6f9eb91858387f18ad2ad5f9af4bcd5cccd932
+9ec464a549a6145e412b77c9480d29b3cae0d0418e5aba519944be35f47c6ec1724e684ee38b74bea2d1176fefa9d777789878bf58ed6d0f39e64cd5
+583b0469d584fcabbe2aac61615bbe13c27d52e4451d1f4be88bcdafd986ec75f8e28808756a44883987580206fb4fa923e6537ee2bed8929439ce74
+6c2799119b5d0594170de52edf4becb6afd8fa4ec8c888034466509c38910fe40cc13db50ff4e243beb6c1ca630bde5e060d88e57e0155a7fe00c522
+cd7a8edae528ee5ec995c5d24841334203bf2be3dcc12b8542e5f44298b1bcd46b1a6322561c2be4743d25ed928da807a24cdf9bc86b9b7dec5b8ff8
+3955367e539e0dd3f1be0ea310d1cf2289ee08c224e3713429143bd04f1c7bca8bf9d00fb511ad6b9945bb78f47125f73437085fe4801099f0f85620
+ffe6f93679da50b94ef042122ced7bdf4f111f6ed4caefd3c46ff1377b1699019e065ad5183b1d4ee99addaec28da548b0f8fb4b3b3508e144a63704
+52cb5eb41ae91762ae9cbcfa8937c04174278402d44b058a120aa1608d27edf98599e30081c8a859667d5fd27d956ef71bdc62f956918242b5a0eba2
+68019a1e22518fe16e245ef9e21ae23ecf6b86b4ac67d951db9dc5c4544a2f6e0ebb37f8e6cb77c01fc4f2538ea6b2d37c1169225c2b64fe727141ee
+918dcd04ae4ed2d79b74d224a97abef92f51355812b10087a5e838950ecec2249e972f9e64dc301e26086ed469063f92cfaef214b351ab648c00ad25
+b27b7fce342a4942a4e577bec1be5b69a29dc83279bd7fab48eb7a1e28ed0b8d01582e69cec9efde9e2aac5e6648ae14b8516bd245191e4eee9accb2
+cc9ce47eadf8aa097f24729f22dd5f100db668ac25ec1e658fc6b0fcdd2b86427642e279f56b5fa80905e62e835cf2beac9de964de89bc571634579a
+31cc2bbc58fb3fbf2ef9ec42f58582df64199b6444319fe57e6806f7e51dfd51b416cb89bc02a255d29cc28d3250206901aa70fee6cb3e921880c843
+84a690dc78514d2856066ef368312489e8a88118a146da929a5dd524a96cb8f8255a781174d567cbf7ab0a9c5cdede29989068a443af5f332c3c6ec1
+40402b96ccf19d5ba90ee2279b4afa7cfc6c398b7b270319a1cf19d2dc970964e9ba925d02fd7db45efe42471ea8169075161873dacaa2eec321bb60
+201a9d128d457e954774015afa9aa7cdb1e1cd3ed0b9b2086e706e9929ca4c5755b85ca538c70973aec6f9b2c67fa8094b219115dc050b923f0dec79
+8361fba0e0c9b70081dcf7571b3811c86f9675a73e8609b13ff3ec55b4b18fcf591d9f595b289af2692658aeab49b16ab716a78bb76bca5c9cbadaa7
+060408651ebb3ff9ebdd758e09dfb315bfb189cf5f0a7a33570629bc3c1e62dcbbc690459e46c492c8259b15886196a5655a346c55ef4093a0e44bc0
+50989a6bdbd428f00dcd2f790a1978cb4b1a3482c5f0f214b150bc34d815eb13b3766dce3c6a3543e8821b99fbbd180a85c1f96625a074a349bf1347
+2cb910907e494553dedcb5c88223b1653b18e640af4775d102335f6ff59ae3a296bcee68e8e3eb252a2a678423db1e4a48dd55b521a63d78a5c0ffdc
+922b8646750a841c98030b854a4ad52ed57bcdbeb29dbb1d8cd1d17e225d5f8829de20e41d8625b52bb0a97292878ed9630a8c150478b9b1256678b8
+f91af429ef7eca8ead7b8b0d9cadafee560a2f6e1ae76ebba88e72ea65a1f75888b59d9b7f4e5d334a0760f53c656baef5f7d50aa34cdbd9867dcc68
+ee5db2c43f463e7018fd4287daf942cb5cda9a148f966ea048a15d382417698011481898c5f2d81cf36ba662954de503a86a64cc3e7f4149bcbc0ac5
+c7b31e2ed8bada39788470a958f14d1e78b50b8012405e0db2ada8edcd2cbc26284cb3058208598645191e4eee9accb2cc9ce47ead9ba70e786f1ba8
+22c150120bec13a639e61863a2dbbfb3d47f8d452960c25099564fee5b01ef2fa70697bba79bfa4c8caae957163478952ecb2fe91bcd65be39efa305
+8fa199df4f1a8a434736d9ac2c0e12ecab36a375ee76d482f8358b65f89186b5154a247c45ff70a3b0947bd04088aa1bcbe4d8803d3d3c69680778f9
+68312489bbb9813e8946d3c5c676de37e438d5a27918712b51ff5e8bb8f842fa75b1e975d5a660a846e86c383d167fe34304348598b48c5b9e50a061
+914fe504b47d66c275170448b6cf3c85868c1e78f8e886777fc62afb7fad00333df05ff3531404758884fcabae20b071615ff534844d76d245001443
+e9c4ae858ac6cd7ff2aceb5a3b414f9e2081781806ec158723fc1376a6f6bef79964ce652a66bf15844c78ae0101a1768d3694dec1b1f553d889b514
+4e3a5f9e2a976cd231eb24a232fdf905f7e4a3992441bd585a369ef25e295fbefe07b1669d4aea8eb526c555cbd0dbab1b12680164c632f8ebd937c0
+0e9ac84399bb9ade3d422e0e561b7ff1723b2ec9f5e1d643ef7af7a49c6ad42ba92ad7b7090678205dbd5cf4ecba049b1996e828978b73eb10af5d38
+261e72c7023c3392c6f19f28a94da16c9d13eb32ee4b7fd5342f0405d99d1fd9dba81a72e9a6d82e2bc931eb13a71b6d518142d61c1b09359bd0a9ee
+836f9c252675b4159f4d59c21f201e55acbce2aedb83b153f3b6a5027870098d38c15d0301f755e865a81875f99cf8bb98318a0e382d8514f63122b5
+1e10f439c32fdce6e4d8d912a6e1be194f1e38f154d321e419c46bb629f6e853b2ab8f8b4c0b9a644d3b8fe9632613a7ea13f4779d6bcb9fac248b57
+d98ca4f55f41332267c657fbe7db3a8c4cfbfe54ada690d6785f3367710678e47d362882b5eac41ce50df8858975de62e0288bf62c5178205d8c0bc4
+deba0a9d1996e726828b74bf62fd7a323a5826804b0d2fb8d9f0d409f516c40ef17bae339a6a6aca3e6a3242f78a5e8a888d3f69e1fa95396e8339ea
+11bf035374a81b9c1c4a5d2e808492ee8e09ac76655df5228d4b70d0193b0455f9abfca6d69bfb71eebda50462241ccb7ca5377e629132ac23eb1a7b
+ebf6b0e9dd62ce6e763b9f11925b4ee91501f6638f49ecb6a59db90c8cbbbe146d6650963896448e71ea2aa272cbe25dbee4dc8b582b975a1a7695e5
+7b600bfbab47bd7b8d338ed6ec219010fe9999a96b4b326219a631f9a8857bb528c1f605c5ba94cc354f22670a442ba0326d67c7b6b38861c426fc96
+9a36f921af639ce524413f7f3eb002c8eafb4bcd5cfbc4299d8d66e579e77b3a2d5648d45e07309290b4f815ae4baf699b4de53eb96f23850e0d2244
+ff811bc58af45b42edba9279489b63b558ed7c063ce15ec31c454b52ffcdaca5832aa93f3914fb50c52211be62381e58fc93ae8bd98aee7cbce5eb2e
+7577558a23cc5b5906fd4ce86edc1e6fbff8b0f99833cc0b381b8e13ba4a4aaa1e4d8b42a443ffb5ad94b573c592be57163464bf34d27ca916cd3cf8
+6db4ab0aeaf2cd8b3c43de070163dbcc6d2a5ebba524fe28d46bc788b6289610e9bc82ea090a2f6e1ae76ebba8896bcc4c98b717dbfdfbb214336f25
+5d0425d27d3b2080e9ebd405a97bcc96866bcb21be6d95f432146c3b4ce44eebf9aa0e9c52ecce3f8fc43ceb5efb6c3e261f35d55c183e8583e0d403
+a916f527b449a935b0365fc223302244e1800c8488e55b43e3a6dd3e6cda45b358f24b490bfc59df571d610eb2e8a0e98823f0516756af40d1085ed9
+1e395f7df291fae9ff87ff78fdb5890b7a674ad06de35f150df4159429f00f44a2ceb4bbc07fdf162368a7119e5d47e92f01f93ff54ef2beaf96f645
+c29cfb4a0b515f8e30911ae200dc139130f1ec49b6a18fdf23239b515c52f2e5622c31de817d9837d27ccf8bf86ede5edf8c82e85504006f09843bee
+ead135843ecdf95e85b0d9cb7c186b6b180968e4753725a9fae9c447ed44db8eae74da27e0289cf23f7b237f18ad47ad91c1079f1fd9c767bdc43ceb
+64e16d23291678c502063e8083b6f709bc52ab25d408bb31bb7d22ad524d2705c18e07d8ddac3472e8adc97736d476be49d05c033dfa039907582d29
+e8cdbbeecd72fe424c51b652c2467ec043655d1bb0cba2e788c4ab22aaf1f0475d2a638a2ec4590507ed55a40fe71778b987f1a6dd1c81497e218c5e
+a8504eaa1e4ad22ece0597de8196e854cd86b812057a548c759d1bce3bc739be39eaa90bfb82c8854e008c594d2aa9e168214ea4ab49b10ef976c3c9
+b66ddc188cd4cbb1122e480201a03df6e49828941ec7f052cbe9d1f2730c7a26560b6ebe723d3ccfb9d1e838b95dd19c8d3a97608a21c0b738402374
+16ba40e4f7a404825c858b04948a67a24aa14a3f2d157e8e7f1c2998c0f18a5bae4bbc68934de504ae7965d42b25134ee38c079795f84b2eb4fdb15e
+02fe18d251f04d0634a8679001582269c8d0a0e58e2af0796d4ff342b84d63c32735135ef1dda2e7fec1b030d0f6980e616101d66dfa7a1e05aa15ae
+29ff5327e581e4b7dd6fc2072964cb40d5030b8b5534ee38c47bf7b8a6d8a600f9acb21a193a5f9e2a977eab58997bfc7ca8a707ebedeba20423d075
+493b90e77e274eb9ef20e33ad36cde86aa6dc553c5d8d6a70a1f6147439b3beffc9866c00dcbef5e84babfda701a356774465ff5642c0888f7ebd358
+ed129eb48776dd29ab26afff2e59343529ba16d3a3e827de3ad7c533dbd9218e43fa73790e1775d4022f3483c3f5dc39b253aa3cd864e504b9607ff4
+323e040bb0cf4f87a2d1724ca29cde2f7fac50b754f8400a3de65f9001582e69cec9efdf8837aa4f4954b20782457ed91f7a3d5efb8b84ceb1e28219
+f0b7a8067724639f238f035721f648b42de61872e5dab4ecd57dba42603ca905884c44a95948a10d8434be95bc96b573c592be57163464bf34d27ca9
+16cd3cf86cb6bf0bfbf4cd8b3d41c61b0868d2bb2c0a4fb9a524fe28d46bc788b6289610e9bc82ea090a2f6e1ae76eb9bd8077c05c84bb07c5e5dd9b
+2d56044e312a7ffe321a2a84f0e3d304b841dab48774d432ff28c6b7085b3d740fec40c1eaa706a23bfa8374cec821f818a33e637d5120806e1c35d9
+fff1c90f9e50a2688a1beb6dfc5b64c93d2d0605d9871bdacdf62874fea7d03230d453af53b1680836fc0b8d1c3d0572d68a87e4833bf050674cb301
+816a77d6083f4a1bdf8be0e9ec8df364cfb1b1023b3901da7da5377e2aec55ee18ed0363eb89f1d89231884e7f66a015854b70ac1e1dc727cc68c3f7
+a996ff00ef87b51142731fb038c63ddc13cd329630f9ec7af58a80c6684f9145087ab5ef622d19dd827dd835ce6bcf89bb6d855ed98fc3a56e6d0264
+1fa13be5aa947ba218c6b219a8bb83d5780d5c265c017ee33c656bb2dfedcc45a34ac9dfd8349b74e502f29e413d585909b140eaf7bd18953ecddf33
+948a308841e67d3c723b74ce420d388383f2c415be4ba7689600e25ad51102e52f2a4f7fe8970a9795f8595bdcbade2478d45abe44b1004905aa21b9
+35712973d58a95ee953b9d786457a953cc153bf404381e49aed1e8b5d785d957def0f9522e2801d97f9f125750a812ca4581727ba4d7b0f7dd3c8149
+7642e279f55b44a91544bc6bfe6aeca1a19bfe5382bd9224055d5f8b28cb0ce21fc925ea1ff7e549bea795836b1a90545c3194ee242155a7a754f62b
+d836a4eed101a259dad882e94b0a147808bd17f9f8cd2fb415d8fe17d6e9d1fe730a63696d1b6ee255363b92efd0d81ba801f592917ad421be6cdbf6
+2550717213af40ecfdb1289f18dd8b39c6c444a558e2301c2d0158cf480d75a2c5ffdf14aa51ee73904da55ad51102ae52270e45e3d53adedbbb146e
+e2add82323dd1bd23496276e1be745d6551f454cdeddb2d0862aa7516459bc3dcc153bde05245f70f886cda8dc8d811995d1c26e59704fc519ca4603
+48a51ba922f8555caecd92f4993ac06979258e7af53122ce7226f525835bfbafbcbbf44cc39ae8571634729433d927e056fc23b531fda574afb68ec0
+6865f73e2151f2d5782157a4a53afe2fd479d7cffaea2798534064a77041386904a13ab7dbdd2fc24088fa549fbd9ed5531e6322184625b03e782988
+eeeac54bb94084d7ca38956eec6195e7657f34623eb00ac2b6860a9d1991a14ef2ed08ae43eb145e41717ece484151fea2f1df1ff435c762964cc15a
+d57464c43a28414df8811dc3c1b71520cdacdf1c6e8d73b253fb67093ee703c05d1f0e2b9bd7a4e89926b1792418b909824c689b4b33144fd28deaa2
+cac181199599af034861429f24c0505f18f95ca560a80872a8c0b8f49373ce407d3ca402985d59ee716d882dc27dbe88e4d8f949c28cfb1e4534588b
+3cd63cf450ca22be38eba207bfabeba2046692584b3997a04a6806f7c21ae22fdc71cd82f666ce4794daadf55a49242941ef2ef6efdd72ea65a19271
+c59890c2720a7a084a0c6ee23c656b80fef0ee19a94accdfc1239b06e25b92ed2e146c3b289b07caaae605950b909a6bdbc935e70dbf32777a4a329b
+0c2e75b5caf7da1caf50bb699c7cb931b26b7bc629210f48f4cf439799d2720985a4d4346a9831971da20e2e36fb5fd1521b0e29d5c1b6a3cf1bbb6f
+7c74ba028944399b4b125800bdb3a094d192ee30a1f89e23726913c523ca495f58b60ef560a84b3beb85fdbbcd76d5075466bb1f8f515fae140aa176
+8d5adabea5cab54ec99ff347073400cb719f7eab589862da5591826bf58680c866088c585d369fd47e2955a4fb15e33ed37cd7c7e5289a0b9cb4c5d3
+5e5c352b50ef3cfee6dc00d13193bb7bc58094c3693c612b571a38b021780888f5e2c80ce37bd692857d9514a9708fac6b787f5d12b11a87a5e82e9e
+09d58501948a75e56ae06a3f291559cf400c60d7e7bae51ea54b9d6e824deb6dfc293bad524d6867a3bb1bcfdc803a6ce5afd53a6e9a65fb00bf6b09
+2de505e459001f5ffac8a8ec8322bb797c1697058a5c11be625d1d54fe9ee2e7f3c8b630d5b6b8137a6a428e63c15b0040ba6fa534fc3776a9d1bdb9
+d17fa80e2368a05eaf5151a25b59a11ee966f3e5e696fe5784d8f543073401d77d8e62a7488170f017b6db48a8ad95c26201de0a080dbfe9617a15b9
+ee03b96b932982c7f53a9b1c9cc8c7a70b0d4b0264c615b9cad9388b0bdaf44285b0a5c97c117d37591a6efe7f216bdabbb59a4b8601ea92906c9b7d
+ec6a92f92f6f634646ff2589ccad13843fd7c72889d721f60dcc71392e117c8e78003e9acebae20faf50a562c308807e9a7765d37b79416ee39a1399
+eeb71574a28fd42363957c9951fe4d0c63a8609e681d1373e8cdbbeecd72fe263832d269e56335e30e2c0563dc93e7a0d685ee7ee8f8f6475e6a5486
+63fb5b0f1cc07aac25ef157aaedaa5b5af36894f6c42e27999564fcd7201ef2fa70694dea497f841c0c88b46073465ca719f29e20ce739b439eaba07
+e6e4a2d9680e8a5278399ce5246acb4805dbb118f252eca68c2a820b9ca8daa96d4d32620fa33bb7b5982f9219cda017bfe5dff97c1c65204a077efe
+781b248bf4f6924bf00ffd98867ed227e25c93f226517f4809ad01ccfdf34ba44d96ff22839042a441e06c6468453be343063d9eccbae513b852ab29
+b549a23ed61167c838250d0bdddd5297fcea5720ebadcf18799074a90fbf13471bfa4ed1481d3b66dcc1e9a91dd04f96e7805440ba6148e22a185312
+97f6e2a8db89e730ccebe7474f370dcb2aca4a381afc5eb27fa8463788c6b4fa893abe467f2dc3520ca7a4445b29ce1de842db999cdab22aa584b414
+4a7811ab69936ed34c846bb739ecc455bfa1939f2d52de745a3d9af469185ab0ee5cb3ab228e0bc78844ea69f9aac9ae312d2d640eae32b7d88d77c0
+389db7178cb185f46f1b6b350d4836b05f2a2e86efe1f10aaa4a96d50a8222af7487dbd81f7c14495ff664aef4a708911098fb71d7c455fd01af7932
+3c3769c4491a6dd796b4f209b85eba62a849ac35f43ae92bf3abd9a4ada43beeea913544dfea925d02fe18d134de4a030bed48c45517052feb95edab
+cf089153286c9225be085dfb221a361bbbdfdc86ffadab4bcaede55746260dcb2aca4a381afc5eb27da1711e8ad0b5cf9238894b7d60bb41d0180937
+e4e82ba41580be83a78df8488caeb71e457311d31ad02aa721cd2ea475baa707f9908ede6e07b85b41369ca220685cb2ff3be33fd86d9fced201ea54
+d8ac84e05c4824233dfe72b7aa48c47bcd4723b8cb959fcf7452482b51066cb055352688e9f0c007a45bc7d5c4389901a27c92d1275d3f7c5ff34ec0
+fdbc248218ddd976d2ee088a49eb4a382f1f77c504386adb8bb641e45390ee36c818ee708b7967cb39250f4cadc72ed2c6bd0f72edbcde774a987df2
+1fb30e450fe947dc5e1905609988e1ec883b91656c5da951c52212f60f302554fa98e2a290b8ba3cbcfa3bf8978401a43fcd570348cb4fa120e31e65
+ebf5a4e99c7dc2073a079912954c6ab20905a3678d68fba3878aff45ded9f27d2255559f0ed327e31dda63806db4ab0594b683c2794fba5e5b2c9aee
+6f2d19fbab47bd7b8e2f82c7e0248b56c99688f3524b2f231be67ed4e7d63d890b86cd5687a7dff46f1d67337c0178e47d362882bbb9811ded4ad093
+c438dc25b84789f32e46603277d62fc3fc9b079918ddd96fabd52deb0fc06c35210c3bf35c0d3e9389b8914af11ffc32d408f37cfc7e7ec938300844
+e3c7089e889b146eeaa1dc795d957da813d05c0531fc78c0591d0f278684b7ab8821ba3b285fbe14a35a7fd21965583197f6cfa3dcbbee73e8b1a409
+335410c76d8d7f3e25da74946cae5b4383e694daa97dc2077f2d9f3f8e5c4eb54a4d8b42ec6bfa83a79ffc4cc9c08b46073413b332d32aa72ac12cb8
+28b8c84bb2a78a8b4c069355472cd9ac2c6a69beec1ce518d176cd8c8c67cc57d09dc9ab1b43247f22bd3af2fa8972ea65e9ff53bfbb96dc711a2617
+09442bb25d312685f4f08143885cce989a6cc8609a3cd5a262167d3b5f9e07cafaa71fd25098cc228fab73af48fd2f7e42715ac4483c3490ccf8d453
+8d0ee227daca51f1fc597ed334642042e08d11c3889e1a69e0a7cd3279d4398b51fe40471aa1099c1c5a2a6ed6c6aeffab2eb77b674ebe12ce043bd0
+0e203e49f99afcf691e2827cf3bbaa0b3b6671872cc10f5b48fa6bac2de6491dc2d8bef89c33ce416d268804955745e72e14e52ad96adfbea59af454
+fc84ba197e5d19d257b647ee1e88298030f9e515fbb089ce6365f73e213aabec6d2609f9df11e92f9d228ec59567cf5586d8c9a7150a614802a138fe
+ef960d8100dbb57682b993d4692f622656620299153a1b8bfaea9345994ac683ab77d72fbe3bdbaa6b773e751bb60989cca00e9d1996f833898b6aae
+27861732261c11a949063ffda2f8de18bc53ee618d46a824b5776587183d0247e8ae17dacab70f50e0a9d57f22fe18d26eeb411539ef4e9e7d110665
+d4d091e78c2197796c5da340d10833e41f3b035afa9aa086d185e97fe888a706754d4f8f28d71e5248bb68b423fa1a70ae9a90f2903d815348248a1e
+8f110bec5b558b42a44cf1b9ae91fc0efa89b704055558963fd03ad714c925f061b8d853b4b680cc6841bf5e453a94f45c245ab9f82fc22fd26dcf80
+bd26ea59d19a84f36b48206524a13af2f0e551e965fbef5899b596de333c6f2a5d1a6adf6a3d3995f2e0c42fa85bdb949c7ddf60f1289df627473411
+74d63dd3f7ba0a971996ea2e96866ebf6eee73323a1954d6491a299ecff1f214a851ba27c508fb5ad5115ed73f25154ecc8613d5c7ac2b6ceda6ee1e
+23dd1bd234ca5a0e34fb05fe530c0261c28ce37b72c171374951b602835c3be707351f19b1dfac8ad78cee30efbdbf476f6b1bcb6f8f105948db54ae
+2ae11c399dd5bde8d31e874a7a279f20905945ee716de425c90597b59894fa4e9dc4fb157b7850956f9f73a739cc2f9429f9e70f8bf5cd8b2f9f61b9
+8778b8f96f245ef7ca1dfc39d26b8eb7b469c51290d8a8fe5848244a04a23cf8fce837810284bb15a6bb95de275f2c6716462bd373362d8efcaaf70a
+a15c90b68175d92fb85897f62518715804bc02c2d9a1069213ccfb2b9a8a2deb4aea6a183a1c7ed21d4151fefee4d51aa95a8f6e954aa4248c746ac9
+0e0d490287e63fd3cc8b1769e8adc97f5bc53dfb1fdd4f143da878dd53171f6fd5c1b2f8cf63fe262418e250c00828874774174ef39cfaaed786a366
+b5f888087562488c63f95f1b1bb67aa921ea146398d9bef4893780426b3bcb4ddc4e0be85b55b17b8d6af0b3e4d8fc45d8a7a9134e6600d257b60fe3
+1cfb27b938fdf90f8bf5cd8b2f3f8c524c3198f4652755f5a754a1779d2a9ecbf8399d1c9c9e9ee95850286403e728bea8fb348e0ac1fc19bdb59dc8
+332f7c225c0168e4753725b4eff6c405aa5bd6d7d538cd60e328caa77b14347519f34ec0fdbc248218ddd976d2ee088a49eb4a382f1f77c504386adb
+8bb6e216bc4dba27a85aae34b57b7fce342a4103dd8610d081fa5720ae9bd636798041a958fb47042ce144de1e544b60ded08ef9892aac262132d221
+884c4fd80c331d5eb5afbfeb98caca65e8b7eb26726901bb2cdd4a5544b8198139fc1456a2d981fa8f2bcc0b382f8e04b34a4fa20955a841a463f1b4
+a994bb42ed81b646073453ba34d27c8d71c424b33df4ab41aeaa82df640090177d289fe1782d7abee624f029c95ddb93ac67c565f5d0c28d322d286d
+4dad1ffee58a7b9404cdf53de2ddf8d95c166375163c6ee8687876c7b9d0c019aa4acacdc83a9b6ee228b8f82552387c53890fcbebe62a9911e8ca35
+8fee08c224ed5f3e254a35f449102fb4c4f8de09ee1ff327bb47a536b57f25f333210c4ea3bc0ac5c7b31e0a85c1de396ffe18be53fb246e34e748d1
+50580d72d5c7b5e28221fe54715bb705ad4176e70a260513b4f587ceeb9ce462fdbfae495a6d4cbb2cdd4a3e06fc5eb86cb55b44bfdba3fa9a3ac066
+7125bb118e4c62a91f01f96b882fbd84bc97e941cb8df5364279619a2fcb3da753887ada5591c848b5a288cc23399f5b5b76bae961185aa5ff54ac7b
+ee6bc195b96fce1efd9186d75a563578369c2af8fad93c8542e9f25abbb583cf54116a2240350199150d3b83faf0c42aa442ee969a6cf935b87c94f9
+1e7d793277d667f2eca1078352f6c433928278e30f7f81d9e7585ac941480b96d9e09357fd1d9a668a4fae24fc486ad52f64124ef9cf0ad892f85920
+a2e69b14649a77b25ab1780634fb05f155153b66c9d0e881e42ab0730231b92185452a9b4b363052f0cdaefa98a9ef74d8adaa0b335410c76d8dcee8
+e6371b8335eb1772ebf5b8f6dd0f8f556c6ac750bf4148ab1e25e826fd6eeca3e4d8b974cd9abc125f2e11d97d9160a73bc725b635ffa571baa89285
+4c069367492a8fac2c0b42b4e711d032d04fcf95ac248b57d98ca4f55f41333a44c557c2f8dc3a9409e9f25abbb583cf5f0a7a3357065ed9347141ee
+918dcd04ae4ed2d78a48c929a339d7b72964237212ed64aef4a708911098cd32958775a242e13e02381c7ad44938299ec4e6d80fa46a872fd122c259
+b57e2bc50b360844bfcf0adfcdb6710985c1d907799d7ee913cb4b1f2ca816901e28196ed4d6a8ff9475fe352816f540af4775d102335f6dfc93fde9
+ec89f977f9ac9b15726b538239d6347e619159903ee11425e5e0b4e3891c814b773ad850c11868a81502e82c835bf6b2a59db573d89ab41c4e1e38f2
+38d12a8d71cd25b45691e748b8a58d8b6b1a90545c3194ee2c0b42b4e711c53acf78cb93887ac25fce919ffe130d4b02649c2af8fad93c8542fcfa45
+8cb185eb6f166135511c72d9723c2e9fbbb981439e5bd185897fde6e986989f02e40016914b01cceecb1229e18ddd367dec4229859e06c362f1d35f4
+4d1a3c92dfc4c312b24da773914db879fc332b96514d6868e28118decff62d61e0bb95036a8676be49cf5c0e37fa42c445585627e8d0aef98c28bb39
+5c59a907895c4bc5023b0352e996ebb4e3bbff7feeb9ac02355040992aca4a271af154b225fc025ea5d0b4e3a055e72e4d388f11885d7bb5120bf322
+d976cb9ee0d19129a5bdaf1e47671fb532cb27e101806920c31624078fa593cc681bde675a3194f2653c42f5a754b30bcf76c195b17cd210cf9d9fa7
+4f4b7b2b4fef70b9a8fb348e0ac1fc19bdb59dc8332b6f355f0d7fc06e312495f2f0d842c726db998c12b2229c7a92f87a1871792dad07c8aae856d0
+3ddccf038e856de37dbe32776a88842e8348188ec8f8d45b8d4da7688a41bf29fe342be422270d4ed98e0cd0cdac2b72e5a7c93e7f8d3dfb1fcf5c0e
+37fa42c445424b259b8aefabae20b071615ff5368d4468993f35035cf88bdeb5d187f979e8a1e747587d428728fb5f050ffd4f903ee11465a2c0a8b7
+dd388b53573a8f158e0902cd7231f12fcc7bfb87ba91f452c59ca222623c18f154b547eb17cb2abc7cfac34eaff5cd8b6f2797431a52f2ec632b5abb
+ab12e435de6bc788b628fe40d8999fe2734d355802ba30f3ddf173c966a1925e8df493f3740b3c674c006efe165142eef9ccc81fff01ea92906c9b7d
+ec2aa8f83e5a35215dfd4e89b6e8289f12dec220d5b260a75ea1563e3c2b74d5420c0b85cee7d40fd736c70e9a60a224ee365fc223302244e1800c84
+88e55b43e3a6dd3e6cda45b358f24b490bfc59df571d610eb2c1afefe746bb796c32d20c834b7adb4b320455fe8be7a8d6c8c869ffb4ae2f72707284
+38c15a5f419232c91ffc1465aad3b4b5b5369a74773d8514b5564fa20344bc6b855ceab8ba99fc4582a0b203787b449539f620e31dd06bf57cbbd853
+b4b680cc6841b65e5c0b94f5622c6ba5ee07f42fce368eccf839a139b5bb84e95d4d26253bae32e4a6f032943fc7ee598f8483de6e1a7a67054858e4
+732a2a80feaae902b97cd182867ceb32a97b9ee3386f026f12ad0fc0fde6239908ebc432958048a549ea660a427112f55c0c3a83cedcd80f8e50bb69
+9c7d8278f51202ae0e300847fec130d8dcb11d79a4ea4bc89f7e319354eb0e3437fd45d41e544b25fad1a5e2826fae656d4bbe14d6083997457a5178
+f291e8aedfc6dd71f0abe52f7270728438c15a271afd48a538a1711ec2e1a5f2912cc07774299238954c78a80e0ae563840597b2a69c9129cea0b203
+1a38119915d63ab558956b9138fccf52baa8c9fb3c43de15d8c76f0a2c0b42b4e711b113d46b8eb4b77dc5549ed4cbc442472d6e25a62ac4e7cd3584
+4088b96484a19fdf275f2c6716462bd373362d8efcaaf70aa15c90bf816ce82fb9669fc73951227e09f34ee4e1ab079534d1df1494916faf01af7932
+3c3769c4491a6adea19de40bb95eba62b041bf03b36d65c30e0d490287e674bee9bc1f53e9abcf3e649a398b0cb30e450bc167f5722c4b219bf093c2
+aa089b452a14fb07895c54c50f31030ab4f58786dc8cdf7ffbbfa702335410c76d8d6d1e04fd55b46cc9127aeb444e0f587dc2073a1b821c99565f86
+1209a3678d68fba3878aff45ded9f27d2255559f09d029e014cd63806db4ab058fb688cc6a0a8c75472cdbdb581519fbab56c529d478c982aa4ac444
+9ed4cbe05e500e7909aa2ca6a1b252a108cccf588cb39dde352f3f6b184afb0f92f76bb3fae7d502ae4ed2d7a071cf2dad7a90f239167d3b5f9707d3
+f5a9199b19ca896bdb8364bf62fd7a323a4932aa25293f93fffbd61cb15ae657c904eb722c879006b4fcee0bc3805ef4c9b51e72ede8e932689b78b7
+1fb30e4516e779d55f17026b9988e1ec883b91656c5da951c52212bd6215155fce9aedb3d187e538cce9e747394574b90c8f185724d7788b6ea45b70
+aec09ee9993a9c163142e231985c7fa81c03ed2e855faffbe8dad049c084fb365e6650d9719f6ccc11c4279129eaea05f7e486ce79208c534d2acaa9
+06417ab3ef20fe3cda73cbcf883987109eacbba77a51336a4fe37eb5dce81a951ec9b91bcbb394cf520d6a224a59229a155242a6ffe0f20eae5bd798
+8630eb71e028d9df0260135425fd4287ffad1fbf0edcce35cacd0bc26ceb7a03271f7ccc49400bc687b49333b85eaa27bd50bb31b27c6ed579684109
+c58a1fd3eda00b61e2acde2529d831bc58eb61153ced598115726246dfc092e7842bbb652068ea4ccc0a53d20a305168f485ebe594c8b93cbcedfb4b
+3b3614c76dc94b190bec52af22a00d3eebf7bef59b3689094e298703d2704ea61f37e831c82fa3f7bed8fe4ec8c4fb104e607e8939da3cb651a24291
+38fcdf48bca38dce253fcf1b087ab9ef68311b92f304f035d97adcc5f4288978d58c89e843066d2b0aaa2ad8fadc3e925d81913eaab095e871166a22
+4a405ba1307869a5f4e0d84b9e46c492ca349b72e028cea76714602e51ff08d2f6ab1f9913d68331d2c442a443e97730662e7acc5f46139edff6de03
+8e56b462d815eb26fc7d65c37764064ef9a00cd3cdaa4a2986c1b15e4a90758858fc5a0e37e603e00d544b25fded8ddfa81d8d372e189d2fba0a3797
+0c310574ef9bebb589c18119ddbcaf337463468728876e4644b8199429e9163788dcb4f8967dc2073a1c8e11917b43a2180fa3678d68fba3878aff45
+ded9f27d2255559f09d029e014cd63806db4ab058ca58dc72d2c96524b33d9ac2c6a6cb6e718d233d87cc5c5f428cc55c8b799e35e56702267c61ff3
+ecec34870bc4fe1fbbe5dd9b3f2c66284f484ddf4a7a67c7b9d7c904ba69f1a1ca349b27a97cb4e52f51232a54d567e6fcac3f9f1bdfc722d3b430e7
+0dadeec8efca3bf35801389cd2b4e51aaf58ab73d87aae24b9767fce342a4307adcd2dc3c1bb1079cda1d67527d476be49d05c033dfa1a9936712a63
+dff0aeec8a23bb3f5809f740ced88439c4743c4ef18be7eafa87e575bc9cb2097a6948886dee571a48c36fa938e9153c9696fdbbdf129b4b6c21a91f
+925d6aae1646ad6bca6aea98ba9cfe529dc1d17e6a7055af32d829eb1d801be170b8a9d7445f4044b5e0de76462c92ad482d48aee517b109d86cc18b
+ae6dd91290d8c9d55e572e671baa2cb5a4983c8518e7e9538ea6c092177662285b0967b0713933b3f2f0c0058b60e8d7d538d23398618ff625643d6e
+0eff0fc9fce85ac04c888b2889c439fb1d8517162c1c48cc450c3e8583c48057fd1d8848ae089839a67d2987756a4103e49c2adedcb91550e0bdc877
+6a9a75fb1fbf063311dc6afe17582a57fefce8a9cd20ac372a1af24ccc1d2b9b4b391043c996faa6d6aec446b0f8f9572b28018d38c15d0301f755e8
+3aa15b54a4dab7f29a71b846743bc536b36e0bfa5b12a12ec36bb2f7af9def6fde8cbe051a3d3bf257b60fe31cfb2eb328f1e449f394d3872d4db662
+6c78dda04f1a7484d83cd012ef3d82c7bf6ddf7fce9c8ef5090d4b022cab3ac3e7df3c8c0980cb05c7f4d3e875107967740768fb3c0b3f86eff1d249
+e10f9ca48077cc0ca36b90c43f55256e0efd4287ffad1fbf0edcce35c9cd0bc26ceb7a03271f7ccc49400bc587b4938b42ae4fe840a7eb04bd6a6cc2
+2f64325fec9b0bc488911564e5abda23648633f71dbd7a062aef4ec46f0c0a73ced7e3a7cd28bb63474abf059e1a32bd6215155fc990e9a0d48da340
+aef4eb455f7d4f8a20c65d572bea54b33fe01a7eb996fdbbdf1b974979258213bf4a44b4080ce022df2db2f7af9def6fde8cbe05193d3bf21cdb2ad3
+17cf2cbc39b0db15f7e4c3f8790e8a5e4b78b8f2633b48bfea1de379913f8ca4aa67d843d49982f51908616c08bb11e5ecdd29d245a2923de29595df
+4e1a6d33510765b84c6a67c7b9c1f23bef039e908d6cf432a86d89a5623e585a19bb3ac8ffaf079554e8996bdbc644987daf53363b0c7ed20e447bd5
+eec7e159f11fa9628c67b934b96a398e514d204fe9bb11d0cfb41e28dcfa977729048e4a86bf6a022ced48c41c36042ae8d4a0fc836ff1374457b902
+950a37974910144ff89cfa92d69bfb71ebb6ae033928018c28db71050cfd49f265827256afd085f49a3882423018d95cdc1adb58f4d36ef3222fd0b6
+bc91ed458caab21b47765e9a2fdb6ed319cf38f074c8e746b5e4a2822f43de156a3197ec6e275aa5ef20f03cce3d82c7bf6ddf7fce9c8ef5090d4b02
+01a03df6e49839a502cfaa1bcbb6b4d57a4d044e540768f170782d92f5e7d502a2419ea2987cda34a94da8c70e5a367213ba3beeb0e161f975d1cd67
+99a16fac1faf6a3f2d1611a9256139b2c5f38355895ab673d815eb7299766cce35215b0bafcf5099889b146eeaa1dc795d957da813da7d371de64cd9
+521d610eb2ada3ce8328ec395c5da314af4777d819675106bdbce1a9de81ec3ec8b0ae0a7e2a729f3fc05512629132a522ec711eaedab591f4338144
+7924cb16895648b3120bef6bee76fdbbadbdc870e986bc1e457119d257b647d40cc739b13bfda5628894a4c56a06905261369fe5746806f7a327e534
+cf7ec982f64df860f9968cee5541086509aa26b7ad9878b318c7e9568cb1dffe4e2f4b295f0165f56f716bccbbb5ab62c46cd1998e71dc6e9a6997e4
+6571024b38b109cef6ad4bcd5cebdf28898566ae03ca4d070d167cc9420d28acf8e0de09bc58ab29bd7b9b15b27f62c93e0d0f4fe89723bda1d12e70
+e8a9cf324ea7419e53f847093ddd62981572620eeed0a8e79e6190787c51bd19c40aeb28fad59e8312dfcb94e8c8ce7efbb1a502392801c908c1591e
+06fd1bb329fc5b63a48ef1b9dd71c0075b278516955f05911a08f265e85cce92a69ff24ec9c1d17e4e7a55f154dd0be91f9967f03edde540e9e4dc8b
+4c0b9a735d3997a85c7a17f7a9840eca3cf01668f84bd253d09dcbc26874614e03a837f9ed9a77c02fd1f85b8e91a2eb5811692e560d27b03e1d2580
+f2eac451ed0d9ed9c638f82fa26e92f0656230770ef12bf4c88d059715d6ce6bdba778a841ea5b04183d75c745063edb8bf3d40f924daa628a1ae25a
+d54d7bc33a30046edebf3bd9cfb11565d981937e01fd50bf59cb41003fe44e986c4a472799545e184b6f97636d55fb46cc6474d81f743468cddda2e7
+9aa1ff75f19d98373928018c28db71050cfd49f265827256afd085f49a3882423018d95cdc1adb58efcfa11cc86eeeb8a6d8b400f887b41b0b5162ab
+7f936ea52fcd2aa033f6ce748be6cd8b6a0a8a785a3c9ef23e6131deca10f50fd278c98bbd20fb0290d8c977a4b7e72b5e8b7ed5e7c07bb705dafe51
+99b59cde3d3a5d171a442bb2590b1bd4dfa68d4baa4acab89a7cde32fe21f19e0a50354f12b809cbfde03bc2509889b7647581eb7be67b20683975c7
+400d7ba5caed91539150a16cd87eae33a877798e79684109c8bc2efbc7b71052edb1997b2b9374af72ed4a022aba02ba35390f63efcba6ec812af647
+3a14fb421cb7bd034b120457f1dfcfa9d99ce47df5bbaa0b3b574a8e21ca4a1806b87e931caa5737e9f182cbae348b4b7d3c841ede140ba01e10ce39
+c96aece5e1f29261c88c8f184c735d9e75ef7cab588abb4ffb35ab68bda2ccd86e1d9b524678afe17e2f5ea3ab35e329d268ddc5f428897fda9e98e4
+494124652cbd2cf8ffcb79cc4ccffe43a4a695de6f4d274d31296ff448372c80f7e1893bff039ed5db2e8b827c28afe52a5734690efd4287ba9c1991
+1fddd934d9c821ac48fb51252c1d6992056252b6cff0e514ba58a262d078f97cfc3a5dce282d0342e1860ace889b1365efa3997b2bd647b24ef64c0e
+34e15fc97f100e64d086edab8a2aaa587a5cbe12de0111be2a30156ff298e9abddc0db22b0f8e997849f8004f5201e2309fb4fa92fe9173788dcb0f6
+8e7fc671713bc4279d5447ee5948a169ee67ffbabbdab700cb8daf38597054896f96448e39cc2f8433ffec4bbeecb199214fdc6f050a9af92e641bf5
+d326f0229f338e80bd7ce442d89d99b5122e484a09ab0af8efdf378544f8a91bcbf6b7ce71136c35510f63e43e746bc5ddf1cd07af5dd790806c996c
+ec6f9ee30446357e0fed47ad91c262b118dcf822989068a443a74e6564583950b3f9cad7fddde15b9871894eb66deb76fc5d58f77b073478d9a033fe
+f2992f49c386997b2b9374af72ed4a022aba02ba35390f63e8c8a8ef883df6473a14fb420eb2ba972e07211bcd90e2abd186ec30d8bda706622409da
+709f10461bb41bf17cb54a39fbc7f8b9d17fdf0b3879db5cdc0b07e71d11ef28d966f1b9e08eb200ef87b51142731fad3cd33da93dfb1b8239fef942
+a8acb3ca790ade0a082edbaf2c790bf7ee1af5779d78cb93977acf55cecac28d3265256f3ea337f3edca73b05e84bb151b4b621d3d367a22554858f3
+7d366ba3fee8c012ed07cd928b31996cec3dd7b778047d3b4cea4287febd059308d1c429d39228eb6ee07031211f35f64d0428d9e2e0d4168e5caf69
+b146bf35ae6e6acb7b79415dadc05e8698f81e6ee8e49b306e805ea959fa5c55718222f1581c386bd2c0a4f9c51fec3b281a39fc63c7a3384b11226b
+bdb3e7a9ddc8df78f5bba0097e7752c9618f0f4744b80ff060a84a22e794b7ee933c9a4e7726c306d53222ce380bef2dc468b081a994e80ee9bb8b35
+446c659334dc25e91ddb38f061b8fd07f4e4d09b0766f751472adbdf20685ef7e21ab12bdc76dc94f05bdf5fce998ce21561125b22ad34f2ebcc28c9
+4cccf41782b2d1de333d613f181c63f572782ec9d9ebd9459947d7948376de33bf28c6b7085b3f7d14b840f1f9a418de39ebfb05949c55a344ec7539
+2d0b688049063fd7cefad571d45aa063d408ac35a85779c33e36530287e63fd3cc8b1769e8adc97f5bc63dfb1f6fb1f3fca86ee36c583f62c3d0e1d8
+8435bb352418e24ccc19239b4b654217bd99fba9db9ce27ff2f0bd4e110d28a822c1581e0fb66da120fb555298e485fe852bbd4e622dcb4ddc4e21ce
+7202ee398d50b2f7add8f24e8c98ba1e596719a829d03ce61fcd65950fc8c445b1a182df7e46de534752f28905215df7ee5adf3ad07a8e93b06dc510
+d9d6a5e656416f5804b53bb7b5982dc009c6ff3de2ddf8d27b5f6b697c0178e47d362882bbf0c90ea30fdbd9ac71c834ad6698f26567386118ff5387
+eee846d04d98ce299fee08c248e17a5d411d75c400483c92dfdbc31fb84dfc2ef2218a34b85c7ec6376c3119a1cf5c473756d420d8bada346e863194
+4ff6490e36aa07905a0d0564cfcdaee5c566d41e0151bd40af4775d102335f6dfc93fde9ec9aea73f9aa8415726348856d9203574ada54b438e71635
+ebc0b9fe937fad48762e8217d26e4aab084ad539cc6cfba5878af247c586fb4a0b36729e33cb2bf55aa242d939f4f842b2a2c1e86201985e4f76ade1
+603b1583f915f23ecf50dc8ebf61c51081c5cba578412f7f08bd7cb7fcd03e8e4cebf4598dbd96954b1e6234163c79f17f3d39a8e9edc602a30f83d7
+ca55d435bf6dd99d423d34770eba4ee4f7a60d991b96fd2697972f9f5fee7d323a3769c94b0135d796b49339b24bba68950aeb35b27c01ae52111542
+e19c50f9c7ac1266f5e09903799572be4fbf611531ef42de1e544b25f4d6a8ec8421fe646d4cfb1483123b954b7a5f1bde90e0a1d18fa546fdb4b849
+4f76408828dd710501ff52ae65827272a5d0fdbbdfaf71a9b068a8099f544ee72d2dd16bf967fbbaaddab700ca9db5145f7d5e957596448e71c424b3
+3df4ab53b3a18cce7e4fc317537ab8f96d2619fbab56d229d472dd88b62a87109eac84ff524763274ded08fee7d43e944e84bb15acbb9ddf3f02044e
+310464f37d346b84f4e8ce19be0f83d79312b249c54b82f625146c3b3eb002c8eafb45960ed7c615bca629fb01af2c627d543b92195d72dba19db872
+9e4da76a8b47a570e13848c8372b1318a3890cd8c58a3c42a4fa8e6227d424ee11bf165271a421b935713f68c3cda2abd06f9d786457a953c24e69d8
+06063679b5cabeeb98dabe25b0f8fa552b2d0de144a6372101f757a538a8463788dbbdf48f6cc0416a278622bb7a03f64254ad6b953fb2f7facdae09
+80e2d27e22535e97399f73a73bc727bf2eaba541a9ab8cf94a2dd6051d6dd7a03e780bfbab40a172b716a79ad201a263c89799e65c416f5f05aa33f2
+c1d63f851488a617c3fca2cf720d6f205d465ff879352eaef5e0c413ed40ccd7d9319b65ec2b8fff2e59346854ff4587a9c262f910d7c82697c47585
+4ce27b7775586fc849053e84f0c7c514af5ea962d67ca335b17d42c93f21197687e677f4c7b61d69ebe6ef3f6e9974f56eeb5c0833ed0b8d1c1b046b
+d4d6b2d09901bf7a6d65d169e5417d9738201e49fc98ebe9fea7dd42f5b6ac3252244085298f6d0307ea5aa729a63d589de6b8f59a0aa71d5e218514
+ba5159b40f27e922c16bb6f59db1c854de87b012093d118f35da20a72bdc24a23dffee099d8bb7f9640199626176aec95f3c49b8e011bf18d273c195
+f8358b53d39484f5487f35450ca23bcaa8dd358466a192629fbd9dc833316133510e72b83ea8d46933a4f503a842dbd7a968cb2ca56d9fb56714734d
+348f4ef3f0ad06955ccbce33db906ef10dad3e7966586fee4d053edea19dd415b913ee609d5c8422b87d7995724e686ae98b2ad8cfbf1765a498897b
+2bd642b352e80e3734e952d54e582566d6c1b2a9c16ffc446057ac2e8d457e954774165ee9b0fca3dd9ab93996d18a037f504e8c2ac35b5f38aa17e0
+6edb1378bc9499fe9c339a4f380a8a02de140be5280cee3ce56affbbbc90b90c8c8fbe036466559e2f8d678d71e92fb408f7ec40b7a1c9fb3f43de15
+7b3094f72c0c52a4ff15ff38d83d82c7fa5bc35fcbbc82f44f452f6808ed72b7efdd2faf1eccfe45d9fdfbb25c1b6a13570f6cfc79701bd5b7a4839b
+52a007d7db2e8b60836e9dba1857237e18b14ef3f0ba0e910898ea35898b76b80fa33e75071e7dd34f1a3e92c5d5c309b248bd25d408ac35a85779c3
+3e36530287e577f6ccbc2865efbcd23865dc41e911bf0c3519cc6ae21e544b60ded08ef9892aac252132d221884c4fd80c331d5eb5afbceb98ca7b8f
+0f79eb347665539f6dfb56050df94fe01ee91f76b996fdbbdf0d8f43793ac95cdc5f4eb33416e52edf3db7ddc1b9ff44ff84b2134e6619ab6f936ea5
+2ac92fb12eb8d946b5a38489214fcb070478ceb03c641be6bb44bd7bdb6ac084ac61c45e948ec2a7784b2f6d04a870c1e9d428ce3ec9ff56998690d5
+7a1a2e7a181e2bf5723c67c7fce1d524bf4bdb85da31b149c601baf32f67347809b601c9b09858dc5c9aed0ba2c427eb7edf5b120c5a37804b0d2fb8
+d9f0d409ee16c40eb94caf04b37f6ccb3e6c3118a1cf5cf1c4a15b4de3acde7750ae4cf911bf0c2134f1099c1c1f0e73f4d6a5ee9f7cf71d0179bf04
+b8477cd00731596baed3aee557500430d0bdac0e6f246787348d12574ad45ea725fc3d7bb296fdbb9a3a9a686a2c8e02cf1121ce3a00e518c166fab2
+bad0cb1380c8f931476d11a82dda2be35a846be16cb4ab16eef4d1872d5ecb0704789df5622b4fbee41ab92d943fed88b66ec25792ae8aeb480a0767
+149c2ef2eddc7bdd4cdebb5285b0dd9b7a1a7a084a0c6ee22f7141eedae0c53fa248d99b8d30eb73e028d9c43b51347f5d970fc4f3ea47d05eebdb22
+9e8049aa4ee43c7b681f7ed4631a3f92d9a79871d47eaa63ac47ac37b07d23f7686841097d70e5164760f420cf8ec936669131884dfa4b037aa40b92
+7f3e1966d6c192fb882aba352418bc05986769d30e26421297f6cfa3dcbbe779f8bdb94f4b370dcb6ff85f1b03b868b029ed1f35e794e0add17fdf12
+2878c750cd0d1beb5b02f425ce7bf7b8a6d0ed098cabb4194d7d56d50bde22f456ff2abc37cbfb42bea0c1962d19de52463cd7a06b2d4f98f910f429
+8e36a4eed201ea54d8ab8ee44f4d2e65459f6dbba89a16a93febb91bcbb394cf520d6a224a5b229a15192f83cfebc60ca14a96a7db349b62826798fb
+224471402b824c8bb8ea259f1fd4c237d9c821ac48fb51252c1d6993056252b6cff0e514ba58a262d078f87cfc3a42c93d2d0f42f98a5efdddb50b22
+a0e8991e65925bae50ef0c4b78ef4ec4730a0f62c997e881e40eba735c57bc07804d33e758785119da90eae7f587ef75bef4eb455a6a558206c6521b
+0aea52a327aa5737acd1a5d48f3b8b552b61e179bd5c4f931403e627c827cee4e4d8b96ec3c89d16477811bf3cd22fe01d8a67f07ed6e461baa88d89
+214f99525c1789e4693a08fe817dd03fd94bc180bf64ce18eccbc7a719772a724d8737f3ed9800b8318ab717c9879ac255166a221a442bf7792c0495
+ffe1d358e425b7b68c7cef2fab6f97f2636462375dfd2dcbf1ab00d028e88b1cb89073a706cc723e2b134682004879b4c7fdd210896fec2bd84fae24
+936a6fc22977482184e577f6ccbc2865efbcd23865dc41e811bf0c311dc062f3703d4b219be093c2bb0afc3b285fbe14a35a7fd21967583194beeaa3
+ec87ec77f0bde337282801c9bd30a4e048ce5ea825eb1772ebe7a1fe983bce6577279804de140be52d01e922ce63fb95a797e8548ec4fb104e607e89
+39da3cb451a2429138fcdf48bca38dce253fcd1b087a0b1f97f01b81ee1cf838d17a8ea6bd7ac251d0d8adeb42066d2b4f993bffe1db37852ac4e215
+c7f496de69307c235d1a38b916510a83ffd7cd02a94accdfb82b9760ee5e9eff22573d7e5d8c1ec2fdac49dc5c8d9b6bdbd031fb01af2f6f78543bc6
+59063883c2fbdf53ab16ee449746ad39bb365dc637374f7de88717d4c4bd2870e9addf7736d467fb58f14a4b78ef4ec4730a0f62c997e881e7469f73
+6c6bbe03984174d943044217bdddcd8ffdabc040d391853348260dcb2aca4a381afc5eb27fa1711e8ad0b5df883e820f487bc750dec8b454f644d20e
+f92fcee6ead4bb46d986b803427b5fd3749f1bf311c438fe0ffdff77b4ad8fdf254dae060a71dbe5622c17f7a9960bfa9d4bfec78839891c9c9e9ee9
+5850286403e777b7ddcc328c1f86cf67bbbb98d569572c17094a22b079362fcbbbe3c41f825dda929a2b924ac5499ff30f413077558f5d8bb8ea9b6f
+ef358b14beb0219b1fad32772e0d75c35801349983bd912ea956a274d67bae248c7762c92f6c437bbfcd5797cdb61f2cacea59cdaad4458b1dcf1c45
+74a84dc5521b1f6ed4cae9a2cd1aaa7e644bf534bc7874de05205919cdcdacee988de574b0f8ac026f4b538f28dd0d5e62917aa428cc0e76a79c81a8
+d17fccd787db6650af7d7fe72b57a3678d69ebb9ab8cf24fc2c0f2577e6058972e911de20cf824b932eca3058bf7c3822d0a90530478d96296e91b83
+db54c1689f338e81ad66c844d59785af1204147f04a32db9dce80b8f05c6ef1fc984c299345f6b295c442bf7792c0495ffe1d358e425b7fde159df24
+9f6d98e3225b3f332dec4287ba852aa05e948b209e904eb949ea6c64617212e1480c1f82caf8992bee13ee2508b759f5fc5c6ed42f360e52adb42eea
+8af45b66f9a6d823629b7ff31495276e34e748d150582866d6c1b3eacd72fe427c51b713c26f7ec328210349f891fa84d985ee62fdf0e26d120d488d
+6dc1510348db5aad29fa1a37bfdcb4f5dd2d8b536d3a855099564fcd726ded24ce6ef2f7ab9df554c99afb4a0b42549829d03cb556c62ea774dbea4a
+beb680855b069b40583789f45f2141b2a52cbe69913fed86b56dd95192ae82e24c542e79199c37eded9602cf5e81913ee2b89ed87c132e3559112bad
+3c1b2a8afef6c0519b46db809877c9349c6792f93f603e491ca646c4fda61f950e96f36bdb8764a559ea6c79115111a925043494caf8910bbc4daf6a
+8b08f6708e7972c43a37157bec9d1fdadbf61565fbe0926c2b8470a95cf25d491ee147c4590a2f62c8c7a4e5892eb0637b71b513984975d40e275106
+bd84c2a8db89e740f0b9b202692a62832cdd5f141cfd49bd77a80b76b9d5bce8d319874b6c2d992485484ee74644c425d862b085a981f841df9c9d1e
+4760548909c63ee256ed33b330edef42d1cde8c7620c9f5b082a9ef379244ff7b654c23ecf69c784bd7b8567d38a80f44b45226e579d3feeebd92894
+44dafa4ec59b83d27a16606b181a6ae9321c2295fee7d502a2419eddc82d8b70e0288bf639553c6854d567aef1ae4b8219cbde2b8fc460a549af6c32
+3b0d77d402383484c2e0d814b31fba6f9d46c159d51162c17b2a0e5fadbc0ad8dab91c65a285da2758807ea95cf84b2137e44fd54e581f6fdecae1d8
+9920ac766f5df52d8d5848c30426105cf8b9e1abdc8df930a1f88209687040852eca10190def13e20ae71773aec6f3b7dd0c8b556e2188158f167ca8
+090ff23bcc6cfbfef3d8c854c39aba104e3a7c9a2dec3ae80ac92cb51af7e743beb6cfe56c029b171578d9d8531c52a3ea1ace16dc6ffd93b77aca57
+d9dacbe255404b0264c632f8ebd937c01ecdfc5e84bad1863d2d6b20510765a332362e90b3f6c418b843cad9b877c829b86194f96b19714d18bc1ac8
+eafb459e19cf8376cec830fe01be2b7e645869c55f1d378385c4de08b44ba7689608e0708a7d68d334365205e38a099f99ed5731b9e48a6222dd1bd2
+349642083be947904c191973c884fcabbe2aac61615bbe13c27f74c50027015afe9ab481d186ef40fdaabf14526a738e2ac651195bb049a52be11479
+e7949df49e3e8277742992158e1668af1a16e028d96aecfbe8c9ab1085d3fb1b447750977ddc21f216dc6bed7ca8812ed2cd87c47f4fa11b08289af2
+786852b9ab04f032cf6c8697b97adf4395d88fe8312d480264a638b7f8d9299442e6fa5a8ef48f863d5d4c264b0d7bfc7d2c2ec5bbe5cf0fed5fdf85
+9c36f521a16ddbe97614734f18ad1cc6f1a649d01dd6cf67958b75eb5dee6c2366287ad249062fcdedfddf1f9b56bc748c6ba339b07c238513310c4a
+e38017d38af15b61e2ac9b276a8665f56dfe5c0236fc0bce01583873d4d6a0ec88619376786baf0f9e497cd22d3b1d5ff88daeb3d08de51a95d1c26e
+1270408921ca101e06eb5eb238a02863a4c6b0fc9871aa426b3c991f855d4f971a16f538812fe587a98aef0091c8ab1659601ddb0dde3ce216dc6bed
+7ce8ea55afeab1ca7f0a90435571c0a07c2949a3a524f029d871dac7e528f844d38a8ae05e0a0c6a1d9c2af8fad93c852ac7f7538ea6ca9b7e107b29
+4c4836b07f373e89efa48a4bfc25b7fee111de2ea802f29e42513f7f77d667aecdbc029c0f96e5288f8d67b205adeec8dadd3bed4d187bb3cee7c509
+b246ab75da04eb728e7d66c82d21050bafcf509988bb1475e2bc9b7925d433fb52fd5d1339eb47d51c080a75cfd7e3a2e746d772665cd16989467f9b
+4b7681a4097bae95dd9bff7feebdeb3c575903c76dc94b190bec52af22a0521dc2bdbdf49e3e82077b279e1e881816e74b6e8842cb60ecf797d4bb44
+cd9cba57427a118b3cd63cf450fb3fbf2ef9ec42f58084d8791d914e4d3cabe17e3c48feab10fe51b416a78ebe28cf51c899c5d75a56352b0ca13ab7
+ecd92f8142f8fa458eba859b69176b29181868f170346381eeeac21fa440d0dfc138df21b869d5c72a4625352dbe1cc2f6bc4bcd5cdcca339aca51aa
+5fea7023681d75c405537b94c4e1df0ffd02ee64975da524fc332b967b210f4f87e677d2c6bc710985bcda3567913fb851fa4f1570db5fdf4e190c62
+95e0a4f8993db16e6d5c8b019e5c689e615d7852fbdfddb3d79aea77f9f686066b5755843fce59122ef757a429fa5b63a3d1bfbbae2b8155792f8e5e
+b1595b940f0bf32aca6ad8b8a49cfe5296acbe045f665e82759675a72bdc24a23dffee0996a591f879008c564f3dbdef602c5ea5ab49b135d4738e82
+b66ca139b5ad9fee57576f4502bb37f1f1907910f33c1f17a6b5819b4f1a7d33571a6ef43e746bc5c9e1d21fa25ddb93c83a9b6ee22898f83e5a253b
+53f14e85b8a7098308d9c82b9ec471aa5ffb6d75617212c5420c77d7ccf1c534af5bab75cb01c159d6114ac33f170448f98611d980884f2caceaeb1b
+4aad54891dd367340caa07905b1d1f48c9c0a4f9d966d41e6457b80180084bdb0a2d1449d196fdb3fe9aea7df9f8f647526a529f2cc15d1246f65eb7
+64aa2874b9dbbdf7943189616a298615de140b974f4d8b42fd63ffaead8ad749df9c9d054a7954d511de37e80ddc04a238fdf907e6e486ce79208c53
+4d2acfa825423287e715e83ecf53c794ac4ed951d19dc5d4525e242b50ef0bd3e1d569ce02cdec1fdaf8d19629532e77144838a22c7170c7cbe8c012
+a85df29e9b6cfd32ad659eb9095532701aad01d2f6ac289f10d7d974dbd9218842e1783e2f564fc849053ed9f8f1d271d46fa266814db91cb56b7fe1
+29250c4ea3bc1dc5c7b41742edbaef3f62977ab558ec5d4765a81f8b1c280766c2c1b3c7843caa517a59b605c27b78c504381d79fc8dc7aad98fee53
+f3b4a41528241ccb0ec0501101ff159424ed1672e5e7a5e992348b2d11018503885945a41e4aef2eda27bc8281bbf452c28da955073461973cc62bf5
+34c138a41aeaea4abeedcfe8621d90525a0a9ae4653d48f7b654c41fd4728089bd7f830090d8ddae312d2d640eae32b7c4d1289420c9e2589ea0d186
+3d3660344c0965f379762582ecac833e8463d7849c54da39a37d8fb5671401771ca60bd5d4a118843acaca2a9ecd3aeb61e66d23041962cf591c75a7
+caf0d512b358ee3ad87d8f39b13665c22c6c5107addb57bda18b0f6ffea9dc3225a47dba44fa5c2b31fb5ff64e1906629b99e1db812ea7727a74b213
+986e69d606317b3297f6e2a8db89e730faada5046f6d4e856dfd5b111afd48a81ce41a6eaec69df28e2bc60e1241e216934a0b985744e223c463faf7
+a196bb50cd81a90403445d9a24da3ccb11db3f962ef9e642e18384df4e07975b4c2a9eee246112f7ef1bb132db3fcd8fb164cf0af58baaaf1962336a
+00aa7cbea8d729c00fc0f25b8feeb8c85c572c135d107fd2692c3f88f5a6884bb947db99c87bd329a06cc1d32e47256912a6468eb8ad05945cddc523
+f1ed08a742ec7f3b681977cc7c043a8ecee6c25be01f9d628a5ea233b96b25f73725184eff9c44f0cdac2b6cedb1de2578dc38d134965a063ae44e9e
+4f17197393c5ade7bd23bf6e6d4aa84ccc4e6ed908201854f3d7efeb988aa21a95d1c20b746740876ddb7f5755b85aee18ed1a7aebd5bfffdd3ec073
+7d29865eb25946a25b0bf36b8f41fba2bc8afa4c8ed3fb1b447750977dcb0ca7458829fe08fdea4afba58fcf2d0dd0634d3996ae422956b2ab1be37b
+9f51cb92ac7aca5c9ef2e28e324d272b198e7eaab5982fa24cdcf35285f483de690a7c29181b7fe275362cc9f7ebd60ebf07dfd9a679d625e528c7b7
+3840237213b840cbf7bf0e8254da85099a8964e20dea7033735869c5581d29998be0f05be11fba45f221c235b27c22ad524d0744ffcf219b88a85b69
+e2e8d2276a9d63a815fe420b08e44ac9590a182e9bc0ae81e446d77e6e18ab40d1153bfb04371057cd93efbedd9aab64f4bda547786b4f9f24c14b12
+48fd55a44681721ea7dbb2fa917f9a427925a511915d0bfa5b14af1fc86ef3f7a996ff00dcc68f124a791fb53cd22ba717da6bf212fdfe53a9a58d89
+0766f73e443798e160684fb2ea19d234d170dcc7e528db1ee89d8aea1b452f6f4dbf70c3edd936ce38cdfa5aa8bb9dd46f514d28540779b0732a6ba4
+f4eac702aa01ea9f8d75de6e986d83e3413d581211b00dc6f4e8038028ddd333dbd921e9dd108cd7683c5ee1684a51fea29dd81dfd4fe0449049b931
+bf6c6ed57b30094ee3e577bea1d1176fefa9d777628750b754e94b4765a87ec455141829f2d780e78439bb3f7814fb10c26b73d61935124ff88da7cd
+b1e18219f0b7a8067724429e3fe74e5b48c71bfd6cdd0f7ea7c7ffdc982ba64279249f18d44807e70b4ac223cc7dffb4bc9de909a6e1d27e227c41af
+38c73aa7458822a31df4e251bee480c5694fd615cac55f6fb4c71bf5ab5abf7bd07eda8ff66ec75fd38ac3e44e56097b44e67ef8fa987910f33a1b17
+af91b0ff3f75074e310d65f4165142eef7ebc20aa10fec989f388660856688e32a5a327e53b10bd0b0ea2d821dd5ce65d7c451a74cf67b25041168d4
+6a1a3a9acebd8a5b8f50b929ab41b135fc252bf21f2d0c19a3811bc080e95720a1f097773bd831e905b615470ae75c9e7e19086cdcd6aefe832b8a65
+6956a8108d5a7ed9082d5106bdce84ceb1e1e77fffb9a7474b4655856d921e3e06eb4fa122eb1e39a5d1a6b3df0b8b5f6c0a9e04885745e55744d324
+da26a5f798baef4e82bbb20d4e340cdb08fb27ea4a8625b52bb0bb09edf6cd8b3d43de060478cba937686b95ff1abf19dc7cc580aa67de5ed8bb84eb
+5456722b50ef1df8e4d729d342cee9588686b6f9354b3e6b185c3bbc3c6c7ece918da8629d6dca99c64cde38b828c6b73840237213b840c1f7ba0691
+0890896288c4298b08fc3777135d68fd0c4d28d587b4c1559956bd779449b21ebd756e8b7b344f65ec821b9b88ac1e61e186da3a6ed831b34dcb4b1f
+2ca121b935713b45cfcaefdf8837aa546754b412df0826971f311056de90e2a8cad3ab40deaca5495d6b4f9f6d921e3206ed56ee0ae71563e5f3beef
+953e836577248f4bdc6869b3154ad52ed57bcdbeb29dbb1d8cd9eb4c0b44738f33910ff20cc709a528ece44998ab8dc47f4fc3175c2a8ee5064132de
+db36e535934bcb9fac50ea5cd59f85ea5e4a352b50ef1bf9fdd575b409d0ef6faab898dc73126b294c4647f57a2c41ee928de805be5bdf998b7d952e
+a97fd3b51e7d017a19bb07c9ffea47d02cfadf29d2ca51aa49eb77392f347ec6584866d7fed0d816f351ab70d018e770e4313087122a125fec811dd2
+86b61e77a4eaee1e489b63b558ed0c4b78d869c452514544d4d6afee9f1dbf73614da840d1084ef302395f55f888a6f794c8bf3996d1c26e4b465585
+63e251021bfd79b538fc1479faf7bdf29e34d464772685159f4c03a10e0ae23fc460f0ffe1d8dd45cd9cae054e671fa82dda2df319dc2e8030f9f242
+a9ec9185430e935201789eee686131de827d9b52b416c288bb69c710e59d8ef379502f2b50ef17f9fbcc3a8e0fcdb5598ea3d999491a76337a1d7fe4
+733669cbbbd6ce1ce4149eae8d7dcf02b866d5c4224e343b40ff3be3f1a559de12dddc6fcbca30f901af2e7b684937801c4160d7f2f1d40f9f4ba029
+a847b839a87164c97b79417ec986138586b61e77a4f895613fd831eb11bf1e4b78b802ba3571625edec1b5c99921f055695bb0079e476ed90f171e57
+f28dbde785c8c87ff0b7b9543562538420fd793540a90df060a84f27e794e5abd464ce7e7d2d9f32885605931e1cf56b902fbc27577431cf1467f94c
+0b4d549e29fd3ae956fc2ea828dbe44bb4b6d28b304fbd58443789b322265ea0a345bd6a912e87dcf851ce55c8ba9fe915622e6519ef63b7cdd62e8d
+42eef4599ffab6d469176f2a7a046af377636bbefee1d529b94190a38d60cf13a5729eb77614602b77d667aed1a618841dd6c822d58a64bc05ad4b1e
+0b1769ce491a79db8bcdd41ea97dba69d106883fae766ed509250542f89c5e8a888d3f69e1e6d5327cdc21f71dab076d518122e9591d1f45cfcaefc6
+823aad724a4daf1483462af4073d1250a7bce1a9d68de864b4bebe0978704884238717572efd5ab439fa1e64e5f2bdf29338be4b79318e02d44802e7
+1e0ae562a70597dec194f443cd84fb237b5645957d826ece16db3fb132fbee09b5a196832f3b9b4f5c1a8ef4782755f5a754c334ca3695c78c58e944
+d2d6b8ee414161364d9a1afee58a758e09dfb307c5e6c0973d4f226709442ba035636bb3cbc6d505e37fd184816cd22fa228c6b71e7038764ff100c2
+efe05bde4b808767cbc821fb01af2e7e427112a978381983c5baf31abe54a975975da5349f7767c829774116adac11d9ceb11c2ed8a0de3a6eda42be
+5ea40e3308ca5fde122c0e7fcf84fcabcfad44b6286c8b42d7084fe729201f15c99af6b3fb87e77feeebeb5a3b474e852bc659593cf05ead29a62863
+b9dbbafec67fba775a3c855eba5745b35b59a10ec37af3f98e97f55482afb40343755cb931de2dec43881f801eece5098fa199df5e0684520865dbb1
+3c4232de823dff28c97ec084bd26c555cbd0c9d272672e7903aa2cb5a4980fb02edcf51ec5979ec9731a7c15590c62e56f7876c7cec0c806e341db80
+c0289760f821f19e423d3d741ebe0287cbbc199f17dd8b7adbad6fb859ee70342d5675c55b4079a2e2c7c509b254ab25d4089f009e6c658e6064325f
+ff8015d2869b146ce3ba9b6a2bb77eb55bf649490ce04edd59563873c9cbaaeed66f8d637a57b005c27c69d60527015aef9ae0a4c1c8b630acf6fe6d
+120d28bf1ded4a1946d554b53fed3962bfc0bef5cc1c824e7b23d133935645a21810a92dd861fda3a197f50885e2d27e221d589d7df321e419c41bbc
+3de1ee55f58789ca7f0e9d434d2adbe1622c1b9be417f037ed73cf9ebd7a8573d49999e658502479578937f9ecfe32921fdcd85f82b895933f377b2a
+590664f9780a2488efd4c019b90d97d78976df60bc26b8ff2a46307809ba1c87f9a60fd00c96e82f9a9660a859ea6c6d0e1175c46a012984dfd7d912
+b15be625b05da631b27762c3092b0e5fdd8e0cc38af15b74e4add55d02fd18d234d3410439e47bdc5d010e7595e7a9ea9f2ebd636d4af52899457ad9
+043d1569f290fa97d99aff3edf9eb906766101d66ddf103400f949a12ffc1e65e5fca4f69c31814e7c1a841f88684ab50f4ac20ddf6ef3b2e8d2bb63
+ea9aba1a4e3a5f9e2a977eab589867f06fb1812ed2cde8a2581b975b5b76b5ef78215daea35673c11c3ffe8bb971ce429cacbba51704635f08a33be7
+e7ca2f850888ef58d1f4d39b33512e3716266afd797141ee928da80ea34bb4fee111de2ea821f19e42513f7f77d667d7fba9079c54dede29989068a4
+43a7377718147ad9491a179ed8e0f709bc52ab29b95dbf3fb1797fce38070045fb8e0de4c1a21e20b1e8fe397e993f9a48eb410a39fc42d36f111162
+95fde1ee832bf71d0131b70f8f4977971b181848e9a6aefa98a4e263e894aa1e747155c50ccd4d1804ed4fa50fe71563aedaa5c894258b094142e279
+ac544abe1e16cd22de7bd8a5a995fe0eef89b5014a67629227da6eba58fd0fb931aaa549beb3c99b214fce1b0868d7a061294fbfa519f023956fe28e
+ab7cf21097d8dab71704753b5de6779d81dd358466a1c9528da694c8752f6226410d79dc752b3fcfb28ea861c443d19489749b30a06982f23975357f
+18bb2dc8f6a64bcd5cebce358d8d62ae5ea14e3b29017ed25f460b9bcaedd4099c5baa629c12883fb2766ec42f6c334eeb9d1bc4c0881761f5adc91b
+628765f237965a063ae44e9e55161862c9d0e9d89920ac766f5df523834675d208201854f38ca2e7c884ea69f9aa8a037f6145a822c1505e629157af
+2fe91737bbd8b0e2982dbc4275279d19925f68a8150aa1768d5cfba5be91f845dfc68b1b4a6d54892e911eeb19d12ea20efde648adad8fcc372c9159
+463d98f4242e4eb9e800f834d337deced201a276d9999ff2494132253faa33f8fedd1eb33c80eb1ee1ddf8e978197c224b005bfc7d212e95d7edd21f
+e506b4fe8d76df69c6018ff62958343514b11dc2eabc43a308d7d9269c812f8842e170322b0c72cf421b77d7dbf8d002b84d9c629547bd39b27f48c8
+352a482184e577f6ccbc3f75eda493073fd831f9cd00bae378da6ef66e3d384f9988e1ed9821bd636157b548c50849d20d261448f5afe2a6c18df95c
+f5abbf4f3224448529831e559807aa41a330f4379efa82cbb81cba664c0dc95cdc5e5ea91810e824c327b7f78e9dfa54d99abe04054745942dec3ee2
+1bdc2aa439b0a207beaa85872d089b43672a9fe57e7c12dd827e981ad97bfd82bb7cc25fd2d0bbb2170463fbf25de0b7cbf715a625efbb67b991a2fe
+492c2e61183b5fdf4e190ca2b9a8810ca85bf1858c7dc975e502f2d62f50156e1cb346f7ade44bd28c2739f9dbb760bd48af5a322e196ecc584a77d7
+cde1df18a956a169d001eb05a87167d47517005de8ac11d9ceb11c28aebcd2236a9a4ebf58f94f1234fc09991c1d05639784e37b72dc5c374457ba04
+cc6c7ed10a211d4fbfd3aea1cd86e864f5b7a54f3224749f24c34d5924f75aa40fe71571a2d3f9b989369a4676178f159a595eab0f46a86bc861fafb
+e89ffe54e39abf12592118f154fe2ae33cdd2abc74c8be0bfbe60331ac4fae454d2b9ef4366877b2ec1de579913fc892b66bdf59d396c3ae1b713562
+01bc70d6f8c837993cdafe448ea0d999511a692e4c4a22b079362fcbbba651f4598a9ea79a7dc825b832dbc52a53343951ff08d2f6ab1f9913d6836e
+dbb175a241fc3016380877d97c1a3e84cee099598f5ea962da01eb35b27c27873c211564ff8b1bc59df17109cdacdf137e957df36daa02477a78b43e
+93583b75ded7a4ffd76f9d464a1af7408a5d75d41f3d1e55b5d6ae92cc81e763b299bb17777d719928dc5b0340ba78910eaa5237aedab5b7dd7d1eb8
+8af6cb239d4e4ee73811f23fc262bcfbe89eee4ecf9cb218453c18db08cb27eb0b8618b12afdc848b5a288cc254d8a5e5c3995df6f3d48a3e419b372
+9d7ac083f428cc55c8b799e35e56742267c637f1a8d128b405dcfa59bbb884c83d0b6622566202995d3c2fa3eee5cd439d1a92d7cae824d15d28abe5
+2e47346f47ff26d1d0e82c9f18d5c4239ec62deb4bfa70343c1174ce04417ba2dffddd08f37ebe7794519b22b96b6ed37366295dc5a811d38af15b65
+e2ac977729048e4a86bf7e153dfb4ec40658386ed7c1afffcd08b6787b4cf94ccc4e6ed908201854f3d7a7e7ed9ce27ceff68a176b6858bb3fca4d12
+1cb0199325e41e79bff3b9f48e2bcc0e382d8514d0184ca20f2bf32fc87dabfec2f1fe4ec8e2d27d2255559f0eda2df311c725f80cada707f980a4f8
+5421bd170e78bace58011696c239b3779d78cb93977acf55cecdc28d3265256f39a039f0e4dd73b05984bb15bfa684de3d3b6b34410668b034142484
+fae88849e10f9cb38d6bc22eaf2ad7b72c5125540fbb0bd5ade161f93ddccf13948366a748a74e6264583950b3f3fa18131b9128b84db8628a088f35
+af6165c479684109de8a0cc1cdaa3f65ffb1d53429d831bc58eb61153ced598515726246dfc092e7842bbb652068ee4ccc0a5fd2182d1f58bdadefa3
+d19df832b0f8fa4b3b3611c76d9a12570eed55a338e11479e3c2f8bbbe308041712fc5269d5458e93f01f232c36cceb8bf9de90091c8ad574e7a55d7
+7dd82bf337da2fb52eada22dd28585cf59009950443dd3d039641bf5ca1ae532905ec78af85bdb59d2dac7a719652f7f048e37fadbc8328e4e84bb50
+8ea0bec9791a7c72116202d1783c1f88fce3cd0ee57f8bdbc83afa2eb861d6d62259715318be0a87d2a11f8419ca896bdbc640a559e65f3e25307ec1
+48223283dff1c359f11fa9628c67b934b96a3e8e514d204fe9bc12deccbd0928dcfd977729a761b253bf7d173ded4f9210585a2b9b97f1a7cd7eee3b
+285eae0e8f5c72d8057c0712bdbce1a9de81ec3ecab9a71435454f9f24ee571a3be852ae1ff81e72af94ecbb8b7f8b497c64cb17994c64b51f01f37e
+84059796ac9cc84cc58cbe05034404d77d9d04ee0cdc2ea27ccaea43b2b19289214fcf1b086acbac2c7d17f7ed01ff38c976c189f07e8210ff9785e1
+52436f5d0ca32db9c9d62f892dc1f67d82a085de6f2d6f23511d78b021783dc7feeac547ed48db83a76adf25be3dd29d423e585a19bb3dc2fbbc029f
+1290fb72d7c4239874dc4a12055a37804b0d2fb8d9f0d409e816c40e9447a831b0385ec9372b004fcf9b109795f8326effbcda3968913fb558e80645
+0ced53c47e0d1f73d4cae3a7cd1feb3e02318e0e80477ad329201f15d19ef7a8cd9cc462f8bdb9472624468e39e04c130dea0ee865827242a5d8befa
+991d9a49361b820a991816e72e20e8269f21f0b2bfd0aa0c8cc5ef5b0b241ddb698f67bc58fd25bc33f9ef65afaacfe96c0c95505a378eee680b54bb
+e406a27b803fed88b467d903929e99e85676064945fe6ba7a49869d04088a907c2def8ee731361265c2a7ffe320c2e9fefa49c4befdf216079f703cf
+ec5db5db0475153b2e9c3ceec89c4bd839d6cf6ed9df219e43e371362c3a6fce023c3e8fdfd7de17b24dfd27c508883fb0777994752a045ca5de5286
+84e9520a859dd53b6495759949f1002137e65f9001582e69cec9efcd8221aa394f57af088d4559db0a371a00bdaae0abd789ef52e8b6e5337e7c55b8
+24d55b5755b80af246813279b8c0b0f59e3ac0497d3fc352a97168a8090ae4398f23be82a694f441c8aaaf19023a72942fd12bf52ac92fb929ebab1a
+fb91a5c2604190525f70cbac2c7e12dd8221ff37d27ecaa5ac66857dd38d98e27951357f02a16fd4e4d1388b56ebf45985b192cf35197b295b1c62ff
+727062c7c9f1cf1fa442dbd9bd76d72fad6cd3be6b513f7f54d567ad91890f942fddc833928b6fe37db932776a9a9708c3d0d4d7e2dae53e8f7e8d53
+b17e8e708e5d49ee15002865cacd5297cfbd0f4ffeacde253ddd1bd27cfb4a2c3df149d9521c3962d9cdafefc51fe83b281a9d0c950856d80f315170
+f886aceb98cacd7ce5fae7477c6155a43fcb5b055eb131c90dec1f5caecdb3f2933bbc427a218514d4681deb5b46cf24ce63f7a7e8b3fe598ec4fb55
+657b529734cf6cab58cf2ea413eaef42a9f2c8a1042e9a53633d82e265265f85ee16f835d937fed1f428897fcc9d85a776412f7e4d843beeaa947bc2
+21cdf542c9f8d1dc780b41355c0d79a6355242a6ffe0ea0eb44dd7998c4ade22a5669fbf1b027d3b5f8b1cceffaf0e823ed7df67b08178e901af3c03
+3a117cc7491a79db8bf3d40f924daa628a1ee25ad5596fc310211849e4811ae5cdba126ee8e0eb6127d4338856e60e2f31ec4e90771d12259784e3c3
+842bbb352418bc05986769d30e26471297f6cfa3dca3ee69feb1a5034961438223cb16275eb41be208ed0863b9dba8bbb03e9e07532d9252d0180983
+1e17f539c276d3b6b8dab700cb8daf38597054896b96448e72a10ab438d3ee5eb9ad8fcf440198580008cdac2c6a7f92cd35c417e93feda8965cf97f
+f0abc9ab1b5f3a292ca633f5e7cc79cc4c8ac95e8cbc859b5e136724534a76bc3c2369abf4e7ca4b994ecc908d6c996cec2abdb76364237e0eac4785
+e5e44b8b5eecca248f8d62aa41af4a076a543b826e4a26db8bef9338b156ad6cd87c9b72f03829e42f360d0ba6cf3ddbc1bb1022f1e49b2c29a17fb7
+52fe4a470beb59d94c0c492b9b8684e5896da36a2418bc05986769d30e26471297f684ce95c5ab55f2abbe157e244087218f4a160aeb1ba82dfe1e37
+a5dbbfb6873a9c48382b8a1e8a5958e7080dfb2e8d7cf1f7ad94fe4dc986af040b75439e7dd623ea1dcc22b128fde75efbb288d8640d925222519def
+7e6864fbab04f03cd83fc789f861db51d58a98af407470274d9f6cbba8e868cc4cf8af1bcb84c4973d2f383a11486fff16514297f8e5cd07e549cb99
+8b6cd22fa220d29d423d586b1cb80b89d9bd1f9f11d9df2e98a760a55bee6d0421027e8011481e99def99f3aa84ba16a995ca2338f7171c2751d6b22
+84e612d8cbb91720e0e886777b9576be07d947093cce42c24f0c286fd2c8a5c48b0cb2767b4bf342b96157de18203d5ae490fbb39ac1811995d1a708
+78654dcb348f035704b85aae28a817398ad6a2f4912a9a425b27850499565f94121ee465f42ff1a5e8c89129a5e1b2110b6d11c57d8a7ea70cc02ebe
+5691822ed2b480cc6841bd56462e9af35f2141b2ab49b10ef976c3d5f666ce4794c8c7a70b08613b41ef27b7a39869d545a2923ee2b19dc87875074e
+31617bf17b3d65a4faead70abe7cd78d8d388660994c92fa791a3f7e0af75e8bb8f847d04e969e6bdbd428c124861732261c11a9250d3593829eb81e
+b35bc462964cc15af1352b9a66795c16b0d2438a95e5463db1f5866a36c92ce600a2135a65b5168d0145563a8699fcb6d072e32a3505e65dd115268a
+56694c06a0c2b3fa85d5b62da1e5f65a26391cd67092034a55a506fd7182563aebf79ec9b87fab7f4804a439a8186388342fd26b8559abf9fed6ab00
+81c89a3b673473ae1aec6ec131f00e947592a60afbf9dc963052c30a1565c6bd317506eab649ac66802293dae535960d81c5d6ba06197c3650f263aa
+b58566dd5195a60ad6e9cc862042337a055536ad216576daa6b99c56f01283cad525867df135c69d275b327a11ff26c6eb9c02841dd6e6228f856cae
+59e77133001774cb0c557b91caf8c21ed735e32ad8739f19994a2b9506642c44f89c1b99e0b10f20aae8ef36799374af1dcc5e0837ee42de5b58435f
+decaaeabc26f98656d5dfb30af085ecf0e37044ff28dfdeeb298e871f0b4e3016e6a429f24c0505f419232a92aa80f6ebbd1f9fc982b9c466f258e04
+9d4c4aa51701a86b9032bef5ae8df543d881b41909345095399f3afe08cd63a339ecf942baa08ec56116d7171565dba26a3d55b4ff1dfe359f3fda8f
+bd66a139b59484e45a48616619ef63b7efdd2f920ddff6529fb585da7f136b6f5f0966f5355242eef2e28106b90fca9f8d76b149c50188f23f46347a
+19b000cbe1e006845098cd26979764e22786175e241778c14048349bcfdddf1fb847ee3ad845bf7e834762c93f21192184e677dadcf6245fe5a6df32
+73d42cfb5bea40042ce144de140c4727d08dcb82e446d77b675bba0ccc4175c41f744c1bc2b8a09fe7bcc244dd9694244e5673ae03fb613e26cb6f81
+02cb3e1dc2bdd8929439ce4e763b9f509d564fe7120af23f834cf1b9ae91fc00cd86bf57427a428f73fc21e91ec12cfe0fecea53beb7cff864039b59
+5c1992ed2c2955b3ab5ce561f46cefcffa45c445cf9dc9ae1b4b332b19a02de3fad1358744dcb217d6e9d19950107b345d4a22b068302e89918da862
+c426d2988b79d760b86989f02e40017a0fab4287c7e856d015d6d833d5b175a241fc30102d0c58cc431b3e84dfc0de38b851ba628a00e25ad51102ae
+522d070bf98e0cd0cdac2b61febc9b2363917fd13496276e518147df5f190727cbd6a4efbd20ad373518af019e4f7ec33b35034fb3afe1b4d19ce27f
+f2d2c26e120d28e221c05d1604b849af23fc5b2aebc0b0e99a3a9a77793a9f5eac5959a21510a12ac36bbea3a98afc45d8b8ba055f3a619a2fda20f3
+42ee22be38dee255a8b0a2c364039a1f0a108eed6d2654beef26fe34c94fcf95ac2a823ab5f1e28e322d286d4da630e4fc96188f02cef250c58785da
+691a7d696b056ae268083982ffedc21fa440d0d78976df60be6794e36b40397e13d567ae91c162f975c8d9229fb46eb80db23e273a1d7ff0431b7bdc
+8bbcc314b24be0468b5bae3dbe7472eb322a044affb91bdbc7bb1274f5e89177629a62af13dc41093ee14c9e6a19077495f4b3ee8926bd636157b533
+985a7ed90c20191297f687ceb1e18275f2bcc16e120d28e244c6585703b806fd6caa337ebf96f1ef953a80076a2d9f058e560b843d16e026c821f0b2
+bfd0eb52c98c8b18583d3bf254b6478e71cd27a339f1ed07b0e4dc962d4daa565a3f9ef42e684fbfee1ab129d86bdb95b628df51ce9f8ef36b45337f
+4daa30f382b152e965a1fe598fdef8b214766b295c62029915513982eff1d305ed40d293a176df25b4208fbb6b5f781174d667c2f6ac61f975b1d822
+8f9664aa49e0703b315076d400482f85def19871d436ab699c22c235b27c01c23520482187c25397f38c3245dee8880a2bb978b84ff0032134e148db
+1c2b026bdecab5abac26b3374e59b70c8e4978dc4b321e49bda7eba9d7e2e77fffb9a7477d714f8839c6511948cc52b42de6367ea8c6bedd91368d4c
+4b218715924c6aae164ca841a463f1b4a994bb49c29baf5716346ebc73e711d331fc0a9e03dbde758981afff5226b0647c19b5c3494232beed54ff34
+c93fc789ab7c8b5fced885e84f0428651ebb70d4e7d63d890b88f445cbba9ecf3d1660344c4648ff723e2280b5d7d50ab94acdd9bb71d725a27cbafe
+2614257318b14ed5fdbc1e821298ce299fee08a742ec7f3b680c7ad24b0d2fa7cae6c557fd60ee3ad841a523a8365ed332281205ca8a0af4c4b70865
+ffbcef3848917faf58ed064e528142d61c1604739bd0a0f98a2aaa47694aaf40835a3bd90420514ffc8de9a2ccb8ea62e8f69b0669614f9f6ddb5612
+06b849a538fd0979ebd1bffff755e74b772b8a1cdc4859a21f34ee388d32bea3a98afc45d8b8ba055f3a61942ed63aee17c641d930f7e846b7e493c4
+621bde0a082c9af26b2d4f87ea06e575ed7edc82b67c9176d5968fc15256327f2ea737fbec9079a819c5fa5984bd95e972107a17591a7fb23552428e
+fda4c805be5b90b48776dd29ab26a8e32a403468538c03c6eabc3b8219dcc2248f8d6ea50dee7033680a74cf58482f9fcefabb72d44fbc629c78a423
+fc252bd72921057be29c5e9c88f0096fe3bc9516788774b65ff3572b31e64ed14e2e0e6bd4c7a8ff946ff4376156a814c26b74d90d3d1615cb9ee2b4
+96b8f975f8b1a813726b4fb839dd5b190fec53e946811e79afbedb9291308d467468a811915d59a65b59a122c37ceaf99d8cf24cdfc69c125f574489
+2fda20f33bc926b52ef9a30ed1cd88cd2d019143081b9aed693a5af7ff1cf4359d6dcb93ad7ac510d9968f8d32482e680ca37ef8fad13ca32a88a617
+a8b59cde6f1e20047e1a6afd795242a4fae9c419ac01fdb19a79d625ec35dbd40d46307618f102c8f7a32a8454fbca2a9e9660e56ec96c36251d35f0
+431b3283c2fbdf57fd4fbc629c78a423f51202ce3d640845fe9b50f4c7b61d69ebe6e8236a8074a813d747130be75ede58581f6fdecae1e2833caa39
+5d4cb20c9f064bdb0a2d3952e9ace1b2d68ca339bcbda503110d558a3ec4100418f94cae64ee0e79a8c0b8f49377c72d1141b8158e4e42a41e17af19
+d861cdb2ba8ef243c9c68912457054890ecb2bf708cd2fea0bf9e253f3edeba2042c9f5a4d2a9aae4f0e49b6e611b1669d70dc8ebf4bed3ab59d85e3
+122e246509c554feee98358f1888c470c58caeef542b4f09672044df570702a9d2d0e82a8166e4b2ac38da2ea8288fee3b51797312b005cafdbc0a9d
+19ccc3289fcd21f610af3c313d1678d4450735d58bf5df1ffd4bb7779d00ac35a8766aca3e270047e1821bc3c0b71f29acf58677299264b55eeb4708
+36aa0bc4541d050db2fb86a5b5108a5e5c79953fa46754fc341d3f72c9b6cf8bf1b2ce54bce5eb13697144e144e75f043cf14fa122c51e63aad9b4ef
+95308a6f77278050c1185fb50e018b42c160fdb6a4d8e841ca8d8e195b7552907d826ef319ca27b572ede557baa78a8b621dde4246289ae3674232bb
+e417f0379d70c2839669c655df9987eb312d4b0202a33ad9e9d53e830dc4f717d6f499d4721463224c0966f568302483b3e3c006a8039ed5b747d521
+a16d98f6275873375db91bc9fbbc029f1290d82297822deb03a1307e427112cc430b3a9b8bfddf08a95ea0649d08f670835f25ff0410287fcca121f4
+fd8a2945c29ce41e45a7459a73dc6b6d518142d61c1604739bcdaff8992eb0746d18af0889463bc50e200449f3dfe1abdca6ea7df9bbaa0b772c528e
+21c9125746b615e96ced1573c1bdd891f45682487b298750bf4d59b51e0af508c261f8beafd8a600c586a8034a7a529e73fc21e91ec12cda5591e748
+b8a58d8b4e1a8c454d368fd3782749b6ec11b1669d76c094ac69c553d9d6b8f35456206c08c5579ee4d738810088d84299a694d5692a7a2e541b2bad
+3c312594efe5cf08a801eb838174c84ac501f19e425d373b3eaa1cd5fda61fa308d7d9269c812f825eda703b27197fc548482f9fcefa9109b84bbb75
+9608a43cb8566aca3e270047e1c70dd2c4be5720a2e6957e2b917fbf3796276d518147df5f190727d6c1b5e3822bfe2a285fbe14824976d208351d57
+f09afaafd78ca33996d1c20b746740876dce4c101bb806e038e9197bae9aa1fa9e34c6093666c27af53147a81805ed6bcc7df999e8c5bb41de8fa859
+451e38f257b647ee1e8808a52eeaee49af878ec56b0699197b2c9af4693b1596e500f810d473c285aa61c85b9c9985e31b49247f05a03ab7b5857bc2
+38c9f052afb59cda7a1a2c6759066fb06f3d2781a1cdd22ae50df6828579d52fa56cd9be6b553f7f5dac0bcbfef2228338ddd8249e8a65aa43fb5131
+603474c34d040b9bcaedd409f37ca6668a49a824b96a22872f2c044587e677bedabd0f75fea6b15e02917fbf3796276d518142d61c150e73d3cba5ab
+d072fe355a59a2038d5b6f954b3b031bf09afaafd78cab2da1f8e921726a45bb2cdd4a3806ca5ab91be10f7f82d3bff48f3aa24e6b3cc950934a0baa
+1e10e924c92fa3eae8dadd49c28c8b1659607e950fde37d011dc238734f1ff42b7ad92df2f4f914508359ef464275ff7b649b179fb76c0838869d944
+f396b9e64206617f05aa309d81b152cd4188c067dbf4b7f245222e1451046efe6819228abbc2c807b94acccdc848c925ba6d95e36b56237e1cb407c9
+ffe80c9111dd8b2e959064b94cec6a3e27166880040c3498d9e79d5bad56ad6c8d58b87cfc4d428e514d6822e1801dd6c4f80868e3bdd7335b867eb8
+58ec5d3431e44ede48585627ddc5adf88845d71e0151bd40af5d69c50e3a0578f291e8aedfc6d864fdacae143557488728c14a3601f51bb424ed151d
+c2bdd89291308d4674688402955f42a95b59a125c46394dec1f19249cac8b6125f7c5e9f7d8273a75afa2aa93ff9f853f9e495c36801de585a319ce9
+626806f7ea06f628e62ef3edd101a239d99498e21b482e680ca37ee5e9c17bdd4cc9e950988fc0e6265f6135510f62fe3c656b95fafd810aa34b9e85
+8961950fbe619cfe2514347519d567ae91c161f975b1a22e9dc46eb944e87739680c73c5426252fea29db817b25caf6bd845b213b479798766642d44
+ee8e12e7c4b90265fee6f83f6a8670b849fa5c6d518122b935140464dac8e1e694078c472805fb0d956b73d619741055f9dfe3befb80ea62a69ea209
+7f4248993edb7d1f01f45fe86ec00e7aaadabef2990d81486c188a02881a02cd726d8842a463f1b4a994bb4dd5bcb41847340cdb30c60def19da6bb1
+32fcab4aa28789ca7f55b85e463cbde97e3b4f94e31dfd3ff279ed8bb97bd8189eac84e85706680164c6579e81d434830dc4bb4384bb9df37c116a2b
+5d4836b071211f88f4e8810aa34b9e9a914cd42fa032bdfe255017720fac1ae4f0a10794549ae32695806dae0fa6145e417112a9266152fea29d9c56
+fd7ca6629b43eb39ba3879c622640e59e48817d9c9ac1e73acaec93866d461b75ce64b157ffb0bc759191b68d584aef9cd27bf796c18ba12894911be
+625d7832f499aeaac1a0d940bcb9a5033b6b53822ac650571cf05eae4681721ec2bdd8f7923c8f4b382c8203886c448f2934a1768d27f1a5a19ff24e
+8cc5fb1a525c63ab73ef21f411dc22bf32b1a56abaa38fc2791a9a522251f289054132bbe417f0379d7bc794ac5cc464d39787a70604356402a316f6
+e6dc37854cc9f553cbfc9ec97418672918452be4733727affaeac507a801ee989b71cf29a366d2b90655367514ab1bc3fde804825cd5ca3393ca69be
+4aea145e417112a925043494caf89118bc52ee3ad86bbe22ae7d65d30e300847fec139d2dc9b0e72feadd52348957cbe4ffe064e528122b93571626b
+d4c7a0e7cd2bb7647c6cb4238d453b8a4b371056bd9ee0a398c0e462f5bfa2093b2901882cc210342eea5aad29a62b78b8dda5f29231c70955298c1e
+954c5ea31e44ee398d62ffa3a0d6f355cb8dd17e221d38f254d628a71cc138a408f7c3758be4dd8b3c5ade585a789fe97f3c6fb8df1bfe379d238edf
+f867d910d89198f36f4b026a00ef62b7b0982f8809c6913ee2ddf8b214767d2f571d67f44c2a2484fef7d238a443db999c388660b87a8ef2413d5812
+74d667c2f6ac61f975b1a24e9e8a65c12486175e417212a9256152da86b4fe0ba956a1699944f170bb7d7fc43a280d42e3880dd4dab10b74acabd332
+689f31b25bbf4f1139e147d15e140e0db2adc882e426b8377c41ab05c44f7ec308351d57f491e9b4db9ae260e8f1eb5a2624038d38c15d0301f755e2
+6cfc1372a5bed892f456e72e74278811901848a61708e825ca2fa3f7af9def43cd84b71e457342982fd63ef3508141d95591822ed2ad878b6e0e925b
+41369ca078205eb9817d9852b416a7eeb467c851d0d885a70604327f1fa630f0a6d4349709dab3548ab89dd27318200959056eb9165142ee928da862
+a4499e99d27ed22ea820d9f03e5a73325db01c87f6f20d9912dc83658c8160bb42e13c7e6817698042523d9ec5f09959ae57a1688c0ae270b36a2bc9
+61220845e9c75cd4c4b11e6ef8ea9277648631b507f947093ca009d6550a0e259284b5e38821d41e0131d269e52112c4033b0457f9affca8db8df863
+cfb1a702757001d66ddb4c020d9232c94581721ec2d1bde89836880776728d19925c03e50e0da3628d60ecf7a6c2fd49c28cf3554f7b5e897f966ee8
+0a8825ea3af1e543f3e688c5790a8c564b2cd9a92c2749f7e54ef732d37b86c5a861c85bc988c9ae1b50296e03c5579e81b152e965a1e85f84a19ddf
+4d0d61245d1b78c375342e89efa49c4bab4ed2848d12b249c501f29e42513f7f77d667ae91c1629512dca14ef2ed08c248e17a5d417112a949063ffd
+a29db81eb35bc40ef121c159d51162c17b370944f8831ae7dab71865ffbbe83e67917faf1deb4602368222b935710768d8c5adab992eac706d4cf740
+855b4cd607385106bdbcfbb5ca8de564c9aca20b682a668e39ec52181bfd48b418e73872a5c0b4e9d576e42e1141e2199a185fa60903e43f8d6ef0b3
+e88cfa52cb8daf597b75439e33cb6ef310cd25da5591822ed2a88ec86c03de475a3d9fd0633b1beaab00f029da7adac98867d859c89184e9312d4802
+64c632f8ebd937c009faf4589ff4cc9b691e7c205d1c25c07d2a2e89efbee702a34bf89e9a6bcf03a46197f36316196e10be00c8f1ac399f13ccfb26
+899023e22786175e417172c60c0d0998c4e0911ab35bee448d5ab935b26c48c83522084ca3bc0ad6dcbd082edfa5da257fa463be59f64d1331e74590
+48100e69b1adc882e446d77b675bba0ccc5869d20f001856f8dfb3e7fb9df962f9b6bf24746a47822a81681604eb15903eed1f7ea8c0b8f4930c9a55
+7d268c04943222ce726d8842c160fdb6a4d8eb49c28ffb4a0b5744892fda20f32ddc22bc2fb6cc42af9488c56a47d7170778cab03c7831de827d9852
+b46fdc82bc5cc25dd9d8d6a74b56246f39a633f2a8937b9005c6fc17c1f4b2ce6f0d6b294c2b64fe7a312cc9cde5cd18e37fd7998f5bd42dbc6d95e4
+2a40387413d567ae91c162f90ccace23ab8b72eb10af6e252d1c4bcf5f4870d783f1e314b24be0468b5bae3dbe7472eb322a044affb91bdbc7bb1274
+f5e891777b8674bf69f64302718222b935716262d5c0cb82e446d71e615efb0d895c73d80f744c06bddddca6c18bea63e8faeb1373614fe144a6377e
+619157af2fe91737a4c6b8fc9431ce1a382999178f631a9a4044ed24ce6ef2f7ac91e945cf9cb21845340cdb75cf3ce21cf824a37cb5ab48a9ad86c2
+6346d06246318fa026680ee7bb44aa7bdc6dc994833af61081d88fee4941227f04a0309d81b152e965cdf7448edef8b21476074e540768f170783986
+e2a49c4bac5dd984b329e67bec6494f42a5871740fb609cef6e856d00ed9d269b49668ac44e12577241778c140483f9ed9f1d20fb450a027c508e320
+ae7d6ff734374106ad800cdecfb11529a29dd53e7fd43bfb08af1e57528122b935716266c9c3b2d0dc12fe2a286aba19c2467ec0433b0352fa96e0eb
+988ce262f9bbbf0e746a08e144a6377e61fd55a44681721ec2d1bffff756e72e7d268f7af53122cd726d8827c26cffbbe88afe53d984af040b29118f
+3cdd22e256d82ab337b0e44bbf8a80c6680c9f5b447088e5602e17f7f815f73ee871de86bb638351ce9f98ab1b156d2b0cbd39d9a19172ea65a1925e
+8df483de6e0a62334b4665b022787bc7faeac54bbf4acd82846cc81bfd55dbe323513f1174d667aef4a708911098c32e8fad6fb859ee70342d582680
+420137fda29db872b150ad669408b961fc252bd53e371447f99c2586f5d2720985c1d2312b8068ab58f0484f2ab9029001454b25e9c5b8e88c3caa45
+6d4bae0c980a3bc303311f3194f687ceb180e264d5b6b8137a6a428e6d921e0559b672ae3ffc1a79a8d1db92f456e742743b8e199a185fbe0b01a939
+9c26beeaf5d8b954cd8ab71209345095399f3cb656e125a328f9e544bee495c36801f43e2151f28964214f9ee507e53ad37ccbc7e528d90192b185f4
+4f452f6808c5579e81b13e8c1fcdf251cba088cb7810686f4a5922b021656bc5d2ead21fac41dd92ca38cf28a966f19e423d581215b61aeef6bb1f91
+12dbce67c6c473fa2786175e411d75c4266152fea2fdd75bb556ba4e965bbf31b27b6e872f2c044587e677bea1d1176fefa9d777639d659855fe5c47
+65a843d948310574cfc5afe88875987e665c9d099e5b6ff605371448e990fc88deabe771efabe345566b458e218d177d619132c945e41474aad8f1f3
+942bbe4b6a68d650af5d59b11207e438835ff2b6b19de95396afbe037b78508238cd08f517c508b83deaea44afa1938365068a74403989a9064132de
+827df83d9d77c7938864d910dd968fa7534d355b01bd7ee9b598178f0fc9f76787b588de6f5f6f295c4848e56e2a2e89efd1d502a15c90be9b59d729
+ba6dd3ff224001770ff34ecff1bc28981dca82678f8c64a52786175e417112c94a483598dfb4f20eaf4dab698c6ba43eba716c890830005fe89c50e3
+cdb91643e4add83c2b9b63fb53f05a471bfd59c259161f52cfcdadf8c306ad436d59b60d8d5c7e9f033d056bf18da7e7cc80ee7e96d1c26e120d28e2
+0eda4c050df64f9338e70976acd1ffd3942b83466a238e02bd545baf1a44bc6b9c21aeddc1f19229a5e1be194f1e38f254b647e216cc41d955918242
+b5a0eba204669b594c52f289053a5ea3fe06ff7bce7ec8828d66db51df93c3f55e57346719bc72b7b9947b9209dbee5b9fa7dfd53475074e5d066f9a
+15513982eff1d305ed40d293a679d625af6997fb634734771bf34e89b6e642fa75ddc523d2ee089859e06c362f1d35e8430730b6c8e0d80db81ff327
+8c5abe35d61158d33436004ce8c136d8c7b3346ce886da3a6e9770b751bf134737e44ffe5d150e64dac8ad818821ba1d0254b4038d443bd61e261077
+f290fee785c8ff71efb3e5146b65568565c94b190bec52af22a0521dc2c3b9f2913ace53793b805e8b5942b35354af7b9826beb3a7f29229c58efb24
+5f7b439a3ada60ce0bfd25bc33f9ef42bfe495c36801de555a3d9aeb2c2d55b3817d9837d27ccf8bf86bc351ced8d6a7774b226a019f32f6f1dd29ce
+2fc0fa458ab785de6f442e2b570b6afc3c303997bbb98108a54eccd78976df60e46b93f6390e177213bb28ceeabb1fb314d1c723d3c649be40ee7038
+211c49cf431c0b96d9e09352fd50bc279b40aa22e65e62c93f020859fe9b3ddfc1b41f28ae9cd425789b33f21df05c473be04ac21228196ed6c5b3f2
+bd2eac632857a9408f407ac551121855f9b9e7b5cb9cc878f5b4af30736d428304dc7f5f4ada5ab329d81a65bf96f8b2f756e74e7e68851f881843b5
+0b44f523c861be84bc97e941cb8df5365e6650af3ccd29e20c8876f032f1e71cfba78ec5790690424d789eee684232dee71bf23ad13fda86aa6fce44
+9cc5cbc15e45357e1faa2db9cfdd2fa119dafa638aa696de6957277c183b7fff6e392c82b5c5d419ac7bdf858f7dcf60f1288ff63953346f77d667ce
+fee81f910edfce33db856faf0dfb7f252f1d6f9a6a013593edfdc308a97ca66e944ce372946d66c6352b084fdf8011c3f8b90974aee19b2363917fd1
+3496270e3ea868df521e026095f7b5ea992aad395c689a159e493bc303311f3194f687ced09afb3edf9eb906766101d66ddb5f050ffd4fee04fd1676
+a5dbb8ffaf30815348299904d27b6db51a09e46b872fdd91ba99f6458286be0003241ddb6d936eaa3bc725b635ffa571baa89285593fbc52403195e4
+482148a3a27e9852b416c695a826ea43cf9d86e5575d0d6203aa3fe5dedd378f0fc1ef4ecbe9d1ed781c7a284a5b25ea792a24ed928da80ea34bb4fe
+e111d226ec4b94f92d5d36352eab0fd3fdbb45bb15d4c7068e9660eb42fd3e1427167dc94b460883cae0d408f36b9e468d5aaa70a8706ec9514d6822
+848311d4c9b45b74e3a7d77736d472b35ced142131e64ff6550a1873f8cca8e78900b8546459a813c40a4fd804385312a6dfe7a1989ce47ff0f8bf0f
+7e6a019f22c0524d29fb4fa93ae90f72e39df1fe933be42e1141e2188e4805843d16e026c82fa3f78bbee941c18df51b447b5aba299726f508861bbf
+2ff1ff4eb4aacd8b5b0a9d43472ac8ae622d4cffff15e33cd86b80afad65ca5ed3918fd5544b355b0cbd2ab9d8d7288918c1f459c58cdd9b750d7e69
+680778f968312489b5dd8d4bb94ecc908d6c9508b9659af9245d354912b01af7f9ba1fde2cd7d82e8f8d6ea503d5377e427112a949063ffda29dd417
+ae5aee548c47b931bb7d25e62e36007fec9d19d2dcf84620e2a1d7776e9a75d134fa400352ed45d415721f66d9c8a4a58421ad727a4cf333984769d6
+0c315f77f290feb494c8ea65eeb98708747408e14782135755a506fd71b5462af689eca6c062d31a2575d64dc10516fa4659bc769032a3eaf5c5a61d
+91d5e64a16290cc6608273ba459576ed61a5b61ae6f9dc963052c30a1565c6bd317506eab649ac668022a4caf528f965f2aca2ca7e04695d58e168b9
+b89151cd4188a60ad6e9cc862042337a055536ad216576daa6b99c56f01283cad525867df135c6aa76096c2640e2539aa5f556cd4185967ac6d93cf6
+10b2236a7545269d115566ca96a98c46e002f33ac515f66dd67464c43a284179f8810adec5bd5b3dacb3c65d6d817fb849f6410978da5ede48110662
+95f1afe7822eba3f2132d235984177c4451a1e4ff499f7ef9a0a11b0736044474e6a4d842ccb1c5b48ba6eae20e71a73a2dab6bba57fba6e4c09a550
+aa0e05f45554a1668d48db99e5cebb74e5bc9a390b537ebf7d970fd73df06b9f11d6c20ef5eacf892465f7645c3789e16b2d159ef821ff37d27eca82
+bc289610c88a9ee2312d27641fef01bba8d4348f1c88f259cba490d26f0c26144c0779f17b3d65abf4ebd118e40fda98c868d821a064d3f13e5a326f
+14b0008fb1e81f910fd385249a8a62ae41a772382708328049063fde8bf1df1fd7369d73975aaa37b93647c83434120bb0cf05caa2d11d6ffee8e47b
+2b977eb553bf470978f84ad94e0b4354cfcbb3ea8a2af0546756b5058f5c72d80527581bf990aeb7db89e77cb4bebe0978704884238717570bf755ae
+76cc1264a8dbbff5983c9a0f31688e1e98110ba215008b42fe7bf1a5a99ffe0eef87b5194e77459232d13da7458830ad5691ed48a9e48a872d30de5e
+46788be1653a48ffc81bff3dd47880b4ac69df55cfd1cbe35404026403a937f0a6eb2f8118cde86c8089d1863d196f2b4b0d2bf5723c41ee918dcd04
+ae4ed2d78b70da32ec35dbdb245730772db30fdefdba45b314d9d926989064b927867731681b73c15e482f9fcefabb72d453a1649944eb38ae682b9a
+7b27094affd538dec6bc3d69febbcf14639d7dbf15bd661235e945df551c3968d4d091ea9f3bfc3e0231d2098a0873c51b740553f89184ceb1e1ed7f
+eef8944b3b6a4086288f571948f14ba125fa083fb09689c4bb339778541ec95cdc1a7398330de52ef243c8f5e4d8b978f3bbab124e706eb70b9d33ae
+58cc24da5591822eb7ab82ca614f915b4c78c6a0643a4bedcd1dff3ffb76dc94ac4bc359d09cc3e95a49242256ef37f1a8d737844cdcf35285f49ed7
+79454a224b1c79ff657062c7feeac561c426b792867cb149c50197f828553d3b0fb001d3d9bc1fd04198c3358bde47a243eb583e3a0b6fe344013793
+83b6e314b24b8f738c49a838b17d65d3796d6b2284e617d188aa146ff889cf232b957fbf1ded41082cc95fc4063f0e73fad0b5f9842dab636d10f938
+b37c72c30a3a3e4cf39aeae591c8ff78f9b6c16e120d289922c04a361cec018429fb0f65a4cdf9b2f756e72e7d268f7af5314ea91f6e8842c160fdb6
+a4d8f355c1c8e657487c508967f927e91cee22a22fecc84fb2a885832f278b5a493694e9686a12dd827df83d9d77db8af87cc355d2f2e28e324c3466
+43983ffbe3eb2b8509ccbb0acb8785d46f1e6922162779f97b312586f7d3c007a67cce928d7cb149c5018bf42a583d331baa00c4eca1049e54918b2f
+8e893b8845ee70302d2b6fc1580d73b2c5e1dc55954aa3669647a2348f6c6ad33e10185be8c12cc2c6b6126eebe19b32659038d134964b093c8222b9
+690c026bc88a93ee9e3bb1656d7bb40c804168de043a5958f59efceb98cae87ff0b4a2037e2608e144a66b0301f448ee1eed0863a4c6b4d89233824e
+6b21841ed45b43a60948a169d960ebb4a0dab22aa58db513211d3bf23bd03ca727846ba07cf1e507aba588d97e47ad525a2e92e3693b1587e715e83e
+cf6c94a0bd7cfb5cdd818ef5480c68224dab319d81b132864cd8b57483b583da7e0b6b35181c63f5725242ee92e2ce19ed7092d79879c934826996f2
+6b5d3f3b14af0fceeabb438b5ef0ce269fc62deb0fdb71253b17398c0c4a0e87dbf1c32fb24dbd68da04eb72946d66c6352b084fdf8011c3f8b90974
+aeb592776f9b1bd23496270b37eb4adc1c080a75cf84fcab9d619d7f694aba03984d698d2d3d1f5fdb96fcb4ccabe379f0bce3177a7655a52cc25b5e
+629132c945e11d37bbd5a3efdd3e804338388a0288026ca20f25f53fdf66fca2bc9db302e39ab210787d4b9e7f966ef9458825b930b8ff4fbeaaeba2
+0466f73e583989f4221b52adee54ac7bcd7edc93e24fce44fd8c9ff55246347f08e77cd8fad13cb305d2fe15c2def8b21476072b570b6afc3c373fc7
+a6a4d10abf5b84b08d6cfa34b87a92f53e4034335f901cceff9c199112cbdb2689816fa854ad375d417112a925183a85dfbae509bc51bd77995aae3e
+bf612b9a7b6c0e5fad914397c6b11729aca9d5332b9b65fb52ed0e57528122b935710768d8c5adab822cfe2a2848ba1298125cd21f15054fef96ecb2
+cc8da332d3aaa20058654fa822c3521e0cfd19e94681721ec2bdb8fddd308d076675cb1e95540bb31301ef6bdd6eeca3e6bbfa4eef87b71b427054db
+609f21e458cd25b45691822ed2cd8dc46e0e92174735dbbd2c385aa5ff4ed63ec95eda93aa61c945c89dc3a57456286c20ae2de4e4dd28934e81913e
+e2ddf8b274192e28554875ad3c36228bbbf0c90ea30fce969a6c950dad7b88fb2e47223b40ff01cab8ad059476b1a24ef2ed71aa5ffb24042d0c5ad4
+581a3295dee0d453ff70bc6e9f7ba22ab93a2787352d0d02b6cf0ed6daac4153e9bcfa237f8678b948eb4b4f7ac759d95b2c1966d5d7b1ea9f2ab074
+711af7408241779e615d783294f6fea6ca9cb143f9ac8a136f76488938db5b5f4ad749a92bcb1a7988dbbdf7943b8b0534688519901110e70b05f33f
+975cfba3898cef52c58aae034e3c13b42fd629ca19db38bc39ebf805f7e48fc26146f43e2151f2e5622c31de827df435d915a7eebd66cf3ab59d85e3
+312d4b020ba02cb7d7947b904cc1f5179bb598c96e575d224a1e62f3792b65b7f7e5d80ebf5c84b08d6ceb2cad719ee5381c78325dbb01ad91c10296
+5cc88504938573aa4efb7b25680c73c5426252fea2f8de18bc53ee649049a623fc252bd77507094aff8e1dc3cdaa4146e5a6df11628662af7ef7470b
+3ca009e8633b0366d6d7e3a2e746d71e615efb03844976c44b20195ef3dfedafd985f82ad8bdb813696b58c3648f5b190c9232c929e61f1dc2d1bfff
+f756e42e5b248e118e715fa21621d21b852694debc99f94cc9c6b81b4e7543d30ecb21f519cf2efe0cf4ea5ebeb6a2ca6e079b1e22518fe16e245ef9
+e818f43acf37fd93b77aca57d9d6a8ef5a56026a0ea73bbe82b12f810ec4fe1988b894da6f575d33571a6af779761d8ee8c7c008a54a97fde14dcf29
+a07bd5c32453367718873cc6e1e00d9110cbce6ec0c454bf44e36d791c177cc7400d1d82c7f8d309b458a673d04eaa3caf7d22ad52220e59ad9f12c5
+84f81e73fce8d2392b8470b24fec06342ce759d15b1d4542e8f48ee9872abd637b11fb0483087dd819742e17bd9baeaed6c8fb71f5aab84f7e7751c2
+6dcb515718fb5aac20a01d62a5d7a5f29231c60e382cd122995544b11e4ca86bc861fafee89df5448c8db513211d57942f9f11ab58dc6bb932b8fb46
+b2b692835e1b9145493f9eae42294fbefd11c137dc66cb958c69cc4395d88fe81b54226a01a376f1fdd6389405c7f51fc2f48581591a7d334a0772b8
+35782e89ffad810ea34bb4fe8e77c960bc6489bb6b473a7e11ff07c9b8b80a990ecb83148f8b73aa4aea3004231d77c5580735a7cae6c508f41faa68
+d84ea422fc4727873f640845ad9f1fdedaab5373e7add77e2b907efb4dfc4f0b34a04dc5521b1f6ed4cae9a2cd2be4456d55b416890032970e3a1512
+bd9ae0a3988de57496d1ad0869247ec76dc31e1e06b84ba125fa083f98c0bee99c388b094c3a8a13994a67ae1501f2628d6bf1f7b89bfa4cc0c0bd02
+4577459232d166ae58c4718239f5e451beecc88b68019a1e083d95e406415db8f954ce779d7e8e8eb628db51d58a98af68502e790ca83bb9c7de3d93
+0fdafe52859583c972087d6e180c64b06c3b2a8bf7acc71ea34cca9e87769369ec69c1c52e593e6d18f74787fda60fd95cddc523f1ed52bf42fd7f30
+2d5654c64a1b3885cef1df3aaf4da1708b08f670a76501ae3d2b130bd2c35edb88b11520fca9d22578dc42af52ed4f003da667df53133966c2e8a8e5
+883cfe787a18a01dc5087fd84b24125af193a6a1cd86e864f5b7a54f32244dd11fca53181efd13e96ced1573e294b4f59955e7746c2799119b5d058b
+140bea19cc76d2bea69de80091c8a00a211d57942f9f11ab58dc6bb932b8fb46b2b692835e1b9145493f9eae432e5da4e806f43ed35bc794ac5cce48
+c88bcbe849043a7644ef3af8a8c8388100c4b3519eba92cf7410606f11487faa4e3d2688ede18942ed4ad093c138de2ea802f2c43f5b237a1aba40e8
+feae18930eddce29bf8d72bf79ea66233b582680571551fecdfbc35b8213ee6b9146ae70b5762bd73a2d1358a5bc0ad8dab91c65a28bc938788779ba
+54ed620e36ed58991c1c0427d2c2e1e78421bb377c50be0ecc5878d60738595de891edb3d187e538b5f8a70e75611bb928c251010db012e029e61f3e
+ebd1bfffdd3a804312418d1f8e1874eb5b08e825c82ff7b9e888fa49de9bf3245f7b439a3ada60cf11dc26b12ef3ee5597ad8fce7e46de53477892e6
+2c2452b9ee54e533d8718e97bb69c75c949e9ee95850286403e777b7e4d1358556fafe5a84a29493345f6b295c412bf5723c6b82f5e0ab62a4499ea4
+9c77c921ab6dd5c32a46367e098c1ac6ecbd18b40ed9dc2e958321bf45ea7077381b7acc40403d82c5f7c512b251e62ed87bbf3fae796cc275100059
+ea8a0ae4dcb90f75ff8cc9367c9d7fbc07cd4b0a37fe4e9815580e69df8dfaabbe3bb165695fbe4eb84969d00e20224ffc8bfbb4fc9aea67f5b6ac47
+26244f82218f5b190c9232ca45e11d3798c0bee99c388b09573a821795564aab370de623d966f0b0e6b9f642c58db5030b60599e33b5478e2bcd39a6
+35fbee54f58888cc651b97594f76baed6e215eb9ff54ac7bee6bc195b96fce1ef38a82e0524a206721a639fffcd1358742e9f65582b19fcf17760714
+5d1a7df97f3d38c9d7edc603b946d090c65ac929ab608ff92e47223b40ff3dd3f7ba0a971996e435928368a54ce3523e2f106fc9420f75b5d9fdd613
+a951ab748b22c2598f7d79d132270458a3a317d0c0ac126eebe6f4227f907eb44fde430531ed45c41c454b54cfcbb3ea8a2af0587a51bc09824977fb
+0233194ff491e9e9f79dff74f3b7b9267666488e23db347e61cb5eb23ae11872b89a9df29a379a4e762fc533905748ac2f0dec2e8d32be84bc97e941
+cb8df538597d569233de22cb11cf23a435f6ec0998a88ec8663b975a4d52f2895f2d49a1e217f4289353c780b07cc25edbd6ade85c612f6f4df27ec4
+fcd729810bcdb57899bd96d2731e620b510f63e475362cc9ddebc62ea34bb4fee14bde32ba6198f2381a1d721ab71acef6af45b613dff8339a9675eb
+10af4d23270a7ac749461485c2f3d815bc53826e9f40bf39b27f25e13423325fec9d0abda1bd156486c1b15e589163ad54fc4b1476df44c2570b1b66
+d8c1efcd8c23b2726668ba12985b5fd218200354e4b7ebaedf80ff30a1f898137476408c2881710501ff52ae2de43d76a7d8b4f5b53a8740703ccb1f
+8e1806f24b548b42c469bef49b8cf452cd8fbe596f71428f2fd037e21cf82aa228ebab19fbf4c1df650a903d21519def7e6864fbab10f02fdc3fc789
+f878ca59ce8bc3d44f4b336a0aaa70d3edcb2f9203d1fe53bbb583cf6e562e235762029915312dc7ffe5d50ae37fdf859c38da2ea8289ff63f557f4b
+1cad0bc9ece81f9819d68b3798856da705e96b392b0c72cf424072d7cff5c51af36faf758c069b31ae7d65d37b79414fec9b1f99f8b90965e2bc9b32
+659038fb58f14a6d51814ede5872620ecfc5a3e78861bd7b6d59a948bf5c74c50a331415d99afdb3ca87f275f888aa156f7708e144ca5013629152a6
+6cdb0f78b9d5b6fed3128f574b3c84029d5f4e811408e52edf2feabfad96bb73d887a9164c711fb63ccf1df317da2ab739dee44bbfa19391490a8d43
+5a3782a825731b84ff1be33ada7a80aab978f844d38a8ae05e622e6709aa2cb7b59835890088fe598fdef8b1142c7a284a096cf5321b3e95e9e1cf1f
+9e5fdb949c79cf25ec35dbf922585b1211b00dc6f4e8089111989667ae9068a75ea159323c3b6ed25e0d3583e8f5dc1eaf5ee62ef221a236fc7b6aca
+7b250f4fada311d4c9b42b6cedb1de2525b779ba4ffe4d133dfa0bd1521c4b4bd4c7a0e7bd23bf6e6d4af523844969d608201449a7b9e7a9dcaee262
+efac880f726845c36fe74b1a09f654a928aa5237bfdcb4f5f756e7447925c5339d554eb51a37f429c76afda3e8c5bb6cc38bba1b7b78508238cd60c4
+10c939b13fecee55e18288c5692997455b2cb8e865245fffa93ce436dc71c18ebc2a823ab59d85e3312d4b0204a97ec4fcd729810bcdb5658ab090c9
+5a0a67674c006efe3c0b3f88e9e5c60ee37ddf93896afc35a532bff23840237404f74787fda60ffa75dec435dbbb2deb4afa777721163bd04d012984
+83e0d009ba5aba408d41f117b96c48cf32280559e881569e81f81f6f86c1b23e6dd462af4ff6400076ee42de58500c72d28a8fea802af2372a608434
+a57c5af9497d5154efdffdb3ca81e577b2bea2097f2c469e2481701605fd17e06ed0245184e2f3b2dd309c076b3c9919925f05a1120ae563ca7af7f9
+8699f64580c8f92f744670bf1ced6cae58c739f02fecf94eb5a3cfcd64019a1f4f2d92ae422956b2a754b303e24bcf84ac61c851d0b0bec3190d617f
+05aa309d81b1528719c1a1738ea785c97206266e326102f5723c41eefeeac561c425b7a49c77c921ab6dd5db24573a7e198b0fd5ffad1fd04198c52e
+97df219859e06c362f1d35e1591a3aa3cae6d61ea91ff3279641a75ad54b7fc82925064ea3a31fc4dc8c1a72ebadcf016e9831e61de4535c78db5fdf
+4e190c6295e8a0f8991bbf656f5daf34854b709756740a4697f6ddb3d79aea77f9f68e344b4b438128cc4a0448a51bbb31b35b44bfdba3fa9a3ac074
+732d8715885745971a16f5388d32beacb5c3bb73d887a9164c711faf2fde2de20ae422be39ebab1afbbf9ca1043c8a585a399ce5221a5ab3ea06de39
+d77acd93ab289610c785e18e4b56286519e77ccfa8ec12b42de6bb61ddfac2952d5f23677f2d45bd2a781faecfc5ef4b8a60fad7c059eb059428b4da
+057d783b289122e8d98c2eb45cebfe04b8a152986bda521b115a32aa49063ffda1f8de18bc53ee618d46a824b5776587122a085fdf8e1ad6daf0520a
+85a1dd7758807ea95cf84b490ae94fd14e3f1e6e9bd0a9ee836fac727c4da90ecc4d75d3615d1d54fe9ee2e7ea89ef71ee9fbe0e3b3901a223dc4a16
+06fb5eee22ed0c3fe9e7b2e9983a80606d21c95cdc4c4ab51c01f50cd866b7ddc1aafa44cd9a9c02423a7f9a30da6eba588a138f0ed9cf66899bb79e
+3f5edc0c080a9ae46d3a7ca2e25ad83cd370dc829f7dc279d28b8ef31b19617f1fba3baca8ea3a840ddadc4282fab5d26e0f6226412779f4792a6bda
+bbbd9852f41687cfe211e834a37a9af02e1a037a19be1ce0eda14bcd5ceaca239a9646be4485175d411474c34d047ba5caf0d0099b4daf6a9d08f670
+957678d33a2a024ea3811bc080fa3d72eda5de7527d443ba59fe5c202de102ba352a0a63dad687f98c22bb395b51a105cc153be22f3d1c09b391ebb0
+90d8a730ade0fb4b3b340dcb7c970e5e53b869a128e90951b9d5bcfed30f8154713c821f921816e72e20e8269f21f0b2bfd0aa0c8cc5e9471b3811ca
+719f63b5489862da55caea43bab6a7d96c029b196a3998eb6b3a54a2e510d234d170dcd4f8358b73d39484f5080a277902a20cd0ca906bcc4c98b717
+dbfdca9b4f1e6a264a2e79f1713d65a5fae7ca0cbf40cb998c4cc921a27b8bf639513f7804ff5387a8e65cfa75eaca239a9647b94ce27b791e1168c9
+4e043ed796b4f214b359a760d67bbf31a87d78890925054affe577fec6ab0f61e2abde79659166f31fca672437fa45d54e5a4727e9c5a5ea9f09ac76
+655df24eaf4769d90e26235af996fbb498d5ab45d8b1a649756156c37c831e47419232ac23eb1a7bebe6b0ff9c2dbd536a278015dc050b8e1517f52a
+c36cfbf9a69dec088ebd92245f665e90389d62a72ac92fb12edef946b6a1c8902d3d9f53492aa8f47e2750b2a537fe37d26d8edaf84bc45eda918ca9
+6f4c246608e10de3fad730855788c9568fb583e8690d612c5d465ff8753b2089fef7d24bf00f8cfde14bcf2fbe699cf26566307f1cad28d5f9a50ed0
+4198f9269f85738d5fee7332427111a940073896c7b4f21eb34bab75bc47bf70e13842c928300045ee8a50d9cdaf5322cabada3a6ed63dfb6ffe4a06
+2ace59d1511d420db2e7a4e5992aac53674cf53385527e975674247ff492bce9d68dfc38acf4eb52372411c76d9a174c48db5eae38ed0953a4c0ffcb
+922c875371278550c1187e831209b365c36ae9fff8d6ae0c8cc5e9591e3811cb738a62a7559a65e575928264beaa95ce7f2b9143061a9ae3672f49b8
+fe1af518d273c195eb289610ff9785e152436f5f05aa33f2a6eb2f9203c3fe0ccb9d9fc8691e60245d4665f56b7069b2d2c7ce19a34accd5c438f825
+a27c9ee50f5b2532539c01d5f6ad19a21ddcc23288c43ceb78cb773a66167ed7045977d79bbdbb72d736a2689b49a770ae796fc6290d0f5bf89b3dd8
+c6b65b3dac9ada336a8657a95cf24b4911e65bc5483a0e60dacafbc88221b0726b4cf306994678c3023b1f13f491feb2ccc1811995b1ad47726a519e
+39816b040dea72ae3cfd0f43b2c4b4bbc062ce62763d865ea94b4eb5320af13ed95be7a7add6d64fd99bbe355e604594338e6ef310cd25da5591824b
+b4a780c72d0291425b3dabef7f6806f7e21ae12ec931fe88ab61df59d396d0a7574b226a01ef2cf6ecd929b003dbbb0acb8690df7c0d483559056ebe
+5d3a3888f7f1d50e9d40cd9e9c71d42ec601f29e275b327a11ff0dc2f6bc0e825c858b119e8775a45fbd30392d0f33d24d0c3a85fbfbc255851fe527
+c118e770ae796fc629140e58a3b65e9c88e14b2986c1b25e679b72ba51bf4d0b31eb40e0530b4b3a9bf2a4e89920ac252656be17c44574c218312154
+eed1d6e795c8e875f2acae15355c0dcb20c04b040dc854b362d15b3aebd7b4f5893a9c094161e179f53147a81805ed6bc076d68598d8a600e087b816
+47445d9a24da3ca93bc02aa23dfbff42a9e480c5694fb2584b3997d0602942b2f95ad233dc6dcf84ac6dd90afa9185e37d4d3378198c36fee4dc73c2
+24ddf65685bb98df4f106133680979e43e7141ee928dc80ded41d183c875c2089e58dbe323513f3b0fba1ad2eaa64b9512dca14ef2ed0bc224867238
+2b1977804f043484cee7c52bb14de2279b44a423b96b7ff4382b134eadd25ed9c1b45720e1a9cf3f259c64bc5895276e51ee44c21c274727cb84a8e5
+cd3fbf7e7a4bf333895a6dde08310215cd93efbedd9af82adbbdbf377765588e3fdc165e41b85faf4681721ec2ddb7bb8d7fd31a380484139d547bab
+1a1de4398d60ecf7a697ef00dcc6981f4a66509829da3ca70cc02ebe7cfbe449afad8fde684f9b594c52f289054157b8e815fd7bd857fcb7f8358b40
+92bb83e64945227f08bd64d1e1d63fa605dae843a8bc98d779572c0f4d056afe73312fb5f4ebd53bac5dcad5c112b249c50192f16b5a3e6f5dba26f5
+c8e81f9819d68b24948a75a243fa7b772d167faa256152fec7fbd21ab11fbc629449bf39aa7d5bc828645c0be09636e5f8f63846fea9d63231a47eb2
+53eb7a0817ea41d55f0c3877dac7a4a388078c472668b413855c72d8057d7b3294f687abd78bea7cbcbca2146f241ccb20ce4a1f46eb4ab238a00972
+a7d5a5f28b3abe486b66b32ece1800e70901ed2ad966e8b29897e80ef6b6e95e211d38f254d628a71cc138a47ca6ab64b4aa87c26a41a856442bd5d2
+6d2c5aa5d915ff3cd83fda8fbd668b53d3969fee5551242b08a13a9d81b152e900c7f85687f482d87c136b67054832a03c776ba4f4eac702aa01e896
+846b9512ad6c9ae519553f7c18d567ae91c1079f1fd9c76783c43ceb5fea72363c116dc57c0728d9f3b49b5bae5caf6b9d13eb3cb37b6acb7b3e4116
+adc20cd2c4b90f69faadeb3878da4bfb17bf5d0439e44eba3571620ed7cba2ea816fba787c68b413cc153be10e370554efcda0a9dd9fa368b0f8b14e
+110d28e244c3511409f41bb32fe70972eb89f1b399309a77773bcb5ddc5b47ae180fd124de26b09aa99ff549d89dbf12211d38f254d628a70bcb24a2
+39b8b707eaf1c1ca630bde444b3789e52c741bb4e71be23ece6bfd84b77ace10c8908ee91b472d641eaa2de3dbdb34920988a61798b79ec978442e24
+540778f56f2c1b8be9a49c4bbd0fdb998c12b249c56d95f3413d581214b94ec4f4a718950fccfb2b89c475a348e1145e417112f358072996ccf19f37
+b25ca5629c7caa22bb7d7f8766640247e29c1bc4dc881772b7e8e823648670bc58b16d122afa4ede48303b55dad0a8e4cd72fe270231d269e57d6fde
+07275f75f28be7a1c1c0a9e0035664474965458a3f8f72180bf319ec6caa2f76b9d3b4efdd338144732d8f4adc1a0be95544e227c27cfba4bca8f752
+82a6ba1a4e3d3bf254b62be91ca242d939f6ef2dd2a18fcf2465f743493a97e5222155a4ee06e573ee6bc195b96fce1eff9785e95e47356202a12dbb
+a8ca3a840ddad2599ba185f87211606e320d65f416522788f8e5cd4bab5ad0949c71d42eec5d8bf32a4034491cbb0fd5b0e161f915de8b2994902198
+59e06c362f1d35f24d0c3a85ede6d016b81fba6f9d46eb22b96c7ed535640445e9e577dbc7bb1a6caca1c8056a9070a972f10e5a78cb44de5a110c29
+e8d0a0ff883cf045695cba12e62148c30426105cf8d1dca6dc89f956eeb9a6023552489824cd521248a51ba93fda1a73aac69ef5f756874138268404
+dc5158951a00e039e261bea3a09df52aa5e1bd1859346ed77dd02ced58c125f02cf9e255a8ecb2df621d9f504d76a9e168294998e91ef438c96c87c7
+bc67a139b5f182e11b4b2361439937e4e1da37854cdcf35285f49ed97751582e4b0169fc797876c7fde5cd18a80fdb998c12b249a9669f9d423d237e
+09aa1cc992c10e9e18b2a24df2886ea84ce33e39270f3b9d0c1c3294c0bc9871d456a827d046a427fc352bf42f2b134aea8a50fbc9ab0f52edacda25
+5e8475ba49fa074764a81b9e0c4d4b73d3c1afab9f2aaa627a56fb05824c11be38201e49fc98ebe9f489f864ceb9af066951518f2cdb5b5755b855af
+3b82721dc2d8bef89c33ce4a6100b920dc050b8b1407e027fd63ffaead8ab563c489a916486054897dde20e358e424b33df4db4bbabd84d9232c9656
+5a3998f4693a0191e21af51dd46ddd939b60c25cd8d0c9cf4e49206502a63ac5e7d72fb00ddaef15c2def8d27b5f60284c4866e9540a1bc7efecc405
+ed5ddb839d6ad560a9669f9d423e587d12ad4ed7f4ba47d013dac167928a21bb4ce66c24602b6fcf5e093c9285c6d01fbc4d8165924da824af312bc3
+344e6822e4895ed9c7ac5b53f8a7c9366c913f8b51fe57022acb4ad3541d3077d7d69cab823dfe79674cfb10805a35f40335035afe8bebb5989ce375
+f2d2c26e1274428a21c316111df658b425e7153fe294bef99765aa426b3c991f851002e71e0ae562962fcda3a78afa47c9c689164f7543b43fd52be4
+0cdb10a030ead607e6e48fc26165f73e4d3488e52c2759bda522f828d47dc282f8358b56dd9498e21b412f6f67c63bf9ecb252ea65cef445cba4dd9b
+791e7a26180165b06c392295e8acf21fa25ddf908d36eb2cad719ee50855327318f64ec3f7c262f915de8b29949021af4cfb7f790b107ad202383a85
+cefac55ba957ab69d84ba43ea87165d23e640445e9e577bec4b71861e0e8de1f59a431e61dfb4f1339a679df530c610eb2c8aee88c23fe656d54ba14
+855e7ee704275106bd92f78feab8a553daaaaa0a7e3e718424c14a2307d759aa29eb0f44bbd5b2fed53aa6754866bb1f8f515fae140aa841a406f2b8
+ab99f700c881a8030b2911963ccb26a90bd939a474eaee4bbab088dd683f91440600a5b22c631ba5ee18f02fd469cbb7b77b856ae2cac28d322d286d
+4dab37e4fc9865c02fc7f55182b3dfed7c137d696a096ff16e0a2a89fce1811fa54ad0fde111b22ca36b9afb6b5b33715de24ef4eca719911bdd8515
+9a8060b962ed74322b0c68fb5c3560d7c2f29114bf55ee73904da570b37a61890d2d1242ef831b9795f81d61e0bbde776e9a75e01dfc41092ce145c5
+5972620edecaa581e446b2786b59b740834a71975674224ff28defa0ddc6d971f8b9b928796e448839dc6507359232c925ee5b79a4c0f1f49f35ce53
+702d857af53122a8190ea1768d46f0a4bc99f543c9c6b5125c3c13bd2fde23e25a846b8328f7f946bca1cff96c0b9f456e2a9aed696131de827dfe39
+d731fd8ea26d8b0d9cadafee56166f6508b876a7a4986ecc4c98b717defdca9b721d6469790668f8732a1b88f2ead54bf00fe8928b6cd432fe2695f2
+3c1c613548f34e97b6fd42fa75b1a20e959775aa43ec7b79261d6c880e3d12b4c4e6df1eaf1de227974aa179f25b64d535211379ec8b17c2dbf84620
+d98cd23a259a74ac15ae024768a121b935713873d4d6a0ec88618c766c59a92f8e427ed41f272a4bc0dfb3e7d78ae11a95d1ae097f0e28e221c05d16
+04b848a32de41e37f694e8abdd70ce6477268d199b167da61717af19cc6bffa59a99f547c9e2d27e477b529a319f36a7458839b530f9ff4eada1b1c4
+7e41a617027888e36d245eecab18fe38dc738e9df8358b1dce9d87e64f4d376e3da02db9d29871c01fcbfa5b8edef8b2721d6469680778f968312489
+bbb9813e8946d3c5c676de37e438d5a2671429375def4092b4e811d94798c42591ca57a25ee67c3b2d582680581a2e92a19db812bb1f9b739144b87e
+956b5fc23a290c4af98a56c781f80f68e9a69b5d02fd18b45ff5002539eb40d74e171e69dfe7aee7823ded373518980f824e72d04500195ef09aa093
+dd89e61a95d1ae0b68612be244a652180bf957e03ae10837f69482ef922d8f407d66bd198f7b4aa41301da3bf02fffb9acd8c854c39aba104e3a6792
+2efc2fe410cd10a001b6dd4ea8ad83c76865f73e213799ea220a5ab4e013e334c871caa4b764c4428fd8d6a74d4d322b0ca13ab7cbd7358605cfb563
+83b19cde33336124532b64fc732a6b88e9a4e204a349d790c64cd325a16dd5c32e4c255f14b264ae91ad059476b1ce299fee64a5498514313d1678d4
+450735d7f9e1df0fb452ab29b146a224f43101ae32224174cac126e8fc912f41c297e90245a0589678c0672911dc62f170313142ff84b5e38821d41e
+0148a909825c339533742572c9bec0fd98acee64f9bbbf027f24449324dc4a1e06ff1ba922fb0f76a5d7b4b7dd2a804b77298f19925f0ba11216f23f
+8321b0f5e1f29229c087b81647345e9739f620f40cc925b339b8b6078483cff3523bb7636916a4c3591a6992c520ce12f34cfaa6964bee3ab5f182e1
+1b4b2d6f24a12de3e9d638854cc9f553cbbb9ddf54117d33590668f5320b3f88e9e5c60eed4ed093c876d434ec6797f3025a226f1cb10dc2b69b1f9f
+0ed9cc22d5ad729e43e371362c1d7f8058003e99a19db872ad5caf6b9400ad25b27b7fce342a490287e677bea1b71764c5a6c8236a9a72be13cc5a08
+2ae94cd512311852d5c8aeea892aba373518af12994d11be625d785df28dae9894c8e77ff3a8eb0e7524518a24dd4d5f07f45f8922fb0f76a5d7b4b5
+ae2b8155792f8e5eb05744b7084da12fc22feeb4a994f708ca9db5145f7d5e9575966ef319db20fe3ff9e544bea8c9c762008e1e083d95e425685eb9
+ef7e9852b416c888aa28f41c9c9b84e9550428654dbf3ffefacb738f00ccd25998a090d57e1a20144c0779f17b3d65a4f4eacf0eae5bd798866b9260
+a867dbe728553d7755b91bc9fbbc029f12908267988b6fa517cb77242b1775ce490b2fdf82b4d415b916ee62964cc159d5116ec93f6d6b22848a10d3
+a2d11e6ee8c2b2084cda498469d67a2616d779e5722c224afefb88c5a41b975644718125a80826971f26045e97f6ddb3d79aea77f9f682144e6a4d84
+2ccb5b1348a51ba62de40872c1bddb929439ce6b772b8a1cac544abe1e16af08c56eecb6ab8cfe528c9cb312451e38f231d02de6148823a531b8b607
+97ab82ca613f9256513d89ae4f205aa5ea17e53ecf25e88eb66ced59ce8b9fc4534d2d6f45ed16e2e5d9358f05ccb91ee1ddf8d27b5f663255487ff8
+79366bb4efebd30aaa4a90b89a71dc29a26997c02a583a480dba0bc3b8f54b9809d585109a886a985dea7b33681d75c426613e99cf9eb828a950bc66
+9f4de51fae716cce35250d6dec8312d2c6901e69eba0cf7736d442be4fe947043dfb05e7530a0074cbc5a2eec309bf7b645db5308d5a6fc42f31024f
+ef90f78fdd81ec78e8d2c26d12684e882cc31e3127ce7cb525a8463782daa2ef9c318d4236268e07d41a78a40901e425ea7af7f5e4d8ef41de8fbe03
+6c6158d2669f08c82eef3eb972d6ea4abee4dc8b2f37a171670ea4d6397a0af5b054d714eb58db8ef641cc5ed38a8ec04e4d08651eaa2ab7b5982f92
+19cda017ad9ba7fc68162003511b7bfc7d210495ffe1d34bf00f87ced1218279f502f2fb245730775d9921f1deba0a9d19989667b28a72bf4ce17d32
+66167ed7044a1d85caf9d459f11f8848ae6fbe39f51202e114122759ec821b99e9b61868e3baeb38629a65fb00bf78023bfc44c20e560562cc8cf1a5
+d863fe27260df25bcc6e54e12d261056f8d1dea8cb81ff79f3b6eb5a3b516582209d10190def13f062bd5737fb98f1abd36ac2072861e179ba777d81
+0905ec2e834dffb4a39fe94fd986bf2359755f882dde3ce216cb32f061b8ba1cfb82aefd4b1d9f5a4d76ade97f2159bbee54ac7bdb7ec294bd02a25c
+d39b8aeb1b62127f1fa035f2a8857ba902dbef5685b79495731a796f1a3d42c3682a248cfea68d4b8b60e8b19a79d625e533dbd11840237416ba40e4
+f7a404825c858b04948a67a24aa14a3f2d157e8e7f1c2998c0f18a5b9b6cba759743ae7e887062c4302a0458fecf439799f64e0a8581d5247f957fb8
+58b140022fa009e5753b0475d5c1b3a9c16f98585e7ea901814d3299283b0355f88ddca6dc81fe63bce5eb325f6d4cc523ca495f59b41bf065b35b44
+bfdba3fa9a3ac061571eb919925f7e8e5b59a10de259d8a5a995fe2aa5e2d25a06346aaf12ef63d531ef03847ccfca739e96acea5f24de7f7d1cc1a0
+4d067499d239d801f85b8ecf96478b65efbdb9c97a69042230c557fbe7db3a8c4cfffa438ea69cda6f144932514836b055363893faeac20ee341db80
+c03ae823be6d9ef90c41383951ff1ac6eaaf0e843bcdc26ef1ed56aa59ea6c3a290a70e7590175b9caf9d45be01fec5fa77c82049d5654f01a102479
+c0ae2cfcf78e4e38bceab15e5c9565be4ff24f1533cf5ed9122a0e74ded08ee5be3fbf606618e6408a4977c40e5e786cfc8bebb5d589f97bdbada249
+52634f843fca790201d155b329fc5b2aebc0a3ee9855e770793c8e02915959ac3c11e865e966eda7a499e26fde8cbe050b2911c2648677be419141da
+55f4e444baa8c1fc60298c56453ddbbd2c0155a4ff15ff38d831c082af208976ce9986e21908615c0cbb3be5e5d9298b2bddf21ee1dda6d65b0d6f2a
+5d4658f9663d6bdabbd1e502a01d90998d6f9370e028c9a77e18712b51ff5d91b1c262a711fed92696812f9b42fc77232117758011480eb3c2f98355
+b35ab92fc904eb7dee293e8b7b744d0bbcdb57bda18f1646fea9d63225b670b856f85c082de64ff3531404758884fcabae20b2787a0bf5069e4776e5
+2c16590aafd3aef68cc4ab22acf1c16e4c6967992cc25b592af958ab2bfa1462a5d085e99c319d57793a8e1e9f410bfa5b54af799805979ea68bef41
+c28bbe59457146d37fea07c417da25b52ebaa7078ca9a7d96c029b1e061b94f2622d4985ea10f82ece3f93c78d4cc25d92968ef013146d2b5be6549e
+e4d738810088ec5ab8a083d4761a2e7a182165e368392584feaacf0eba079ca2a14bcf32a3639eb5671406763bad0fcafde161f90bd5f833898b6aae
+03cc713b270a3b9d0c2b3499cdfdd6558957ab6a9d069824ae7760c2514d1646de9b0cd8c3bd5554e4a1d83c659162a81da20e5676ba21b94b153873
+c9cbaaeec31bac76664bab019e4d75d412744c1badd1bacdb2e1e77fffb9a7474c69758239c35b5755b872ae3ffc1a79a8d1fff59828c6054c2d9304
+b05949a21746ad6bfa62d8a5a995fe09a6e18c1a7f7d459738911dee02cd6bed7ccdcf4eb6f6cfc56818d6060478d6b13e641be7a754a06d9415a7b0
+b55cc244d09dc5d75457287f04a030b7b5980ea405c5a91985b186932d532e7f14483bbc3c6b62ed92d3cc3fa45bd292c65ada23a76f89f83e5a354f
+0fbe00d4e8a9199512dbd267c6c430c124d87303210c77c5023c3e8fdfb48c5bffdd54a6d878991f965d48f37b1c417fc4bb3ff9883afba2ac9e8d79
+3ada20f93796790a0ce15fdc59563f62c3d082e48120ac242805fb2383467dde0c7a2553f892ebe9eb9cf97ff7bdc16e4c69758239c35b592ef755b4
+6cb55b52a5c1bcb5bb308053360f8404945946851705e220a706c9ba9c91ef4cc9c68f125360629227da6eba58997bda55cfe673b2b08dce233b9b4f
+5c00baec652f55baee1ae57b803feb89ad658564d9809fdf7a48286c03a23bf9fc9617850adc913de2b89ed87c132e10553b7ff1682b6bdabbcdcf18
+b94ed0948d36d525bb20d9c32e4c25571cbd0bcbbae44ba711fed926968128c124d873043c196fd3023b328dceb48c5b887ba76aca06a535ab303a8b
+7b695019a1cf4e9b88e94f2986c1ec3a588070af4eb17e082be15fd953164b3a9bf185e2807df0796d4ff350c008239b4b645d1bacc7a7cdb1bfe643
+e8b9bf143546408826c84c181df65f943ee91564bbd5a3fe933c97072568da7af56f46940f05f538835bfbafbcd8a6008eae8b24113407cb7dc36ed7
+31e60cea7caabe4aa8e6eba25a02ad43492c88ae582d43a3c81bfd34cf2c8edaf84bc45cd38ad8a95d562e663f881cbfba886bcc4c9aaa07c7f4c388
+2d56044e6f0558e47d2c38c9ddebcf1fed129eb2866dd66e8a6795e365733e6f15be03eafdac028511b2a21096b775aa59fc30032d006ff345123ed7
+96b48871d468a3548c49bf23f24c6edf2f1c2047e48810dacdb60f20b1e8fe397e993f8f58e75a3f19e442d752150e69cf8a8dee8b3bd41e5b4cb412
+8d4f7e993c35055eef92efb5d3a4ea72f9b4eb5a3b534cb839ce4a04629232ed61a8205492f694c9b31aba6e5b68b93fbe777fe72f25c21fe44cdf9b
+e8b0ce648ccefb3b6e5575be0f9f02ce36ed16da55f4e444baa8c1ff6c0c8a5e4b3997c8590c7ca2e254ac7bf471dd93b966c85592968ef013061268
+1faa3bf9cfcd32c24088ef5699b394cf5a0a676e32615ff17f2c2284fae8e93e8968cb9ec656da2da928c6b7696c0e4f1cbc1acefba907b829fcf411
+cedc31e916af4a362b0c72c34d0413a2efd3c412f376a969975aae17a97142c92821150bb0cf0ac5ddbd4020d8a9d823629770b775ca6a202de105f4
+550b1b6bdadd8ef9892aac373518e259d511228e535e7b32b0d2ae81cd9cfe62f5abbf0e782460852ac35b1348d45ea128ed093787ddbffedd77ad42
+763c8e02dc6a4eb31207ed2e8d7bf1f79c99e947c99cfb344a6655d257b622e81bc927f010f1e54293f5c1962d2690445c3995e3696655b2fc5cb31d
+cf7ec382fa248b64dd9b9fee58452d43388b19e2e19151e920c1f552a3e5dfe874056b6705485ed4753579c9f5e1d643fd039ec3dd349b70e028c9be
+70141d7213ba2696b68a0a9317dfd9288e8a658842e371257b5826806f073591c2f39f2fb55aa362d67bbf22b3736e9c7b080845e8a74f99eab70964
+e9bae83e719141b245fa424765a81b8b1c340269deecf0a5bb26ad7e6a54be40d1087dd6072714319493e1a4d984ab5cf5b6ae23726546cb708f7719
+1bec5aae2fed5579aec3f9b9bb2d8f4a7d6ac750a85948b31207e027e55ada90bd91b22aa5a4b2194e50589a3a911dee02cd6bed7ccdcf4eb6f6cfc5
+6818d6070478ceb020680bfbab46b8609d53c789bd4cc251dbd6a9e6584f267902ba30f3cbd7378f1e9bbb0acb979ed57b1669696c006efd79761893
+e9ebca0ef60ff29e867dff29ad6fd5d52446357e0f8c07ddfd98028819d48b7adbd43aeb61e670320c117ac7023e3284c2f6dd1efd02ee619944b835
+d61167c838250d0bc18610d2e0ea5b3dac81d5247f957fb858b140022fa009f64e1906629988e1df8c2caa7e6b59b728b96c5cc2027d7b32d196e0a2
+f0daa543f5a2ae47262474af24c20c5906fd4ce87ca45b21fb98f1abd17fdc0e2368a719925d63f55526e028c668ecb8bd96ff63c384b40518340cdb
+1ed020e111cf658434fde642f59795d962049b0c081492ee690009f9c91be33fd86dfd8ea26dfb59c49d87a7060471304d8337f9edf069ce3ac1e85e
+89b8949b205f6826541b6e9a16512788f8e5cd4b804ed799b879d525a028c6b7025a226f1cb10dc2b6a60e87549aed359a8964e901af4a362b0c72c3
+4d0413a2efd3c412f435c74a9941a500bd766ecb75170851e8cf4397fd9c126dbee6d5327cdc21f71dad195274a81b9c1c40592e80848cea84218e76
+665db74ead4678df04262154f491fae785c8dd75ffaca415292a4f8e3a870e5b48a815f56582725aaaddbfcb9c318b4b36188403954c42a81544bc6b
+f84bf7bafad6f545dbc0eb591e3811ca698f62a748867efc7cb5bf17f2ffc1e66c06906749369eec220a5ab4e013e334c871caa4b764c4428fd8d6a7
+784b2d641ffc70f1fad736b22beab306dbf8d18a2f532e760041019951392289cbe5cf0ea101fc968b73dc32a37d95f31f4630750eaf0fd5fda60889
+5c858b77d5d63aeb60ee7739181975c540460d9ed8fdd317b81ff3279e49a723b91202ee3537154ae38c1b99c6bd0c28ae9df21464867fbe4fbd0247
+15e942de6c190562d78defc8823db0727a6aba04855d68975674247ff492a0a9dd9fa320b0f8f34e110d4d842ece525738f955a520db0f65a4dfb4bb
+c07fa7496b3c8a1e9f5d05a91e13a969f846cda3ba97f0458ec4fb3a4a7d5fab3cd12beb51936b803df6ee4b88b093c4660ad074473494f22c751b94
+e41af732da31fa8fbd65ce1eef8c99e850417a2b3dae30f2e4eb2f9203c3fe19bfbc98d876116b344b4836b02d767fed918dcd04ae4ed2d7bb6dd914
+ad6fdbaa6b7d3f6809be00c4fde605950b9089139e9c75874ced7b3b6a543bed4d0135a7cafad417f435c7548d4a9f31bb3658ce21214116adba3ade
+c5ea556ee9bf936627d43cea0fb30e5774a81a8415434b54cec695ea8a618e787b51af0983463b8a4b013552f0cda0a9dd9fa320b0f8f34b3b340dcb
+7986347e3bed59942def5555aad7bafc8f309b497c1c9911924b5ba60901ef28d42fa3f7f9c3bb73d98a8f164c3a659e25cb6eba588aa947d4b8d968
+998bb58b4e36bc727a78b3d5486814f8ab20d009fa5afac79447e87b9c1a7c0f192e485818ad0af6ef960f8514dcd85887bb83883d422e0457066df9
+7b761f8ffee9c4459e5bcc98837d80609f7d99c32a537f5d12b11a87a5e82e9e09d58501948a75e56ae06a3f291559cf400c60d7f8e1d32fbc58e053
+9d50bf03b5626e8766645810adbc0bd5fcb91c2ed8adc32353b57db25af1430236fc0b8d1c3d0572d68a95ee953b86566451bc0e814d75c34518145d
+e9f584ced487e871f0f883027a6044996d921e3e06eb4fa122eb1e39a5d1a6b3df0b8b5f6c048a12995409eb5b29e022c35fffb9ad94b22aa5a0be16
+4f7143d50ed634e258956b8518f1e615f5aa84dc255ed2170569c9ac2c7817f7b944b8609d57cb86bc6dd91eec9798ee4f4d2e654df27ec2ccd136d2
+42c6fe40c3e4dd9b25532e7714483aa8355242affee5c50ebf01fc968b73dc32a37d95f31f4630750eaf0fd5fda608895c858b76c0c449ae4ceb7b25
+663e74ce584866d7eefac416f379a1698c068c3fa8706aca19280048e6d45effcdb91f65fee6ef32738042b247fa0e5a78b918ba35300e66dfc1b3a5
+b92aa6635079b7098b4676d205205106bdbae0b2d5c6df75e4ac9326776d468520ca500346d45ea638b35b5faed5b5fe8f71ba42603ca81f905759f4
+5b59a108c261f8beafd6cf48c985be597f71498f57b547eb17cb2abc7cd0db65bab6a3ec2d52de7e462b8fe1622b5ef9e511e6739f59dc86b56d891c
+9cb58aee5574206508a3779d81f00ba20ddad970c58798c1785f33676d2c62fd2e762582ecac9047ed028fc1c4388b6cec3fd2ac6b7c01591cad2ce0
+b698048315ccc22895c43ceb78cb773a7a5675c55b406bdb8bac9d5bed13ee33ca01c159944849c629062605cf8e1ddccfaa1475e2acf838679b63e8
+1da20e2437e444c20f560d75d4c993ccaf67ed222418e858c0082f81426f5172f38cfaa6d68bee3ef2bdbc4f395168a822dd50121aba17e004d83976
+b9f696b2d31c8155762d99229d5c42b20844bc6bf84bf7bae696fe5784d9f7571b3d3bf231d02de6148803801ef9f961b2a88d8b304fb7595b2c9aee
+6f2d15b9ee03b979fb6dcf8abd2a8710f4a8a9e64966062267c616c7cad929a605c4f719b8bd8bde3d422e127c0166a232362e90b3b58d4bfd039ec6
+c4388b69f728b3c70955235d14b30289daa9089b1bcac432958042a441e06c6468453be343063d9eccbae513b852ab29ab5cb93fb77d3087122a125f
+ec811dd286b61e77a4eaee1e489b63b558ed0c4b78c07bf25d0a2d6ed7c8e8a5ae20ac796d4a890188416ec44b69516ed996e3e9d68dfc38adf4eb57
+320e2be221c05d1604b87daf23fc1e65eb89f1d2932c9a46762b8e5e925d5cef5930e433d943ffb5ad94b90c8ca5ba1e4544509538d3678d71ee24bf
+28fdf90988ad9bce2d52de626c3196b222265ea0a345bd7b902e9ccbf83887108dc0c2bc1b622e6419aa2cb9d8d7288918c1f459cbe9d1ee59166375
+16066ee7346867c7a3a8815be10f8bc3c112b206a3678ff2391a137a1eb409d5f7bd059428caca29889460b948e17d2e68453b9117481d98c4e0d409
+f379a1698c08f67099767eca75020e45f9c139d8dcb01a6dcea7d73330d457b452eb4b1576dc4ec8482b027dde84fcabdc7fd41e4e57b414895a35e3
+0e2c0563dc93e7a0d685ee7ee8f8f6475e6a548663fb5b0f1cc07aac25ef157aaedaa5b5b13a88532368ad1f934c4eb55530e433d94cf1bba78aa800
+91c898184572589c73eb26e215cd658439e0ff63b2a9eba1043c8a585a399ce5221c5ab4ff1df23ad157fba3f8358b4bb6f1e2ca5a4d2f2b50ef13f6
+e1d60b8102cdf71bcb8785c972146b6705485bf1723d27b4eff6ce00a8039ebf8d79df25be28c6b70351307f18ad4287d0982d9910d48b7adbac5189
+4cfd583e241437806a073483cee69146fd79a1688c4db97cd61102eb322a041aadd25efbc1b61e48bde49b1b629a749f54fe494765a867d9521d2f6e
+dac3edaba126b0723a18e640a04175d223667b32e0f587cdb181ed30d8aaaa10726a46cb39c75b19629132ac23eb1a7bebd2a4f59e2b874876688802
+99595fa2370def2e8526bebba79bfa4c8c84fb4a0b50439a2ad620e056c62ea774bac74eb5a1c382364f92197c3092e367265ea4f854ac7b8c319bdc
+f8648573d39484f51b19614802a138feef960f8809c5fe19b8a083d4761a356754465df96f31298bfea49c4bab4ed2848d239b32a97c8ee525143d3b
+18b10aad91c1388413caca209eca42b942fc6d3f291169ec45063e8485c0de0bfd02ee648a4daa24b95462c93e6c4810adbc0ad8dab91c65a28bc938
+788779ba54ed620e36ed589e7e171f73d4c9e1b6cd2cac72694cbe2c85467e9f425e7832ce8be1b5d98fee3edfaaa414686c40823fe357190deb158c
+29ee0f37f694b2e9983e9a4254218515d41110e72810ee39cc68fbf98b8af453df80ba1e5958589538cc60d511cf23a47ca5ab44a9a180df68239759
+4d70d28a054157b8e815fd7bd5729fcbf860c60290d883ea0808616300fb7eaaa8db29850ddcfe7b82ba949334532e244a0d6ae479142289feac8847
+ed4ccc92896cde0ca5669ebf621871780fba0fd3fd84029e1990824df2ed69a61ca15d382417698011481898c7fbc348f351ab70d019e761f029229c
+7b2c0c19a3ac11dbc7aa5b3dac8bd43b648622f553fa594f69a41a9c0d515027d3c9f2a5ae20b2787a18e640af4777d819675f55f888a6f694d9a721
+b5e3eb0f76300fa822c3510548a51b8323e41465f89abffe8a77df0b2964da59f63122940f0bf32aca6ab09fa18cf641de83be05677d5f9e2e911acb
+58956bb831a9b00788b08ed96c089b1960318fed6d3a50b2f938f835d86c80b38a289610d495d98d322d127f02bd3ff0ed96138918c5fa4580b183f7
+74116b34162a47b02178238aa8bf8138b940cc968f7d9508a57c96f6395f346931b600c2ebe629a25c858b2f96d00bc22485175e241778c140482883
+cae0c4088947ba27c5088f22bd6f62c93c6a0f4efac75ce3cda00f22a5c2b25e788070af48ec7a1f2ca678d9461d4b3a9b95f281e446ad63694cae13
+b8506f9928311f4ff88daefa989cf965f9d2c26e6870409f38dc6a0f1cb674b538e41279ae94ecbb892d9b421241e20388595fb20830f93f8340eba3
+a491f545ef87b71859340cdb1ed022e80a9b65b62ef7e6759c86c99b214fce1b0868d28a054148a3ea00e428e967dac99b67c75fced8d6a7784b2f6d
+04a870c3e0dd368542e4f45480979ed7720d044e311b7ff1682d38b3e3f08f3da45cd795847d9b7dec6e9afb38515b12748c1ac8eaa90c9552ecca35
+9c81759859ee6a223b3c69c15b0135908ba99108a95eba728b7cb324d6116ec93f4e6821848911c588875720fce8d2392b8470b24fec06343dfa5dd9
+5f1d1829ebc8a0f2883dad2d4f5daf30804962d219275912b4dfeaa89898e871f0b4e3016e6a429f24c0505f41b87da52dfc0e65aec7ffd88f3a8f53
+7d0db820d44802e71e0ae5628d6af0b3c2f1f74fcf89b7574d615f9829d621e958fd3bb43decee77b7a598ce7f2c9f54403dd3f0254232dee212b135
+d26b8e97f867d910ccd8d6ba1b682e680ca30efbe9c13e924cdcf35285f483de690a7c29180d65f41651428bf4e7c007ed4cd6969a388660bc26b8ff
+2a46307809ba1cad91c102965cd6c433db8769aa5faf7125681674d40c0b3396d9bae11aaf5aa073d85ca335b21202ae52171544ff8e19d286881761
+f5adc9146a9779be66ef734765a845d95072620eb2d6a4ff983db01d0131be0e882212be073b125af1dfe6a2d98cab2dbcbba306693e678223cb781e
+1aeb4f8324e11773e39699fe9c3bcc0e382799509f504ab54122e825c949f7a5bb8cd848c584bf20437d529314cc0faf5aea2aa339c8ea55afe6c8a1
+046692584b3997a07e2754a3ab49b138d57edcdd9e61c554fa9199f44f67296201ab76b5c0cd368102c7f253b9bb9ecf4d1e7c331a412bff6e78288f
+faf69b2da441dab1816ac8348f6092fb2f1c734f12ad1dc8bae14b9f0e98c82f9a963b8d44e17a11210a68d46f00329bcfbc932ead4fab75ac47b923
+b33a228734364143e88e1abda1d1176fefa9d77763817cfb00bf4d0f39fa11f655160f41d2d6b2ffae27b77b6c77bd23804968c44376394ef09ee0a8
+d18ca93996d1c20e7d24498e2ccb1e1606fc1bb223e70f37bfdcb4f5f756e72e7427881190184ebf1217f522c368beeae8abef4fde89bc1205445d9a
+24da3cc419cb23b507e8d62dd2cde8f879008c564f3dd5d0602942b2f937f038d57af59785289610c7f2e28e322d02630cbd7eaaa8db33811e84913e
+e2ddf8f3781e6a67054863f57d3c67ed928da8629f40d183c8259b32a3678fbb413d581274971bcab8f54b9809d5874df2ed08c264fc483e3b1179cc
+494866d7ceecd808a956a060d849a534fc7d73ce28300845eac137c4feb10869eea4de77648631bd5cf35d02748222b935712766c8d097e29e0cb672
+6b53fb5dcc4d63de18201855fadfefa9dcc8ee68f5abbf0e75630fa72cdc4a2101eb78a829eb1037a4c6f1abf756e72e6542e279995458a2716d8842
+fe7bf1a5a99ffe0efc84ba0e4e66729a3ed72bdc08f56bed7cf6e24bd1cde8ce630bf43e4d369f8a06414fb6e918f475de73cb86aa20f844d38a8ae0
+5e0a11670cb63be5cbd938880981913e9fb593d778516d2b5d0979b84f2c2495fae3c4458e47df85ab79d828a921f19e3f55337718f10dcbfda919d8
+2fccc4359a8364e57be66d14291b73c505625291c4e69124f11fbe279146eb39ac7962d5286c324eff9917d4cdab5550e0a9c23279872b9c58eb7e0b
+39f14ec24f50422e9bc0ae81e446b7712848fb1ed10857d808351d6bf19ef7a2cac8ff78f9b6c16e120d749b29ce4a1238f45ab929fa3876a8dcb4b3
+8d76e42e1141871f9f5947e71825e52fc86bbeeae888b563c489a916486054891cdb2ae21c9208bf32f6ee44afec87de630c8a5e4736d3ee693f78bf
+ea06b851b416a7eeac69d85b928f8aee4f0c71255ee6549e81b152b51cccfa438e849dda641a7c04590b63f5342862ed928da862a4499e998d6ff828
+ad7adbe323513f1174d667ae91a404931dd48b2493a565af0db23e392d0f58c84d1a75b4c3fddd1f9c5baa629c12883fb2766ec42f6c075ee38c0ade
+c7b65363e4a1d73322fe18d23496276e31ee0bd35411076381edb2cac56d8a786754f949cc476997083c1857f9c5c7b4f9c0a95df3bcae0b392d019f
+25ca507d619132c94581727ba4d7b0f7dd3c8a072568b804934a4aa01e4ac223cc7dddb6ab90fe7bdcb5d17e221d38f254b627e158cb2ff028f0ee49
+fba78585410e8d437f3d9af0632678bfee17fa7b803f9ec7bd66cf3ab5f1e28e322d246509c5579e81b1528502ccb23de2ddf8b2140b6f25540d25f9
+722b2e95efacf21fa25ddf908d36f82fa2669ef43f5d3e750ef34ec4f0890f9455b2a24ef2ed08a742ec7f3b681b73f249057bca8bfad40c9e57af75
+d66ba339b07c59c2362b174ee9d53dd8c6b61e63f8e0dd22659765b252f1060430e147d41572620eb2adc8828429fe746051b704d66168f643762554
+f293acee9887f930ffb0a20b7f3e68980c871c3a07fc5eac6ea15b63a3d1bf91f456e72e1141e21c935b4aab5b07e56b902fcda3a78afa47c9c6981f
+4a66729a3ed72bdc08f541d95591822ed2cd88cd2d0c9a175c309eee2c2b5ff9c715e22fea7acf97b766e858d99b80a70604712b08a13a9d81b152e9
+65a1fe598fdef8b214760722560c229a155142ee92f0c009a14a909e866bde32b820a8e32446307c18f12dc8f6a60e9308d1c42988c821a845dd7b3a
+617212a925613e99cf9eb872d45aa063d122c259d56c6ac537214f42e39c1bc5dcf02874e3bada306eda52b453f14b042ce144de4f544b64fac0a5ee
+8966d41e0131b70f8f49779708061456f289eba398d5ab60b29ba3066965429f28dd6c1205f74da922ef4154a4dabffe9e2bc6416d268804955745ef
+526e8842a406cda3a78afa47c9c68b1b4a6d54891ede2def1df33b8d7ca5ab49b2a8eba20466f75e4e78a8f4633a5ab0ee5add34de74cb838c69d957
+d98ccbba0604312b19a73bf982b152e965a1c84384a690dc785142285b036ef448393980fef08156ed41d79be211b249c501a8e32446307c18f12dd2
+eaba0e9e08f0fb159a9068a40db23e67427112a9256132918bc7c514af5ea962d67caa33a87168c6370c346fad9b16d2c6f82874e3bada306eda45ba
+5eeb470439e463e578562666d2caefdd843cb775645dfb5dcc4e7adb1831515ef39b84ceb1e18275f2bcc16e120d44852986347e61914fa12ee41e39
+a2daa2fe8f2bc6746c2799119b5d0584140aef2ece7bf7b8a68bb700cfbabe1a4462549f74b5478e1dc62fda55fde543d1cee8c7620c9f5b083b9ae3
+642d6b96ef10f43f9d228eb4bd7add59df9d98a96b48207208bd2db9d8d43a9909dada538fb195815e1060295d0b7fb87a2d2584efedce05e55f97fd
+e111d72faf6997b72875357f18bb4e9ab8b845b314d9d926989064b96ceb7a322c4258cf42063e94dfbcd70eb35cba6e9746e379d61102ae2f251240
+a3981fdedcf04b2ebfe1b15e02fd44ab59fe5a0208e44ac9590a2866d8cca4a39d66d41e015db504c52212be1f351357f8d1e7a9cb8df964b48bbf08
+6965468e63ec511906fd58b425e71564e794b2da993b8b433142e279905748a61744e219c862f1a1ad9cbb1d8c98f5344375439a3ecb2bf52acd26bf
+2af1e540e1878ec5630a9d43003e8eee6f3c52b8e55cb851b416a7b4ac67d951db9dc5d75745386e1f8c3ff4e0dd00903188a61785bd9db11476072e
+5e4858e4732a2a80feaaed04ae44db93bc79c927a97cdbaa7614213b09b70bc992c162f975ebdf28898566ae03c37134231d7ff44d1a3c92dfb48c5b
+b356a20df121c2598f6c64d53a230405ce9a0cc5cdb60f48dc9ada23629b31e61daf246e518122d95a583873d4d6a0ec88618a766b4cb2038d4453e2
+2f740553f891ae94cc87f971fbbde5337a6755822ece523f3ddc158d2de115399ddda2f29f338b0725688d11904b4ee71e0ae541a40697b2a69c9129
+a58db513021e38f229de2ceb1d8622be2ffdf953f39795c47f0e9952061b94ee622d58a3e21bff28913fcdb5bd65c446d99cc28d322d147b09ae2af2
+d8d43a9909dad85688bc94936d56044e5d066fb916513f86f9e8c445a441cd929a6c9313b86789f62c517f5812b100c2fbbc029f12cb8767988562a3
+48df5f332c1d7f892662529bc4f7d017fd5caf64904d9b02b97564d13e204116adbc1bc5deb11865ffe6eb3b6a8d74a94eb17e0b39f14ec26e1d0668
+cdcdafecd70cb179665db814c44e6ed908201854f3d7feeeb2e18243e8b7b9067c610fbb21ce47121adb5aa324ed20679694ecbb9336822d1141b804
+934a4aa01e4ac223cc7dddb6ab90fe7bdcb5fb4a0b7a589757b647d40cc739b13bfda571b2b7a2ca6e079b6c5805dbbd2c2652bb817d981dd87eda92
+aa6dd81eee9d86e84d4104583de72ebe82b13e8e0881913e9fb593d7785167294b0d79e4340b3f88e9e5c60ee36cd199867dd834a56795e46714327a
+1eb70bf7caad069f0addcf6ef1ed548203c6703e3c5032aa2521359edfc6d01fbc4de62ef221c159b07768c637640458fdae1ad3cdbc386fe2a69b6a
+2ba774a94bf64d022ba67bdc5d010e75c88a91e78c36bb65495cbf05881258d8053a1458e9d7e8b2d68bff79f3b6e3173224558a3ec4100009f14fe8
+7da140378dd1b0ef882d8b54360b99159d4c4e822834a93b842ffbb9acd19129d889b91b4e3a58952eda3cf350fb3fbf2ef9ec42f5878ec5630a9d43
+413795f320685ea4fb35f53fd87bed88b666823ab59484e45a48616e1ebf0cf2e5d72d8508ebf45985f4cc9b4e1a7c31510b6ee332082786e2e1d318
+e37fd296917dc912a96594e1225a36213eb000c9fdab1fd81acdc5248f8d6ea505ff37770e1d7ad4591a3e8485c6d416b249ab42ab78e320f5386ec9
+3f6d6b22f98e1cdbcdf6126effadc92323a765b44ffe490276cb44de521d0873d2cbaff8c16fbb64786abe0d835e7ed3283b1f55b4f587cdb184e473
+fdb4eb157e77518a3ac17d1806f61bfd6cc41474aad881f79c268b55360b83118e5948b31e16c02fc96afaed8b97f54ec98baf5f4d615f9829d621e9
+50cb23b12eb1812ed2a88ec86c03de5f5d35dbbd2c2b53b6f94ed732d37be88eaa7bdf73d49187e31306097e00ae30f8e1dc79c966a1925e8df499ce
+705f6f295c4865ff68780888f5e2c80ce37cca969c7dc86e9f789ef22f7c307816ff1acffda661f975b1f833949660ac48a15125211f72ce4d040c96
+c7ffe20bb85aaa27c508a325b1365cc6372f325be88a1abda1d17253f8a7c9366c913f8c5cf3453428ed4ed46f160a77c8ccaeffbd2ab0736156bc40
+d1087dd60727143194f68794cc87f971fbbde52b7a7755b82cc95b342eea5aad29a84637a5ddbd91f456e7746c2799119b5d058f1210d224d861fa98
+aa92bb1d8c86b21b211d389e31cc2b8d71a1428328f7f946bca1cffc6c039564583d9ee45f265aa7f81cfe2fed7ac083b166cc1081d89ff54e414b02
+64c632f8ebd937c004ddf65685bb98df5c1b6a225c2b64fe725242ee92ecd406ac41d19e8c59df24a96cb8f8255a71265dbc06c6eae6289815d4cf06
+9f8064af17cc7139261d78d4040e2e99c8e0d814b317ad6f9144af79d61102ae522d070bee8717dbcce23273cde0991f7e9970b552f64a4571a84ade
+58580568cf8482e48329b770266baf01984d68993824145ef9b7efa4d3c8ff78f9b6c16e120d28e21edb510509ff5eee03fa1270a2dab0f7aa3e824c
+4b388e15981816e7180ce827c921c9b6a493c850c98dbf7d221d38f254ec3ae80ac92cb572cfea4bb09791ce680bad59492888e8633c6bb2e510f835
+da3f93c7be69c743d9f2e28e327735641fae39f2a6f43a9318fbfa518e97b7c97c126b67054865f9705242ee92d7d504bf4ed992c650d2349f678ef9
+2f7b33715de24ec9f1a461f975b1a24e93916caa43e07733091c7fc5482b3499c5aef512ae5ca169964da824f43101ae524d684ee38b74bea1d11e6e
+e8e1b15e02fd65ba4ef400033de44ac9144d4727ddd1afe89926b1792011d169e52112de0d74194ef09ee0a8d18cca74f8bdaf24746a4fcb39c75b19
+48e858a120e45371bedab2ef9430800f31688305915945a81200c02fc96afa94a796f51ae881a814447a5f9e3ecb66ae58cd25b475b8ee49bfcee8a2
+0466ad43472a9ae769666cb6e71fc22bd87acab4b669db43d4979fd75e4a256203a87eaaa8de3a8c1fcd913ee2dda2cf720d6f205d4647f16f2c1886
+fde1e22dbf4ed392c8259b2ea564f19e423d026f12ad0fc0fde6239908ebc43295804ea947af2377261177aa25615292c5f09871d436ab699c22c259
+a87978cc75330042f9c74f9ea2d17253f8a7c9366c913f924ed7470331e64c9001580d66d7d7a4b0cd1caa787a59bc05c26072d30e173749fc92ebe7
+85c8e579f0d2c26e48704e992cc85b5924f758ab29ec2f76b9d3b4efdd62ce497124d050af4c44b51a03e465ee7aeca5ad96ef68fcbaba03427b11c6
+7d8f448e71c12df00fece455baa38485590e9d43413b9aec441d7ff7ff1cf4359d4cda88aa69cc5592ac8ae44f4d226a01870bd3a6f53a890286cd5e
+98bd93d7785f33675e0967e379782e89ff8ea862a140dd968438d332bc28c6b7285c3069479907c9fc8e02820fcce82f928865e30fc76b3a291674c9
+483a3498dfc4d009a91de70df121a236fc7079d77b30094ee3e577bea1be1472ac97977765957cbe1df6404731f84ad94e0b437c99fc9ecd8136815b
+5e1af740ce7044ff02301464d1a9aceb98cad34fcfa8ae027f5b6dbd6fd217570cf731c94581727ba4d7b0f7dd3082433875cb188e481181120ae50d
+c47deda38b90f24cc8c0b516467118c07dd628a717c42ff028f0ee49fbab8dcf372b9b445c2a94f924611bb2e5109b52b416cb89bc02a239b59484e4
+5a48617902a02ad6fccc7bdd4cc0e947d19298d5793967354b1c48f875342fcfb9d6ce04b96eca83897bd32da9668fb5623e581274b60887eaa70484
+3dccdf679a8a65eb5fe07123090c6f9a6b0d2fb6dfe0c312bf4aba62d00a930f88717fc6350b1645e88b5c9e88ac1365e2e8c938648050af49a56a02
+2bfc59df45504227decaa581e446bb796c32d269b95c72db187a235eee8be1b5ddabe47cf0b1b80e746a098825ce4c5b48ba58af20e41273ae96f891
+f456bb537124985eae5d58b31416e408c263f2bebb91f44e848bb316593811d929d03be4108a62da5591e241fb878ec56b0699197b2c9af4693b1594
+e315fc289d6bc682b628ed55dd8c9ef55e576f5e1dab3fe3edfb338101dbb31ecbb19fdf17766b295c4101996839298bfeaac805be4acc83c04bcf2f
+be699cf265773e7513ba0dd3f1a705835098d922889460bc43cc7139265111a9266176da8ba98c46e002f33ac515f66de125369a66795c16b0d2438a
+95e5463db1f5866a36c92ce600a2135a65b5168d0145563a8699fcb6d072e32a3505e65dd115268a56694c06a0c2b3cdb1c5a630ce9d85235e5672bf
+08ff6e322cb8139679a64b39fb94fcbbad6dce615110ae34c6187fa60903e43f8d4cffb4a091f54785e2d25a06340cc6608273ba459576ed61a5b61a
+e6f9dc963052c30a1565c6bd317506eab649ac66802293dae535960d81c5d6ba06197c3650f263aab58566dd5195a60ad6e9cc862042337a326167ff
+7f3927c7e9e1cf0fa85dfd9886769b7dec5b9ee53d5d327e0ef13cd2f69b0e820ad1c822d5b664a549ea6c043c1d6bd0490c61b4c4fadf1ebe4be661
+8d46a824b577658f3f30482184e612d8cbb91720cfbdc9256e9a65985cf20e5a78dd5fd9500b4540ded082fe9f3dbb797c7bba0d895a7a9f425e7832
+f499aea9d79cab53e9aab9027570628a208f4a1f0df61bb229fc0e65a594b4f59955e72e74278811901848af1a16a1768d43f1b4a994cb4ccd91be05
+0557599a2fde2df31dda70f030f7e846b7e489d97d4fc3174b309af22c2955b3ab5cf233dc6d94a1b166cf76d58a98f3784c286709e77cdffdd53a8e
+03c1ff6584bb85eb7c0d7a65114864e23c3b2386e9bee702a34bf89e9a6bcf03a46197f3631605740fac0185b1e804825cdbc32689ca51b944e27f25
+31287ad2584834858bf7d91aaf05886e964c8d39ae6b7fe4332d0d4fda8717d4c0910841a4eaf936789141ba4feb0c4e718222b950170866d784a2ee
+833bbb652805fb36894b6fd819665f55f888a684cd9af975f2ac8806762a778228d84e181aec68a936ed554fe486fdbbbe2a9c557d269f339d550591
+1201f63bc27dea84a182fe0ef5c7e95e211d38f154b663aa58f311950ed7a66b9a83bc8b59078c585c2c97e568686fb6f913f42f9d4ccb86aa6bc310
+94b58aff1b12714317ef3be1e9d42e8118c1f459c7f497ce71132e214a0966f53c342e95ebadab62c443d19489749b23ad6b93f22f6030691aba1a8b
+b8ab0a9314ddcf0e88b360a741af23772611778c0c0e3a9bd8f1bb72d456a827bb47a536b57f25f42f25154efec13fdec5ba1474aca7c977489b7fbd
+54f800342ce95fd54f563f75d2c3a6ee9f0db1632857a940af4775d102335f68e99efaa2cbc6d878f3af8d284d244e996dfc4a181af95ca562c41474
+a0d1b5cf9c2d89426c689f18995621ce726ded24ce6ef2f7a697ec0091c8af1e487f19d257b6478e11ce6bf832f7fc07f6e4b2df621d9f504d76b7e1
+7f3c6fb6f913f42fee7ccf89f12895108cd6dbb31b50296e03c5579e81b1089403dafa508efabdda6e0b5a264a0f6ee44f3b2a89bbb98105a258b4fe
+e111b223ad6b93f22f6030691aba1a8bb8ab0a9314ddcf0e88b360a741af23771d0c72cc5f461c92dfd7dd14ae5abd73ac478835b26c6ed5736d6b22
+84e677e4dcb70961ebad95146a9779be59cb4f153fed5fe05d0a1f278684a2ea8e27bb735c59a907895c11be625d7868e990fca6df8da553fdbba302
+7f4d52bc2cc3525755b858a12fe01e7382c786fa9133e42e11418e1c8f5d21ce726d8828cc6cf6b2acacfa52cb8daf571634628f32cd2fe01d8608b1
+3ff0ee438fa593cc681bae565a2cf189054132b4ea17f93ed956ddb0b964c71081d8b8f35456206c08e11df6ebd03e8425dbcc5687b8fbb214766b29
+5c62029979362fed928dab62c446d8d7bb6cd432ad6f9eb90d7b074914b109f2d1e81f9819d6a14ef2ed68ad0dcc71392e117c8e7f1c3a83cee79f28
+b550b941b77eeb24b47d65ad524d6822de9b11c5c9bf1e2eca87ed05629a768e74b1780e2be149dc59585627cfd6b4eee746d71e016baf0f9e497cd2
+45123e6dcf96e0a0eda1a543f5a2ae47262474af24c20c5906fd4ce87ca45b54a4dab7f29a71b846743bc536b36e0bed5b56ad6b9d23be94a796fd49
+cbc68d1647671fbd12e96ead589a62da5591822eb2a2c1c86c0c96524c0c9af26b2d4ff7ff1cf4359d15a7eed101a263c89799e65c416f4d22990cfe
+e6df0ea942fdd2649fa69ed078514d28540779b021782886f8ecc40f845ce99684749b21a26cdbd4245a37721af13acffda50ede2bd9c72bb88b6da4
+5faf7125683b74ce4a013cd9fffcd416b81182689b43883fb07779ad524d6822e8830dd288d2720985c1b2047f9b63ba5afa002117de79d9521f3e4e
+95f188d8993db17c6d16980f8047699756743254f399e7a096bce375f1bde5346f764e80288f347e619132a522ec711ec2bdb4f78e3a8741381b9f1f
+8e594ca25522ce1dff66f0b09db1b576c59bb2154771118f35da208d71a142d90fece455baa384854b20a86541369cd545666dbef81df337d83f93c7
+be69c743d9f2e28e32412f6f67c657f2e6dc51e965a2923e82b2d1e869107c265f0d25c47d3b3f8ef8e5cd23986b9e83807dd54ac501f2fb24573077
+5dac06c8ef803eb45c858b04948a67a24aa14d23290c7ed3023b3398dcd8de18b66cba668c5db870bd766f8708300e59ec881b99e4b7186be9acef36
+799374af1de1134736e147ba3571626edd84b2e3823896424c18ba0e880848c30426105cf8d1c2a8db83ee74c8b9b9007e70018a23cb1e241cf749a1
+2bed555ba4d7bafe990b8f557f2d9f5ebf504ab51a07f52edf2feabfad969129a5e1d2245f7b439a3ada60d319cb3fb93ff9e76f8e80cfe66c069019
+7e3188e96e245ef7b654e529c87aa4eed101a25cd39b8aeb1b4a2e7c4df27ee3e1db30c845a2923ee2dd98dd3d5760284f4826b04f2c2495fae3c445
+814ecd83a04dff15bc6c9ae32e1d71255def4097ade81f9819d6a14ef2ed08c27efb7125291f7e8e60092883e3c1f52ead5baf739d08f670b2777cad
+524d6822848311d4c9b45b6ce3abd0326fa47da91da20e342ce759d15b1d454bd4c7aaee891bbf656f5daf6ae52112be623d171bf390fae7ed9ce27c
+eff682145a68489d288752180bf35ea41ce4093bebd8bef8963a8a77743ac533945959a61810e439842feabfad969129a5e1d27e224745942fde29e2
+56e424b337fdef73bab686ce794fc3174631978a054132de827dc22fd26dcf80bd26e845ce8a8ee94f6c11590cbb37f8a8857bd066a1923ee2ddf8e8
+69107c265f0d25c47d3b3f8ef8e5cd23986b90ba8971d56e9a6188fe2958343b40ff08c6f4bb0efa75b1a24ef2816db84885175e417112a940073896
+c7b4d909ad60ba27c508a73fbf736ec30b281305ce871fc5c9bb0f65fef2fd3e659057b24fec5a2430e147d4145a2372d6c5afe4842b8c78674c8b01
+9e5c399e615d783294f687abd78bea7cbcb5b22f495401d66de3511409f46bac2df11e65e5f7b9fa8f3e8d537d3acb11925c0b8b1407e027fd63ffae
+ad8ab563c489a9164860548967f927e91cee22a22fecc84fb2a885832f278b5a493694e9681a54b8ff24f029c93d87edd101a239b5f182e11b4c337b
+32bb7ef6e6dc7b8d15e0c967cba099de7375074e3161029915342484fae8810fa45ccad7d538d621b860d5f1275b3e6955f706d5e8971fde2cd7d82e
+8f8d6ea50da23e3a313049f002383484c2e0d814b316e04a994fa539a86d6fc2724e682284e677bea1b41463eda49b347e8659ab11bf430620c05b90
+01583e73d2c8b2a5aa2aaa5f6d59b714840077d8083f145fcd93fceb9884e473f7bdaf3777760fa825ce4c160bec5eb26582721ec2bdd892f4338144
+7924cb049d4a4ca20f36e03fc460beeae895fa54c4c6b81b4a7941d33eca3ccf088864f031f9f36fabe8c19b214fcf1e2251f289054132ded800fe29
+dc78cbc99b7dd942d9969fcf6b76207f04a07eaaa8eb2f8f1ec9fc52c59784c96f1a6033703859f1683124c7b0a4891fac5dd9929c4ada34a567dbba
+6b6725740fbe09c2b68b1e820eddc533b3b453aa59e6717e68523b90025a51fea29db872d436a2689b49a770b46848c8372b130bb0cf3dd8c4b70933
+a2a6de2023c531f61dcc5a082ae94cd5123b1e75c9c1afffa51f8c767c51b44ccc7b6fd81935165eb3bcfbb5ca8de564d48899066f6d4ec76d9f177d
+619132c945817244bfdba3fa9a3ac073792b9f199f59478f2e20af03fd49f7bba4d6c849d68dfb4a0b417592308d60e91ddf638328f7f946bca1cfe8
+781d8c52462cb3d05e294fbee458b16b913f9fcbf838823ab5f1e28e322d485819a02cf6efdd75b40dcbef5e88b59df3483b200f682e62fc70760986
+f8efc619a25ad093ab77d72fbe3bdbaa6b5c215812b301d592c162f975b1a24e978b62aa41af6a3f3a1d7ad400482fb4c4f8de09fd02ee25b4679c72
+f03848c83522084ca3bb16d2c5bd5554e4bade367fb87eac3796276e518122b9551e4b63d2d7b5abd16fed27284cb30582086fdf1931104fb1dffa84
+d784e462bce5eb45534d66a36f831e3407f65da92ba62f7faed9b4b5a9379c42793ca3199b5021ce726d8842a406fbbbbb9df2468c8cb2045f340ddb
+658f6ef310cd25f028f0f942bab0cd8b792c915b472adbbd2c6a7692cf56bd7bfe70c081b16f8564d49d86e21570297908ae2adaeddc7b8502cc913e
+e2ddf8b2147662285b0967b07e2a2e86efec8156ed42df838036c829a22095f83c147b3b4ef64e8db8f845c25c938b77d5dc0bc22486175e417172c6
+0c1c3385cef5c55be002ee25b0618c18fe387fcf3e2a415fce8012d8daf84620cfa7d73879c73fbd4ff043351fca0382094d47278f94e1a1cd2dac72
+694cb34ccc1c2b9741741349f89efaaf91e2821995d1c26e12614d9828c658571cf049a52dfc5b2af694f3d6b81bcc076c208e1edc4c68a8170bf36b
+902fddb8a497e913828ea918464676b9758d7bb254887ae86cb8a107b9b684ca7907d2171871dbe5622c31de827d9852b416fd93b77aca57d9d6bfe6
+585028680ca316c2cc9613850dccfe45c58094c3695f33674b1c79f9723f6581f4f6cc0ab9079caccd6be660e97bd9bb6b40396918be1a8bb8a40493
+17ddcf1797962f854ce27b7e427112a9256152fef8e0de09bc58ab29ac49a824b57b6acb13112505c58a1fd3cdaa5554e9b0cf1464987ea90ebf1347
+2ccb44dc530a610eb2adc882e4468d63674aba0789064fd608201858fc93c692fcc6cd7ff3acae1535504493398f03571bec49a922ef5571a4c6bcfa
+8977cc63511bbf4adc1d4faa5b18a10ae442a4f7ed8bb90c8c8cb2045f3811b832d128ee1f861db130eba566b2a9b1ca7f1bd73d2151f28905413284
+ff1be33ada7a80b3b96bdf59df9987cf6e606f5819bd31fced96188f00c7e917d6f485f8721361353261029915514282f5e0ab62c426b7fe8d76df4a
+c501f29e2e5a351174d667c2f4bb0e991a98f833949660ac48a14a362b0c72c34d0413a2efbafc1ab451e051915ba232b07d2bd333210f2184e677be
+fbac1472edafde795f9572af54fc4f0b10dd6f9e7119026995f2a8f8842db2722805fb068d4468d2615d7832f891eacdb1e1ee7ef8d2c26e110d2882
+2b8f7a0509ef52ae2ba80f7faedadb92f45682487b2987508f5044b03816ee38de2fa3f7e0bbf44eca81bc597860508f38cc60c40ac738a334f9e255
+fbab938b4e009051413fd5d378294fb2f85ad522d37ec38ebb4bd95fcf8b83e65256682b0ca13ab7e6d72fc044fbef5899b596de33326f2e562e79f1
+713d6b86f5e08138b940cc968f7d950dad6195d139553c7e538907d4f1aa079555b2a24ef28d67eb5ee771200b0a74d35f482f9fcefabb72d436c76b
+974baa3cfc6b7bd53e25050bb0cf48bda1d17209e0a7d83667d472a952ec5d0f39e159f3531404759b99e1c88221b87e6f168f0889457e9938200354
+f69a84ceb1e18279faf888087562488c63fc4a161cfd48ee08f11576a6ddb2d88f309d5470298202dc4c43a2156e8842a40697beaed8d84fc28eb210
+0547459a29da3da93ec432f033eaab64b4aa87c26a41ad43492c9ef3221b4bb2ee10d93ade748e93b06dc510cf8899e25a4061364dfe669d81b152e9
+65cdf7448ebd979b750d7e6759066fb0742a3bc9daf7d20ea04dd28ea471d525ad7aadf2275b327209a640eaf9af059908cdcf22dbda21fa1daf6a3f
+2d163bd35c1a3e96cfb48c5bec0dee62964cc159d51102ae32224178f9800cd6cfbd554ce3abd0326fa070a95afa5a4737fa0bf353160d6edc8a92ff
+8c3bbb642679b20d8e476f971f3c1455bd8cfeb5dd89ef30a1f8f95c3b6753843edc561601ea78af20e70937f69492f493398740361c8315915d058b
+1407ea08c263f1a5e89df544a6e1d27e22715f9f57b6478e71c424b33df4ab53f7e483872d03d2175a78c6a05f3c54a5ea13f475fe6dc194ab60ca59
+ceb482e95e576f5f02bf72b7dbcc34920dcffe19a8a69ec86e176f2e4a2462fe792b65a5f4f0d504a0039ea49c77c921ab6dd5d4395b226815be07d5
+d4a105950f96e7229d902deb7efb7125291f7e8e6f1a3484d8fcd012af73a7699d5be502b57f63d3514d682284861897dcf81a6ee8e8d9776a9a75fb
+51bf4f093ca8599048100e69b1adc882e446aa395e51a8098e447e9756740549e89ab5e7ccc6cd62f3b5eb5a3b52448839c04c4546f65eb764eb1e79
+bfd1a3b5a573ce447d269f158e1672e75644f23bdf6affb3e8d5bb1485d3fb0305405edb609f18e21bdc24a26eb6e542acec82ce631b9b450600d7a0
+6f2d55a3ee06bf029d328e94a87ace51d8d1d0a74f0a026401a02cb7b598389203dbe85f8abd83f87213613532610299155129c9cdedd202af43dbd7
+d538cf32b96dc0b7291a176912b24e9ab89e0e9308d7d975d58a64bc05ec7b393c1d698e74447b94cefac51eaf119727d308b820ae7d6ac37b6f411f
+a4d45ed5868c1420b1e8ed3268807ea90fb140022fa048d5520c0e7595fcedab8e2ab0636d4af539cc033bc41b26145af9d6b5e7dac6c87ff0b7b947
+2624429922dc4d1f09f1498323e41465c1bdd892f45682094e2198199e544ee74644f539d86aa5f7a4d6dd52c385fb4a0b42549829d03cb556c62ea7
+74fbee49afa19385554fd3175b2889e56d2c1bfaab40bd7bde7ac093bd7a856995c3cbeb15702e2b50ef08f2ebcc34925e86f5529cfc92de730b6b35
+16302bbd3c2b3b95fee5c547ed4cdb999c7dc96e9521c0b7271a127411b01c87a5e8088213cbd82f9a8d738842e37125427112a9256129d9fdfdc212
+bf53ab27c508bf22a97d3087296a2759e2825e8a888e1e63f8a7c965259a74ac15fc4b092ced599e64584027c8d4b3ee8c2bfe3c280cf7408f4d75c3
+0e265f62b4c4aeb596bce430a1f89d0278704e997f8150121fb058a522fc1e65e5ecf1b0dd2c9e557d298f5cdc5b4ea90f01f365f426a5f7bad6d84f
+c087a9571634528932cc3def19c1399333f4e455d1cde8a2040a90532251f289051b4fb8f915f63e935cdc88ab7bc351d58abdee484d236708ef63b7
+fcca2e8566a1923e8eb882de74192e144c0779f17b3d65a4e9ebd218a54ed785be71c829ae649eb73f5c347577d667ae919b1f9f0ed9cc22d5a773a4
+5efc7636210a4dc95f01399bceb48c5bbb5ea2749d22c259d51167c838250d0bf9c35ed584f8172cacba9b6a2ba765b44ffe490276cb59df4f0b0366
+d2d68de2832aad395c57ab4ccc7b6fd81935165eb3bcfca8cb9be371f5aa870e756152c50fc04a0307f517e01ffc1465aad3b4b5be2d81546b208a19
+8e7442a91e17af07c869eafbe8abef4fde89bc12055743942ecc26e611da07b932fdf80989ad86c37965f73e215192e62c3c1ba3e311ff7bc931f88e
+ab61c95cd9d8d6a75d452d7808ef3bf9ecb252e965a1f251cbb6d1cf751a60675a465df96f31298bfea49c4bab4ed2848d38de2ea802f29e423d387d
+5db34ed3f0ad05d01096fd2e888d63a748af23772e1977d349483e99cf9eb872d436a761d85aeb24b47d6587296a3742fe861cdbcdf84620eaa9d724
+6ed474b55995276e51ed45d43671620eb1adc8828429fe546756bd098b0648c30a201448b3b7e7b3d589f97bf9aaeb06756001b839c04c160ffd1588
+25fc1676b9dfb4e9bc339e4f7968d550cc185faf1e0a8b42a40697bba79bfa4c8c80b624426e54db609f79a7538863e17cb5ab74afab93ca6a0ad07f
+412c96e17e235ea5ca18e133dc368ecdf83ca139b5f1e2eb544720674da733d6e4c833814c95bb5a8aa099957e136f2a484058e4732a2a80feaae902
+b942df85837dc901a07893f6671461354ff34e96b1c262f975b1c72898856deb59e33e6a682b6fcf5e093c9285dcd80fb05ebc6c9d5a8739b27d7889
+0f086b2284e677dbc7bb1a6cacbcc97736d442af52ed4f003da663d948150a75d0c1b3c78421bb64266c896ae52112be073b125af1dfecab98d5ab43
+e8b7b9067c610fa324db53161af35eb200e11572b89a93d7f756e72e112484139d540ba50944bc6bfe7bf1a5a99ffe0ee481af1a4a665a9e2ff327e9
+1ddb65920e92822ed2cd88cd2d1b921749369fa0783a1bb6e510b139d13fcf89bc28c9429c8c83e2552e480264c657e3e4960d891fc1f95b8ef4cc9b
+690d7b2203487ffc320c3986f5f7d10abf4ad09491388660a465bafb3b5c30205dab0289deba049d5c858b119e8775a45fbd30392d0f33c349062f92
+d9bae95bf01fa66aab41b135f03868c235300459a3b65e9a88b01653e5b2de7e30d465b713cb414765a87dd55f0c0475898aafee9a67bd72664cbe12
+c2703b9a4b665d1bfe9ae0b3dd9aa549bcf5eb55320e28e244a637031ab66da93fe1197bae94ecbb892d9b4223689f02d26c59a61517f12adf6af0b4
+b1d8a600c4859a1b5b7c50c07dcb3ca93eda24bd7ca5ab71bea795c47f5dd0594d2fd3e369264fb2f95ac97b963fc68a8b61d15590d888e255502479
+43967ebaa8d036b305d2fe1ed0f485c9332b616705485df57f2c2495a9aacf0eba07dd92866cde32e250dbbc6b067d3b1eba00d3fdba45a95c958b75
+d2ee08c22486173524564dc95f01399bceb48c5ba94dbb62c308a93cf24c79c63537114aff8a10d4d1f84620e4a5fa3b7b9c70e01dfd42491efa44dd
+1c454b51dec7b5e49f7df0796d4ff30389466fd2197a291bb0dfe6aaeb81f175b0f8a8027570449963f61e5c48f0569325f21e3ef094b3f7d30b8107
+2568bd159f4c44b5494aef2eda27fdb2a68cfe5282b0fb5a0b261ddb3eda20f31dda65897cb3ab15f2cee8a20466f7555a76ade97f2159bbee54ac7b
+c96ddb82e328c94292ac99e65557316a1faa30f4f19866c004c5da5b9bbc90803d1d7c697e1a64fd3c656bb1fee7d504bf1d90998d6f9323a9668ff2
+391a093b56ff06cacba111955098c822959064b903d63e7c681076f345123ede90b4d309f36ba127c5089d35bf6c64d5696a0f4efac71dd2c6ac1e72
+a2909b7c2bc63dfb5efa40133dfa05e91c534b3592aec882e446bb796c32d269e52148c30426105cf8d1c6aecc85ea62f7bdb9267774498a6d921e1a
+09ec53ee21e9033ffb98f1c889309c467f2dc538954c46a6090fe439ec63eebfa9d8b6009cc6eb42021e38f254da22f41da242d95591ed48a9e4be87
+2d0397594d7892ee2c385abef907b908c970dc86bf6d8578d58c86e6494f247921a630f2fb917b840388f251cbb898d5785f6f295c4867f9723d65b1
+f2f7c809a14a9e83807dd560a06195f26562386814bd02c2b8f54b961dd4d822db816faf0dea7033427112a949063ffda29db871d436c72ad5089004
+9d5b5fee18052d0bd9ae2cf0ed8c5b56c59bf21542b8588f64bf7d3319dc7ee31c312543f2e780dfa21d831d0131d2098a0848c30426105cf8d1daa6
+ca8fee64cfacaa136e7765992cd857190fb84fa829e6711ec2bdd8f29b7fad48762e8217d26b5fa60f01f265f96eecb0ad8cc854cd9cae040b755f9f
+7ddc2fe410cd2f843deaec42afe480c5694f9d564b309ee4582949b0ee00bf0bdc6dcb89ac28ca5ed8d885e84f04695819a02cf6efdd75ad0dc1f571
+99b59cde3d1e6023183b7fff6e392c82b5c9c002a369cc96857d9516a57b92f52751783b09b70bc992c162f975b1c72898856deb59df722568453bf3
+491a2d9ec8f1c2558d53af7e9d5ab86a9b7d7ff73725184effa90cd8c59b1361fea9d8236e8639b85cfc46023cdc4ac25b1d1f29ebc5b3ee833bf71d
+0131d269e54474d40a38514fd39ee3a298d5ab64ccb4b9477a6a45cb39ff520546d65aad29a81465ebd7b0f8953a8a73793a8c1588167ba60901ef3f
+8341ffbaadf29229a5e1d21b447750977ddb27f40c8876f031f9ff4ff5a28dc4621dd61f6b2d89f269264f94ea19bf18fb6dcf8abd26fb5fcf919fee
+544a61264dac3ff4e0dd3fb40ddafc529ffaa1d46e167a2e570622be51392c89f2f0d40fa806b4fee111b249a06798f62714326e0f971e8bb8a50a88
+34c88b7adbb175a241fc30102d0c53c54d042f9f83e0e117af13ee64994ba335b84c6ad53c211505dd8e0cd2c6ac520a85c1b25e02987eb85cf30e0f
+28d848c41c454b6adad0a9a58b23b1787a10b601984035d407351c4bb59cfbb5f098ab3fbcb5aa1f53740dcb7d831e4641b811e07db84b3ec1bdd892
+f456bd53773a8a1799167fa60903e43ffe7bffa3bd8bdf52cd9fb2194c3a67922ed62ceb1d8876f028eafe42d1cde8a20466ad43472a9ae769666fb6
+f913f42fee6bcf93ad7bef42dd8f82e95c0a11641ea62afee7d67bdd4cfefe549fbb838933116b30100b6efe683d39c9c3a88108a841ca929a36e260
+e728c9a3623e581274d667cefee808911fd0ce23b29756aa41e33e23201d75aa256152fea29de20fb24daf609d069f31ae7f6ed30830005ff89c3ac5
+c9af126eebe6f838679b63fb00bf6d0836ee42d7122c0362d6c1efdc8c23b2546754b412e62112be625d7868e990fca6df8da544fdaaac026f57558a
+39da4d331af94ca922ef5543aecca5bbc07f9d536a218517d25e44b51605f5638f546e485c4cbb6fefab97226f5175a67d9a3da704886eb431b8f707
+fea0c48e2f43de43663996e520685fbef800bd7bd56ffe84ac21a139b5f1e28e5e48326e67c6579e81b152b318c7e9568cb1dfef7c0d69224c3b7ff1
+682d38a3e9e5d602a34890b48774d432ec35dbd4245a37721af13acffda50ede30d7c82cb88b6da45f85175e417112a97f1c3485caf3d455895ebc60
+9d5c9824bd6c7ed41f36005ce4811999fcbd0374acf59b247f8678b55ab148082ae54ac4145a30f7243b63aba1009d5c4d7c8640c95b3bcb4b711556
+bd83aee2dccdae32b0f8bf297a6944c76dcb57041cb41ba83cd81863e2bed892f456e742762ce179f53122a21717e422cb2fcda3a78afa47c9c68f16
+5973548f0ecb2ff30ddb0fa23defe249bceab7c27e069c5b4d788fe8692631de827d9852ee6bc195b96fce1ee89999e05e50127f0cbb2be4ccca3a97
+05c6fc19bdbd82d27f136b6705486df1702b2eed928da862a841dafde111b225a26cf19e42513f7f77d667ad91c13e8018d9df22a98565aa5fa7375d
+417111a925013dd7e8fbdf1db458e0548c49bf35af3658c229320459c98a0dcec6bb5b61e2ac9b047f9b63ba5afa00353de947f37a0a0a6ade84a0e5
+896fb6657818af0889463bdf19245f78db8defaaddc8b630cfaca4157a6344c51fca5f1b2bde49a121ed5b72a5d0db92f43688075b278516955f0594
+0f05f52ede21dab2bb81f5438c89b5130b7c438b7dde20e358fb3fbf2ef9ec42f59684ca612cb84549359ea06d265ff7e51be57bfe70c081b16f8563
+c8999fe2480a126e1fb93be5ccdd289902cbbb4383b19fb11476072f4a1825d35a2a2a8afea49c4b9e5bd185897fde6e9e6d9afb0872237a10ba5587
+f0ba1bde3dcbd82296866db261e67032290a4dc54007389edfed9146fd6cba688a49ac35f24a6ec637120447e28c17c3d1d27209e9a6df5d02fd1bd2
+34f648471be745d6551f4554cfc5b5ee9e618a47494da901cc4975d34b070554ef9ee9a296a9fe62fd8caa157c6155cb2cc15a573bec54b22def1e39
+8ac1a3faa93e9c407d3cd13695564f811216f23fee67f7bbacd0b968d985ba19447d55a932d03ad719da3ff275b8ff4fbeaaeba20466bd425a2a9eee
+780b5abaa537d729dc72cbc7e528e876ce9986e215482e64068e2abfcbcd299209c6ef748ab9dff85b0d6f2a5d465bff6f313f8ef4ea8d4b9e5bd185
+897fde6e8d7d89f61f55237c18ab40efeda50a9e13d1cf15948b759b4cfd6a79181768c958013499829eb872b851aa0df121c159d5716d8708300e59
+ec881b99ebad0972e9a6cf047b9172af5ceb4b472ce04ede3671620ed7cba2ea816faa546059a940d10848c30426105cf8d1cdb2ca9aee7ee88bbb02
+7870409f28817d1f09ea5aa338ed091dc2bdd8f29b7f9a64702999509d564fe72801f33dc46cfba4e6a8f741d58da9041152589539f927f50bdc08b8
+35f4ef0f88b08ed96c089b196b2d89f269264f84fb11f22fdc6bcbc99669c65595d89fef5e4a4b0264c657fbe7db3a8c4cdcd34286f4cc9b693c6626
+4a524df9723c0d8ee9f7d528a546d293c03af335a16995f82250733277d667ae91a10dd008f0de2adb856faf0dfb5622255653c54d042f9f8baa914b
+fd4ba6629622c259d51102ce3d64225eff9d1bd9dc9b1a6da28bda3a6e86708848fd44023bfc0bce01581f4fcec9e1ff852ab0374b4da91289466ff4
+0a395f78fc92ebb5d9bbfe72f6bda8133b39019f05da53570df65fca4581721eaed8a2fedd198b466c3d99158f1678b31414d23bc86ceab6bc9db309
+8c8db513211d38f238d33de258ee2eb128edf942a8eab2df621fad474d3b8fe1782d13feab11ff3fb716a782b66ca139b5f2e28e5242614802a138fe
+ef9608940ddcfe44c59598d67f107a674c006efe165142eeb6a981309b1990c4c6289b139841b8dc12141052309d21f3b8ee4bb524e8e409beaa5582
+6cc33e131c5848ed63270fbfe2daf626e71f8a7e9649a639bf3869c637280858f9861d97ccb91670e5a6dc772dd472b752ec4b4a2ae945d759581962
+c8d4aee59e26a872665da813e62112be02325158fc9ce6a2dcbcea62fbbdbf477a6a45cb2ece5d1f0dfc6fa13eef1e63e5e4b0e998319a076c208e1e
+f63122ce7208ee28cc63bea3a98afc45d8b8b4040b2911983cdc26e21cfc2aa23bfdff098bab92c2790691592251f289052454b4ea18b13eef70c193
+f8358b53dd9b83e25f7020790aaa2ab9d8d9298502dca17182ba95fd740d7d337b0062fc787069afeee9c005a246daa58777cf10ad7a8fb5623e5812
+74d602c8fba907d018d1d833c8a021f60da75d223a0a7ece582b3a9a85d7f709bc52ab29a847b839a87164c97b69415fec9d19d2dc881473a5e6f636
+6c9a78af48fb4b6d518122b93671620eb2c8aee88c23fe677a5dbf3485457e9756743254f399e7a096beea7ceff69b157e60488839c651193bec49a5
+22ef0f7fc1bdd892f43688075b278516955f05940f05f52ede21cdbaa98aef70de8dbf1e48605894339f3aef1dc641d95591822eb7ab82ca614f8e5e
+463fdbbd2c1d4fbee707bf1cd86bfe8eb66f83199cd7cbb60b14710164c6579e81c8298508fcf25a8ef4cc9b6d0d6b236c0166f53c736b97f2eac64b
+e70ffd98867ed227e25e9afb381a017213b82dc8f5b80e9e0fd9df2e948a0bc224861732261c11a9256152fda29db872f012ee5cbb7989709e5947eb
+12173562cecf3af6e588324ecb95815d02fd18d210b20e262ca858d8530a1f27dfcdb2ff8c21bd722810e740d8183bc41f211548b4d3aea5cd84e775
+e8f8bf157a7244876ddb571a0db852b36ce61e76b9d8a8bb873a9c483821855094515fb41805ef6b8b2ff6beaf90b656c984b414426048db38d129ee
+16cd38fe5691822ed2e9cc8b48179d525b2b92f669684db2e71bf232c9668e97aa6dcf59df8c82e85504207f4dbc36f8facc7b8405dbef5685b7949b
+7e1e7b345d1b2be675372782f5f08104bb4acc848077d434a5669cb72a5a353b18ad1cc6eca108d01fd9c622898521ad41e66e24667212a9256176da
+8bd5c55bb956bd73d814f670e43878d32e201211ad9f0cd2ccb11874e5a7d577628731a158ed414770ec42c2591b1f27d9cbafeecd23b1746311f56a
+e52112be4679517def90e3e780c8ff7fbcecfb476870548f3e951e071afd5fa92ffc1278a594a2f89c338b54383b861f934c43ab0244f43b8d7bf1f7
+f9c8ab0582e2d27e221d5d943ede22a71cc138a41af9e853b4b6c1962d029f43407698ec6d254bffa310f828c92ceac7f52893199cd7cbb40908613b
+43ff72b7b9966bc966a1923ee2a483de792b672a5d4836b06c2a2e83cfedcc0eed059e93816bcf06ad6b8ff8393e581274d664ae91c162991a98ce15
+948b75eb4ce17a77380a7ec4780136928baa914bf30ffe36d85ca335b21202ae524d6847e28c1fdb88ae1e6cacf59b32599b7eaf13de5d143de549dc
+45340269dec5b3dd8823b174614ca26ae52112be62795c1bd99ee3b7989bfe74f8bda5476d61539f24cc5f1b48f24ead3ca80d72a7dbb2f28926ce4d
+7d3a8003dc5145e71808ee38c82fefa2a98aef45de9bd17e221d38f231d02de614883db530c1ab1afbec85c27e1bcd730864dbb239611bb6e510b173
+cb7ac2c9812881108cd6d8b212042e794db93bfba6e151e965a1923e9fb583dc780b5e284b4836b068393980fef0f104be0f95d7be7dd834a37ac8b9
+255126330bba0289c0e44b8619d4f26bdb9264a703d5377762586bd2490c0f9ec6f1bb72d436c762964cc159d51102ad524d6822e1801dd6c4f80863
+feadde395b9b62f71df040343bfa4ed552585627f8d1b3f98821aa546955e137835a77d33f3b2752f888fea8ca9cdb7ff5b6bf4f6f65538c28db6e18
+1bb131c94581727ba4d7b0f7dd2c8d557d2d8534954b5fe74644a91dc86ceab8bacab54ec99ff3044866549e33ef21f456f067f02ffbf942beaab1c4
+7e41a71e0875dbe369264fb2f95dbf16dc78c08eac7dcf55b6f1e28e322e480264c673baa8e31eb83ce7d572a580b8fa515f4a02743c4ac455150ec7
+dfc5ec3b886b9ea4a557f4148441b5d06b1c174b2ef227e9dc8d3bb532fcee09afcd5cf12786175e415536806b1d3a85cafac51eb84cee6e9c4da524
+b57b6acb7b270046e89d1f97dabd0870e3a6c83e7d917fbe4eec0e063bfa44c34f5858379be291d8cd3bb1373a0ceb4bcc6e4be4615d78329493e1a4
+d984ab63fdbeae236f241ccb65cb4a5709f65fe028fc5b29eb84f1fa933bce436c68d750cc161aee5b05ef2f8d6beaf7a78abb1082d8ea411d1e38f2
+54b622e81bc927f02efdf857b4aa92c27b0a90525b2bdbbd2c255aa3e35af237dc72decfe9269b1091d8a8e85542286c43993ffbfb961a8901caf443
+b8b99ed4691760224b1b27b02c767bd2b7a49045fd06b4fee111b22ca36b9afb6b5830761fbb0f87a5e8438219cbdb28959768bd48e17b243b583480
+41092f9f85f9d003f50fe037c904eb61f2283a877664134efe9f11d9dbb10d65e2adc82422dd31f11dac1c49688222b9357102619bc0a8f8997c9a37
+3418ef50cc5c73d2055e783294f687abd78bea7cbcbbba05596b4e98398f035740a915f06ca55b3fafdda2efce1bce08387cdb59d51801e74a4ab441
+a40697dec194fa4dce8cba5716345d9a30dd2ae658826bf86db6bb07f0e482da6f2d91585b2cd28a054132deee1af551b416a7eeb16e8b43df8a8ee2
+5560287819ef60b7b98a6bc018c0fe59e1ddf8b214766226550a6ff13c656b8bfae9c30fac0f94d7d9368f4ac501f29e2e5a351174d667aef4a70891
+1098ce3f8bb76ca442fb7677755876c158007594c7f5dc0bf50ee037d805eb3dbd6c63893e3c1103a0831fdacabc1a20a6e8c8366d9155af14b30e57
+76b81e9c1c49453792aec882e446d41e0131d24dc10840fa3e182572b0afc286f6c8ca59d19a84333b4179ae0efa6a3e27d61be66cce3a5e87fb87de
+af7fb9664c0ba334b37f76cd726d8842c160fdb6a4d8fa49c1b8b71645340cdb1ed020e111cf65863df4f8099aad8cc9621bae5b4936dbef7e681996
+fe00fe79b716a7eed164c453dd94cbe24341227e19aa0efbe9d619c05188b35682b9a1d77c112e7a054829c0703925c7d9a48926a25acd92a577cd25
+e52ad2b7244671331cb603f7f4a905d041858b65ba9175a40faf7f392c5848d4431a3a90cebaf21ab05abc66b75eae22ae716fc21f21154eee9b1bd3
+88b91564ac8bd4396d9d76f56eeb4f133dfb05f155150968cfe2a0e28120a8727a11d169e52112bd625d7832f499aea2c08de865e8bd9b0b7a6a63cb
+39c75b19629132c94581563aebe4bdfa937fac1d380584058f5d66a80d01d32ec12fd6b6ba9cec41de8df4214266458e3cd36ece16d83ea47cdde652
+b7a595c26201de1f6a218be17f3b5ea4ab38fe38d67acac79b69c655ce99cbc47d56206608e6549e81b152e900c7f85687f495c33d422e345b1a6ef5
+72082494b5dc8146ed4cdb999c7dc96e9402f29e423d587712bc0fcbb8ac12d04198d824898164a57de06d79115836804f0d3583cee69f22d736c70e
+f121a73fbf796787362b174edf8e0ad288e55b6dedbcd379689870b64db74b1f28db46df530c03279184f1a5d463fe272608e34ccc18358f5e7d7b32
+94f687ced18eab64e5a8ae4f766b549828c251010dea5eac65a8462aeb96b7ee933c9a4e7726c95088504ea9716d8842a40697baa78de845c187ad12
+59715dd339c76ead58c524a639caea53bee8c1cf744fd41745378de55e294fb2a27e9852b416a782b47bce59dad8b8e24952286808bc70c1e1ca2f95
+0dc4d2599ba185f67c116f205d1a2be4743d25ed928da862c426ce948974d768aa7d95f43f5d3e7555f664ae91c162f975b1f822899268a848fc3001
+210a6fd54d041299dbe1c536bc51af609d5af103b9766fea3431124ec08008d2edae1e6ef8e0c834799174b56df05d4900a40bc35f0a0e62d5f4aef8
+c316f2376f59b605c52212be625d7832f891eaeeb2e1821995d1ae0b68612be244a6377e61b516e00ae9177ba9d5b2f0dd2b81077b2986158e590bae
+1d44ec24d87cfbf7a196eb55d8c8b2040b7a5e8f7dcc3bf708c739a439fc812ed2cde8a2042c8b455a3d95f44f2956f9c832e33ad07a8edaf84bde42
+ce9d85f378452c252e892cf6e5dd61ac09daeb1fa89283da701a202b570760d168700892e9f6c405b96cdf9ac65bfd32ad659eb91b5b227209b601c9
+b4e81f910edfce33ab8b72e201af7b2f382b76cf431c33dea19db872d436ab699c22c259d5116ecb28216b2284e677be85f55b50e0a9d5774ace3193
+54f8464a08fa4ed3550b0268d58482ea802aac76287b9d128d457e97223a055eef8fe1abd99ce27ff2d2c26e120d288722cc5f1b48f757a40fce5b2a
+ebf7a4e98f3a80535b29865ebf7e59a616018b42a40697dea497f841c0c8af165973548f1ef96eba58eb0da23df5ee09b7ab8ec04c1bd6745d2a89e5
+623c78b6e65ad21dcf7ec382f658c443d58c82e85508617f0cbd39f2fce8349345a2923ee2ddf8d27b5f7d244a0d6efe58313893bbb88128a241d89e
+8f36ed21a07bd5d32e55356112b10b87eca00e9e76b1a24ef2ed088858fd6c32260c58c1414618b1d9f5dc1efd02ee73995aac35a85b4dad524d6822
+848a12c4cdd2720985c1b25e488163a958f15a2439e505f37a0a0a6ade84fcabae3aac656d56af238d4535f42d261056f8c5c2a2ca98a364fdaaac02
+6f4767c76dca46073bf554af38e0521dc2bdd892f43a80431241e279f53121ce726d88428022be91a991f74fda8da9577c75459835db21e0428828b8
+39fbe007b2a2c1cc6c029b175b3b89e97c3c1bbee619f43fd47eda82b4718b5fca9d99f0494d356e1eef1df6e5dd29814cebdd458ab994b11476074e
+31016db03439228acbe8c005ed1283d7ca59ce34a32adbf62550715812b108ceffe638841dccce34d5a568a64fe06a11291177cf5a0d29d7cafad55b
+b350ba27ab5ca422bd7f6e8918250c4eff8e31c1cdaa0969e8adff327f9172af58fb07472ce04ede3671620eb2adc8ff8c3cb5396c5dbd059e007dc2
+05370552f291a6eeb2e1821995d1c26e726201a822c1581e0fb668b42dfc1e64e5f5b8f69f309a0779268f509f5948af1e00d52adf68fba3e88cf345
+c2e2d27e221d38f254b622e81bc927f03dfeff42a99284c82d52de745d2a89e5623c78b6e65ad21dcf7ec382f644c45fd7ae8ee44f4b330164c6579e
+81b152e900c7f85687f494c36d1a6d335d0c5df57f7876c7efe5d30ca85bfdb1c654d42fa75e9ef43f5b231174d667ae91c162f910d7c82697c465ae
+41fb7f1230087ec3580d3fd796b4991abb4bab75ae4da870f1386edf2b21025fe88b28d2cbf1554dedafd53e7f8175be3796276e518122b935140464
+dac8e1ef8823aa764754bf40d10833d60d201449cb9aede795c8e47cf89b8d49576b4e801bca5d0307ea12ee01e91c79a2c0a4ff9855e72e1141e279
+f53142a15b00e427d96edbafb89df854c98cfb490b241fc3689f2fe91c882fb530ecea68b7a0c1972d5fd0071d788fe8692631de827d9852b416a7ee
+8b7cc442dd9f8ea97a4d2c6902bb1df6e5dd298123defe4599bd95de5e107b294c4836b0340b3f88e9e5c60ee36ed79a8a77cf03ad659ee52a7b277e
+0fad07c3fd8b048512cc8b2889c431e20da43e66427112a9256152fea29dd81dfd6cba688a49ac35f25962ca392b1568ec821bc5c9970d65febad233
+6eb77eae53eb0e5965a81e9048100e69b1adc882e446d71e0131d233984769d60c315f78fc92ebb5d9a7fd75eeaaa2037e40449f28cc4a120cb806e0
+38fa0e72c1bdd892f456e72e1141e225885147b4552aee3fc469e7ffea1a01818ca9923a695b65db1bfe07cb37fe0e827eb4ab0598a58cce7f0ede5b
+473b90e5686859aeab13f036d83fdd84aa61db449dd8b8f05250226308ab7ee3e7980b8c0dc6bb75cbfcbcd4680c6b0a571e6ec2793462c5b7a49542
+c726b7fee111b249c5019ef92f3e581274d667ae91c10e9c0fdda14ef2ed08c22486175e1b0c74d24d0f3ed9eafddc19b24b8d66954db931936e6ed5
+292d054ece800bd9dcf84620bcc2b25e02fd18d234964b093c8222b93571620eb2c1afefe746d71e0131d205824c32bd625d7832949ae0a3b2e18219
+95bda503110d28e228c15a7d61915eae2882721ec1bdd8f29b7fad48762e8217d26b5fa60f01f265f97df7b0af9de962c39cfb0343715ff154b647aa
+55881ea339b8e846b8ac84cf2d1b9f454f3d8fa0243f52a3e354f037d469cbc7ae69c759d8999fee544a680164c657fbe7db3a8c4cdce95e8c849dc9
+3d422e24590b63f5780c2a95fce1d54bac41dad78b79d828a96caff63953346f538f0fd5fda61fd01dd6cf67a88173bd44ec7b24662877c1550d2984
+91d3d40f8d53af7e9d5a8d22b37548cf3a360048f98a0c9fcbb91868e9acef36799374af13cf4f153de65f993671620ed2c2e1e88c2cb6726c6cba12
+8b4d6f970a3a151bfe9eedafdd8cdf71eebfae133554409928c14a5709f65fe038fa12709bd8a3bb9c318a074d3c821c8f1662b43a08e83dc827eaa5
+a19fcb4cdec4fb144a77599e39eb2ff51fcd3ffe0cf9f942b5b0c88b6c019a17003694f42c0b54b9ed1df675ee6bcf93bd7b8567dd9487c453412260
+4da02cb7ddcc328c1f86d244bdbd82d27f136b6f5b0968f8793c1f86e9e3c41fe4069e83807dd54ac501f29e2252716f14bc058fb1e846d02fccc435
+9a8364e579fd77302f1d69e2431c1898c4f8d514aa51ee39d86ba43eba716c890d250d58a3bb0cdecfbf1e72c8add73672d465b358f1246e518122b9
+51171e74de95a2e7842cb53f2103fb33984769d60c315f6fef96e9a0dd9ac97fe89ba40877604e9c238f03571cf158ab64a1711ec2bdd8fe933be42e
+11418e1e983222ce1e0ae541a40694dec1d5b600f7a99f367b4078ad189f14c22ae7669c1ddfab628894c1ee4328b7796d05dbd367214bf7ee1ae532
+cf7a8e8bb767db10d59ecbf15257346a01ef38f2e9cc2e9209dbbb5699b1d1df740c6f25540d6f9a15512788f8e5cd4bac41c7b2bb489b7dec4b94f9
+2d5d36352eab0fd3fdbb45b52fe88b2889c442a443e97730662b6fc1580d28d9eec7e128b65aa2628c47a570b36a2be4342a0742eac12dc3c9ac1e73
+a29cc936689163a81df05c471be745d6551f4554cfc5b5ee9e6191716e4bb812894d75f619261e4ceef587ced18eab54eeb9bc0e7563019f25ca507d
+619132a92aa81578bf94b0f5841abd77383c8315923222ce726de82d8d61f1a3e8abef4fde89bc12055162ab15d62ae31dc66ba434fde52dd2cde8a2
+043c8a585a399ce5220d6887c31df53fd8718edaf87cd945d9f2e28e322d486d02bd7ec8a4983e931c88f259cba490d26f0c26144c0779f17b3d65a2
+c8d4ee09a74add839b319b24a302f29e423d58120dbc0fcbf4e00d8512dbdf2e948a29e22786175e417112a9491b2bd9e9fbc9558b56bd6e9a44ae70
+e1386dc637370410ad8a0dc786961a6de9e6ed3e789d73b758bf13473ee947c359434b62c8d4efc3882eb263607aba12c27e72c402361d5ebdc2aea1
+d984f875a7f8ae146b2a65823edb5f190bfd159625fb1275a7d1f1a6dd398f4b6b2de179f53122ce726de82d8d6aeda7e6affe41dc87b5575f7c5495
+7dda3df756ff2eb12cf7e5098dad92c26f039b1715789de1603b5ef7ee1af551b416a7eed101ce5ed8d1e18e322d480208a13a9d81b152e965cef445
+cb8bdd9b711660224b4862fe3c282a8ee9f78938b940cc968f7d9513a76d97f23f5b3f4b1cad1ad4b1e80f9f76b1a24ef2ed08bb4eee723b601e6ece
+4f1c3298c5bc985bbb50bc27a704eb3cfc7165872b250859fec712dec6bd0829acacd47767da47b24ef64c0b3da816905a190774de84a4e5896fbb79
+6c11d169e52112be0e3a153194f687ceb18ee462bc87e747776a0182238f4e1601ea48e81ffc1465aad3b4b5a92d8f447d3aa719925d58ee5b00ee41
+a40697dec1f1eb43cd84b75f4d615f9829d621e950816bbc32b6dd4ea8ad83c7684fc3174e3997f369685eb9ef5d9b52b416a7eebd66cf3ab5f1e28e
+32422e794d9072b7e998328e4cd8fa5e99a7d9e869107c265f0d25df7a3e3884e9e1c4058c5dcc989f6b9260a867f19e423d581274af0dc6f4a44396
+09d6c833928b6fe304af7f791e1168c94e043ed796b4d71ab14cab279d46af79d61102ae524d0445e9e577bea1d11e6ee8c2b25e02917da85895276e
+518178c4530a0a60de8a84d8bd07b7736c5db540d1087dd60727143194f687ced487e871f0f8a5086c504888268f03571cf158ab64a1711ec2bdd8f7
+923c8f4b38219833935549a60f25e23fc479fbf7f5d8d84fc28eb2100547459a29da3da939c126b233ecab48a9e4b2df621d9f504d76b7ef6f235eb3
+df15e33cd86b8e99e528c559d0d884f51b47206805aa3ac3e9ca3c851888e50acbba98d71776074e310464f37d346b94f3ebd407a97bd685876ccf2c
+a928c6b7085b3f7d14b840f4eca91f950f96ea239a9475a25bea58071b587ace48483598dfb4d8089e50a365995c8a33a8717dc27b250f4fadc756d9
+c7af2f69efa39b7a2ba765b44ffe490276c44ac348390f66cbd0a8fd880aad675c51b80bc50827975b7a410aabd684cdb1e18219f5beeb0974700198
+25c04b1b0ccc53b223fc0f7bae94a5f39831e42e1141e279af4c44b51a03e465e16eeda3899cfa50d881ad126e6741af34dc25a7458825bf2bcce244
+b0cee8a20466f751472adbdf20684bbbf954f8359d6fcf8eaa7b8363d98a9dee584132253da33feeedca28da2bcdef6787b588de6f0c266e11486fff
+165142ee928dc80ded5fd285c8258660806798f627643d7a04ba1c87eca00e9e5cdbc4298f8d6fbe48af7b392c7212a92561529bc4f7d017fd5c8a66
+8c49eb6dfc4d7fce37374f6ce89b3ddfc9aa1a63f8adc9136a8070f34df35c4e528122b9357102619bcaaeffcd2c9a767c59fb14844d7597083b1f4f
+f491fba2988de57496d1c26e120d4d842ece525718db53a13ea84637a8f0b0ef9c71ad4f793ae179f53122ce170be22ac12fecb8a78cbb1d8c8b9f16
+5f751fa932d03a8d71a142d955f4e444baa8c1c3680e9a17157898c46d3c5af9c311f03fb716a7eed101c75fdf9987a75257006704b93bbba8d128b5
+02dbeb569cba94df3d422e247c097ff1321138a6f7edd70ee10fddb3896cda6e857baef93844306c13ba0aad91c162f975d4c4249a8821ae5eff3e6a
+682b6fcf5e093c9285d1e22b925da4629b5cb80bac7479fa514e682284e677decef8156ff8e8933e78b57db24bfa0e082aa803f353160d6edc8a92ff
+8c3bbb64267cbe14894b6fe20527015aea91eba39889e574bcb1b8327577518a3ac15b1341b11bb424ed151dc2bdd892f4568741382d9800dc4c43a2
+156e8842a40697dec188f841c084f3115e7a528f34d020af51a242d95591822ed2cd84d87d41bc585076ade97f2159bbee54ac7bdb7ec294bd338b55
+cf88c5c95a4924253ba62dfeead43ec05188fd5687a794803d1a7d3716206ef1702c23a5faf68f3da45cd795847d9b7dec6e9afb38516a3b18ac1e89
+dca118841dd6c822d5b268b844ed723268453bc64d042892a19db872d436c70ef141ad70b96b7b890c21005be2815ec3c0bd1520e9bbcb795c9170ab
+52f1003131fb42d2501d4b3a9bc2a0e79e2afe72665cd169e52112be625d1455f9d684ceb1e1821995bda503110d28e244a6371e0eb868b423fa1a70
+ae9a82f098338b537726bb118e4c589c0b08f3168d7bf6b2a6d8eb43cd84b75f4d615f9829d621e950816bb633eaab78f7e48d8b6401de47493189f3
+241b4fb8f915f63e934cc582b46ddf5fd2a88af54f571a7b01bd03bea8dc34c00086cd5e98bd93d7785f33675e0967e379782e89ffa4c405a9069e92
+867cb149c501f29e425d373b2eab01d5f9af0ede28caca249e964da243ea6d0c381469fd0c1c3392c5b4c118bc53a22f9e5da533a87164c9736d4178
+f9800cd6cfbd5554fea9d83279b878b558ec751734fa769e6a11186ed9c8a4abd06fb876644bbe4089467f9e4b311f5f97f687ceb1e18279faf89813
+7476408c288171110eeb58b229ed1556b9c6beec8e049e4b6a15cb04945d45e70b07e027c127f8a2a69bef49c386f35e0b4745942fde29e256e72db6
+2ffbf942beaaa0d97f008944732897f251666dbef81df337d83f93c7be69c743d9d88ee95f0d616e03ab549e81b152e965cbf4599fbd9fce7875074e
+316102f5723c41ed928da862c446d8d78677cf60a97b8bb73f5c347577d667ae91c162b619d9df32898172e56efd7b363c1d5ef37c402b9bd9bdbb72
+d436c70ef14db820fc252bf42f2b134aea8a50f2fb883462e6add82378af61b74fc2246e518122b959160f0db2adc882e426b8376657af40895b6b97
+1f3c1455bd9ce1a9cc81e565f9f8ae097f0e2be244a6377e04f758a120a80978a4c092dd8f3e83423875cb0293575fe93822f32ac06a94dec1f19229
+c087b816473445942def21f454883fbf2cd7e507e6e4a2de7f1d9b595c1b9aed361f54a5e710c534eb76cb90a867d944ec9782e94f0c697902a02ad4
+ceca3a8d0988b117a89283da701a20295d1f23a0307879c9afa8815be40690a7876bd234a56795be413d581274d602c8fba907d01ed7df33948951a4
+5ea33e35270c6fcf412735d796b4f20eaf4dab698c6baa3de64f64d537203544db861bc0d8b70974dca7d2397fdc39a952f05a241efa4add59584127
+f8e2b3ea802af0796d4ff350c008368445665d1badd6a7e9e887f879e8b1a409320e28e244a6371b07fb5aac6ce71544a8c6b4fe937fd3076c279b3f
+921844b55b06ee3fd960f398a6f29129a5e1d27e063911a01cfb0fd72ce11d957cded9728890b4e62d2cab7b6411b5c751721b9ee507e53ad36b8e94
+b361db10da9799a7544227780ebd3bf2e6982b8c0dd1fe4598f486d378112e085e0e78f36e3d2e89daf6d304ba5c9e9e9b38df29bf6999fb2e505b12
+74d667aef1ae4bd812d7df67948a52a85fea7b396817698058072ba7c4e79f21fd03f327c801eb31b27c2bc934304168e28118decff62874edbcde24
+25bb77bd4efc5c023de66ac24e171c749bd0a9ee8345d71e0131d269854e3bd218245f79f287a091d19be272f0bdeb1373614fe144a6377e619132b0
+2fe9177be3d2a4f59e2b87487660c27af53122ce726d8842c87ceef98a97e30efa81a81e497854db609f28e614db2eeb7cfdf857f58a80c66841a85e
+5b3199ec696806f7ed15fd28d8248e82ab788578d99987f353662079439937e4e1da37854c95bb518ab882de265f6b3448464ff96f2c2a89f8e18f3d
+a45cd795847d9b7dec6e9afb38515b1274d667ae91c162991a98ce348bca56ae4cff7139680c73c542483e84dbbae61ebc4fa169d67ea223b57a67c2
+7b79414dec830dd288bd156486c1b25e02fd18d234f648470bfc44c25d1f0e29e8cfa4e7883bb1795859a9149f736bdb1909514ff59ae0e7de87f930
+c3f4eb177a7655cb24c11e0709f149b364db0f78b9d5b6fed30c8542742d9f1f92684ab50f17da3bc17dc3fee89cf400c58efb074a6645d50bd63dee
+1ac42ef028f0ee49fbb480d97941a85e5b3199ec696806f7ed15fd28d83fcb89bc28ce5ed8d88ee95f2e480264c6579e81b132864cfbef5899b596de
+333d613f0b2c44f2763d2893e8dfd107bf729e83807dd560aa6789b7141871775db60087e8a902820f90f833949660ac48a15c38304b5fef4e023e94
+dfe7ea0bb14d932ed84ca470b57e2bcb75120858e48d12d288ac1365e2e8d7795d9d62b25ff34b4765a84dd1500b0e27decaa5ab8821ba376d56bf6a
+e52112be625d7832f499ae94cc87f971fbbde52b746b4ab92cd6721e06fd489b3ce4094aebd5bfffdd0c9a486a298c15d27444a81036e032e166f0b2
+bba3eb4cdeb5f5214267589931da6ef310cd25f00fece455baa384854100915c7a3982cc65265ea4d004fd29e031f88eab61c95cd9d8d6a75d452d78
+08ef3bf9ecb252e965a1923ee2dd98dd3d2c7a284a096cf5320c3986f8e1d327a441db84b368d73291289af92f14026f12ad0fc0fde63f821ddbce35
+b78d6fae5ed46e3b3a2535f6451b3295c7f1910fb55aa027ab5ca422bd7f6e890f360048e89d32dec6bd085bfca4c90a25a278a854fd420278b50bd6
+5d1418629bc1afefe746d71e0131d26989467f9e615d783294f687a2d68c811995d1c26e12674e8539c650020d9232c945817272a5d0db91f456e72e
+112484139d540ba30905f608c263f1a5e8c5bb63c386bd1e4c3a659338d22ba92bdc39bf37fd812ed2cde8a26409de5e5b0d95f37c294cb9ee10b12f
+d57ac0edd101a239b5f18ff55a53026401a02cb7b598188f00c7e904c5b283d4702d4905105932a030787ad4aba88159f81a97fde111b249c56d97e4
+2e5d373b2eab01d5f9af0ede30d7c82c9e8055aa5fe87b23684526805c0429d7dffcd415d736c70ef121c239ba3862d40f2d154ae3bf12c2dbf80f68
+e9a6b15e02fd18d2349642083be947904c0d0774de84fcabc522bf636016a80982006fde083f5912bdd5aef688c1ab3bbce9e247312411c578a5377e
+619132c945ec0976bcf7bef7922dce1a380b841c934a18e91d16ee26ff48dcfffacdae0c8c85ba03433a579732d03caf4c986bfb7ca9bc12fbeec1db
+78038d520174dbb0254232de827d9852d873dd82d201a239b5f1e28e5f56207c2ea032f8fa9866c02fc7f55182b3dfef751a6322162464f3771b248b
+f4f6ab62c426b7fee17dd524c601f29e423d34770eba07c1b88b049e1ad1cc69a89060bf48fc30032d1976e3440d389c8bf5df1ffd6aba6e945be519
+af4c6ec63629005fe8c70edbdaf15b74e4add55d02fd18d234964a1539ff68df50171927868482e48329b770266cb305814d35e30e351c3194f687ce
+b18de763f9b1ad477277758239ce502704ed48e038e01e79c1bdd892f456e74b772b8a1cdc555295140bf56b902fd2b8ab99f770c089a212593a7293
+3ccd2fe40ccd39f03df6ef07f3888ec86c03ae5b49219ef2220b53b6f915f22fd86d94a1b166cf76d58a98f3784c286709e77cdffdd53a8e03c1ff65
+84bb85eb7c0d7a65114864e23c142484fae8f107ac56db85c65bd321be6998e32e466b5d14b10ae1f1ba18843fd0c22b9fcc238348ee7a75615111a9
+256152fea2f8de18bc53ee63cb4ceb6dfc7572f5342b150bec811a9780aa146ff8e6eb38789d65b252f10e4a78e552e253171f29ebcbb2e29926b179
+211696018b4672c31e30141bf28daef688d8811995d1c26e12684e882cc31e1f38f949b46cb55b6788dcb0e9c71987497c0e82028f4c68af1208e563
+8f47fbb6acdab22aa5e1d27e221d5d943ede22a711db07bf33f3e249bc8595e6684fc3174e3997f3694232de827d9852d4798e8f8869d9449c9985e3
+1b49385902a02ab7fcd03e8e66a1923ee2ddf8b271106d2654487fff513d6bdabbaccc129f40d183c648d433a57c92f825147c3b158f0fd5ece63b9f
+0fd1df2e948a28e578e17723427112a9256152fec2f291138d5ebc73d66b8d22bd756e89172b0e40db8a1dc3c7aa4144e3bc932364b974f21da10e57
+76b00bc4541d0527d2d78de48224b7796f79af2d890826971f26045ebd9ae0a3b2e1821995d1c20275602be244a6377e61f15de028bb1f37f794e2ab
+dd309c07713ba71f935342a91c25f506c82feabfad969129a5e1d27e221d55893cc80de814c739f061b8c848b7ab939823098c58450abcc2247a0ee2
+a754a56e913f9ad2f102a239b5f1e28e5e48326e04a97ef3bbdc7bdc4c9fae179fbc94d51776074e31610299782a2a90d8ebcd04bf0f83d7ab77d72f
+be3bd5f1395b3c493a9d4695adfd47d04d809e6bdbd031e22786175e417112c5420c51fea29db872b851aa0df121c259d5716d87182b0f4de48850e4
+dcb90f65ffe6ed3e789d73b251f65a1e1be04ed357580a69df84aee5be2cac726d56fb01824c3bc304242154eed1d4e786c8bb30fdb6af47756b55cb
+24dc6b191be85ab722ed1f37aadab5bb93309a074d3c821c8f1662b42d0df222cf63fbffa09dfa4480c8ab1b593d118f35da208d71a142d95591ef55
+bab3a2c461008c171578b8ef602749e4a51af42c952f80d2f4289b1e89d4cbb71511680164c6579e81dd358466a2923ee2ddf8d27b5f4d28560e62f7
+320b3f86efe1d245995ddf948d6ac860b8609ef9413d581274d667d7fba9079c54dede29989068a443a7375d417112a92561529bc4f7d017fd53a027
+c5089824b36a6ac03e6a3559ec8c1bc5e4b11565ff93cb3b79a931b44fbf6a1539ff42de5b560562cc8ce3c78421bb352103fb33984769d60c315f6f
+ef9eeda2caa4e27ef9ab901777767ccb708f5219629132c94581721ea2d2f1f4930c8d557d2d85509d564fe70f0bf11bc27cb08de8c6bb108c9cb312
+451e38f254b6478e71a127be72cee254b2a68dce2d52de435a2d9ebb2c2455f9df1cf838d671cb94ab289610ff9785e152436f5d0ca32db9cdeb0ba2
+03d0cf5f82b79ad5780c7d67571a2ba1326d70c7f7ea8f28a243d185c8259b24be698cd424583e6977d667ae91c162f975d4c4249a8821bf62fd7730
+21163b9d0c0b3e99dff1c371d436c70ef121c259b57e2be4342a0742eac128d6c4ab5554fea9d83279bb63b25af6404765b50b927e171f73d4c9e3ab
+9927bb790231d269e52112be625d0574ef96e9aed6c8b630cabda813747613c523ca495f0bfd55b429fa554fe79492ee8f2d8b496c0b8a1dd26e42a2
+0c14ee39d95cf7adadd6c209a6e1d27e221d38f254da22f41dc12df01ff7e541b2a3cffd6c038d197c2a9ae3693a74a5e213f8359d2293c7fa45c445
+cf9dc9a74f4c246567c6579e81b152e965a1f75888b59d9b702f613418552bc3792a3d8ef8e1d2459866edcdaf7dcf0da37d88f2075b327a09b601c9
+b0e161f975b1a24ef2ed08c259c06c3e2f11758011480d92c8e0de09ef11a0628f00a600b36b25ff77640c7be29c50ee81d2720985c1b25e02fd74b5
+5995276e518122b93571076995e2b3e4806fe3377c77a9098b41758c4b381f15c990aefa98beee73e8b7b955356a449c65cd51031cf7569023fb554f
+e794b3f4892b814a4827985ea51121ce726d8842a406fbbbbb9d9129a5e1d27e221d3897339118ee0bc129bc39b8b607bda58dd86865f73e2151f289
+052d55b3817d9852b416a782b66c823ab5f1e28e32412d7808a638b7dbcc34920dcffe19bfa690d8780d422e560d78cb6c3439babbe5cf0fed7cca98
+9a79dc25e25c89f62851235714b10bd4c3b807822196fd2e888d63a748af6a3f2d1611a9256152fea2e4d21ab153e6618d46a824b577658f7264325f
+e29d1fd0cdf62f72edabde25479d7fbe4ec45e0b2ad505e6550b0265d7c1e1b6cd29bf7b7b5dfb05824c32bd625d7832949ae0a3b2e2821995d1c24a
+36246e8d2b824d141afd5eae6cdc1a65acd1a5bbbc2d9c486f3bcb58bb4d4ab51f01e562a70697dec1f1f2468cabb4194d7d56d50ecb2ff31ddb659f
+3afef844a9a184c54c1d8c585f2bdbf4642d55dd827d9852b416c288bb69c710dd8a99e84c6b2a2b50ef2ef4e9d437c80addf5549fbd9ed53556044e
+3161029915512788f8e5cd4bac5dcc989f3886609f7c94e52a53343532b908d4fbba0e9512f9d935949372905de36c0a427112a9256152fec2f29115
+b24bee668a5aa427fc6c63c2354e682284e677bea1d11a72fea7cc7736d455a95ce847093fa645d54b504953c9cda0e58a23bb352103fb019e5a74c0
+45121857f19aeae785c8ff62e9bdf04748704e992cc85b5927fe5db32ffa1e72a5f5a3e992289d7c6824992ddc050ba60916ee3ca70697dec1f19229
+c986bf7d221d38f254b647ee1e8863be33ecab48b59782d9680a9017472adbf463386bb8f85acb7b81228ed7f128ca5ed8d885e84f04694802a138fe
+ef9608940ddcfe44c58094da703c66225b032bf1723c6bb2efedcd18e366cda38d79d62dad7c9ebf3b58233254ff1acffda661f975b1a24ef2ed08a7
+42ec7f3b680a7ecc0c557bdfd9fbde0ff36fa174915ca23fb238268718311359e8810af4c9b55543cabada3a6eda41b44ef65a0e37e602ba3571620e
+b2adc8828120bd766418bd0f9e5f7ac50f744c1bde8afcb5dd86ff53fdb5e5245d7640862881721807f36da52ffc1465c1bdd892f456e72e11248413
+9d540bb51203e93f8d32be94bd8ae945c29c9816463a72bd2fde23e256fa22b734ecdd42b8b08ed90766f73e2151f289052454b4ea18b13fd26be888
+aa7fca42d8d8d6a75d4b337c0cbd3aadccd72fc81ecdf71ed0f49dd47e1e62675c077fc2753f2393bbb98119a448d683d25cd434e47a9efb623e5812
+74d667ae91c1079f1fd9c7679a8a66a748af237725196fc802092f96c5a6991fb24b9c6e9f40bf7cfc7c64d31d2b135cec9d1a9ea2d1720985c1b25e
+02987eb85cf30e062afa44c76e190f6eced7e1b6cd22bf636016b609820058c219261455e9bcefaa96bee275eba8a4156f574891288166585ab41b83
+39fa0972a5c092fa9071b84e7d3f9b1f8e4c78ae0101af12823db7f7e2d8ab0e9bddd17e221d38f254b647eb17cb2abc7cf9f955b4b3a2ce631b9b45
+0865dbe369264fb2f954ba7beb7acd93b77a991ed29d9caf5645356343bc37f9a0d9358700cdb217c1f490c96f107915590c62e56f746bcaf6e5d503
+e34cd184c079d527a06dd2b7611430690fb019f5f9ac02850f91a14ef2ed08c22486173b271b7acc0c1c32878ba9911aaf4da170bb4da524b96a2b8c
+7b120448f9800c8586b61e77a4a5da2363da62b253b74f093fe44e991c524b368988e1a6802eaa7f265bb413c44975d00731581bb7dfbff591e28219
+95d1c26e120d4d842ece525704fd5db41cfc5b2aebd5a3e99228ad42763c8e02dc130b911e07f524df3db0b9ad8fb34dcd9cb359587d5fd33cd129eb
+1d8860f06eb6be0efbeec193214fd35a492c93ae6f2748ffea1af637d83f85c7ea269e199cd2cbbf122e480264c6579e81b1378f0fc9f71799bd96d3
+692f7a6705486ae26e373ca4feead50ebf0f95d7be7dd834a37ac9b92551263310be1acfb6bb029e54d9c520978121e60dbd30626158318014447bda
+c6f5c513f35ca174d049a537b07d2b8a7b764f1ea4cf549790f1710985c1b25e02fd18ba4fed411076d844d9520c2a278684b5e29d74fe767a4ab417
+c27874de0520331ba0dfe2a2de9cdb64a7f8aa15696b56c51dc057191cdb1bfd6cfa1270a3c081eff756e72e1141e279f55959b51413af08c263f1a5
+e8c5bb44de89ac3444785e89669f2ff50ac73cfe0af1f84eb9a8848b304f8a455d3df189054132de827d9837d27ccf8bf86cc243c8ac93f31b196158
+19a02cf6efdd75af0acee85499b194d559167d336c0d73e46f782a89ffa4f21fa25ddf908d36f426aa7b98e52e513f5f14ac1af3fdb01f8327c8c735
+a6ee08c22486175e417172c60c0c3284dfc0c90ffd4ba6629622c259d51102ae524d684fe49c0ae3d0ac5550e3bbd223629b7ffb00bf4f152ae75cf3
+59161f62c984eaabbb2abd63674ae94e824d6c9f06350553b38ce7a99089e577f0bde24731240cda7f831e5a05f94fa862eb1464e3d5bffc913ac707
+3268c641ce1121ce726d8842a40697deac91e854f890af597f71498f7d826ef40cda22be3bb6ed48a9a980df254ddb19183e96a2206849b2e75adc3a
+da71c793ad6cce19b6f1e28e322d480264c63afefbcc0f981886d85887bb839b205f6a35591f48ff703739ed928da862c426b7fee17cd233b85c83e3
+6562386814bd02c2b8f54b840ecdce4df2ed08c22486175e2d167faa256152fea29db81eb14cab0df121c259d51102ae3a361344fac128dedbb1196c
+e9e886776d957da85895276e518122b9357102619bf7b5e49f2eb9722677bd069f4b69d20e3a3552ee8bdaa2c09cf830fdb6af4748704e992cc85b59
+27fe5db32ffa1e72a5f0b8e8890b8b5f6c3bb000904a76e70f0ce425a70697dec1f19229a5e188034466509c389101e11edb28a239fde563b2b795ff
+68178a44732897f251666dbef81df337d83f93c7be69c743d9f2e28e322d480264c63bf9ecb252e965a1923ee2b19fdf1776074e316102f5723c62ed
+928da862c426d791c876d434ec6989e524431e705dab06c2f6e8289f12dec220d5b775aa59ea6d79071e7dd34f1a3e92c5d5c309b248bd27c508ad31
+b06b6e873e2a052184e677bea1bd1773e9a1dd7758807ea95cf84b4917ee4dc35f0a0e62d5e5b3f98238ad4c7854a93dcc5c73d2055e783294f687ce
+c88bea7cf0f0ad127567558222c1165e629132c94581721e98c0bee99c388b09572e8d039f4a4ea21525f339c278ed8cb894e97d82beb20442765d9e
+7d826ee119c438b55691822ed2cde8a26409de645c3789e16b2d1598ed12e238cf7acb899c61d844e89d93f34804206509ef0de3e7ca3a870986d451
+8da792c9781a6003511b7fc479203f94c0f4cd19900fca9f8d76b149c501f29e423d584809b01cc6ffad45bf1aded824898164a569e66d231c1d63d4
+5f332b9bd9c99f2db44ca765944deb6dfc7e6acb28216b2284e677bea1d11e6ee8c2b25e02fd18d258f14a4e528122b935710e69dfaecb82e446d71e
+615efb0f827b78c50e311f1bfc91eae7cc87fb40f3abe53d3b3a01db6ddb5612069232c94581721ea7dbb2fa917f8642712f8304dc050baa1a10e965
+cc6dedffbc97eb70c39bf52e0b39119932cb3ae815f824a372c1a22dd2cde8a2046692584b3997a07b215fa3e354ac7bd57ac780b07c8b1f9cc9c5b1
+312d480264c657fbe7db3a8c4ccaf44fb3f4cc9b69107e17571b25c83c756b90f2e0d503ed009ec5e211b249c501f2fb245730775dbd01dfc1e856d0
+11d9df2fd58968a505fb71271817688e75447b95c4e0c514b06fa174d671e25ad61102ae524d6842ebcf3dd8c6be1267a29bcf367f9162f578cc7e47
+2ce04ede3671620eb2adc8829d2cbf7b6410bd15824b6fde043a591297f687ceb1e1821995bdb81735464e9363f9570401fa57a56cb55b63b9c1b4a0
+dd3a9d57360a8408d26b42bd1e44bc6bfb6afda3a78aa90ec28dac5f5c7d558f35936eef1dc12cb828b1b007beb791854f008619783788e9782154b9
+ab49b10dd87cda88aa3a855ed98fc3e5545c19274dad31efd19160c009dbeb19a9bb89955e1062284a4836b0782a2a90d8ebcd04bf149e929b689502
+a370d5c339553f680dbe1cc2f6ab12d041989a4df2ed08c22486175e241778c140483998d3c0d912be54ee3ad86ba43eba716c890d250d58a3aa2de7
+eab70354e4a1d83c659162a81df05c4769a61eba3571620eb2adc8828429fe447c57a9018b4d35fb04371a5ef9abefb5df8dff30a1e5eb177776019f
+25ca507d619132c94581721ec2d8bef89c33ce576d249815dc050bef1605f523837cf7b9e08cf243c7c0f257013409d27d946eb6518861f06cb6be2d
+d2cde8a20466f73e213a94f8582052b4e054ac7bdf70d6b3b061c85b9cd3cbf74e48326e4de57ea6a68d51e965a1923ee2ddf8de731b044e31610299
+15514282e8f48f29a25790a38071d82ba26d88e46b09717912a73acff1ab00fa75b1a24ef2ed08c248fc6e79061976c5023e3284c2f6dd1efd02ee2f
+bb47a536b57f25f42f25154efec12ddfc7af3561e1ad9b2936d477ba51ec4b4e63a84ec34c562566d6c1efd88435bb373518980f824e72d045021057
+eed1cb94e8bcee68e88ba21d7e244e996d9e0d4c48fd48b062c61a7aae9a85fe852bce1a38219825924b5ba60c0ae42f8d6ef0b3e8d0eb4cdec69f1e
+58645d9a24f12fea1d8865fe7cbaab7c958bccf85d2ea979757ad2a0633a1ba7e706bf1fd46cde8bb971e551d19dd0a75e57312523ae33f2a6e83493
+05dcf25885f4cc9b4b1a6d33571a39be723d3ccff9ebd933ed049e80817ccf28ec27dba56714337405864e8ab8f95dd94798ce348bca4faa40ea3014
+271474d20c557b93d9f5c638b253a175f221c259d51102ae5221125ba3a71bd6c4ac1342edba9501628778b951fa0e5a78a068df521e026095f7b5ea
+992aad395b50b417a44d7adb1f3c5145a0dfe8a6d49bee39a7f8a70878654dcb2eda4c3f18b806e02fcc1a63aa9a92ee8f179e07773acb41cc0810e7
+170be22ac12ff3b6b0b0eb0091c8b8334a6050d510de36cf088824a27ca9bb17e0e48dc46e0e9217403d9aec782069b6ff1dfe7b803fc386ac608553
+d09986f71347347925bf7eb8a8d53a9824d8b717dbf8d18a3475074e3161029915512e94ebaae90eac43ca9faa79c96e8f6797f839146c3b3eb002c8
+eafb459e19cf8376dbc921a348ee7223202a7ad4450777d7c3f1d017a9579c668c41a47cfc2822ad524d682284e677becdab0b2ec4adda3b7f9c53ba
+4fb1681537e50b8d1c2e0e64cfcbb3b9c321bb60205ab418b40836975e785159f287d7e793c8e375f5bfa313323f018e3edf103f0df957b424ca1a65
+e5e0bebbc07fb8427b3c8402ce1645a20c4ce324d557befae8cdb700ce87a32e0b3f119338d629ef0c8866f034fde240b3b0c1812d079b56442c93d2
+6d3c52b8a27e9852b416a7eed101ce43ccd6afee485020650eaa70c1e1cb328200cdbb0acbfcb2d473196720163b7ff1683d38c9c8ecce1c8946cd83
+8976d825ec76c6b72d553d6818f65587fdbb1bde38d1d8339a8a62ae03dc772d2d582680042b3499cdfdd6558b5ea274d66d9800887d73d3082d1b4e
+ad800c9799eb5220a1e88a6c2b9162ab13db47142ce945d359563f62c3d0e1b6cd3caa656156bc4e8a4769da0a205919b8d1bea1d5caa730b4aaa408
+6f2a71843ec64a1e07f61bed6ca01365bb94b0f5997f86556866bb1f8f515fae140aa124df2fecb8a78cb570c39bb203427b5fd2749103e61fc622a4
+29fcee0ed1cde8a20466f73e213d88f0220c52a4ff15ff38d831fe88ab61df59d396cbba1b72246819a02ca5a6d63e9744caf44fb3f4da9b6a166a33
+504824b02e746b85f4fcf84be60fd692817fd334ec23dba5620f717e0eaf40e3f1bb1f9112dbce69b88b6da45faf23772c0a7ad76f073798d99eb872
+d436c70ef121a236fc5b64c93d2d0605de9b1fc3cdab5557e9a9cb3865b1428b1dfe400378ed58c0122f0e66cbcbafab9927bb790231d269e52112be
+625d1d54fe9ee2e7d687fc30a1f8bf0e786f09c247a6377e619132c945811271ebdabeefdd3caa466c29c52799595ba81544ee398d27f0b8bfd8b600
+848b9f165f751fb73ccc3ad01dc93bbf32dbe342b8afc1c47f4fce1e0866dbb0227e12f7ff1cf435b716a7eed101a239b5f1e2e47f45356a43983bf6
+f8d735c05188ce4382b882955a1a7a02491d62e06c3d2fb0fee5d104a307ce9b9a349b308f609ae5623e581274d667ae91c162f91ffcca339aca4daa
+5efb4932290874ce6f003e94c0b48c5bb350b90df121c259d51102ae52210f4f87e677bea1d1720985c1d73868957dfb4ad14f0a3da816905f3c0a73
+da8a96ee8c3fb1792857a940ce7d75d61939145fbff587ceb1e1821995d1c20268740fbc28ce4e1806b66da93fe1197bae94ecbb892d9b421241e279
+f53122ce726de438dd21c9b2a988f44e82bcbe0f5f340cdb7fe46ca756866ba712f9e642fbeacf8b2f32dc3d2151f289054132de8218fe38dc738e83
+b17bdf7fda9e98e24f047c2b458c31f9eed13cce3fdcfa438ea7dfe875107903511b7ff1723b2ec7e5b9810dac43cd92c138da2ea828caa16b5b233b
+4fd567ae91c162f975b1a22288942f9c48ee6e3826564bcf5f012f9ec4fa9146fd69ab648c47b962f2766ed073260e53d5cf5597dfb11f74e4e89477
+39d831b952e7774773a843d5551f03739b8fe1ef843caa586e5ea805980111be625d783294f687cedd9bfb3ecbbdaa17746a0fa822c3510548a51be8
+3bc61a7aae94afa6dd7dbb49793a8615981a02e71a0ae56bee60f2b8bacbb546de87b6256c5619c9688a62a74a9b7bfc7ca9bb17f2e48ed92d2c915b
+472ac8ae6a3a54bad933d3738c279ecbf839930090d8dabf0b0d4b0264c6579e81b1528500dbfe5e8df494c86d515922591864fe3c2c2382f58ea862
+c426b7fee111b225bf78d5c02e55217413f138ceeba1099c199896679d856db84885175e417112a925613e99cf9eb872d436c70ef14da534f51202ae
+524d6822e8830dd2a2d1720985c1b25e7b9770b751b7481236eb5fd95316432eb1adc882e446d71e015da810c26a74cf45021848f49de2a298d5ab76
+fdb4b802202444983d81701605fd159625fb1275a7d1f1a6dd398f4b6b2dd050994b5be93301e027d967dcb6bad6cd49df81b91b4e340cdb3bde22f4
+1d936bb52fe8a563b2b795ca630c9b197e3188e96e245ef7b654f73ad16ccbedd101a239b5f1e28e5242616e1ebf70c0edd92b8f0288ef5f8ebad1de
+6e0f20105d097bff72761d8ee8edc307a80f83d78e79d733a9289ef92f3e581274d667ae91ad059455b2a24ef2ed08c248e17a5d427112a9256152da
+86b4ea3c9871e331d81b8f70934a42e21510246fadad31e2e69c324ecbe8f91853d454886dc2246e518122b935110d27f8cbafed8428f0447c59af05
+9f065ee43b67351bfc91eae7eb9ce462fdbfae49596b59d809e05c1d0dfb4fb317f817659694a5f39831e42e1141e279f5315ba41a08ed63cb7af0b4
+bc91f44e84c1d17e221d38f254b647eb17cb2abc7cfbed0bfbb788d1684fc317581b93e17e727cb2ff36fe2ed37bc789bf4ac44894d1e18e322d4802
+64c657fbe7db3a8c4cdbe31bcba788973d0c7467054878f9663d65bfbbae815be31a92d79b71c125e251dbbd6b047f2e51ff1dcee2ad45aa5c928b77
+d5d10bc22486175e417112cc430b3a9b8bf7de09b35abc74d815eb2bd61102ae524d682284e61dd188f25b56e9abcf3879c73fb558e8064a2bf00790
+110b122b9b89b2f1c463fe746e18f140ba4d78c304264215f39af9ef989bf33cbcf5b81e37240c983786127d619132c94581721ec2d7b7bbd77fb842
+7b3c8402cf1645a20c4ca138d523befabb81b7008c9ba15e0734529d7d956ed11dcb3fbf2eaba549beb3c9867e17d217052b82ac2c6848ada2589b52
+b416a7eed101a239df9ecbad1b72246819a02ca4a6d63e974485e84fc7f4d1c864532e6a4b1222bc3c3b2dc7b1a4f70eae5bd185db36d525bb20dbe4
+3318713b0ea64287b5bb11d950b2a24ef2ed08c2248617342e5831807a0d3883c4e68255b35ab92fd85bb37cfc3878de77644158f7c65297cbbe5b2a
+ac9ede347f9b63e813f14b1070a558c810584b74c288e1ab9e35f71d0131d269e52112be165e783294f687ceb1e1e77fffb9a747685455986d921e0c
+159232c94581721ec2bdbdf49e3e820779269226954b0bfa5b02e027de6a94dec1f19229a5e1d2114466119239c762a708dc6bb932b8e257baad93d8
+250c9145463d89f325685fb8817d9852b416a7eed101c75fdf9987a748546d2b02a10db7b59818951edafe599f9790d627286135540c5fff4a312e90
+ebebd31f9d40d7999c30cb34e502f29e423d581274d667d4c8bc18ab15dcd31adbd921b85d85175e417112a92561529ecdb4de158e1faf699c08b820
+f2422b997b74415fe58a1097c9b60256e5bb9b6a2b8063ae58bf4b093c8222b93571620eb2ada4e58945d71e0131d269e52172d14b351f42cb96fde7
+cc80ee7e96d1c26e120d28e244a652180bf957e029ec1c72b894ecbb8655e72e1141e279f53122ce0055ad79d023beacfad4a85d80c8a04407204cd7
+7dc47aab49d567da5591822ed2cde8a204668502046e86ac2c330dfbbc09bd7bc62882dfa5248b4b84d4defa172e480264c6579e81b152e91799b702
+96f8d1c02f53383a144870a3306f36cbbbff9547f552b4fee111b249c501f29e363e581274d667ae91c1629c13dbca2bdb8632af0db23e043c1769c1
+4b0d75b5c4ec823f925da4629b5cb80bac7479fa514d682284e677bea1d1176fefa9d7777f9c78b856bf13471be745d6551f4551dac8b2a5a81c8e55
+67408f08854b70d90e27021bf28daef696dd811995d1c26e120d28e22bc04c5701b41ba56ce11537a2c4b0f28f2cc6427c2f8e03d5184fa8716d8842
+a40697dec1f1924cc38bba1b0b7811c67ddd7de323c116da5591822ed2cde8a2046692584b3997a07c091beaab07c12fce44cbbce955f63ab5f1e28e
+322d480264c632f8ebd937c01ceabb0acba7a1cf6e246b1c0a35569a155142ee928da862c426d791c868fa60ad669fb73b76717a13bb4ed7d9e631d0
+42989b679a8a65eb5dcd300d68463b900c1c3392c59eb872d436c70ef121c259d57425f132370849e18a5e8a88ac0975e9c2b25e02fd18d23496276e
+51e405f64e170627868497ee8e3bb1653a16b5059b006bf6450c5d1bedbea09e91e2821995d1c26e120d28e244c3102307b806e01aed1863a4c6e3b5
+933a990f680ac528d0185b85553da841a40697dec1f19229a5e1d21b05575e9732cd6eba58cc39b12bdbe44bb4b6eba20466f73e2151f289054157f9
+df1cf838d671cb94ab289610c89082e4502e480264c6579e81b152e909c4e852e1ddf8b21476074e3161029970761d8ee8edc307a80f83d78e79d733
+a902f29e423d581274d667aefda60ffa75b1a24ef2ed08c224ea7033427112a9256152fea2f1dd08b835c70ef121c259d51102c134364174a1cf1297
+c1b65b70eda1c92423a765b44ffe490276ca44c80f3c2465d1c1a2ff9e14ae7b7a65f24088473bdb45021848f49de2a298d5ab76fdb4b8023b614f8f
+47a6377e619132c945ed1573c1bdd892f456e72e7d268f59f63122ce726d882ec17cfbbeaed8c854c39aba104e3a7394258c0ac81ac22eb328ebd057
+b7b6bc8b79079b592251f289054132defb17f037d137c892b66bdf59d396c3ae1b422e794d9072b7e498328e4cd8fa5e99a7d9e869107c265f0d25d2
+732078a3d4e6cb0eae5bcdac9874c91de5289ff86b587f4d14ac07c5f4ad4bcd5cdeca2b888121ae43eb3e32261c32aa256152fea29dd415b935c40e
+f121c259d535268700032465a0d950868894344fc7e8ed1248a05e891dcd6f3e78cd78e06172620eb2adc8828429fe546756bd098b0648c30a201448
+b3badd97f487e47bceb9b2477a6a45cb1edb510509ff5eee00e7147c99d5a8d794318b5443388702a1185faf1e0a8b42a40697dec1f1eb43cd84b75f
+4d615f9829d621e9508141d95591822ed2cde8c7620c9f5b08309ee1686806f7fb37f93acf25e88eb66ced59ce8b9fc4534d2d6f45ed16f2e9dc79c9
+66a1923ee2ddf8b214166867500d6af43c2c2382f58ea862c426b7fee111b22ca36b9afb6b5c01740ef34ecfd7a64bcd5cfbde3589816fbf6eee736d
+1f1769cc483c34a1c2f1c60bb24dba579741a524f4706ec63f6a3144fe860adec7b6520a85c1b25e02fd18d234f3410439e40bc25d012e69df84fcab
+852abf732668b413855c72d805745a1bb597eba6dcc6c856eeb9a60235484e8426f95b141cf749e066a84e39fb9ddb92f456e72e1141e279905748a6
+1744e41bc27cb2f7adb7f50091c898025966549529fc2fea42ff24a230fcdf488dad84dc7d008c43783792ee786049b6f231ff3f9415a7eed101a239
+b5f1e2ee5d04696322a17ef8fa983eaf0281bb5685b0d1d34d107d69624835b02c782a89ffa4c43ba25c90adc8269b70ec7c93f2253e581274d667ae
+91c162f910d7c82697c46deb10af4d23270a7ac749461798c4ffe31aa473a7699d5b9020b06a56ad524d682284e677bea1d1172edaa1c83e699874fb
+00bf5a152ded21b93571620eb2adc882e423f0517a57b640d1084dd208201e49afd1e0a2cfc0e340f3abe53f372449bb22dc102e419232c94581721e
+c2bdd8929171ba483875cb26995b5fa80956af25c878b6b29897e80ef4c4fb127b7b42d50496448e71a142d95591822ed2a8cfe8620391450865dba8
+5f3c54a5ea13f475f170cd8cbd6cff51ce9f8ef31b197c2b1da32cbea8d935844cebf4598dbd969549176b2a5d4647ff7f330888f7ebd34ba25d9e93
+9a79cc03a36494e5413d581274d667ae91c1629c52ecc32e988f6fae5efc3e6a68493595266152fea29db872d436ab6b8b4dc159d51102ae524d6822
+84bc0ad8dab91c65a284d43860a670a271f640022bd35bdc4e254551d2d7a8e9812afe2a285eba0c9f4d11be625d783294f687cedd86ef1a95d1c26e
+120d28e228c34d12629132c94581721ec2bd82ef922d8f407d66a71f935379a60228e825c87cc5a7a48ac60efa81a81e497854db609f28e614db2eda
+5591822ed2cde8a268019a3d2151f289054132b2e510b851b416a7eed101ce5ccf9d82e11b7735641fae39f2a6f4348f07fafa4ea7bd9fde6e247e2b
+4a352be4743d25ed928da862c426b7878b79d72ce46e8ef92840387413f74787cbbc04821ddfce69b78b6ea07fee671b21167ed377183785f6bae712
+ae56ac6b9d08f670ba7967d43e640445e9c674bea1d1720985add53301fe18d23496276e75a50beb7b3d252a8d8487dea103fe5646798f2fa16158f6
+27742270d8b3cb93f7a6ab55cf88f147493514cb6b8f6c41359232c94581721ea2d2f1d89231884e7f66b8049d4c4eb45521d21bfe64fbbbad8cf44e
+8c89b5130b4745942fde29e256fb20b530fdff48b59480d9791ca547442aa6a078205eb9817d9852b416a7eea86bca5cd0d08df25547356202a176be
+82b152e965a1923ee2b89ed87c132e37590179e350313893bbb98110b025b7fee111b249c50197f828553d3b14ac3c96ade856d00cfbc32689de47a2
+43eb583e3a0b6fe34401379383b6e40bad5abc53975ab83ffe312bd966640f42e1e577bea1d1720985c1d2312b9d62890caa0e1330ed45ba3571620e
+b2adc882e43fbf7e7a4b97099f5c3b8a4b2f7b3294f687ceb1e1821995a3e92f7e6545c9618f1c2218e85eb218e70964a496acb7f756e72e1141e279
+f53122bc5931f13bc87dcab8ba8bf40280c8f93b4463548909d03cf4178a36fc5691822ed2cde8a20466f74c0a0d8bf0693a6fb8f907fe79913f8cab
+bd6edf65cc888ef57a562c2910e37eecaaf43e8618fdeb478ea6b0c9705d22671a246ef668142490fef6e019a00dc3dbc863990ca96e8fdb24433469
+3cad0385b4e849bc19dedf0f9a8a65e950a3145e417112a9256152fea2ef932ead4fab75ac47b923b33a27877916084ce59b2bc7d8bd0941fea5992a
+27d46af96ff6490f2cdd5bc0590a2a75d686edabcf1db770604c970f9b4d69f619395346b1dff5e5ea81ec78e894a4107e766099208d12574aca52a7
+24fc3376a5d0f3e6d155e72e1141e279f53122ce0046cd24da6aec83a78ae84f8ec4fb556771578f08cf3ee20ae42eb77ee5a707a0e6adce6b1bab47
+583d89cc692f19fbab56dd3edb6be288af6dd97cd99fc9fa17043a2921aa38e3c4d72c851ee4fe50c9f8d199511a68337e0764e43e2567ed928da862
+c426b7fee111c06280678cf239603e690eb04c8bb8ea39991bd0df128b9464b961ea797535543bdb0e3a3290c3e0e40bad5abc4b9d4fe97cfc3a59ce
+3c2c1567e2981bc5e4bd1c22f1e49b2c29a678bc55eb62082fed59fc591f492b9b8693e28a27aa516757af42912212be625d783294f687bab2e18219
+95d1c26e12614d9828a5377e619132c945817267aadda3e8b1369d533875cb0bf63122ce726d8842a40697aceab0fe41c8caf75709405e892ed06cfa
+54a242d95591822ed2cde8a2764daa585a2b94a22068199bee12e57bfc6dc3c5a524a139b5f1e28e322d480264b47cc3e7ca288f4e84bb15b9bd96d3
+695f4f35554a76bc165142ee928da862c426b78cca4cd432bf67d9bb6b161d7e1bab4eebfdaf498d50b2a24ef2ed08c22486175e335a4fcf5e1b34d5
+87b49329b458a673d864ae37fe6501ae524d682284e677bed5d2720985c1b25e02fd74b55995246e518122b93571626bd4c7a0e7cd3cb5726418e640
+bf5c74c50a331415ce94ebabdd9ce47eccb9b913685f51873ff2347e619132c945817271a4c6f1f2dd62ce163468da44dc5c44cd726d8842a40697de
+c194f443cd84fb1b0b29118836da22dc11f541d95591822ed2cde8a261009d5644788be1653a1beaab04f032cf6ce28eab7cf059e1f2e28e322d4802
+64c657feee982b8105dabb4383b19fb11476074e3161029915512788f8e5cd4bbd6e9ecac868f828ad7ac1d1225a355d14ad1dd3dba0029c1890db26
+92965afa70a6145e417112a9256152fea2f8de18bc53ee77ba08f670ac5b63c6297e2742e38b38dedaab0f43e4a1d733238470b24fc41c3a718222b9
+3571620eb2adc8828429fe674918ba0e88086bf54b20195ef3f587ceb1e1821995d1c26e12684e882cc31e0707eb7aec6cfe12648a94ecbbbe2a9c55
+7d269f339d5511901416ed2ff960c8bead8feb4fde9c8b18427a45d32dfe60d717db22a435f7e50ed1cde8a20466f73e2151f289602758b6e754e134
+ce5d82c7ae61d8729cc5cbc44e56336e03bb1df6e5820c8f1ec4ff63848298de6a0f61354c3864f9722c6397d9aaf104be46ca9e8776924ac501f29e
+423d581274d667cefee8438615cbea67949621bd44fc5c7e681975c40c183484eabaeb5be31ffe279946af70ac7778e5751e4115addf5ec3c0bd150a
+85c1b25e02fd18d23496276e34a67dd94f11096bde84fcab993dab720231d269e52112be625d78329493a081ca87e630a1f89d0278704e997f815012
+1fb04baf3fc9554fe794a1f48e1ec07e3142e279f53122ce726d8842a406f2f99c97bb1d8cbebe145f7b43c973d12bf050d824a31eb6d30bfbb48ed8
+4f41a71e2251f289054132de827d9852b47380a4b764c4429cc5cbe34945364802a331e582b152e965a1923ee2ddf8b214132013500168fb723d3894
+bbb98128a241d89e8f36ed21a07bd5d218641374058b06cefba305950fcb8b2889c430e51885175e417112a9256152fea2f1dd08b835c70ef121c259
+d51102ae524d0d05db860ddecab41e20b1e8dd36678774d13496276e518122b935716262d5c0cb82e446d71e0131d269e54d77c40e5e783294f687ce
+b1e1821995b4e5317277488921ca1e4a48fe5aac3fed711ec2bdd892f456e72e112d8514f63122ce726d8842a406fbbbbb9d9129a5e1d27e221d38f2
+54d360d111db22b230fdab1afba280c77e0af43e2151f289054132deee1af551b416a7eed101a239d9968f8d322d480264c657f2e6dc72ea65a1923e
+e2dd94d76e1a6721183b7fff6e392c82b5d7ca0ea14aca988648da32b87ba0e727460c3b09b70bc992c162f975b1a24e8b8760a741a77822261b6fc9
+430673de8bf2de09fd60e2278849b924fc7165872b250859fec72dc3c7aa1a67e9e6e83c6e9874af52f17e062afc58eb4c14195a9284a5e4cd26b837
+7859a914c27e72c402361d5ebd8be6a2d6c8fb71eeace5317277488921ca1e4a48fe5aac3fed5b72a5d0f1fe933bce42762cc27af53122ce726de425
+c90597dec1f19245c09bbe7d221d38f254b63ee419c427f83aede544afad8ec52546f43e2151f28905415ea4fb5ad334c531f88eab61c95cd9d8d6a7
+5d452d7808f47ef2fbc875ae0dc5fe19bdbd82d27f136b6705486df1702b2edcbbe1d21be367db96846cd302ad7ad5c12247387911ba4e9ab8ae0a9c
+0fdd90679e9771e569e66d23291678c5023e3284c2f6dd1efd02ee619944b835d61102ae524d6822e4895ed2dba85557e9a9cb3865d465b358f10e02
+2bf805e759191b68d58a97e29e26bc7b6d18e6408a4977c40e741455f9f587ceb1e1821995b1ad4748704e992cc85b593bf35eac29fc14799bd5a3ef
+8e049e4b6a15cb04945d45e71d0bf36bf223bea7a98aef00c586fb074a7d438875ec3ae80ac92cb572cbe042b7a195c4633f9f455c2ba0f0603a66fe
+ab10fe7bd4798e97b97adf1eea9198ee5948242b19a73bf9a8c83a921886cd5e98bd93d7785f33675e0967e379782e89ffa4c405a90fdb998c12b249
+c501f29e425d373b2eab01d5f9af0ede3ed7d374bfab63a148ec6a24130877d271482f9fcefa911db24dee58d408a770b5762bd73a2d1358a5bc0ad8
+dab91c65a28ad42f38b05eb957fa4d132bd35bdc4e254227dfcbe1e28b6fb2395e51a8098e447e971f3c1455bd93a091d19be272f0bdeb5a3b624087
+3eca1e1206fc1ba522ec5b72a5d0db92f456e72e11418216dc6b5fa80905e62e8343f1b8a3aafa59e081b512584f41972fe26ee616cc6b8328f7f946
+bca1cfe7620095654921b7e9622d488cfb18e3069349c794b16ac7559c8c83e25504127f02bd3ff0ed96178f03c3c956929898d5780c5537541a56be
+4a31388ef9e8c44bf00fd896846bde60a9669f9d423d581274d60bc9fce161f975b1a24e9e8a65c12486175e2d167faa256152fecefad571d436c762
+964cc159d57d65c3514d0445e9c674bedcb9196ce9e6d239789163af15cc5a082ae94cd5123b0469d5c1a2ff8420b0642418a905824c7ec5283b1f55
+b4f587cdb1c5a630a1e5f65a26391cd67092034a55a506fd71b5462af689eca6c062d31a2575d64dc10516fa4659bc769032a3eaf5c5a61d91d5e64a
+16290cc6608273ba459576ed61a5b61ae6f9eba22042de7f6d19a9d44e0d7a83ab5cc76e932f80d7e228fb019cbea2df7e6061264dab2ab7e5d92f88
+4c8ebb7187addeff780c77295b4846e5683d33ce918d8c46ed1283cad525867df135c6aa76096c2640e2539aa5f556cd4185967ac6d93cf610b2236a
+7545269d115566ca96a98c46e002f33ac515f66de125369a66795c16b0d2438a95e5460a85a4d4346a9831b358fe5c133aed4ac47f1705699b99e1d8
+883da87e6b5da84ebe5d75e40e260752fe9aa08fdd89f964febdaa1321474e8523ca5d0340fe4eae2ffc1278a59cb5efd455e72e712ecb1e934c0b92
+0f0ded388346ed96a491ed4584a4b4144a7861973cc62bf5548807bf3ff9e777b7a598ce7f41bd5f492a9ae3782d49feab00f93ed315a7eed161cd10
+f09788e657742d6a14aa2cb9cbd03a920dcbef5299f485d37811044e316102fc733b2a8bbbecd31bed129ebb877bda2c9c649aee2e467f5815be1cc6
+fbbc0e8246fec2299fa268b95efb5d3f21147f880e202e9acafade12b96da1688c78aa22a83a22ad524d6822e4895edfdaa85b74e4add55d02fd18d2
+34f3410439e40bd24a585627d3d6b1b1ab26b0734e51a913986b73de07305919c5a0c8abc1b7c946bef1f047726201893b8f4a1f0df61ba23ab23f72
+b8c0a3f48477c7077d268f7af53122ce7208ee28cc63beb5afd8a600c49aab4d6d7d5f9f1bd63cf40ceb23b930fca305839ba7c77430bc700a71c0a0
+652e1bb5ec54e533d8718e85bf32ef55cf8c99e8420c682b08a13a9d81b152e965c4f4548ab8d1d76b5f3367501a7baa5a312583ddedd318b96cd69e
+847c93629457a8e72e51354431894c8ea3e802965cd4dd678f8c64a50de3686d0c1d68d45e0722df82b4d415b935c70ef121ae3eb81202ae52210f4f
+87e677bedabd0f75fea6b15e02917fbf3796274a75a870e609565d298bf9e1d98c26b075674ffb23844976c44b725173c8bbae86db8bee7ee8d2c26e
+726201a822c1581e0fb668b42dfc1e64e5fabec9983c814e74688a1e981867a81805ed1bc16ee7b2bad6d848cd9aba145f7143db29d72be972a142d9
+30f7e846b7e48fc47a4fc3175c3198eb246131de827df83d9d71c190f8258b18ef8c84f55a43242521ae2de3c6d709850fc7f25ba8bc94d8765f6135
+185822b022787bc9a9b1811fa54ad0fde111b2499f7c94e52a53343531be1dd3d6a739951fd7c22bb88c64a846af237726176caa256152fedbf7d017
+b117a872964bbf39b376238e514d682284e612d8cbb91720e1b1f83f6a8631e61dd3410439e47bdc5d010e7595e7a9ea9f2ebd636d4ad169e52112be
+0d3b031bc2d3aeaecc8de630f5b6eb0e6b6548993e87530e2bf05ab276cf1e6388dcb8f7992d8b493061c250985721ce726d8842a466f8f7a18cfe4d
+96a1a8360336659432d36cae58c739f035ecee4af58a80c6684fc30a087abcf5626a1ba3e311ff51b416a7eed101a256d38acbd81704372b04a17efe
+f8d932921f80f2438eb9cbfc780b4a224b0b6efe78392593e8ac8842ed4bd1fde111b249c501f29e2252716d47961de6b0ea258511dace35ad856dbe
+48ad377729167f80041b2f85c2fad655bb56a063d05bbf22b5766c89372b164effc70899e6b91665a5e49b75799172b454f30c4e78e759904f0c196e
+d5c3efed8421ba3f7b4ca909824f35db04231449b589a089d985ee39b0f8e9146b76448a298d175e48ec53a52282721ec2bdd892f456e751361e8a1c
+895d0bfa5b548b42a40697dec1f19245c28cd17e221d38f254b62be91ca242d95591822ebeaa85a10466f73e213d95e4064132de8211ff3f9415a7ee
+d16dc554b6f1e2e255404b0167c657baa59800b65986ad19db89d1ef720a6d2f182e67f9723f6babf4e3c808ed07ee9b8961de328f6998ff2e141e6b
+09b603cee2ad0fd976b1a22e9dc442a443e97730662b6fc1580d28d9fffbc418b579a26e964feb31b27c2bcf2934415fe58a10bda1d17266e3ba9b27
+27d475ba49fe0e0e36a85bd1550a182fe8d0aef98c28bb395854ba19895a58d6083c1412bd9be1cdb1e18219f5beeb09747001c30ec0501101ff1593
+38e90f72b89a85fe9c32ad4f7d2b80509d564fe72e10e827de21d7a49c9dfa4dc189af12036418d27dcb26e216a242d95591824bb4a780c72d1bb665
+7878c6a068294fb6a526fe34c915a7eed101a259dad89fcf6974616a03ab7ebffcf009b042f8f44482a098d4735f2367501a7bbe4c37388eefedce05
+e401f3968f76d234b96c9eb77714693b09b70bc992c162f975b1a22f89942f8a5efc7b3a2a1462e1420f2e9bcae6e71eb150ad6e8c51eb6dfc4e6ec4
+2f2b1318a3811bc080e14239b5f1827b2bcd28e204a6174b78b112890541522eb1adc882e446d763406a8b4ead5b68d206361d42d196e0a2d99add75
+f0b7a80e6f7d01d66df95b141cf749f362e61e60e3d9b0ef95719c46762c841dd4151ef74b54b1678d3aaee7f8c8b20c8cd9eb471b2401d77dd22ff3
+108639b132fce44af3e9d49b3d5fce1b086dcbb03c7812fe817d9852b416cb89bc02a239b5f18ee95f2e480264aa30f382b1528502cc913de2dddc96
+3d245872165e25a041780495f9edd54b9e5bdf9b837dc9608d7d89f6413d58721bff2dc8f6ae029752ebdf268f8172e562fd7c3e3c396ed24d483a99
+cfb4e20fb24daf609d06873fbf736ec30f25134ce89b5ed6c6bc5b53f8a7c9366c913f9752fc45023cdc4ac25b1d1f29f8cca0f98c2caa727a18ba0e
+880873c51b740553f89184ceb1e1e77fffb9a7476f4c73bb6d921e241cf749a12bed555ba4d7bafe990b8f557f2d9f5ebf504ab51a07f52edf35d8be
+a69cdd49de9baf34437d5d9f759d06f215c925bf35fcd948b4b0b1ca7f1bdc1e2251f289652e1ba3c326c17bc977cb89d201a239b59484e45a48616a
+03a832f2a8857b9405cbf01fc2f4db9b5e106021510f25c67d3438c9d4f6c302b97cce928d7cb149c501f2fb245730775db008c1ebad1fd04198fd22
+98906eb91ea170323f5076c158007594c4e7991ab358a262d108e1709f7765c132234f7dec830d99e7aa1969f88cd2247f957fb858b30e5474a846d1
+48104574d2cae9ea8328b2722118f140af4775d102335f6dfc93fde9f79ae979e89ca2146f654f882886347e619132a83ef855548dc6b0f6987fd307
+5b0e9911915d05ab140bea0ad927ea9f9aa8b570c39bb203427b5fdb769f21e11edb2ea470b8ff6f8994cffb621c9743413795a9064132de821ce32b
+935edd94bd65c95cc5b482e95e45335d08a331f4e1cc22c05188cd5288a09ec92e5174224a07019915512e89ff8ea862a841dafde211b26de128a0c1
+7e1a67354d824ee6f6bc02dd3ad4c2299cc448a640e06c23291472d4554873a7c7f5c81eaf7caf64904deb1fac6c62ca323e044fa4e577bec1be5b43
+e3a6dd3e6cda42af5ceb4b1476c945c4553e076ed5c3e1ea832bfe7f7a48fb14844d75bd625d785df28daeb794c8ef71e8b9eb0e7524518a24dd4d5f
+3bec54b22def1e399bd8b0e2982dad467b208e59dc5c44cd726d8842c160fdb6a4d8f454c48da93f794411c67ddb2ff3198619bf33ec812ed2cde8c2
+6b4f9143403d89c85e181bb6e510b173d26bc682aa40f96092a884f45250286403ef73b7e0ca2bce3cc7e85e9fbd9ed5345143265f0662e4693c2ec7
+a7a4905eed5bd6928612b249c501f2fe2d143e6f15ba1cefca9845b10fcbce2a9988788744e17b363a2e7ecc430b3283d2bafc1aba51a7738d4cae70
+e2383c977b2b130be29b16d2da902950a289c8246e9973b744de40002de44ac26a1d0768d8cdb5f2c302bf706651af15884d3b894b63411be997eba9
+b2e1821995d1c201747601b4618f4e161aec1ba922a80b76a2c6a2b3993e9a46360b83118e026ca20f20e438ce6af0b3a996ef5384c1f2574f7b3bf2
+54b6478e71a122b67ce8ea55affea8d84c47dc75492b9ed06d3a4ff5a254e533d8718e97b97adf1eff9985c454482d6209aa7eaaa8de3a8c1fcdbb52
+85b0fbb21476074e310d65f4165142ee928da803bf5f90b69b6bde2dae6482d6255324771cad38c2f4a7089908c18b7adbb264a859e06c6466027ed2
+436252fea29db81eb35bc40ef121c235b27c01ae524d0445e9e577becdb61f0a86c1b23b649770b71dfc46062aa8169070170866d7f4adea942aac39
+4b50ba128d4b6fd2195e7832f190eda6d4c8e362ecf8f647786c40996dce501348fb53a13eb23d7ea5d097f28f2c9a6470218714d41a63b21605ef24
+c46bccb8a78ccb41de9cf95e211d389732dc2feb58c03ebd7ca5ab44b3a5938b6c019a174b309af2360e52b9ef32f829ce6bed8fb164cf189eb09eea
+5a4a2e6209ed779d81b132864cc6f443cbbc83cb3d107c6756077fb0742d26c7efecc405ed5ddb839d6ad560a9669f9d423d5b1274b60887cbbc0482
+1ddfce69ac856da07eff7b322c2b75c15c1b3398dfc4d415b956a060d849a534fc7664d37b070e45eb861999fbac1a74e9bb95047b9174bf75fe4d0c
+78fc43d55272620eb2c8aee88c23fe747d4aa905825c53c206744c1bfe97efb582aee27ef89ea2156870628324c35a5f4ad04ead2de6147eaf96f891
+f456e74e7e6888058e4a4ea90f2cf4268d7bf6b2a6f29229a5e188034466509c389101f511cf22be3df4dc46b7afb2db680a9a17157898f57e3a5eb9
+ff3ce4369348cf8bb35bdb55d99ce18e322d485819a02cf6efdd75b70dc4f0649bb194df4e116f374b0064e44c3d2583f2eac64bf00fd896846bde4a
+c501f2f225505b1274ba00c392c162fa75b1a14ef2c92ceb7bea763e2b147e807f183e92cfb4f314b24cba27de088a35ae716acb7b020d5287e677de
+cef8386fe2aed23025a765ba49fa5d490eed43d95f140e45d4cbb2ffcd2eb0732850ae0dcc4975d34b3c0456b3aceba6ccb8ea62e8f8bf0f7e6a2be2
+44a652180bf957e03fed1a63eb89f1f38832c0747d299f209d4a5fcd726d8822cb2fedb2a98ca169dfa9f3557d7159923ed32bd41dc93ff275b8ff4f
+beaaeba20466f7444d398fae41294384fb11f43f9d228e8ab97cc31ed19993af4841207f43823fefdbc83e850884bb7484ba97d27a515826541b25c6
+79302284f7e1f21ba84adadee211b249c57b9ef63f1a05740fae1bc2b8f54bc24c889b77cbd40bc2248617242d196f8e781d2999f8e4d41eb91ff327
+9549bf38f2756adf7337044af9c12ac2dab62870e9addf7b2bc63fee1495276e51ed45d43671620ed7cba2ea816fbd767a6ab40f980826971831104f
+b3befdb4dd85e97ce58aa4086f544099398f510548eb5ea13882721ec2ddb7bb9e3e9c7577279f5088504ea9716d8842a463f1b4a994bb49dfaeac13
+0b2911a838cd38ee1bcd38fe09d1d81d92b7aace742b91404670beee7925159cee0dd234d97a80b0f128c4429cd083f2560a0c641baa1afefadd3894
+05c7f519a6b596d5740b7b235d4835b02c782a89ffa4c91ea001f3989e7dff29be6d98e3225b3f2139b01a8febad0a8452fbed359a8964e561e0713c
+1e1d78d4431a72d795a99156ed11ff2ef221c259d57464c43a284142fead1fd4c3f84620dfadc921629774a813ca673462c158fb59012f68cccae9ce
+833ab339435da223834c7e99387d5154efdfa6afcd85a55df3aeae237276448839c6511946d55aa722e10f62afd1f1a5dd6fce46762ccb188955058a
+1412e40fc47dfbb4bc91f44e96acb4030367549a29910dc10ac926b572d4e448b09284c879008c1e0864dbad3c660afe817d9852b476c8c7b17bed47
+d8d884f51b4d32490cac35b7fcd03e8e66a1923ee2dd9dd47e1e62675c0179b021783882faf08f288b5ddf9a8d36f72fa363adf228403e695df54e8f
+f1bb2d871898ca299fc430eb42fd3e7a795111a9256152fec7fbd21ab11fad728a7eae3cfc252bc43a363344e29b50f6dbab1e6deea4c21b629a74ba
+4fc94b0b37eb42c44572620eb2adc8e7822cbf7b284cba128b4d6f9756741552efdfa4e7fb87e576f5bfe5317a6852c51bca561e0bf45e933ced1e73
+c1bdd892f4568d466a1a841f88166ab40801ec29c176d2bea69dfa52fa8db718487d45827d826ed11dcb3fbf2eaba549beb3c9df6c1d99525c76a3ac
+2c2b4ea5dd11fd75e4338e93b97acc55c8d6b1ae312d480264aa30f382b152e965c1fd17a8bb9fdd741820144c097ff56f761d82f3edc207a869d28e
+c86cd325a202f29e423d587712bc0fcbb8be2d9c05fcc235dbd921fb2786175e417172c60c3b3e85ddfdd21eae119b4eab128223977d72e334330f03
+c8810bda86931e79cfa7df3225a761ba5efa074737fa0be3590a1d6ed8c1b2a5b8068d2d414b9005956c74c0057c3455e892a08cdd91c87ff8bde522
+3224558328c1347e619132c945fe3d7bb2f0b8e9dd62ce161241e279f5314eab0801e82d8d5cfba5be91f845dfc68e3e782e788816da37c317df25f8
+19f6fe4af58f84d24e009a5206149ee6781b53beed00b87bd26d8eb4bd7add59df9d98a96e6d123124bc15f2f1fc34970280de599eb9dff078064d28
+5c0d25c135783f8ffeeaab62c426b7fee16efd2cb54c92e56b0971364cd567ae91c1629512dca14ef2ed08c244e93e210e1462e4451a7b8996b4815b
+a957ab69f221c259d51102c43a363344e29b50f6dbab1e6deea4c21b629a74ba4fc94b0b37eb42c445585627edc1a2ff823ded39665dac488f4969e5
+043b0515dc8cfda2d58ae769d0b1a5027a76778e21c05d1e1ce1159860a80d51a7cd95f28f7fc407300b841e9a514ce92d05ed388359fbbfa19bf745
+ff98be124f341bdb6d9179b251846bb33dead948b4b0cfea7e1c9b5a4a3482cc65265eb6f922f437d27cc793a126f119b6f1e28e322d246509c5579e
+81b13e8e08a2923ee2b19fdf17760722560c019a15512281bbc7ce05ab46d9d9bb6cda34a97bd5d92472307711ff1acffda661f975b1c221db8c73bb
+03ce6d242d1579cc55243299cef5c32db853a164915cb27e853837877677510bf9871bd9a2d1720985a0c92725b562a858f24c0b21c442de59191951
+dec8aee8843ba73735188d058f5c74c5587a1f5eead7e6b5c8c6ca63efbda605777d6d8223ca5f053efd57af2fe10f6ee5ecfdbbd06cde0b38209900
+d27958b41e09e327d443f7b9ad99e976c984b414426048d50796448e71a12ebe3892822ebeaa85a10466f43e2175d6a057180af7cd3dc9069d59c29e
+f8238b74d98b92e958040c7e19ba3ffba8fd238300dde85e84bafbb21413612459042bf96f192893eee5d504bf6edd83816ede60f128b8f82552387c
+538c1ac6ecad18de3ad4d2679496219859e06c362f1d35e95f203293c2fad671d436a761d846a424fc7178e63830144af9800cf6cbac1276e9e8cf3f
+6e9a1bd23496470178cb44de5a110c29e8d0a0ff883cf0446d4aad059e6c7ec4123a121be997eba9b2e18219958bbf086965468e63fd5b1604db7db2
+2de51e37f694b9e98d71ad616a298615c71847a81805ed6bdf6efaf7f5d8d84fc28eb210054250972e910ae20bd125b30cf7fc42a9cee8a204669645
+5876b8c67e2956b2ab49b133cf6f80a49e7aca5dd9d8c1a77862336a00aa70f9edcf738d0ddcf31999b59fdf7212266a4a096fbc3c2a2a83b2a88106
+ac5bd6d99a79d524a365d3ba395535344ff34ed5f9ac44c255948b2a9a9069e55fee70332715338d5e093fdb8be6d01ff416c40ef121ae3caf7d62c1
+7b070e45eb861999fbac1a74e9bb95136e8768b55ebf5a0f3de621b935716254cfcbb3ea8a2af0456d59b723aa5a7ada0e744c1bf58dfee9fbaef971
+f1bdf04748704e992cc85b593afd5aac1aed1778a8dda5e2dd62ce4f6a38c5318f4b4eaa1908f807c461fbb6baaefe4cc38bb203522f119732dc2feb
+58da2ab47ca5ab64b4aa87c26a41a856442bd5c4693b42b9e824fe2cd86da4eed101a258ce88c5c47d56206608ef63b7e0ca2bce2feee95686b1d191
+3d3c483559056ebe723d3ccff6e5d503e35ddf998c77d668e17a9af36714237a19f64287f5a91f9852caca299f8b6ce300fd7f33674a37805e093fd8
+99bd9d5bb05eba6fd65aaa3eb877668f7636004fa1cf0cd6ccf1520a85c1b23265901bd234fa4003528122ba357102619be7aee58b26b9395b4cba14
+895b35f60520187af492ddb7d186ab64f4bda56d120d28833fdf10342eea5aad29a84637a3c6a1b5be199c46752dcb5adc7b6db51a09e465ec61f9bb
+ad8bb31080c8b6165f7c1f893cdb66f311cb20f875b8a10798ab8fcd6408d061493488ae4d264fbeca1dfc08cd76c0b4a86dce549cddcbb40d146827
+4dff779d81b13e8e08a2923e82b2d1f87211682e5f4658e47d2c2e94b5c5cf1fa46ed79aa07dda2486618fe32e46716f15ba00ad91c1629c13dbca2b
+db8c64aa49af23772b107ad2162e3299cfd2d809ae4b8d6f9144af78fe506ec63f66482184e677decef81365edac9b2363917fd13496276e30ed4ad4
+123b2d75dac9a4abd06fb672695cf523aa5a7ada0e745b1bdeb9fca6d58da57ef9afe3317e6755843f9c10190def13ca4581721ec2d9b0ef95719c46
+762c841dd41568a81502e82c8359ffbbbbd6da4ed8819a1e465e588f29da3cd519cc22a52fb4ab64b4aa87c26a41a856442bd5c1623c5296e219db32
+c96bcb958a69cf59c98bc2ab312d480264c633f6fcd075920dc6ff5886fcdcf87211682e5f465df1702b65a6f5f0c82aa442f49e9c6cde329e699ffe
+3e477d3b3eb000c1f1af45a61dd4d869ba8a75a26ce6731d210c6fc55e3a3a93c2e1c252f135c70ef121c23dbd6c638929250f4fe282569aebb71566
+e5af95016a9862f57cf15a0e19e146fa550c1f62c9f6a0ef843aad3b287bb40e8a417c993d351d48b3bee0b3d1a9e27dd6b1bf137e76738a29c64b04
+419232c945815237e194e1b5cc76e42e11418e1e983222ce1e0ae541a40694dec191fd00ef87b51142731fa829de3ae20b8603b928fae45ffbab938b
+4e009051413fd5d378294fb2f85ad93edc7beb9fa869c554d98acbf353412f2b2baa3fe3fdca3e9342fdeb538aa094f3740b6c28400d78b835782e89
+ff8ea862c726b79b877bda2cec7a94f83f75256f5de24ecfeab851b615d6cf01929672bf6ee7773b2c5039f243072fb6dfe0d018b552ab698c0ae25a
+d51162c17b2a0e5fad9d11d8dc990f74acbcd33265fe18d234ed41082cc95fc41c454b4ed5d7b5ea832cbb39665dac48ce696fc30a371956f891fae5
+94c8e362ecf1f047696b4e9f0cdb4a5926f956a56cb55b3599dbbeefbc2b9a467b208615924c09cd726d8839c260ea96bc8ca173c99c9a035f665899
+28cb2baf5af0148435ecea4994b38fce694dd2175c2a8ee5254232de8227e534cf7ec982f65ac45fc8b99ff35a47296608a12ad8ffd63e844c95bb43
+99a194b114766b295c620299165142cab6a4fa31887df1daa459fc608f47b7db0267185433ff2be9df8125b52198e429979d21a642eb7731315769c5
+5f1c3485ceb4c613b851ee669b5ca226b93878d33a300458ad8c16d6c6bf1e0a85c1d73868957dfb53fa4b032bc644f35314076edfc1e1b6cd0cb179
+6e51bc4ebf5c7ac30e275f75f29ce2aec8c8e462bc8bbf086965468e63e64d3f01fc52ae2b82721ea7dbb2fa917f80427d2c983e936c44b2180ca176
+8d4cf1b9ae91fc0eff9cba034e671fba33cb27cc11c427b22ef1e84cd1cde8c26b4f90524d3c88ce630b54bbe71df53e9d6bc682b602a239b5918da7
+554b352b3ebb31e5e9df3ece22c7d85887b898df783e6d33511e6eb068302e89918da862c47cca989a79dc25e24694d424583d7219ba2fc4eca11d95
+5c858b33899164c12486175e1d0c72cc5f460896ddf1f214b153a7749147a578bf706ad577644348e28312deccbd592986c1b25e6e9a75d134962701
+37fa0bef10581d27d2cae1fb8c26ac64205bb3019e125cd21f101448fe9ae0a3d986ff63b4f1e2477f6b2be244a6371e0eb84dfa05fb3a3fe9f6b0e8
+980f8f556c6ac2509d564fe70d4ac22ac34cf1bba491ff458c9cb312453447d51ede20c417c427b938fdab1afba280c77e0ade52463cf18905415eb9
+ef7e9852d873dd82b16e8b63c89799e65c416f45028c31fbe4d13f852dcbef5e9db1d1cf751a604d316102c368373986fce18f25a26cd19b8471df25
+8d6b8ffe3d5171265db90fcbebad61f975b1fe33928872e57fea6d23270a7ee34304379ed8fdde15f55ca6668a04eb72bf7767cb32200409a4e577be
+cdb61f0a85c1d2312b9a74be59ec60080ce75ed354581f6fdecacb82e446b7712856b414cc7b6fd81935165eb3b1e193d79de878ddbbbf0e6d61019f
+25ca507d619132c91ffc1465aad3b4b5b330ba486d2b83319f4c42b11e44bc6bd97debb2c2f19229a5bdaf1e47671fa83cc92bc417c427b92ff1e449
+f3a789ca7f43de155c378ee3646a12dd827d9852ee7adc91b16bce4392af84f55057316a0eaa70d1e9d4378502f8fa459fa7b5de6e0b7c2841206ef9
+7b303fc7a6a49144fd25b7fee17dd524c601f29e2d5b233b22f34ed1b8a105d00cd9c23588cc62a34cfd24102d0c5fc55f0b3e99cff5df0fae17e72e
+d84ca45ad51102ae3222415db7a60df680fa3961ffadeb36798033f21dfe400378fe05f35d163f68cec7a9ab9927bb79284ef5238d464fd81e37191b
+a0dfe8a6d49bee30f9b6af6d120d288e23cb347e61fd57b329e11d3798c0bee99c388b095627bf1f895b43861810e83dc82feabfad969129a5e18803
+4466509c389100e82cc73eb334d9e853b2b2848b304f9856442b9e8a05413282ff1dfd28934dcb94ac67d955ff9787eb5257286403e73dffe9ca77c0
+4edcf44288bcd3921776074e6b0d79e6753b2e94b5d3ce19a65cce968b7d9506ad6497f22564306909ac2ac2ebbc199f05f0ce2e9c8c75eb10af4d23
+270a7ac749461485c2f3d815bc5388669444ae3e947d62c033304144ffcf538298e8710985add53301fd18d13496470178db5fdf4e190c6295edb2c3
+842bb7796f18af08894611be625d1d54fe9ee2e7de84f25ccaf8f647737651d10bc650132ef149b338cb137ea7d0f9b9a500a84b6117a726de1121ce
+726de82d8d69f2ae84aebb54c48db5574d7848b70b850ae20bdc39bf25b0a207beaa85a10466f75b473b9aec2c244df7b654f929cd25e88eb66ced59
+ce8b9fc4534d2d6f45ed06c8c0d13f8533e4cd15c2def8b21416686756077fb0702e6b93f3e1cf61c426b7fe846e9b7dec4195e43f553f7818f100c2
+efe049bc15d6ce2689b264a742ec7723315a329b0c042dd9e5f5dc1efd02ee25a0778339b87d54eb0d666b2284e677dbdef63a74f8a9d83f66917faf
+0dbf13472ae744c47d0c1f3c9bc8b7a5a02ea651674ab805cc153bda0a201915f58ae9a2b2e1821995b4bd494d614d842ec64a0e2bf755b338fa1a7e
+a5c09cf4993ace1a380d850591167da2170be222d976ddb8a68bef52cd81b503667b559e73e92be40cc739eb7cf4fd098ba593ce631bde0a083089f0
+064132deee1af551b416a78bb76bca5c9c9c82f51b19615d08ac2af8fa8b759a09daf40ccbb89ed87c132e2459052bad3c0d3f8ef7f78f2ca85bfd82
+9a6ade2eb84b9afa2e46303354d567ae91a10dd01fd9c6678f8c64a52786175e411474c34d047b94cdb48c5bbe5ea329bb6eb931b17d01ae524d6842
+ebcf2dd2daae1263e9bb950242a72b924ed44b1e1ce75cde143d0572d68a8aee940cb1736d168c49cc5c73d205741552efdfb3e7dc81f930b7f8a801
+35484e8426f95b141cf749e029e61f1dc2bdd8929439ce747d3a9d199f5d58e92e2dd271e47cd5b2b1bcf457c2c09e195e791fb038c60de81ccd6583
+75b8ff4fbeaac1cf641dde0a083c92f22c651bb4ed5add34d274f882bb7cc4429c9d85e3312d480264a638b7dbdd299605cbfe44c581b8e827367d0c
+5d114fff6b3663a2f5f1cc45864ac7b4877cde6e8d21dbe323513f3b19b61c87a5e80f990e98866798822f9944e876231e1d78d4431a7b92c5f0bb72
+d436c76e9e089835ae6e62c43e374f7ec4bc44fedb931e79c8a7cc3923b17fae50b1650221cb44d459562f2e9bd0a9ee836fba7e7a18e64088416997
+4074125db3ade7a0d09cdd75ffaca4153b614f8f47a6377e0df65fca4581727ead9482fe8f2987447d3bc525b56b118e082fe432e960e9b9e0bdf555
+c1c6901252575e9f38910bae58c739f00ffdf951b2a784d8233ab764121188cb69317fb8fc1ab91ed36ac3c9936dd273d39c8ea96854206808e67ee3
+e0dd35c008c1e917d6f495d26f5f25676e0d68e4732a78c9e2c5d902be0fdb998c12b249c5619db71851236d14bc0bd4b69d22a346f1d80c9e9d45a4
+5ae13612260d768e670d22b4c4f0d4558c16ee688a089835ae6e62c43e374f7ec4bc44fedb931e79c8a7cc3923b17fae50b1650221cb44d459562762
+ddd092e38429aa3e284cb30582087fde19744c1bf996fce795c8dd75ffaca415282a58aa35c64d570df65fca4581727bbd9a87fe9e2b81554e2d871f
+9f515fbe5b59a12fc47db09aa99ff549d89dbf120b2a11cb7dde20e358cc22a272cde54eafe4cb8b4e009051413fd5d66d2448f9cd18e808cd7acb83
+f867d910ea9d88f35456722517aa2cf882b1528500dbfe5e8df4b2d473196720163b7ff1683d38c9dde8d84bb947db99e211b249a06798f627143972
+19ba22f1b8f54b980ec89101928a658d44fd6d230b1072cc484079aff4dcd81fb8608251da01c159d51162c17b2c084fe8a32897dcb01e6eaca0d233
+6eb847e179fa5d132ae7529815580e69dfaec882e423b1746954fb0c9a08269703260101db96e0a3fe81f963e89ba30e776009c915f0781b11c77796
+6ea1711ec2bdb8fddd31815338249d5088504ea9716d8842a463e8f7f5d8d24edf9cba1948711f9538c866a534c125b53deadd42b7ab82c27916dc1e
+137897f622065abaee54ac7b9f47f1a1b471f47ceadae18e322d48671be11fe3fcd9388801cdf543dbf4cc9b6f106133791c7fab3c343dc9d6e5d92d
+a25ddd92c8259b2dad7c93b92341367e77d667ae91a41dde2addc728988d75b26ee070243c0a7ac9421c1698cff19146fd7aa07295069d35b07768ce
+2f3d2244e39c0ac5c9b11574c1a7df3225a274b849f05c5c78e45d9e6c191962d5d0e1b6cd27ac670231d26989467fbd625d7857f29cefab988ce262
+bce5eb317e6755843f9c100d0dea54fb6ce41474aad8f1f89c32ce1a381d9f19904b05801e10c23edf7dfbb9bcbbfa4dc99aba5f021e38f254d628a7
+1bc926f028f0ee49d1cde8a2040391544934dbe36a6806f7e815fc75fe59dc86b56da139b5f1e2ee5d04126e1fb937f4edcb75b525fba17e989f94c2
+59107929102d65e571760082e2c7ce0fa801e9dec86cd325a2289ffe39146c3b19b61c87b3e8089652f4c42890b264a859e06c772d167faa256152fe
+c2f29128b84db86e9b4db87e8951589d12372a4ef4ab11c0c6f03e6ef9a5951c6e8d52b459fa003471a85fd859164b63d2d6e1b6cd2bb7652815fb03
+8a0657d8043f275efe8be1b5988de57496d1c26e126d47cb1eca4c0101fb5eb362dd3244f1fda2d09826aa486f26c335924d46e93001f808c26bfbf9
+89d1bb54c48db5574f7d43db609f2aee0a8866f03ffea575b2a389df5b0a9d43472adbe5622c31de827d9832db3ffd82aa7ec253d98bc5d272777b42
+1e843beeccd72c8e44edf54286fabade643c61235d464fb93c2c2382f5a4c502bf0f83d78c71c960e72898f16566387c15ab38c2fbbc04825cddc523
+f1ed08c248e17a5d417112c94a480892d9e2d818b84ce052b17bf119af536ede1f2b1645a5aa10c2c5f63065f58bd4336eda54f21df05c470bed59c6
+551b0e7495f188d8d706ad5c6d419f0f9b4633f205211c15d69af784d78cee3ecfa8aa047e2d019f25ca50570cf149e071a81f7eb994fabbab3a8d53
+773ad85e857953ae0844e425c90597dec191fd00ff8da9014277548873ea07d442e1389b39e1cf48acaac9ee631a9319633d82c3632c5ef9da5db134
+cf3ffd82aa7ec253d98bc5d272777b421e843beeccd72c8e44edf54286fabade643c61235d4647f57a2c188ff2e2d542ed5bd6928638df29be28c6b7
+2f5d233b50ff38c2fbbc04824f96d206838d72eb48e17a5d417112c94a481898c5f2d81cf36cba668c4db87e907d6cce2f020d52ad9b16d2c6d27209
+85c1d73868957dfb49fe5c003dfc7dd550585627dfcdb3a5a02eb979614cae04890825975b741055f9dfeaaecac6de7ef5aceb4d3b474e852bc65959
+3ef957b362ce176e98c4b4fe997f8155381e8e13885759f4551ee439c20597dec1f1f74fcf89b7574861438938d13ad11dc46bed7cf4fd098da182df
+621da852443798e978311bb8f954c73ede6bc195eb26d155ce97e18e322d48620bef33f6fcd075810edbb3438aa696de69296b2b16312bbd3c3b3e95
+e9e1cf1f9b4ad2d9b1319b7eec3dcbb73f5c347577d667ae91c11f910edfce33ad816deb10af48322b0c74d21f463592dcbcc51aaf58ab73ae4da77e
+84342bc42e36134ee39b28d2c4f62220a7e8d6367f9c3fa854f8404f2ce959d7590c3d62d78a98abc06fbd627a4abe0e987e7edb450d581bb7dfbbf7
+94c8ff71eebfae134d614dc51786347e619132a522ec711ec2bdd8f78b71b8427b3c8402aa5d47a8180df5328d32beb4bd8ae945c29c8d12472e7d9e
+2fcf66f319da2cb528ceee4bf7e4a2c463099750060e9aec7f6677b2ec1de51dd166fd8ab767df5895f2e28e32412d7808c5579e81b1379642fefe54
+9fbb83ed78136124511c72b021782f8ee9aaec0aaa41d7839d7cde60f228cbb72a5a353b19b61c89cda602845c928b04948a67a24aa14836240b35e6
+40110887cef1d55bb24dee519d4bbf3fae2b25dd3e360e2184e677d2c6bc710985c1d73868957dfb5eea5c153de65fe348191f629b99e1e39822e450
+6d4c88148d5c7e9f425e78329496e8e7db9df962f9b6bf346f65558e6dd103572df64ead62c00e7aaadabef2990c9a466c2dbf098c5d0597131df222
+ce7cbea3a09df52aa5e1d27e5b775097319728f216cb3fb933f6a30efbac94c6372c9656463f9ed378294fb2a331ff2ed031e692b569c55fd59cb8f3
+5a50245f14bf3bb9d8d0229305cbe81ecbb19fdf3475074e310d65f416514282f7f7c461c426b79b877bda2cec648db7761439690de528cef6ac2d99
+0ecbdf04938d6daf05ad46080e1462ff603e79de90b4d81dfd53b8278c40ae3efc747d9d1f21125fff80079f81f81e6ee8c2b25e02987eb85cf30e0b
+2ec00b8d1c10197781e2a8e58909b7657b4c980885447f9f490c2e73f49beb98f4bea939a7f8a2013b6857a36ddb561206b857b604b23f72b8c0a3f4
+8477c7077d268f7af53122ab1407e0278d6ceba5ba9df554ff9cba034e340cdb35ca23bd3fcd3f8328f9ff42f3edeba204669751083b8ef27e2d55a3
+d800f02fd83f93daf84dc545d1d6a3f256452f6404ab0de3e9cc3eb415d8fe19bbbc88c8741c7d674c006efe165142ee92f4c20aa14396919d76d834
+a56795bf6214396e10e52dcff9a60c952fccca339ecc44a558e2301f3d157ace43013fa4dff5c51e8946be62d67abe3eb27165c072640445e9c674be
+a1d11e6ee8c2b25e6e9a75d13496246e51e14d907f170561d2c3efd8992eaa727b168810894d7fff0a371a1be997eba9b2e18219f5beeb24746a4782
+2a816d0309ec5eb362cb3d65aad9b4c88d3a8b43383c8315923222ce726de93ec021c9b6a493c850c98dbf571634628f32cd2fe01d8604a235ffe249
+baa8b6ca6104ad474d3d9fbb2c2454b4ea18b136d269cba3b17a8b0d9c909eea15692e7d088b37e5eddb2f8903c6913ee2ddf8d27b5f63284e0d4ff9
+6e760686fceac81fb84bdbd7d6388b6efd288fff2e5a711174d667ae91e546d027e89a67bdad59960dda6d32681c6f804a0729d7cde6d016b812a769
+9c4dbb35b27c6ec92f64125be88a1abda1d1720985a0c92725b757a95cf24b4765a843c24c562841c9c5aceecd64fe7a674ebe24855a3b9d4b7c3254
+f399e7a096beea7ceff69c06776f729b28ca5a5742b85fb465a8711ec2bdd8fe933be42e11418e1c8f5d21ce726d8827c26cffbbe88bfa46c9bbab12
+4e7011c67dd22ff3108626b932b0c848b5a288cc23399f5b5b76ace1602368a7ee11f5779d2c9ccee328c345d1d6bce6574f127b08aa3ab7b5982881
+0acdc8478eb195b11476074e540768f170782791bbb98103bf5f84b18176df06a57a88e3085c387719f74cffc79b1b9519dcf40badc628c12486175e
+211e3bce431c7b9bddb4c513b851c40ef121c259b06e2b9a7b0d0f58f98e10d4cdf61565fbe0991b629a74ba4fc94b0b37eb42c4455a423c9bc8b7a5
+a32eb3722805fb42b47748c70e311564d1a9accdb1e1821995b4bd495a70558a2ec7531206ec0be071a80978a4c090ef8964ce4b6e66a611847e44b5
+1801a1768d3aaee7f8f29229a5e1d21b5d3a679e31d02dee0cd108bf32ebff55baad8fdf40009a520865dbc5623d56f9dd11fd34de76da9e9b67c543
+c88a8aee55500c6409aa70dbe1d63edb4cc4ed19bbb583de730b2e7a180079e0165142ee92e1cf0fc726b7fee174d423ad64dbfa2442345f14ad4e9a
+b8a01e9d52f5c4319ea068b948ec6a3e271611a92561529ecdb4dc14ab5a8a6e8a068631bb7662d32e20040bb3cf4e9999f80f68e9a6b15e02fd18d2
+51f04d0634a84ec8480a0a27868482e48329b770266eba0c9f064cd6073f224bf89aeae795c8f871fabd98177e6145e144a6377e61f44dee00e11572
+9dd1bdf49e369a5e3875cb15844c59a65b5aa17b8d6ef0b3e89de354de89fb18593401c07dd338a934c125b518f1f942b8b088c4634fc31745378de5
+482149dd827d9852d873dd82f864dd1ef09185e26d412d640ea62aeea8857bd04ccdf553e1ddf8b278116a4d31616efc6f3d41ee928dc91ea001e996
+8473e830a96d9fb77614026f12ad0fc0fde6248215dfc2299a8856aa41e44d272d1d7faa2561529bc4f7d017fd53b827c508a322ac224dce35202742
+ff9c0af4c0b11764a4eae308588474be59c062317aa11090551e4b6bcd84b5e38821fe7b7e029f059f5c69d8127c581bf891eacdb1e1ee7ef8d2c26e
+110d28822b8f7d1806fe52a762db0f76bfd1a2b5b431886d6d259b509d564fe72801f33dc46cfba4e6add27396a1a83c4e6d75942ad166c216dd26fe
+17fdf264b4a084855e1f9f544d71dbf4642d55dd827d9833c87294a4b069c557d9ab9fe64f41694e03ba33b9c0cd368102c7f253b8a090cf782b7737
+5d4641e571282289fcadab62c44ad093e211de2ea821f19e3f55337718f107c9ebad198454ebdf28898566ae03cc7139261d78d44507358487b4d91e
+bc4dba659d49bf13b376658e514d6b22a0c25e8a95e5463db1f5866a36c92ce600a2135a65b5168d0145563a8699fcb6d072e32a3505e65dd115268a
+56694c06a0c2b3fa85d5b62da1e5f65a26391cd67092034a55a506fd7182723ae69498d5ad0aba2d1165c650c10516fa4659bc769032a3eaf5c5a61d
+91d5e64a16290cc6608273ba459576ed61a5b61ae6f9dc963052c30a1565c6bd317506eab649ac66802293dae535960d81c5d6ba06194b0201a03df6
+e498328e1cddef758eb390d55e10602918552bc3792a3d8ef8e1d2459866edd9a176cb35b84a9ef02a5a6b5812b100c2fbbc439609d6c833928b6fe3
+44a33e30617212a9450e7bdfc2bafa1ea47ca1639d08f66dfc5b64c93d2d0605c68a07c486951e6ef9e8d4252b9d3f9058e66d083ced0b8d01582e69
+cec9efc088369d786c5df532854f73c3283b1f4fef90e2e7d79aab79b293ae1e586b458e6d9203572df64ead62c31e6e88dbb5fed30d8740703cb818
+955e5fee5b05ef2f8d5ceab8ba99fc4582a5ba1e4552439a30da6ef310cd25da5591824bb4a780c72d0991545d2b9ee42c751b84ee06e732de7addc9
+8d41f80afb9d9fc15447347808ab0af2f0cc198f1480b23de2ddf8d27b5f60284c486dff7f2d3882ffa4d503a841b4fee111b229aa2895f83f14026f
+12ad0fc0fde6269512cdef22998b74a54eea3e23201d75aa256152fea2c7c514af5ea962d665ae3ea95c6ec534310f48e8cf4397dcaa0e6586c1b25e
+02fd42af52ed4f003da666d155162d75dac9a4a5bb26ad7e6a54be40d10875d81f74224ff28defa0ddc6c671f5b68d157a6944c51bc64d1e0af45eca
+4581721ec2d8bef89c33ce4174278a04be4c45e74644f52adf68fba38f8df21aea81b5136d7d438829fc26ee14cc63f204c7df4eafa58ff44b039156
+5c3195e7531c54b0ec18f479913fda95ad6d823ab5f1e28e324d272b0ba331f6fcfa2f8e4cdcf35285def8b21476074e5e0464f1681a3f89b5d0c413
+b90f83d7bb6cd432ad6f9eb9065538753bad0fcafde63d990fd1c92b9ec460a549af3cb5d4ed3980431a7bd5f3b6bb72d436c70ef14ea73fbd6c49d3
+356a354ef59b3dd8c4b70933acf59b047f9b63ba5afa002a39e145f64e19066295f2a8f8842db2722859b504cc6b74db04264215fb8de1aaeaafc938
+aeedfe4b3b3c11c76d970e5e48f749e00fe71571a2d3ffcf953a8342361b9f0293534ecd726d8842a406f2b8ab99f700df9ca91c0b29119d31d02ff3
+3adc25ea1af1e5439dad93d8792c965e443cb4e64f245aa4f85cb30ef44cda95b763ce1295f2e28e322d480204a97ee4fcca30c018c0fe59cba785c9
+76514d28540779b021781893f4f6c00ca801f3968176fd32ad659eb91d5d22721fb30b87f9a60fd03fd7c72889d72fad5fe073050f3a3392195d77d7
+93a49d5be50fe727975aeb13b3766dce3c6a3543e8821b99fbac096fe7ad9b3265901bd23496276e3de64fba3571620eb2f1b5e2813cf059674cb206
+95003947f4c7c01bd09ae0b29ac4ab43e8b7b9067c610fa62cc650311af956a562de1264a2d6bdfedd3e8043386aa420b9766e835944ee398d2ddd9b
+87abde648ec4fb46021e38f254b647f319db20fe38fde746a2ecd1853f43de515d3698f4652755ffa254c22fd26dcf80bd26e655d28dafe2594b3465
+0eaa7eaaa8de3a8c1fcdbb5285b0d8b11476074e5d066f9a155142eee9e1d51ebf41b4fee111de2ea802f29e2e5a351174d607c1b8af4b8414ddc567
+898175be5fe13e32261c11a925013dd7c2bafa1ea47ca1639d08f66dfc5b64c93d2d0605c68a07c4868d156ce3a9df777f9c74b51dcd5b092ce146d5
+122d056bd4c5a5a3c474fe656d4cae1282087ed90f5e7832f499aeae96bdf875ee91a5176e7075923dca1e4a55b87eae39e55542b8d1a3d2932f9b53
+4c319b15d27544b20801c33ed97bf1b9fad8fa4ec8c898184572589c73ec3ae60ccd38fe0ef1ec4faf878dc26e04aa584f3f97e52c3c53b2e554d234
+d379c780f65bdf51c89d98a97a4d2c6902bb7eaaa8cc29950988fe598fdef8b274192e2e16236ee95f372f82bbb99c4b8e40d091817f950ba97188b9
+0d58283b09b70bc992c162f915de8b148f8b73aa4aea3003271f7ccc492e2e99c8e79f3db146ee73904da55ad51102ae08300e59ec881b99fcb71c67
+e0adfd22659762f57bf3574f36e75f907f170561d2c3efd8992eaa727b169d0c950111be625d1457ee9a84ceb1e18253f3b6ad0e7c2a729f2cdb5b04
+46de57b96cb55b79a4c0f1d89231884e7f66b8049d4c4eb45522ed32a70697dec1adef49c09bf5394460589d24976c65e420a468d3b8cd4ba2e4acc4
+690adc1b081b94ee6a215cf9d800f02fd86c80a1b4718b51d29ccba57e6a0049218a1ab5a8d729c04eecd264aa96bdfe595d226709463eb9165142ee
+feeac561c426db998c12b249a56edbfe657f34623eb00ac2b8f556d03fd7c52192832f8048f66d79061778cc45187b83c3f1df71d436c76e9e089824
+b36a6ac03e6a3544ea8812d2eead1563ffe6f538689878ab1deb4602368222b935713873d4d6a0ec88618a786f5fb705aa5d75d4187a3f54fe93e7b7
+9086e464bc9ba4097d6d46c51edb5f030deb158e23eb177ebb9ddb92f4568b4b6b2de179f5312284140ae722ca21cda3a98cfe5382a6b414477d41db
+609f20e80c8808bf32fee240f59795ca790a8d19663798ec653831de827d980ec976c294f646c444d59e92af19d4de9ad6ef10f8ebd432904e84bb74
+84ba97d27a515d33591c6ee332162484f7edd14bac41dad7ca5df5018e44bed369143e695dfd2aeecb8929bc39fc896bdbd52ffe0485175e411d75c4
+26615292c5f0bb72d456a82791068035a55b64c33e645c16adac11d9ceb11c2ec7adc22425a063b25af84b1578fc43d55272620eb2cda7abbe3bb165
+695fbe4eb8477cd00731374ef39cfde9ec9ae277fbbdb9257470019f25ca507d619132c91ffc1465aad3b4b5a9308940742dad05925b58e92f16e82c
+ca6aec95a78cb34ec39cfb34447a57923a911df319dc2ea372ccf94ebca384d94f008a1e2251f289692448b2817d9852b45cc189be61cc1eef8c8af3
+5e576f5f1fa639f0edca198f1888a61785bb859b5e106021510f25c368393f82e8aaf519a448d9929a5ad434c601f29e4261257211ac40e9f7bc0296
+059089a56145219f5fe679302d0a59cf584a77d7e8fbdf1db458e0548c49bf35af365fd53223064effad11c388b91564aceafe194ab65d9e79bd0e08
+2aa809f4752b2a45f7e185a9c16fef393d11d169e5217ed90f5e7832f891eacdb1e1e276bcb1e52c7e7d628429ca1e4a55b878af22ee1270e5ffb4e2
+8e71a2487b23bf118e5f4eb35b10e92ec30597dec194f443cd84fb344a7954893c9f73a72ddc22bc2fb6cc42af8794d97f0a90436b3996e57e2913fe
+817d9852d4798e89b77c8b73dd958ef55a04356308a17ee5edcc2e920288fe598fdef8b2141668676b1c64e27d3f2ec9d7ebc200a84bea969a7fde34
+ec7c93f2253e581274d602c8fba907d013d4cf099a8964eb10af4d23270a7ac749461798c8ffd41f895ebc609d5ce51ebd756ead524d6822de9b11c5
+c9bf1e2ec0a7d83c6e9045ba4ff84b1378b50bde5514610eb2adc8d89920ac766f5df523995a69d20520396bcf9efaaed7c8b630acd2c26e120d488d
+6dfc4a181af95ca562dc1a74bfddb2fa9117bb63383c8315921878b31416e02cc821cab6ab8cf243cd8493226f3a7c9a34d160d111db22b230fdab1a
+fba280c77e0ade52463cf18905413282ff1dfd289351c193b16ed2189e087413a804156a1fa83be3a8ed358c03cbf0528ff6dd9b3f2d6b2b5d0978f5
+78782d88f8f1d24ba24184d7ca38956eec6797f305553c7e54d567ae91ad078319b2a24ef2ed6da44eee7277250153f27c4866d7e7fbd21ab16fa266
+814db97e9f706ad53a27154effcf1fd9ccf8376fefa9d707679568be4fb16d0f39fa4ad3481d193dfdcdafefab26ac647c7bb309804c339523211c5a
+f390e7a3ea87e464ccb9b913392d2be244a6371b07fb5aac6ce01270a3d1a2efa9379c42793cc750885959a01e10a1768d22affbe896f24ca6e1d27e
+22725e897dcf62a71cc93fb17cf1e507aba588d97e47ad43472a9ae769666bbbea0df429fe7ecd8fbd218b54d3f2e28e322d48620bef30f8fc983f81
+18c9b57483b583954d1e7c22561c2be4743d25c7f8ebcf1fa441cb92c87dd524c601f29e423d387d5db101d3b89d1f9910cb850e88a56da25bea3627
+64587fc1580975b4c3f5c352fd4ba6629608a83fb26c62c92e21414ee38b74bea1d17209e5ae9b14649a77b25ab17d1339fc4ec3122c0e66d6e7a9ee
+8e24fe76665cfb35984177c4451d026ff89ee3aad99cee38ecf1eb1373614fcb2ec0500301f64ea56ced1573c1bdd892f45682487b2987509d514697
+1a16f56b902fcba3a194e80eeb8daf244675438f1cd623d719da3ff838f9ff46f58789ca7f46f43e2151f289652e1bb9e400b13ad472fe86aa7c8b44
+d49d85a7584b2f7f04a12bf2a8dd358466a1923ee2dd9dd47e1e6267480778bc3c3725b4f8f6c40ea30f83d7ab79d625be69c1c024463d7f29b038ce
+fdbf1b9f0eccfb28928a75e34ce67307290a6f8e7c07289edffdde15f435c70ef121c239ba3864c90827134ee8815ed6c6bc5b70e3bb950d2bca31eb
+1dfe400378a07dd55f0c0475898aafee9a67ae787b16834ccc5874c4450d581bb0dfd8a2db9ce462aef6a5026c2c628a20ca4c1646ce52a53bf81465
+bfe7b8e19871b6082a64cb339d554eb51a4ad722c878eeb8ba8cc849d68df52e042618d273f22fe016c13fa538fdab1be6e4a2c463099750060e9aec
+7f667d98dd54e533d871a4eed101a239b59484e45a4861780ea02cf2a8857bb518c1f744c59790d77e0a62264c0d5ff86e3d2a93c8e7ce19a807cedb
+c875c2089e58d29d423d581274d607c1b8bb089f0edd8b79db8c68ac45ea6d231c1069c54d1c7b83c3f1df5bb556a96f9d5bbf04b46a6ec62f645c0b
+fe8c11c5cde35b74edbadc327fd42cfb4dbf4b093c8222b935716262d5c0cb82e446d772665cd169e52112de0d74055aef98ebb3989ce375f2d2c26e
+120d28b839c04c160ffd158c23eb1072afe0b0e99a3a9a0725689f118e5f4eb3716d8842a406cda3a78afa47c9c698025966549529f71ed519dc22bf
+7ca5ab17d1cde8a20466ab43413488ae42274fbeed0db9794d802048f85cca42db9d9fa7774b226008ab7cbba89a178f0fc3fe53d1f4d39b33512e33
+591a6cf568760586f6e18145e30f9cd7c0299614ad7a9cf23f1417741eaa1d8ebae161f975b1a222979764c12486175e412d6fc9401b75b9c4e0d81d
+a417ece565a4eb1eb3385fc62923045fafc35e95e6b75b76eda4d2332b917fbe50e60e0e36fb42d459582d48ed84a2e29f2cb272291af26ae52112be
+0e3a153194f687a2d68c811995bda503110d28822b8f575923fd428323ec1e37f689f1d89231884e7f66a015854b058f1200e46bcc61faf78b97f546
+c58ff5245f75459e2e911dec01e022b439b8ff4fbeaaeba2046692584b3997a0643a4bf7b654dd34de7ec2b7b469d255ced6a8ef5a56206819aa2cb7
+e9d63fc020c7f85687849dda641a7c697b006ae27d3b3f82e9bee702a34bf89e9a6bcf03a46197f36316196e10be00c8f1ac399f13ccfb26899023e2
+2786175e211e3bc85e187b83c3f1df71d436c70e914eeb03a87779c63c214f62fea717d3c1b61c20f8a0de3901fd18d234967d1337fa4ad759562274
+f3cda5e28328fe2a285eba0c9f4d11be625d7832f499ae94cc87f971fbbde52f726044a80bdd5f1a0db84fa829e65b7fb9c4ffd8bb2d8f4a7d68d650
+af4c44b51a03e465e566fab28bbee941c18de05778605e893cd82ba930c12fb51fdef946b6a1c1962d01975b083d95e4064132de827dc42fd473ddc9
+9667df59da81c3a5cbbbeb894d8b3be4ebdd35944e84bb15b9b185ce6f116b23181c64b07b2a2492f5e08104bf46d99e86399969c601f29e42513d68
+18d567ae91c162a308d7d9269c812f8344eb7b140e0a7acd494866d7c3e6c1559e79bc66954df0708f6c64d53a230405c49c36deccb11567acf59b23
+798174d13496276e51e059c0123b2d75dac9a4abd06fb665781698269e4976d24b7e5178db8defaaddc6e575ebf0fb4b3b3711db7d831e47419232c9
+45817242bfddbde8d3118153712e9258dec8b45cc344d40de22fcdbcb1d8d349c88df95b0b36779734d826f358c928a435eeee09fb9493ce7e1cde6c
+7005dbf4636849b2ff01e3359f338ed4f102a239b5f18ee95f2e480264aa30f382b1528502cc913ee2bd979b74515b345d1a42fe6c2d3fb3e2f4c44b
+f0129eb2866dd66e997b9ee5025a216e098b17d7fde6269f09cbce058e9075a443be3e36261c3be343063d9eccbae20fbc4bab74d67ba23cb9767fe6
+3229414ae38b5ed9c7ac5b48edbbef3e7f957f9658eb4f0a3dfc43df58300468d084b5e38821d41e01318f09984975fa02370354db93e7a4d3bbe27c
+f9b6bf26726909c247a6371206fc31c945e11d37a29a84e8982da749683d9f2485484ee74659a10ec37af3f99d8bfe52e586ab025f40488b389103e8
+0ddb2e9229ecff48b5f5c1ca630bde7447369de96b6668a3ea00f428935cc28ebb63ff609c9985e31b7724791ba63df2fb960ea93f92d244a0b188ff
+7208606f7d067efd32132e9ed8ebc50ee363db919c5bd42eb87a94fb6214257318b164ae91c102965cf4c4249a8851a74cf67b25663b73c15e093883
+cee6911ab35bee4b974baa3c8c746ade3e364f68e58e0cd6cbac1e72b68ed2396fb278a94eeb6d0f31e44f981e301e6adacaaee2891db1787c68ba12
+980a32970a3a151bd090fbb4ddc6df71eebfae133b70498e23a5377e619177af2fe91747a7d5a8fe8f71ad4f793a8a13885d59e93311ec2ac360f7b3
+9a97f454fc89a903055777893cd22ba7458808962ef9e642f5aa84dc252291425b3dd5c8653c1587e407f82fd470c0c7f328fd55df8c84f5080a2f6e
+1ae76ebba88b77c05c81b23de2ddf8de731b044e310d65f41651428efda4c845864ac7b4877cde60f135dbd4245a37721af125c2e1bb45a41ddbdf2e
+98856d9f7daf6a3f2d1611a925613798c8f5dd5ba95ebc609d5ce770833836870e300847fec139d2dc9b176fffadc8235f9b52be53eb4b1570a121b9
+357102619bd0a0f98a2aaa376956bf40984969d00e205f6bfc8deba9ccc8ff78f9b6c16e120d288722cc5f1b48ec4be071a82872b9c2b8f8982cc077
+742992158e4b11801e10d127cc76fba58e8af44def80ba054a77459e2f973ae60acf2ea472c8ea55beaa95820766f73e21319da078381ba3e311ff51
+b416a7eed164c453dd94cbef495461364d8331f4e9d40b8c0dd1fe45c59799da6f1e6d335d1a2bf1723c6babf4e7c0079d43df8e8d6a9503a46989f6
+28403469479907c9fc8e02820fcce82f928865e30fc76b3a291674c9483a3498dfc4d009a91de70df121c259d57464c43a28414ec5bd2e9795f80f70
+a28bd336799572af58ed0e0636ec0bc44c56286fdad6a0e8992aac2d4e51b504aa4169c41f171952f19ba6e5f09de671f2b7a203496b4e9f1dce4c03
+4ab131c94581721ea2d2f1f38f2fce46762ccb15b46a7be70f0ce425a70697dec1f19248de98f5346d665096389f73a71de0198072dbcd55baa9848b
+274fbd715a3996e522265ea0a344bd7b8d338eca9b67c556d59fc5d15a483225399f1cf2e0d1358428c1e843c2def8b21476074e6d1c62fc6f760588
+efedc712e50d5c6d4938ef21af7c92f42a58714f2dfd4287ba9c0e9c19c8c4358f8165eb4fea763e261c21800e4875d98be0c155935ea362d122c259
+d51102c235206b2284e677d2c6bc710985c1de396ffe18d258f14a6d518142d61c11454cdedd82e4892afe2a3518980f824e72d0451f1442eed1caa2
+cb9cf97fe595aa173b70498e23a5377e61f454a32de45b54aad9b4e99c7fd3074d3c821c8f166ca20f27f439df6af0a38b99f645de89f35e211d38f2
+34d96ee917dc6b933df5ee55bae495c36801de454d2c8ef262685eb9ef7e9852b473c184b9648b53d9969fe249047c2b3baa3de3e7ca69ce02cdec1f
+a8b59cde6f1e2011510d7ce0732a3fb4f2fec44595008cdbc85bda2da97a9ab91d5d346c0db01cd3cba1119552e18475d2ee08c224e3713429143bd2
+4d117bca8bd7d016b84daf3dae41ae27ac7779d30b2b0845f9bb11e5c9a15363e9a6cf3279da49f71dfc4b092ced599e6551610eb2adade48e2eb237
+7859a901815b3b8a4b061042fe9efdb3e889f971f1abe5097e7309c2768f4e161af956b362ce127bbfd1a3df982c8d42762c8a1e884b62a90810e025
+ce6aedf7f5d8e06cc38bba1b7b78508238cd60c410c939b13fecee55a6ffc1db6c1d9f5a5b76bde9603c5ea5df0de13e9d228ea2b67dc61eee9992e4
+5a57354d04a32af2faec22900986de4f88b884df7875074e310464f37d346b95fef7d407b90f83d7bb7dc936a56b9ee465633e6916ac1ec6fbad51a2
+1dc1c826889029b94cf630183a117cc942447b85caed9f3fb44dab648c41a43efc322b926b744d0bfd8e0cd6c5ab520a85c1b23e6dd463be4eea4213
+78e945d41c0a0e74cec8b5a5bd20ad7e7c51b40ecc5c73d2055e783294f6e7a19886e464bc8bbf086965468e63e25f073bec54b22def1e51a4d8b5fe
+8f7f9a4f7d26cb23885759a61c01af06cc7fcda3a78afa47c9aeb41b4f7143db609f07e90bdc2abe3ffda549beb3c9894b0092534d2ad9ac2c1b5ea5
+fd1df23ece31f988aa63d840dd9b8eae0004127f02bd3ff0ed9616811cfbef5899b596de5b1062235d1a25de7d352ec7a6a48333927bd7838976e40d
+ad78a8e32446307c18fd4ec2f6ac61f975b1a22b948760a70dfd7b302117758011480992ccfdde15ee11a0628f00b935af6d67d375140e58e49b17d8
+c6f85620daadd823648622f553fa594f69bd078109545a329288e1f9883cab7b7c168b0f9f416fde043a5110bda9eba4cc87f923b2b6ae10333514c7
+7c9a12465db112ca4581721ea7dbb2fa917f9e466a3c9850c11878a20912e828c87cb080a78af053dc89b8121152589539ef2ff50cdb02be0efdec4e
+b4aad2837f0a995e4736d7a0402758b6e724fd3ac47adcc99b60ca42dd9b9fe24908613a5dff77aca8d434830dc4bb5484a19fcf3d422e7732610299
+153e2495bbdb8d4bbd4ecc83c871d560bc6992e5381c217a0fab1d8eb8ac04fa75b1a24ef28d67eb5dee6c2366367acd494825ca8bb6f31aae5abe6b
+995cae72fc7965c37b340059f9c130d6c5bd5b7eb1e899036e8663ba54f10c4739e64f9052171f27cbc5b3ffc31fbf656d56af5aaa4175d32d3d0348
+e9bce6aed48ca332d4ada606756b488f6f861e1606fc1bb02dfa0f399bd5a3fe932bce592568b804934a4aa01e4acc2add5ceab8ba99fc45ea87b713
+4e66118f35da208d71a142d95591ff46b9a8848564018d525a2cd3d3782749b6ec11bf1fd86cda95b771ce54ec9999f3480861703dae2ce3a8857b90
+0ddaef1bcb8490c978117a6705487bf16e2c65b7faf6c405b95297ccc868da32b826abf639513f6f5de24ef4eca719911bdd850a9a9452bf42fd7f30
+2d3e74cc480d29cc8bf7de0eb34bee3ad84ba425b26c2b8c7b756b2284e677becdb61f0a85c1b25e6e9a75d13496276e0dfc42dc4f562568cfcda7f2
+c56d2e889a9dfb2d8d583bf30e270549f286ebb59ac4ab32cebda6086d6145cb6f8f105948fb54b522fc5b39e594f3bb923d9d53792b8715dc484ab5
+0f17a362a70697dead96ff2aa5e1be194f1e38f234d96eee56e32ea91ff7ef42fbf9dc8b4e009051413fd5cb693148f9d911e22fd26dcbaab9788b44
+d49d858d322d486702ac3ffba8db349502dcbb0acbe4fbb2147668284a4854bc3c3c2a93faa4c805ed5fdf9e9a6b9313b86789f62c517f5f18ac1ad5
+f7b10e942cd9d93388cd21af4285175e417172c60c0c3a83cabae11aaf4bee66964ceb34bd6c6a890b25134ee39b5ec3c0bd1520fcabda3b67dc77ae
+53fc5a0e37e603991c1c0a73da8a91ea9f3bf047694abe0e980826970f35055ab3afefb5dd86ff30f9b6af4e2024428438c14a5755b858af39e60f37
+e094e0bb98318a2d1141e215925c21ce726df52acf63fbf9ab94fe41dec088034466509c38910ae20bdc39bf25fdef77bab695d82465f73e21319da0
+5f3c54a5ea13f475f07edeb4ac67d951db9dade8574024794dbb36f2e698089403dafa508efabcda6d2c7a284a096cf55a372783fef69b2fa85cca85
+87619369f728a8e32446307c18f123c6e89b1f9f0ed9cc22bd8b6daf48fd3e6a681672cc0c0d3593a19db872884ba76b8b06853fa8716dde736691b4
+196b5efac9a85b52e9bbcf38799175f911bf0c353dfb5fdf4e1d0f279984efa5cd2cb162664cfb4ec20839970436024ffc9ce2a29898ea62e8abe94e
+110d288e23cb347e61f15de025a63072b2f7beff987fd31a380b841e9a514ce93001f838835bf1b0af94fe6cc38bb03a4e7a44db29d72be972a142d9
+35feab74afab93ca6a0ad063473f9cec690e4eb9e807bf08d570d9a1975e8b44d49d858d322d48023ebb31e5e9df3ece38c7fc5087b1b7ce731c7d69
+6b0064e75a171dcff5ebd54b8e40d091817f9513b8698ff2381a027312a828e8cee161f975b1ce2b88810bc22486171427167dc94b460883cae0d408
+f36ca6688f6e8406fc252bc934304168e28118decff62874edbcde2425a779b44ad96131528122b935110d27e8d0aef98c28bb394e778d3285467ce2
+22740553f891ae94cc87f971fbbde5215452738223c86b3e46ce52b325ea1772eb89f1d89231884e7f66b8049d4c4eb45537e924da49d181e89df544
+a6e1d27e2241459231cc60c917dc22b625b0a9d7444a4e8b4b20a8177a3195e72e641b94e41af732da31fd93b97cce4392ab83e84c620e5d4dae30f3
+a89a1eae2dead772aff6d1d46f5f2c03713b4ad2501d0fc5b7a49045f806b4fee111de2ea802f29e2e5a351174ba00c3b1c262841ddac722d58d6fb8
+48fd6a7f1b0c74d24d0f3ed9e8fbdf15b85cba6e9746b87cfc7165d72e30234eea8e10f4c7b6152986c1b15e679b72ba51bf470928fd5ff5521c0e63
+f8cbafe5cd72fe446d4aad098f4d68993e1d2215d491feb2ccade574f9bcf124746a4f8e2edb16111df658b425e7153fa298f1fcd455e72e712ecb17
+dc4c43a21544f32ed97aecb9e89df544a6e1d21e4d3458d508cc2bf531c63ba528ccf257bee4dc962d2a90424576aef3693a72b9fb01e50fc46fcbc9
+9567de43d9ba9ef34f4b2f394dae30f3a8fb348e0ac1fc19b8a090cf780c2015510f63e45f342284f0d0ce0caa43dbd79c70de2eec4b94f92d5d3635
+2eab0fd3fdbb45b115d5c9288fc43ceb4bee72242d587ece48625292c5f09871d44baf65944de539b26b6ed52f6c325fe29d1fd0cdf6386fe2a6de34
+7f9d7eb54eb30e0e36f85ec479160f62dfe7aee58366d472665cd16ac1053bec31112374b0b3cf80e5d2ab59e8bda6476e74458a39ca4d5700f955a4
+20ed1f37a8d8b4fa933397077a31cb00994a42a81f0de26bc47bfbba8497f4508cc0ab054e62549529cc6ec31ddb28b532fcea49af8585cf680bde47
+5a3791e56f3c52bbee54f737d270cac7ab7cde44c89d99ae312e2d640eae32b7e6d92f891acdcf568c989ed46d5f33674c0978fb322b3b86ecea890d
+b841dd838177d568e502f2e0235d3d7e5dab1cd2fde80f9f76b1a2339a976ae55aee772360483592194151fea2fdd75b8e4ba175994fae7e956b5ec9
+372b004fe88b5ec3c0bd1520eebade3660d474b55995276e31ee0bf353160d6edc8a92ff8c3bbb64267ab20c804a74d61930255afa8caea8cac8a353
+f3b6ad0e7c2a729f2cdb5b0446dd68906ce91573eb9c82ef922d8f407d66af029d4f42a91c26f324c66af0f7a78abb63c386bd1e4c3a679a31cc60c2
+2bf80ebe3bf1e542fbf9dc8b2f3f92564678b8a0240a52bbe716fe3acf7b87c5f867d910ff9785e152436f5d0ca32db9cdeb0ba502cff2598ef4cc86
+3d5d4f324c0729b935783f8ffeeaab62c426ce948974d7688a6d9ae33e463468538a1ec3f9bc0ebe1dccc2319eb060ac5ea6145e411d75c426613e99
+cf9ed415b916c473994aa735f27165d43e361503de9b11c5c9bf1e2ec0a7d42778d831b55ceb47113ddc4ad77017047792aecbe7822cbf7b2851af05
+816474d81b744c1be99efdac969bfb71ebb6e3016e6a429f24c0505f419232b724e11772ebc0a3ee987f8a481241e2049d4b40e90c05e83f854cf1b9
+ae91fc0efa89b704055d459e30ec2de616e125a439eafd46b7e48ed92d5ed0020152f289652e1b84ff1be33ada7a80aeab5dc55cd3998fe25f043563
+08a17ef5fadd3a8b4ccdf553e1ddf8d27b5f4d28560e62f7320b3f86efe1d245845bdb9aad4beb60b8609ef9413d58120dbc0fcbf4e03e8018d9df22
+b29064a668dc4e7e427112c5420c51fecefad571b851aa2ef25caa32b07d25ce35370459f9c72dc3c7aa1a67e9e6f738648462f71df65a0235c444df
+4c51610db1adeca6cd1bb167256ab207845c3be00a201449f09efcac98aedb43bcfeeb37726a46cb38df5a161cfd49e064c91578a5cdbcf2873a8a1d
+38068450a94b4eb51505ec2e840597a3a98bf00edf98ba00453c578e33dc3aee17c663f95691824bb4a780c72d098e446b378eee786806f7bb7e9852
+d170cd86b428c751cf8cadf74870286806ef63b7fcd1388b4481913ee28794c96b166d224b4659e5720b2e95ededc20ee37ddb998c7dc913b86d8be7
+2e506b5812b100c2fbbc439609d6c833928b6fe30485175e411e6bd36f072e99dfb48c5bbb4fbd44975da524fc332b96514d684ee38b57bda1d10c68
+e5a4de777f8664be1dfb416d518122c45d0b0029ccc5a8ffc57ff0222132d269e5417d9738201e49fc98ebe9f19bde7ef0b7aa037e60019f25ca5057
+0aea5ea127a81e79afbed892f43381447924cb1e934f0bfa5b10e828c627b7ddc1f1924cc38bba1b0b7744892fda20f33ed838f061b8e646afaccfcd
+61009145003e8bf34f274eb9ff54be7b9571c190f8258b5cdd8b9fc14b5715620ea477be82b152e90ad8e87484a19fcf3d422e773261029970393893
+ddf4d23fa44cd5d7d538d52fbb02f29e423e581274b301c4f9a44b8015d6cc0a88c43ceb1d85175e410878c140047391defad20fb450a02fd122c259
+d51167c838250d0bfe9b1fc3dbf84620dfadc921629774a813cc5a062cfb0bdf4e581866ddc182e78221bb456d5ef3078d457e8d2c310568f88df8ae
+db8da332cfacaa13682608c247a6377e61f454a32de45b79aec0f1a6dd2c9a466c3bcb11925c0bb40f05f5389749f7b9acbef252df9c981f427855d3
+7ff12bf30fc739bb7eb1812ed2cde8c26b4f90525c789aee686855b2ff4ed732d37be88eaa7bdf73d49187e31306126e1fb93be5dbcc3a941fe1ef52
+86f6d89b7c116a67560d7fbe4f3d3991fef6f21fac5bcdbe9c7dd67a8a6195f30d5d2368099c06cef4ac43d238d9df26dbb468a54aad37773c107ece
+266152fea29dc112b3588374d815eb3dbd6c63893d280e44ffc710d2dcf62865febede25588070af4ed65a0235d309f45d0c0a27ebcdafeccf12e450
+6d4c8d01805d7e9f427d7b3294f687a2d68c811995d1ae097f2d2be244a6571148e852ae2bc50837f689f1abdd2b864276689b19925f66b45b59a179
+952ffbb9acf29129a5e1b2110b4745942fde29e256ff2aa439eae646a9afadca6f0a92175c309eee064132de8227e534cf7ec982f65fca44d98a86e6
+494f0d6a0faa32b9dcdd23944c95bb449fa698d57a5168284a056ae4347a0db7c8be814ea90f9e8bc838eb09824fc1b76e503c685ff34ec4edba1995
+12cced3788c821bb44e1791a3b5111a92561529ecdb4d20eaf4dab698c6ebb23fc2636876e74415fe58a10bda1d17209859bcf38799576be13c84f13
+3dfa46d14e132766d9c1ada5b92aa6634b57b70f9e1b3b8a4b171e57f28dbde9de9ae47dce9f894f22340dcb7f9b0e5b48a90ff06582721ec2bdb4f7
+8e3a8741382b9e028e5d45b33d14f26b9332bee4f8d8ef48c986d17e221d38f20ecb21f519cf2efe0bf9ff42a9a980d966239f554d34d5d469304f94
+e418fe298e3f93c79b67c75fcecbc5e1494b2c592a8d76a5bc8d77c05e98ab1bcbe2c1921776074e310d67e3795242ee928da838b940cc968f7d9517
+ad7c9ee52655237031be0cc2f4e63f9504cce828978b73f80db23e14271474d21f463d85c4f9e33c9f17fc32cd04eb67e9342b906e6d6b2284e677d2
+c6bc710985c1de396ffe18d258f14a6d51ed45d415726155cecab5e2802af05e6651af48c52244f0450c2e6fd4abcf89e7a1c543c89985245e241ccb
+368f7d1806fe52a76cb55b54a4dab7f29a73ce746c2799119b5d0bfa5b37f524df6ef9b2e4d8ce54c584a8571634648f34d33dab58ee2eb128edf942
+a8e4dc8b4b0a9f435d2a9ef3206869a2e500f836d83f93c78a7dc544d5958ea7462e286d4da62dd1e7cd358409dabb4383b19fb1142a7a2e541b25de
+732c2281e2ac839b52be2fd7b038ef099849b5bc6b75015e25ff29e8dc8524b4399a8767d9a960b859ea6c77031d6280743c76c09cac885b9c5cba6e
+8e4dea70ed283b977b022e7dadc95ef6c4b45b47e3ac9b07799162be49ec0e3236e444d3571d0f299988e1bfc37af71d0148a909825c33959bcbe0aa
+bda4d6e7eca1df51d2f39647564572bf08fd1e3127cd758409da5b4f9f99e6acc566ce725604a433b77d6fe5526ee427de6af7b1e891e873c984b712
+5934459338d1448e2ddc22bc2fb6c548afad87d2254d0ea8bad6dbd82c1c7283ca3aba7bed5efcb3964df91290d8c9c45409076418a13af2fa981085
+1588da549fbd87de3c5f4f375d102bd7733c2688ffe1814ded7fcc929b7dcf33ec5d95fb24573a7e19f14c8bb8fc42fa75c8d92e959029e9dd108cd9
+6823438078210fb6e5bfec5b8d7e9c53b66d9970895647e8180f246fafc674d2c4ab1e69eae8d2245f9d65ba53cf42122ba85fd85916610eeed0a8e7
+9e6190787c51bd19c40aeb28fff15163bdabc793f9a6a030c7889928365c01aa1dea662a4ab41be21cda343a939490eb9827ce60772c861f985d0b86
+1810e83dc82ebee6f8c8ab00eaa78d570d34618938cc2bf30b881ebe30f7e84cbea0cf89214fca1e22518bf265264fffa9840ecf183ff5bff85ce264
+fdb6c0da1b74134440977ed6d8fd03c039e6d778a89fb4ff3f560422541b6e9a150d3f8ef7f78f25a25bd791913099a2508ddbcf6b60184f3c914ef1
+aee65ade4d988667bca14fe61baf4a1e1c3955806b271fd783d5e13e851f814ab661e272f03829f11214416ef58c12c2dbb10d65ac9bce3e7f913194
+53f347093da60be04e1d18749bff88e59e2aac635518bd0f9e0856d205215317bdcba7cdb198f979f2ace345432475a219ee70573eae15f362b85b3a
+ebf394d5d069ce73511caa3edc7f64835b4cc01be857be9885b6d2098ca494366f5175db0eea0dc43dfb189609d4c77ef9edebce630b
+]===]
+local _0xP = string.gsub(_0xRAW, "%s+", "")
+
+local function _byteAt(s, pos)
+    local c = string.byte(s, pos)
+    if c >= 48 and c <= 57 then return c - 48 end
+    if c >= 97 and c <= 102 then return c - 87 end
+    if c >= 65 and c <= 70 then return c - 55 end
+    return 0
 end
 
--- [ZERO-LAG]: Item updates handled cleanly by periodic itemLoop (prevents DescendantAdded projectile flood stutter)
+local _0xS = {}
+local _0xL = #_0xP / 2
+local _0xKL = #_0xK
+local _batch = {}
+local _bCount = 0
 
-local nativeTagLoop = task.spawn(function()
-	while true do
-		task.wait(0.25)
-		if Storage.IsUnloaded then break end
-		if Config.States.BillboardTags or (Config.States.ESP and (Storage.DrawingBroken or Config.Vals.ESPEngine == "Plan C (Billboard)" or Config.Vals.ESPEngine == "Auto")) then
-			pcall(Features.UpdateNativeTags)
-		end
-	end
-end)
-table.insert(Storage.Loops, nativeTagLoop)
+local _bxor = (bit32 and bit32.bxor) or function(a, b)
+    local res = 0
+    local p = 1
+    while a > 0 or b > 0 do
+        local ra = a % 2
+        local rb = b % 2
+        if ra ~= rb then res = res + p end
+        a = math.floor(a / 2)
+        b = math.floor(b / 2)
+        p = p * 2
+    end
+    return res
+end
 
-local itemLoop = task.spawn(function()
-	while true do
-		task.wait(Config.Vals.ItemScanInterval or 1.5)
-		if Storage.IsUnloaded then break end
-		if Config.States.ItemESP then
-			pcall(UpdateItemESP)
-		end
-	end
-end)
-table.insert(Storage.Loops, itemLoop)
+local _unpack = unpack or table.unpack
 
+for i = 1, _0xL do
+    local bVal = _byteAt(_0xP, (i - 1) * 2 + 1) * 16 + _byteAt(_0xP, (i - 1) * 2 + 2)
+    local idx = i - 1
+    local k = (_0xK[(idx % _0xKL) + 1] + (idx * 11)) % 256
+    local res = _bxor(bVal, k)
+    _bCount = _bCount + 1
+    _batch[_bCount] = res
+    if _bCount == 1024 then
+        _0xS[#_0xS + 1] = string.char(_unpack(_batch))
+        _bCount = 0
+    end
+end
 
-	-- Top-Right Watermark FPS & Ping updater (Anonymized: No Username)
-	task.spawn(function()
-		local fpsCount = 0
-		local lastFpsTick = tick()
-		Services.RunService.RenderStepped:Connect(function()
-			fpsCount = fpsCount + 1
-		end)
-		while true do
-			task.wait(0.5)
-			if Storage.IsUnloaded then break end
-			local now = tick()
-			local currentFps = math.floor(fpsCount / (now - lastFpsTick))
-			fpsCount = 0
-			lastFpsTick = now
-			
-			local pingMs = 0
-			pcall(function()
-				local stats = Services.Stats or safeCloneRef(game:GetService("Stats"))
-				local net = stats and stats:FindFirstChild("Network")
-				if net and net:FindFirstChild("ServerStatsItem") and net.ServerStatsItem:FindFirstChild("Data Ping") then
-					pingMs = math.floor(net.ServerStatsItem["Data Ping"]:GetValue())
-				end
-			end)
-			if pingMs == 0 then pingMs = 28 end
+if _bCount > 0 then
+    local rest = {}
+    for j = 1, _bCount do rest[j] = _batch[j] end
+    _0xS[#_0xS + 1] = string.char(_unpack(rest))
+end
 
-			if Storage.WatermarkLabel then
-				Storage.WatermarkLabel.Text = string.format("FPS: %d  |  PING: %dms", currentFps, pingMs)
-				if currentFps >= 50 then
-					Storage.WatermarkLabel.TextColor3 = Color3.fromRGB(90, 240, 140)
-				elseif currentFps >= 30 then
-					Storage.WatermarkLabel.TextColor3 = Color3.fromRGB(245, 200, 60)
-				else
-					Storage.WatermarkLabel.TextColor3 = Color3.fromRGB(255, 75, 75)
-				end
-			end
-		end
-	end)
-
-Runtime.Init()
-_G.X_TITAN_INSTANCE = { Config = Config, Storage = Storage, Utils = Utils, Features = Features, Runtime = Runtime }
-if isFounder then
-	Utils.Notify("👑 X TITAN+ APEX GODMODE", "Master Key XT-7789 Active! 1000 FOV & All God Presets Unlocked.", 4.5)
-	print("👑 [X TITAN+] MASTER FOUNDER XT-7789 UNLOCKED")
-elseif isSeller then
-	Utils.Notify("💎 X TITAN+ PARTNER", "Co-Founder Key Active! Apex Godmode & Presets Unlocked.", 4)
-	print("💎 [X TITAN+] PARTNER UNLOCKED")
-elseif isTitanPlus then
-	Utils.Notify("🔥 X TITAN+ [PRO-X APEX]", "PRO-X Apex Godmode Active! 1000 FOV & Presets Unlocked.", 4)
-	print("🔥 [X TITAN+] PRO-X APEX UNLOCKED")
+local _0xDEC = table.concat(_0xS)
+local _0xRUN, _0xERR = loadstring(_0xDEC)
+if _0xRUN then
+    _0xRUN()
 else
-	Utils.Notify("✅ X TITAN V6.1.1 - GEN-6 TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu", 4)
-	print("X TITAN V6.3.0 - GEN-6 TITAN GOD (APEX OMNI) LOADED SUCCESSFULLY")
+    warn("[X SUITE] Dynamic stream payload failed: " .. tostring(_0xERR))
 end
