@@ -14,10 +14,10 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V6.1.1 - GEN-6 TITAN GOD (APEX OMNI) ]]
+-- [[ X TITAN V6.2.0 - GEN-6 TITAN GOD (APEX OMNI) ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
--- P1: CFrameSpeed dt math & Fly/Desync Mutual Exclusion
--- P2: Zero-Lag Character Caching, Throttled Raycasts & High-FPS Engine
+-- P1: cloneref Anti-Detection Service Isolation & Metamethod Defense
+-- P2: Synchronized Tactical Hitmarker Engine & Zero-Lag Adaptive FPS
 -- ==============================================================================
 if _G.X_TITAN_INSTANCE then
 	pcall(function()
@@ -32,14 +32,18 @@ if _G.X_TITAN_INSTANCE then
 	end)
 	task.wait(0.05)
 end
+local safeCloneRef = (type(cloneref) == "function" and cloneref) or function(o) return o end
 local Services = {
-	Players = game:GetService("Players"),
-	RunService = game:GetService("RunService"),
-	UIS = game:GetService("UserInputService"),
-	Lighting = game:GetService("Lighting"),
-	TweenService = game:GetService("TweenService"),
-	Workspace = game:GetService("Workspace"),
-	StarterGui = game:GetService("StarterGui")
+	Players = safeCloneRef(game:GetService("Players")),
+	RunService = safeCloneRef(game:GetService("RunService")),
+	UIS = safeCloneRef(game:GetService("UserInputService")),
+	Lighting = safeCloneRef(game:GetService("Lighting")),
+	TweenService = safeCloneRef(game:GetService("TweenService")),
+	Workspace = safeCloneRef(game:GetService("Workspace")),
+	StarterGui = safeCloneRef(game:GetService("StarterGui")),
+	SoundService = safeCloneRef(game:GetService("SoundService")),
+	Stats = safeCloneRef(game:GetService("Stats")),
+	HttpService = safeCloneRef(game:GetService("HttpService"))
 }
 local LocalPlayer = Services.Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
@@ -89,7 +93,7 @@ local Config = {
 		WeaponESP = true, OffscreenArrows = false, NoRecoil = false, DetectUnspawned = true,
 		ShowDistance = true, ShowHealth = true, ShowName = true,
 		AimbotFailover = true, BillboardTags = false,
-		AdaptiveFPS = true
+		AdaptiveFPS = true, Hitmarker = true
 	},
 	Vals = {
 		FOV = 200, OrbitDistance = 8, OrbitSpeed = 8, FlingPower = 100000, WalkSpeed = 150, FlySpeed = 150, HitboxSize = 15, HeadSize = 25,
@@ -633,7 +637,7 @@ end
 function Utils.GetPing()
 	local ping = 0
 	pcall(function()
-		local stats = game:GetService("Stats")
+		local stats = Services.Stats or safeCloneRef(game:GetService("Stats"))
 		if stats and stats.Network and stats.Network.ServerStatsItem then
 			ping = stats.Network.ServerStatsItem["Data Ping"]:GetValue()
 		end
@@ -651,6 +655,9 @@ local HitSoundMap = {
 }
 
 function Utils.PlayHitSound()
+	if Config.States.Hitmarker then
+		Storage.HitmarkerAlpha = 1.0
+	end
 	if not Config.States.HitSound then return end
 	pcall(function()
 		local soundId = HitSoundMap[Config.Vals.HitSoundPreset] or "rbxassetid://6534948092"
@@ -2189,6 +2196,7 @@ function UI.Init()
 	AddSection(P1, "SILENT & TRIGGER", getOrder1)
 	AddToggle(P1, "Silent Aim 🔥", "SilentAim", getOrder1)
 	AddToggle(P1, "TriggerBot [T]", "TriggerBot", getOrder1)
+	AddToggle(P1, "🎯 Tactical Hitmarker", "Hitmarker", getOrder1)
 	AddToggle(P1, "🛡️ No Camera Recoil", "NoRecoil", getOrder1)
 	
 	AddSection(P1, "AURA & LOCK", getOrder1)
@@ -3238,20 +3246,22 @@ function Runtime.Init()
 				if r then r.Visible = false end
 			end
 			
-			if Storage.HitmarkerAlpha > 0 then
-				local hmSize = 6 + (1 - Storage.HitmarkerAlpha) * 4
-				local hmColor = Color3.new(1, 1, 1)
+			if Config.States.Hitmarker and Storage.HitmarkerAlpha > 0 then
+				local hmSize = 7 + (1 - Storage.HitmarkerAlpha) * 4
+				local hmAlpha = math.clamp(Storage.HitmarkerAlpha, 0.2, 1)
 				local tl = Storage.HitmarkerLines.TL
 				local tr = Storage.HitmarkerLines.TR
 				local bl = Storage.HitmarkerLines.BL
 				local br = Storage.HitmarkerLines.BR
-				tl.Visible = true; tl.From = Vector2.new(center.X - hmSize, center.Y - hmSize); tl.To = Vector2.new(center.X - 2, center.Y - 2); tl.Color = hmColor
-				tr.Visible = true; tr.From = Vector2.new(center.X + hmSize, center.Y - hmSize); tr.To = Vector2.new(center.X + 2, center.Y - 2); tr.Color = hmColor
-				bl.Visible = true; bl.From = Vector2.new(center.X - hmSize, center.Y + hmSize); bl.To = Vector2.new(center.X - 2, center.Y + 2); bl.Color = hmColor
-				br.Visible = true; br.From = Vector2.new(center.X + hmSize, center.Y + hmSize); br.To = Vector2.new(center.X + 2, center.Y + 2); br.Color = hmColor
+				if tl and tr and bl and br then
+					tl.Visible = true; tl.Transparency = hmAlpha; tl.From = Vector2.new(center.X - hmSize, center.Y - hmSize); tl.To = Vector2.new(center.X - 2, center.Y - 2)
+					tr.Visible = true; tr.Transparency = hmAlpha; tr.From = Vector2.new(center.X + hmSize, center.Y - hmSize); tr.To = Vector2.new(center.X + 2, center.Y - 2)
+					bl.Visible = true; bl.Transparency = hmAlpha; bl.From = Vector2.new(center.X - hmSize, center.Y + hmSize); bl.To = Vector2.new(center.X - 2, center.Y + 2)
+					br.Visible = true; br.Transparency = hmAlpha; br.From = Vector2.new(center.X + hmSize, center.Y + hmSize); br.To = Vector2.new(center.X + 2, center.Y + 2)
+				end
 				Storage.HitmarkerAlpha = math.max(0, Storage.HitmarkerAlpha - 0.05)
 			else
-				for _, line in pairs(Storage.HitmarkerLines) do if line.Visible then line.Visible = false end end
+				for _, line in pairs(Storage.HitmarkerLines) do if line and line.Visible then line.Visible = false end end
 			end
 		end
 		
@@ -4238,7 +4248,7 @@ table.insert(Storage.Loops, itemLoop)
 			
 			local pingMs = 0
 			pcall(function()
-				local stats = game:GetService("Stats")
+				local stats = Services.Stats or safeCloneRef(game:GetService("Stats"))
 				local net = stats and stats:FindFirstChild("Network")
 				if net and net:FindFirstChild("ServerStatsItem") and net.ServerStatsItem:FindFirstChild("Data Ping") then
 					pingMs = math.floor(net.ServerStatsItem["Data Ping"]:GetValue())
