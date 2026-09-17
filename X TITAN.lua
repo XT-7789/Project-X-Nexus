@@ -14,10 +14,12 @@ if not _0xAUTH or _0xAUTH ~= "X_NEXUS_VERIFIED_7789" or not _0xKEY then
     return
 end
 
--- [[ X TITAN V6.2.0 - GEN-6 TITAN GOD (APEX OMNI) ]]
+-- [[ X TITAN V6.3.0 - GEN-6 TITAN GOD (APEX OMNI) ]]
 -- Founder & Developer: XT-7789 | Official Seller: vlilayz
--- P1: cloneref Anti-Detection Service Isolation & Metamethod Defense
--- P2: Synchronized Tactical Hitmarker Engine & Zero-Lag Adaptive FPS
+-- P1: Sticky Track & Hysteresis Lock (Target Switching Anti-Jitter)
+-- P2: Frame-Rate Independent DeltaTime Exponential Damped Smoothing
+-- P3: Target Visibility Status HUD Indicator ([LOCKED] / [OCCLUDED])
+-- P4: cloneref Anti-Detection Metamethod & Synchronized Hitmarkers
 -- ==============================================================================
 if _G.X_TITAN_INSTANCE then
 	pcall(function()
@@ -62,7 +64,7 @@ end
 if not targetGui then warn("X SUITE: GUI Target failed!") return end
 
 -- ==============================================================================
--- CONFIGURATION & STORAGE (V6.1.1)
+-- CONFIGURATION & STORAGE (V6.3.0)
 -- ==============================================================================
 local Config = {
 	Keys = {
@@ -93,7 +95,7 @@ local Config = {
 		WeaponESP = true, OffscreenArrows = false, NoRecoil = false, DetectUnspawned = true,
 		ShowDistance = true, ShowHealth = true, ShowName = true,
 		AimbotFailover = true, BillboardTags = false,
-		AdaptiveFPS = true, Hitmarker = true
+		AdaptiveFPS = true, Hitmarker = true, StickyAim = true, TargetStatus = true
 	},
 	Vals = {
 		FOV = 200, OrbitDistance = 8, OrbitSpeed = 8, FlingPower = 100000, WalkSpeed = 150, FlySpeed = 150, HitboxSize = 15, HeadSize = 25,
@@ -103,7 +105,7 @@ local Config = {
 		Deadzone = 5, PingCompensation = 0.05, RadarRange = 100, LegitFlySmooth = 0.1, VehicleSpeed = 180,
 		ESPRefreshRate = 0.3, ESPBoxThickness = 1.5, ESPTextSize = 13, ItemScanInterval = 1.5, TracerOrigin = "Bottom",
 		AimbotPlan = "Auto", ESPEngine = "Auto",
-		TargetPriority = "Crosshair", HitSoundPreset = "Neverlose"
+		TargetPriority = "Crosshair", HitSoundPreset = "Neverlose", StickyFOVMult = 1.35, StickyGrace = 0.25, StickyHysteresis = 2500
 	}
 }
 
@@ -126,6 +128,10 @@ local Storage = {
 	CrosshairLines = {Top=nil, Bottom=nil, Left=nil, Right=nil},
 	HitmarkerLines = {TL=nil, TR=nil, BL=nil, BR=nil},
 	HitmarkerAlpha = 0,
+	StickyTarget = nil,
+	StickyTargetPart = nil,
+	StickyLostTick = 0,
+	TargetStatusDrawing = nil,
 	MenuDebounce = false, ActiveSlider = nil, SliderDrag = false,
 	OriginalWalkSpeed = 16,
 	OriginalFallenHeight = -500,
@@ -165,7 +171,7 @@ _G.X_TITAN_CURRENT_INSTANCE = {
 }
 
 -- ==============================================================================
--- UTILITIES (V6.1.1)
+-- UTILITIES (V6.3.0)
 -- ==============================================================================
 -- ==============================================================================
 -- KEY & FOUNDER AUTHENTICATION (TITAN+ PRO-X APEX)
@@ -992,6 +998,7 @@ function Utils.GetClosestToCenter()
 	local center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
 	local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 	
+	-- Manual Target Lock has absolute priority
 	if Storage.LockedTarget and Storage.LockedTarget.Character then
 		local tChar = Storage.LockedTarget.Character
 		if Utils.IsAlive(Storage.LockedTarget, tChar) then
@@ -1011,7 +1018,57 @@ function Utils.GetClosestToCenter()
 		end
 	end
 	
-	local highestThreat, targetPart = -1, nil
+	-- [STICKY TRACK & HYSTERESIS RETENTION ENGINE]
+	-- While sticky aim is engaged, maintain lock on current sticky target inside expanded boundary
+	if Config.States.StickyAim and Storage.StickyTarget and Storage.StickyTarget.Parent then
+		local sPlr = Storage.StickyTarget
+		local sChar = sPlr.Character
+		local isAlive = sChar and Utils.IsAlive(sPlr, sChar)
+		local isTeam = Config.States.TeamCheck and Utils.IsTeammate(sPlr)
+		if isAlive and not isTeam then
+			local sPart = Utils.GetSmartAimPart(sChar)
+			if sPart then
+				local sPos, sOnScreen = Camera:WorldToViewportPoint(sPart.Position)
+				if sOnScreen and sPos.Z > 0 then
+					local sDist = (Vector2.new(sPos.X, sPos.Y) - center).Magnitude
+					local retFOV = Config.Vals.FOV * (Config.Vals.StickyFOVMult or 1.35)
+					local isVis = Utils.IsVisible(sPart, sPlr)
+					if sDist <= retFOV then
+						if not Config.States.WallCheck or isVis then
+							Storage.StickyLostTick = tick()
+							Storage.StickyTargetPart = sPart
+							return sPart, false
+						else
+							-- Occluded: verify grace period
+							if (tick() - Storage.StickyLostTick) <= (Config.Vals.StickyGrace or 0.25) then
+								return sPart, true
+							else
+								Storage.StickyTarget = nil
+							end
+						end
+					else
+						-- Outside expanded retention FOV: verify grace period
+						if (tick() - Storage.StickyLostTick) <= (Config.Vals.StickyGrace or 0.25) then
+							return sPart, not isVis
+						else
+							Storage.StickyTarget = nil
+						end
+					end
+				else
+					-- Temporarily offscreen: grace buffer
+					if (tick() - Storage.StickyLostTick) > (Config.Vals.StickyGrace or 0.25) then
+						Storage.StickyTarget = nil
+					end
+				end
+			else
+				Storage.StickyTarget = nil
+			end
+		else
+			Storage.StickyTarget = nil
+		end
+	end
+	
+	local highestThreat, targetPart, bestPlayer, bestIsWall = -1, nil, nil, false
 	for _, p in ipairs(Services.Players:GetPlayers()) do
 		if p == LocalPlayer then continue end
 		if Config.States.TeamCheck and Utils.IsTeammate(p) then continue end
@@ -1023,13 +1080,14 @@ function Utils.GetClosestToCenter()
 		if onScreen and pos.Z > 0 then
 			local screenDist = (Vector2.new(pos.X, pos.Y) - center).Magnitude
 			local targetDist3D = myHRP and (aimPart.Position - myHRP.Position).Magnitude or 100
-			-- CQB FOV Retention Buffer: if target is within 35 studs or is already locked, allow expanded FOV tolerance so close fast-moving targets are not dropped abruptly
+			-- CQB FOV Retention Buffer: close targets receive expanded FOV buffer
 			local effectiveFOV = Config.Vals.FOV
-			if targetDist3D < 35 or Storage.LockedTarget == p then
+			if targetDist3D < 35 or Storage.LockedTarget == p or Storage.StickyTarget == p then
 				effectiveFOV = effectiveFOV * (1.0 + math.clamp((35 - targetDist3D) / 35, 0.1, 0.5))
 			end
 			if screenDist <= effectiveFOV then
-				if Config.States.WallCheck and not Utils.IsVisible(aimPart, p) then continue end
+				local isVis = Utils.IsVisible(aimPart, p)
+				if Config.States.WallCheck and not isVis then continue end
 				local score = 0
 				local priority = Config.Vals.TargetPriority or "Crosshair"
 				if priority == "Crosshair" then
@@ -1043,14 +1101,36 @@ function Utils.GetClosestToCenter()
 					score = Utils.CalculateThreatScore(p, myHRP, screenDist)
 				end
 				
+				-- [HYSTERESIS ANTI-JITTER LOCK]:
+				-- Strongly bias toward the currently locked sticky target to eliminate camera jitter
+				if Config.States.StickyAim and Storage.StickyTarget == p then
+					score = score + (Config.Vals.StickyHysteresis or 2500)
+				end
+				
 				if score > highestThreat then
 					highestThreat = score
 					targetPart = aimPart
+					bestPlayer = p
+					bestIsWall = not isVis
 				end
 			end
 		end
 	end
-	return targetPart, false
+	
+	if bestPlayer and targetPart then
+		if Config.States.StickyAim then
+			Storage.StickyTarget = bestPlayer
+			Storage.StickyTargetPart = targetPart
+			Storage.StickyLostTick = tick()
+		end
+		return targetPart, bestIsWall
+	end
+	
+	if Config.States.StickyAim and (tick() - Storage.StickyLostTick) > (Config.Vals.StickyGrace or 0.25) then
+		Storage.StickyTarget = nil
+		Storage.StickyTargetPart = nil
+	end
+	return nil, false
 end
 
 function Utils.SaveCollision(char, mode)
@@ -1612,9 +1692,9 @@ function Features.GetAuraTarget()
 end
 
 -- ==============================================================================
--- UI SYSTEM (V6.1.1)
+-- UI SYSTEM (V6.3.0)
 -- ==============================================================================
--- ITEM & LOOT ESP SUBSYSTEM (V6.1.1)
+-- ITEM & LOOT ESP SUBSYSTEM (V6.3.0)
 local function ClearItemESP()
 	for _, bg in pairs(Storage.ItemESPObjects) do
 		pcall(function() bg:Destroy() end)
@@ -2213,6 +2293,7 @@ function UI.Init()
 	AddToggle(P1, "Team Check", "TeamCheck", getOrder1)
 	AddToggle(P1, "Wall Check", "WallCheck", getOrder1)
 	AddToggle(P1, "Show FOV", "ShowFOV", getOrder1)
+	AddToggle(P1, "🧲 Sticky Target Retention", "StickyAim", getOrder1)
 	AddToggle(P1, "🎯 Multi-Bone Dynamic Aim [Titan+]", "MultiBoneAim", getOrder1)
 	AddToggle(P1, "🛡️ Anti-Desync Resolver", "Resolver", getOrder1)
 	local maxTitanFOV = isTitanPlus and 1000 or 800
@@ -2220,6 +2301,7 @@ function UI.Init()
 	
 	AddSection(P2, "HUD & CROSSHAIR", getOrder2)
 	AddToggle(P2, "Show Lock Status", "ShowLockStatus", getOrder2)
+	AddToggle(P2, "👁️ Target Status Indicator", "TargetStatus", getOrder2)
 	AddToggle(P2, "Dynamic Crosshair", "DynamicCrosshair", getOrder2)
 	AddToggle(P2, "Static Crosshair", "Crosshair", getOrder2)
 	
@@ -2664,7 +2746,7 @@ table.insert(Storage.Loops, auraLoop)
 -- ==============================================================================
 local Runtime = {}
 function Runtime.Unload()
-	Utils.Notify("⚠️ Unload", "Unloading X TITAN V6.1.1 - GEN-6 TITAN GOD (APEX OMNI)...")
+	Utils.Notify("⚠️ Unload", "Unloading X TITAN V6.3.0 - GEN-6 TITAN GOD (APEX OMNI)...")
 	Storage.IsUnloaded = true
 	for _, loop in pairs(Storage.Loops) do pcall(function() task.cancel(loop) end) end
 	Storage.Loops = {}
@@ -2736,6 +2818,7 @@ function Runtime.Unload()
 	Storage.OffscreenDistTexts = {}
 	for _, line in pairs(Storage.CrosshairLines) do if line then pcall(function() line:Remove() end) end end
 	for _, line in pairs(Storage.HitmarkerLines) do if line then pcall(function() line:Remove() end) end end
+	if Storage.TargetStatusDrawing then pcall(function() Storage.TargetStatusDrawing:Remove() end); Storage.TargetStatusDrawing = nil end
 	
 	if Storage.OriginalLighting.Ambient then
 		Services.Lighting.Ambient = Storage.OriginalLighting.Ambient
@@ -2772,7 +2855,7 @@ function Runtime.Unload()
 	Storage.LastTargetVel = {}; Storage.LastTargetTick = {}
 	Storage.ESPObjects = {}; Storage.SkeletonParts = {}; Storage.TracerLines = {}
 	Storage.RadarObjects = {}
-	print("X TITAN V6.1.1 - GEN-6 TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
+	print("X TITAN V6.3.0 - GEN-6 TITAN GOD (APEX OMNI) UNLOADED SUCCESSFULLY")
 end
 
 local function InitRadar()
@@ -2995,6 +3078,15 @@ function Runtime.Init()
 		hm1.Color = Color3.new(1,1,1); hm2.Color = Color3.new(1,1,1); hm3.Color = Color3.new(1,1,1); hm4.Color = Color3.new(1,1,1)
 		Storage.HitmarkerLines.TL = hm1; Storage.HitmarkerLines.TR = hm2
 		Storage.HitmarkerLines.BL = hm3; Storage.HitmarkerLines.BR = hm4
+		
+		local statusTxt = Drawing.new("Text")
+		statusTxt.Size = 13
+		statusTxt.Center = true
+		statusTxt.Outline = true
+		statusTxt.OutlineColor = Color3.fromRGB(0, 0, 0)
+		statusTxt.Color = Config.Theme.LockColor
+		statusTxt.Visible = false
+		Storage.TargetStatusDrawing = statusTxt
 	end
 	
 	for _, p in pairs(Services.Players:GetPlayers()) do pcall(function() Features.CreateESP(p) end) end
@@ -3143,7 +3235,7 @@ function Runtime.Init()
 	-- ======================================================================
 	-- RENDERSTEPPED (V5.0.0 - P2 FIXED: Target Caching)
 	-- ======================================================================
-	local renderConn = Services.RunService.RenderStepped:Connect(function()
+	local renderConn = Services.RunService.RenderStepped:Connect(function(dt)
 		local CurrentCam = Utils.GetCurrentCamera()
 		if not CurrentCam then return end
 		local char = LocalPlayer.Character; local hrp = char and (char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char.PrimaryPart or char:FindFirstChildWhichIsA("BasePart"))
@@ -3263,6 +3355,28 @@ function Runtime.Init()
 			else
 				for _, line in pairs(Storage.HitmarkerLines) do if line and line.Visible then line.Visible = false end end
 			end
+			
+			-- [TACTICAL TARGET VISIBILITY STATUS INDICATOR]
+			if Storage.TargetStatusDrawing then
+				if Config.States.TargetStatus and cachedTarget and cachedTarget.Parent and not (Storage.MainFrame and Storage.MainFrame.Visible) then
+					local tPlr = Services.Players:GetPlayerFromCharacter(cachedTarget.Parent)
+					local tName = tPlr and tPlr.Name or cachedTarget.Parent.Name
+					local dist = math.floor((CurrentCam.CFrame.Position - cachedTarget.Position).Magnitude)
+					local curHp, maxHp = Utils.GetHealth(tPlr, cachedTarget.Parent)
+					local hpPct = math.floor(math.clamp(curHp / maxHp, 0, 1) * 100)
+					Storage.TargetStatusDrawing.Visible = true
+					Storage.TargetStatusDrawing.Position = Vector2.new(center.X, center.Y + 24)
+					if cachedIsWall then
+						Storage.TargetStatusDrawing.Color = Config.Theme.WallColor
+						Storage.TargetStatusDrawing.Text = string.format("[🔴 OCCLUDED] %s | %dm | %d%%", tName, dist, hpPct)
+					else
+						Storage.TargetStatusDrawing.Color = Config.Theme.LockColor
+						Storage.TargetStatusDrawing.Text = string.format("[🟢 LOCKED] %s | %dm | %d%%", tName, dist, hpPct)
+					end
+				elseif Storage.TargetStatusDrawing.Visible then
+					Storage.TargetStatusDrawing.Visible = false
+				end
+			end
 		end
 		
 		UpdateRadar()
@@ -3287,7 +3401,7 @@ function Runtime.Init()
 		end
 		
 		if Config.States.Aimbot then
-			-- [V6.1.1 CQB ENHANCED AIMBOT]: Dynamic ballistic damping & close-range responsiveness
+			-- [V6.3.0 STICKY AIMBOT & EXPONENTIAL DT SMOOTHING]: Dynamic ballistic damping & close-range responsiveness
 			if cachedTarget and cachedTarget.Parent then
 				local targetPos = cachedTarget.Position
 				local eRoot = cachedTarget.Parent:FindFirstChild("HumanoidRootPart")
@@ -3317,16 +3431,19 @@ function Runtime.Init()
 				local screenPos, onScreen = CurrentCam:WorldToViewportPoint(targetPos)
 				local screenDist = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
 				
-				-- [CQB DYNAMIC RESPONSIVENESS]:
-				local baseSmooth = math.clamp(1.0 - Config.Vals.AimbotSmoothness, 0.08, 1.0)
-				local smoothFactor = baseSmooth
+				-- [EXPONENTIAL DELTATIME DAMPED SMOOTHING (FPS-INDEPENDENT)]:
+				-- Guarantees identical camera responsiveness across 30 FPS to 240+ FPS
+				local safeDt = (dt and dt > 0 and dt < 0.1) and dt or 0.0166
+				local responsiveness = math.clamp(1.0 - Config.Vals.AimbotSmoothness, 0.05, 1.0)
+				local lambda = (responsiveness / math.max(0.01, 1.01 - responsiveness)) * 32.0
 				if dist3D < 40 then
-					local cqbBoost = (1.0 - (dist3D / 40)) * 0.55
-					smoothFactor = math.clamp(smoothFactor + cqbBoost, 0.3, 1.0)
+					local cqbBoost = (1.0 - (dist3D / 40)) * 1.5
+					lambda = lambda * (1.0 + cqbBoost)
 				end
 				if screenDist > 120 then
-					smoothFactor = math.clamp(smoothFactor + 0.25, 0.15, 1.0)
+					lambda = lambda * 1.4
 				end
+				local expSmooth = math.clamp(1.0 - math.exp(-lambda * safeDt), 0.05, 1.0)
 				
 				-- [MULTI-PLAN AIMBOT EXECUTION & FAILOVER WATCHDOG]
 				local aimPlan = Config.Vals.AimbotPlan or "Auto"
@@ -3336,7 +3453,7 @@ function Runtime.Init()
 					-- Plan B: MouseMoveRel Hardware/Virtual Input Emulation (Bypasses Locked Camera CFrame)
 					local dx = screenPos.X - center.X
 					local dy = screenPos.Y - center.Y
-					local moveRate = math.clamp(smoothFactor * 0.45, 0.08, 0.8)
+					local moveRate = math.clamp(expSmooth * 0.9, 0.08, 0.85)
 					if type(mousemoverel) == "function" then
 						mousemoverel(dx * moveRate, dy * moveRate)
 					elseif Services.VirtualInputManager then
@@ -3345,7 +3462,7 @@ function Runtime.Init()
 						end)
 					else
 						-- Fallback to camera if mouse input is not supported
-						CurrentCam.CFrame = CurrentCam.CFrame:Lerp(CFrame.lookAt(CurrentCam.CFrame.Position, targetPos), smoothFactor)
+						CurrentCam.CFrame = CurrentCam.CFrame:Lerp(CFrame.lookAt(CurrentCam.CFrame.Position, targetPos), expSmooth)
 					end
 				else
 					-- Plan A: High-Precision Camera CFrame Interpolation
@@ -3354,7 +3471,7 @@ function Runtime.Init()
 					if screenDist < Config.Vals.Deadzone then
 						CurrentCam.CFrame = targetCF
 					else
-						CurrentCam.CFrame = CurrentCam.CFrame:Lerp(targetCF, smoothFactor)
+						CurrentCam.CFrame = CurrentCam.CFrame:Lerp(targetCF, expSmooth)
 					end
 					
 					-- Failover Watchdog: check if game script immediately overwrites Camera CFrame
@@ -4282,5 +4399,5 @@ elseif isTitanPlus then
 	print("🔥 [X TITAN+] PRO-X APEX UNLOCKED")
 else
 	Utils.Notify("✅ X TITAN V6.1.1 - GEN-6 TITAN GOD (APEX OMNI)", "VIP Exclusive Suite Online. Press [Insert] for Menu", 4)
-	print("X TITAN V6.1.1 - GEN-6 TITAN GOD (APEX OMNI) LOADED SUCCESSFULLY")
+	print("X TITAN V6.3.0 - GEN-6 TITAN GOD (APEX OMNI) LOADED SUCCESSFULLY")
 end

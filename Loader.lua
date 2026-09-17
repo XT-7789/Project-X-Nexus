@@ -298,7 +298,7 @@ print("📱 Device: " .. (isMobile and "Mobile Touch Device" or "Desktop / PC"))
 print("==========================================")
 print("✅ [PROJECT X NEXUS] ACCESS GRANTED")
 if isMasterTitanPlus then
-	print(isFounderKey and "👑 X TITAN+ V6.1.1 [XT7789 GODMODE] LOADED" or "💎 X TITAN+ V6.1.1 [PARTNER APEX] LOADED")
+	print(isFounderKey and "👑 X TITAN+ V6.3.0 [XT7789 GODMODE] LOADED" or "💎 X TITAN+ V6.3.0 [PARTNER APEX] LOADED")
 elseif isMasterProPlus then
 	print(isFounderKey and "👑 X PRO+ V3.7.5 [XT7789 FOUNDER] LOADED" or "💎 X PRO+ V3.7.5 [CO-FOUNDER EDITION] LOADED")
 elseif isMasterMiniPlus then
@@ -322,7 +322,7 @@ elseif string.lower(tier) == "nano" then
 elseif string.lower(tier) == "pro" then
 	print(isMobile and "📱 X PROM V3.7.5 [DELTA EDITION] LOADED" or "⚡ X PRO V3.7.5 LOADED")
 elseif string.lower(tier) == "titan" then
-	print("🔥 X TITAN V6.1.1 [APEX OMNI] LOADED")
+	print("🔥 X TITAN V6.3.0 [APEX OMNI] LOADED")
 else
 	print("⚡ X " .. string.upper(tostring(tier)) .. " LOADED")
 end
@@ -359,7 +359,7 @@ local function ExecuteRemote(scriptUrl, tierLabel)
 end
 
 if isMasterTitanPlus then
-	ExecuteRemote(repo .. "X%20TITAN.lua", "X TITAN V6.1.1")
+	ExecuteRemote(repo .. "X%20TITAN.lua", "X TITAN V6.3.0")
 elseif isMasterProPlus then
 	if isMobile then
 		ExecuteRemote(repo .. "X%20PROM.lua", "X PROM V3.7.5")
@@ -407,7 +407,7 @@ elseif string.lower(tier) == "pro" then
 		ExecuteRemote(repo .. "X%20PRO.lua", "X PRO V3.7.5")
 	end
 elseif string.lower(tier) == "titan" then
-	ExecuteRemote(repo .. "X%20TITAN.lua", "X TITAN V6.1.1")
+	ExecuteRemote(repo .. "X%20TITAN.lua", "X TITAN V6.3.0")
 else
 	ExecuteRemote(repo .. "X%20NANO.lua", "X NANO V3.4.1")
 end
