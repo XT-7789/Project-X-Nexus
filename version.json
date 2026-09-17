@@ -1,6 +1,7 @@
 {
-  "version": "1.10.0",
+  "version": "1.10.1",
   "name": "Project X-Nexus Executor",
   "download_url": "https://raw.githubusercontent.com/XT-7789/Project-X-Nexus/main/X-Nexus%20Executor.exe",
-  "changelog": "V1.10.0: Display-aware FPS shortcuts fill a custom target using the selected monitor refresh rate or twice that rate. CPU and memory charts show the last 60 seconds. Optional five-minute PC usage recording continues across pages and while minimized, stops automatically or manually, and reports valid sampled averages and peaks. Export the latest in-memory recording to CSV with the saved FPS cap as context. Performance now has Overview and Activity tabs. Actual game FPS is not measured."
+  "zip_url": "https://raw.githubusercontent.com/XT-7789/Project-X-Nexus/main/X-Nexus-Executor-1.10.1.zip",
+  "changelog": "V1.10.1: Portable ZIP package added with the application, quick-start guide and executable SHA-256 checksum. The automatic updater continues to use the standalone executable. Includes the display-aware FPS shortcuts, 60-second CPU and memory charts, and optional five-minute PC usage recording from V1.10.0. Actual game FPS is not measured."
 }
