@@ -1,7 +1,7 @@
--- [[ X SUITE - UNIVERSAL CLOUD LOADER V2.0.3 ]]
+-- [[ X SUITE - UNIVERSAL CLOUD LOADER V2.6.0 ]]
 -- Official Discord: https://discord.gg/mQ3ASbfP8j | Seller: vlilayz | Dev: XT-7789
 -- Multi-Executor Support: Delta (iOS / Android), Codex, Arceus X, Wave, Solara, Celery
--- Dynamic Ephemeral Session Handshake & safeCloneRef Metamethod Defense
+-- Ephemeral HMAC Single-Use Token Handshake & Secure POST Body Transport
 -- ==================================================================
 -- USAGE:
 -- getgenv().Key = "YOUR_KEY_HERE"
@@ -221,25 +221,50 @@ local function GetHWID()
 	return "X_CLIENT_" .. tostring(math.floor(tick()))
 end
 
-local function SafeHttpGet(url)
+local httpReq = (type(request) == "function" and request)
+	or (type(http_request) == "function" and http_request)
+	or (syn and type(syn.request) == "function" and syn.request)
+	or (http and type(http.request) == "function" and http.request)
+	or (fluxus and type(fluxus.request) == "function" and fluxus.request)
+
+local function SecureHttpPost(url, payload)
+	if httpReq then
+		local ok, res = pcall(function()
+			return httpReq({
+				Url = url,
+				Method = "POST",
+				Headers = {
+					["Content-Type"] = "application/json",
+					["Cache-Control"] = "no-store",
+					["User-Agent"] = "X-Nexus-Loader/2.6.0 (" .. tostring(execLabel) .. ")"
+				},
+				Body = Services.HttpService:JSONEncode(payload)
+			})
+		end)
+		if ok and res and res.Body and res.Body ~= "" then
+			return true, res.Body
+		end
+	end
+
+	-- Secondary fallback for executors supporting game:HttpPost
+	if type(game.HttpPost) == "function" then
+		local ok, res = pcall(function()
+			return game:HttpPost(url, Services.HttpService:JSONEncode(payload))
+		end)
+		if ok and res and res ~= "" then return true, res end
+	end
+
+	-- Constrained fallback for executors that only support HttpGet
+	local query = {}
+	for k, v in pairs(payload) do
+		table.insert(query, tostring(k) .. "=" .. Services.HttpService:UrlEncode(tostring(v)))
+	end
 	local sep = string.find(url, "?") and "&" or "?"
+	local fullUrl = url .. sep .. table.concat(query, "&") .. "&_t=" .. tostring(math.floor(tick()))
 	local ok, res = pcall(function()
-		return game:HttpGet(url .. sep .. "t=" .. tostring(math.floor(tick())))
+		return game:HttpGet(fullUrl)
 	end)
-	if ok and res and res ~= "" and not string.find(res, "404: Not Found") then
-		local testFn = loadstring(res)
-		if testFn then return res end
-	end
-	-- Dual-CDN Failover: jsDelivr CDN
-	local jsDelivrUrl = string.gsub(url, "https://raw.githubusercontent.com/XT-7789/Project-X-Nexus/main/", "https://cdn.jsdelivr.net/gh/XT-7789/Project-X-Nexus@main/")
-	local ok2, res2 = pcall(function()
-		return game:HttpGet(jsDelivrUrl .. "?t=" .. tostring(math.floor(tick())))
-	end)
-	if ok2 and res2 and res2 ~= "" and not string.find(res2, "404") then
-		local testFn2 = loadstring(res2)
-		if testFn2 then return res2 end
-	end
-	return (ok and res) or (ok2 and res2) or ""
+	return ok, res
 end
 
 local key = getgenv().Key or getgenv().ScriptKey or script_key
@@ -254,15 +279,20 @@ local cleanKey = string.upper(tostring(key))
 if not VerifySecurityIntegrity() then return end
 
 Notify("⚡ X SUITE", "Authenticating Key & Verifying HWID...", 2)
-UpdateSplash("Verifying HWID & Cloud Key...", 0.45)
+UpdateSplash("Verifying HWID & Cloud Key (POST TLS)...", 0.45)
 
 local hwid = GetHWID()
 local reqNonce = string.format("%d_%d", math.floor(tick()), math.random(100000, 999999))
-local verifyUrl = "https://x-auth.alex-x-7789-x.workers.dev/verify?key=" .. tostring(key) .. "&hwid=" .. tostring(hwid) .. "&nonce=" .. reqNonce .. "&_t=" .. tostring(math.floor(tick()))
+local edgeBase = "https://x-auth.alex-x-7789-x.workers.dev"
 
-local success, response = pcall(function()
-	return game:HttpGet(verifyUrl)
-end)
+local verifyPayload = {
+	key = tostring(key),
+	hwid = tostring(hwid),
+	nonce = reqNonce,
+	device = isMobile and "mobile" or "pc"
+}
+
+local success, response = SecureHttpPost(edgeBase .. "/verify", verifyPayload)
 
 if not success or not response then
 	SafeAbort("❌ CONNECTION ERROR", "Could not reach Auth Server.", 4)
@@ -323,12 +353,12 @@ local function _deriveTierStreamKey(tierName)
 	return k
 end
 
-local sessionTimestamp = math.floor(tick())
+local sessionTimestamp = data.session_ts or math.floor(tick())
 local sessionNonce = tostring(math.random(100000, 999999))
 local isPlus = (data.plus == true) or (data.isPlus == true) or (cleanTier == "titan")
 local isFounder = (data.founder == true) or (data.isFounder == true)
 local isSeller = (data.seller == true) or (data.isSeller == true)
-local sessionSig = ComputeHandshakeSig(sessionTimestamp, key, hwid, sessionNonce, cleanTier, isPlus, isFounder, isSeller)
+local sessionSig = tostring(data.session_sig or ComputeHandshakeSig(sessionTimestamp, key, hwid, sessionNonce, cleanTier, isPlus, isFounder, isSeller))
 
 getgenv()._X_AUTH_SESSION = {
 	Timestamp = sessionTimestamp,
@@ -336,15 +366,16 @@ getgenv()._X_AUTH_SESSION = {
 	HWID = tostring(hwid),
 	Nonce = sessionNonce,
 	Signature = sessionSig,
+	ServerSignature = tostring(data.session_sig or ""),
 	Tier = cleanTier,
 	IsPlus = isPlus,
 	IsFounder = isFounder,
 	IsSeller = isSeller,
+	LoadToken = tostring(data.load_token or ""),
 	StreamKey = nil
 }
 getgenv()._X_AUTH_TOKEN = sessionSig
 
-local edgeBase = "https://x-auth.alex-x-7789-x.workers.dev"
 Notify("✅ SUCCESS", "Welcome! Loading X " .. tostring(tier) .. "...", 3)
 UpdateSplash("Access Granted! Fetching X " .. tostring(tier) .. "...", 0.85)
 
@@ -385,13 +416,22 @@ print("==========================================")
 local function ExecuteSecurePayload(tierLabel)
 	UpdateSplash("Launching " .. (tierLabel or "Client") .. "...", 1.0)
 	task.delay(0.5, CloseSplash)
-	local loadUrl = edgeBase .. "/load?key=" .. tostring(key) .. "&hwid=" .. tostring(hwid) .. "&device=" .. (isMobile and "mobile" or "pc") .. "&t=" .. tostring(math.floor(tick()))
-	local code = SafeHttpGet(loadUrl)
-	if not code or code == "" or string.sub(code, 1, 8) == "-- ERROR" then
+
+	-- Request single-use ephemeral payload delivery via secure POST
+	local loadPayload = {
+		key = tostring(key),
+		hwid = tostring(hwid),
+		token = tostring(data.load_token or ""),
+		device = (isMobile and "mobile" or "pc")
+	}
+	local loadUrl = edgeBase .. "/load?key=" .. Services.HttpService:UrlEncode(tostring(key)) .. "&hwid=" .. Services.HttpService:UrlEncode(tostring(hwid)) .. "&device=" .. (isMobile and "mobile" or "pc") .. "&_t=" .. tostring(math.floor(tick()))
+	local okDelivery, code = SecureHttpPost(loadUrl, loadPayload)
+
+	if not okDelivery or not code or code == "" or string.sub(code, 1, 8) == "-- ERROR" or string.find(code, "UNAUTHORIZED") or string.find(code, "TOKEN_REQUIRED") then
 		getgenv()._X_LOADER_INITIALIZING = false
 		CloseSplash()
-		Notify("❌ DELIVERY FAILED", "Could not fetch script from Secure Edge.", 5)
-		warn("[X SUITE] Network error: Failed to download secure payload from Edge Server.")
+		Notify("❌ DELIVERY FAILED", "Could not fetch script from Secure Edge. Token invalid or expired.", 5)
+		warn("[X SUITE] Network error: Failed to download secure payload from Edge Server. Code: " .. tostring(code))
 		return
 	end
 	local fn, compileErr = loadstring(code)
